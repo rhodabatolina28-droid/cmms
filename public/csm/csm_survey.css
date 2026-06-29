@@ -1,0 +1,437 @@
+/* General Styles */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f0f2f5;
+  display: flex;
+  justify-content: center;   /* Center horizontally */
+  align-items: center;       /* Center vertically */
+  min-height: 100vh;         /* Buong height ng screen */
+  margin: 0;
+  padding: 20px;
+}
+/* Form Container */
+.form-container {
+  background: #fff;
+  padding: 0px;
+  border-radius: 10px;
+  box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.1);
+  max-width: 1000px; /* pwede mong adjust, e.g. 800px */
+  width: 100%;
+  overflow-y: auto; /* scroll kung mahaba */
+}
+
+/* Banner */
+.title-image {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+.banner-image {
+  width: 100%;
+  box-sizing: border-box;
+  container: cover;
+  display: block;
+  border-radius: 8px; /* para sa kaunting round sa edges */
+}
+
+/* Form Body */
+.form-body {
+  width: 100%;
+  text-align: justify;
+}
+
+.form-body h1 {
+  font-size: 1.5rem;
+  text-align: justify;
+  margin-bottom: 20px;
+}
+
+.form-body p {
+    font-size: 15px;        /* mas maliit ng kaunti */
+    line-height: 1.4;       /* bawasan line height para mas compact pero readable */
+    margin-bottom: 10px;    /* bawasan space sa pagitan ng paragraphs */
+}
+
+.consent-text {
+    font-size: 14px;        /* mas maliit kaysa sa default */
+    line-height: 1.4;       /* bawasan line spacing */
+    margin-bottom: 15px;
+}
+
+/* Form Row */
+form {
+    padding: 30px 40px;     /* mas maliit kaysa dati 50px */
+}
+
+.form-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  margin-bottom: 20px;
+}
+
+/* Form Group */
+.form-group {
+  flex: 1;
+  min-width: 250px;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Radio Button */
+input[type="radio"] {
+    margin-right: 5px;
+}
+
+/* Form Group Label */
+.form-group label {
+    display: block;
+    font-size: 16px;
+    margin-bottom: 5px;
+    color: solid black;
+}
+
+/* Input Fields */
+.form-group input {
+    width: 80%; 
+    max-width: 500px;
+    padding: 10px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Select Dropdown */
+.form-group select {
+    width: 87%;
+    max-width: 500px;
+    padding: 10px;
+    border: 1px solid #000000;
+    border-radius: 4px;
+    font-size: 16px;
+}
+
+/* Divider */
+.divider {
+    width: 100%;
+    margin: 20px auto;
+    border: 1px solid #000000;
+    margin-bottom: 5px;
+}
+
+/* Styling for instruction paragraphs */
+.instructions p{
+    background-color: #f9f9f9;
+    padding: 15px;
+    margin: 20px 0;
+    font-size: 16px;
+    text-align: justify;
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+/* Survey section container */
+.survey-section {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-bottom: 20px;
+}
+
+/* Survey header containing question labels */
+.survey-header {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap; /* Allows question to wrap to the next line */
+    width: 100%;
+    font-size: 16px;
+}
+
+/* First paragraph inside survey header (e.g., CC1, CC2, CC3) */
+.survey-header p:first-child {
+    margin-right: 15px; /* Space between "CC1" and the question */
+    min-width: 50px; /* Ensures "CC1", "CC2", "CC3" align */
+    text-align: left;
+}
+
+/* Last paragraph inside survey header (actual question text) */
+.survey-header p:last-child {
+    flex: 1; /* Allows the question to take up remaining space */
+    text-align: left;
+    margin: 0;
+}
+
+/* Survey options styling */
+.survey-options {
+    padding-left: 50px; /* Ensures checkboxes align under the question */
+    text-align: left;
+    display: flex;
+    flex-direction: column;
+    gap: 0px; /* Adds spacing between checkbox options */
+    font-size: 16px;
+}
+
+/* Styling for each survey row */
+.survey-row {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+}
+
+/* Groups for left and right options */
+.left-group, .right-group {
+    display: flex;
+    flex-direction: column;
+    width: 50%;
+}
+
+.right-group {
+    padding-left: 20px; /* Space from the left group */
+}
+
+.survey-options label {
+    display: grid;
+    grid-template-columns: 40px auto;
+    align-items: start;
+    max-width: 600px;
+    padding-top: 5px;
+    border-radius: 5px;
+    background-color: none;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+
+.survey-options label:hover {
+    background: #f9f9f9;
+}
+
+.survey-options input {
+    margin-right: 5px;
+    transform: scale(1.2); /* Makes checkboxes slightly larger */
+}
+
+.survey-table {
+  width: 100%;
+  overflow-x: auto; /* ✅ para scrollable imbes na sumabog */
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+table, th, td {
+  padding: 10px;
+  border: 1px solid #ddd;
+  text-align: center;
+}
+
+th {
+    background-color: #e0e0e0;
+    color: solid black;
+    font-size: 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    padding: 2px;
+    height: 100px; /* Ensure uniform height */
+    vertical-align: middle;
+}
+
+.header-cell {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start; /* Align content to the top */
+    height: 100%;
+    text-align: center;
+}
+
+.emoji {
+    width: 40px;
+    height: 40px;
+}
+
+.spacer {
+    height: 10px; /* Creates space between emoji and text */
+    display: block;
+}
+
+th span {
+    font-size: 14px;
+    font-weight: bold;
+    line-height: 1.2;
+    text-align: center;
+    text-transform: none;
+}
+
+.subtext {
+    font-size: 12px;
+    font-weight: normal;
+    color: solid black;
+    text-align: center;
+}
+/* Checkbox Styling */
+.survey-table td input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+    cursor: pointer;
+    accent-color: #007BFF;
+    transition: transform 0.2s ease-in-out;
+}
+
+.survey-table td input[type="checkbox"]:hover {
+    transform: scale(1.1);
+}
+
+/* Alternate Row Colors */
+.survey-table tr:nth-child(even) {
+    background-color: white;
+}
+
+/* Hover Effect */
+.survey-table tr:hover {
+    background-color: #f9f9f9;
+    transition: all 0.3s ease;
+}
+
+/* Left Align First Column */
+td:first-child {
+    text-align: left;
+    font-weight: 500;
+    color: #444;
+    font-size: 16px;
+    width: 50%;
+}
+.header-cell i {
+    font-size: 12px; /* Smaller text */
+    opacity: 0.8; /* Lighten the color */
+    display: block; /* Ensure proper spacing */
+}
+/* Suggestion Box */
+.suggestion-box {
+    background: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    padding: 20px;
+    margin-top: 15px;
+    text-align: left;
+    width: 100%;
+    max-width: 100%; /* match with your email input width */
+}
+
+/* Suggestion Label */
+.suggestion-box label {
+    font-size: 16px;
+    font-weight: bold;
+    color: #000000;
+    display: block;
+    margin-bottom: 8px;
+}
+
+/* Suggestion Textarea */
+.suggestion-box textarea {
+    width: 100%;          /* full width */
+    min-height: 100px;
+    padding: 10px;
+    border: 1px solid #000000;
+    border-radius: 8px;
+    font-size: 16px;
+    background-color: white;
+    resize: vertical;
+    transition: border-color 0.3s ease-in-out, background 0.3s ease-in-out;
+    box-sizing: border-box; /* para sakto sa container */
+}
+
+/* Focus Effect */
+.suggestion-box textarea:focus {
+    background: #ffffff;
+    outline: none;
+}
+
+/* Placeholder Styling */
+.suggestion-box textarea::placeholder {
+    color: #777;
+    font-size: 16px;
+    font-style: italic;
+}
+
+.suggestion-box label span {
+    font-weight: normal; 
+    font-style: italic; 
+}
+
+/* General Button Styling */
+.submit-container {
+  text-align: center;
+  margin: 30px 0;
+}
+
+.submit-btn {
+  background: #007bff;
+  color: #fff;
+  padding: 12px 30px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.submit-btn:hover {
+  background: #0056b3;
+}
+
+/* Loading Spinner */
+.loading-spinner {
+    display: none;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #e67e22;
+    border-top-color: transparent;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.disabled-gray {
+    background-color: #e0e0e0 !important; 
+    color: #7a7a7a !important;
+    border-color: #bdbdbd !important;
+    cursor: not-allowed;
+    opacity: 0.6;
+}
+input:disabled, select:disabled, textarea:disabled, button:disabled {
+    background-color: #e0e0e0 !important; 
+    color: #7a7a7a !important; 
+    border-color: #bdbdbd !important; 
+    cursor: not-allowed; 
+    opacity: 0.6; 
+}
+
+.disabled-label {
+    background-color: #e0e0e0; /* Red background color */
+    color: #7a7a7a; /* White text for better visibility */
+    cursor: not-allowed; /* Show the "not-allowed" cursor when hovering */
+    pointer-events: none; /* Prevent interaction */
+}
+.disabled-table {
+    background-color: #e0e0e0;
+    color: #7a7a7a; /* Change text color for better visibility */
+}
+
+.disabled-table td, 
+.disabled-table th {
+    background-color: #e0e0e0; 
+    color: #7a7a7a; /* Ensure text remains visible */
+}
