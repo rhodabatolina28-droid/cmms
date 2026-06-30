@@ -371,6 +371,7 @@
                     <option value="">All Roles</option>
                     <option value="user">User</option>
                     <option value="admin">Division Admin</option>
+                    <option value="supply_officer">Supply Officer</option>
                     <option value="it">IT Personnel</option>
                     <option value="super_admin">Super Admin</option>
                 </select>
@@ -472,6 +473,7 @@
                     <select name="role" id="newUserRole" class="form-input-gov" required>
                         <option value="user">User</option>
                         <option value="admin">Division Admin</option>
+                        <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
                         <option value="it">IT Personnel</option>
                         <option value="super_admin">Super Admin</option>
                     </select>
@@ -503,28 +505,29 @@
                         <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
                         <select name="office" id="newUserOffice" class="form-input-gov" required>
                             <option value="">— Select Division / Office —</option>
-                            <optgroup label="Internal Services Department">
-                                <option value="RESEARCH AND INFORMATION DIVISION">Research &amp; Information Div. (RID)</option>
-                                <option value="ADMINISTRATIVE DIVISION">Administrative Division (AD)</option>
-                                <option value="FINANCIAL AND MANAGEMENT DIVISION">Financial &amp; Management Div. (FMD)</option>
-                                <option value="COMMISSION ON AUDIT">Commission on Audit (COA)</option>
-                            </optgroup>
-                            <optgroup label="Technical Services Department">
-                                <option value="CONCILIATION AND MEDIATION DIVISION">Conciliation &amp; Mediation Div. (CMD)</option>
-                                <option value="VOLUNTARY ARBITRATION DIVISION">Voluntary Arbitration Div. (VAD)</option>
-                                <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION">Workplace Relations Enhancement Div. (WRED)</option>
-                                <option value="OFFICE OF THE EXECUTIVE DIRECTOR">Office of the Exec. Director (OED)</option>
-                            </optgroup>
+                            <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
+                            <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
+                            <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
+                            <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
+                            <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
+                            <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
+                            <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
+                            <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
                         </select>
                         <p class="form-help">Required — determines the user's scope in the system.</p>
                     </div>
                 </div>
 
                 {{-- Row 6: Password --}}
-                <div class="form-group-sm">
+                <div class="form-group-sm" style="position:relative;">
                     <label class="form-label-gov">Initial Access Password</label>
-                    <input type="password" name="password" class="form-input-gov" required placeholder="••••••••">
-                    <p class="form-help">User can change this password after their first login.</p>
+                    <div style="display:flex;align-items:center;gap:8px;">
+                        <input type="password" name="password" id="newUserPassword" class="form-input-gov" required placeholder="••••••••" style="padding-right:40px;">
+                        <button type="button" id="toggleNewUserPassword" class="btn-action-modern" style="position:absolute;right:22px;top:32px;border:none;background:none;padding:8px;cursor:pointer;font-size:16px;color:#64748b;" tabindex="-1">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                    </div>
+                    <p class="form-help" style="margin-top:6px;">Password must be at least 8 characters, 1 uppercase letter, and 1 number.</p>
                 </div>
             </div>
             <div class="modal-foot">
@@ -633,6 +636,7 @@ document.getElementById('addUserForm').addEventListener('submit', async function
         });
 
         const result = await response.json();
+
         if (result.success) {
             await Swal.fire({
                 icon: 'success',
@@ -643,11 +647,27 @@ document.getElementById('addUserForm').addEventListener('submit', async function
                 showConfirmButton: false
             });
             location.reload();
-        } else {
+        } else if (result.errors) {
+            // Validation errors from server
+            const errorMessages = Object.values(result.errors).flat().join('<br>');
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: errorMessages,
+                confirmButtonColor: '#0038A8'
+            });
+        } else if (result.message) {
             Swal.fire({
                 icon: 'error',
                 title: 'Error!',
                 text: result.message,
+                confirmButtonColor: '#0038A8'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An unexpected error occurred. Please check the password requirements: at least 8 characters, 1 uppercase letter, and 1 number.',
                 confirmButtonColor: '#0038A8'
             });
         }
@@ -753,6 +773,41 @@ document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('addUserBtn').addEventListener('click', openAddUserModal);
     document.querySelectorAll('.close-modal-btn').forEach(function(el) {
         el.addEventListener('click', closeAddUserModal);
+    });
+
+    // Password toggle show/hide
+    document.getElementById('toggleNewUserPassword').addEventListener('click', function() {
+        const pwInput = document.getElementById('newUserPassword');
+        const icon = this.querySelector('i');
+        if (pwInput.type === 'password') {
+            pwInput.type = 'text';
+            icon.className = 'fa-solid fa-eye-slash';
+        } else {
+            pwInput.type = 'password';
+            icon.className = 'fa-solid fa-eye';
+        }
+    });
+
+    // Filter division options based on selected department
+    document.getElementById('newUserDepartment').addEventListener('change', function() {
+        const dept = this.value;
+        const officeSelect = document.getElementById('newUserOffice');
+        const options = officeSelect.querySelectorAll('option');
+        
+        options.forEach(opt => {
+            if (!opt.value) return; // Skip placeholder
+            const dataDept = opt.getAttribute('data-dept');
+            if (!dept || !dataDept) {
+                opt.style.display = '';
+            } else if (dept === 'INTERNAL SERVICES DEPARTMENT' && dataDept === 'INTERNAL') {
+                opt.style.display = '';
+            } else if (dept === 'TECHNICAL SERVICES DEPARTMENT' && dataDept === 'TECHNICAL') {
+                opt.style.display = '';
+            } else {
+                opt.style.display = 'none';
+            }
+        });
+        officeSelect.value = '';
     });
 
     // Auto-set department when office is selected

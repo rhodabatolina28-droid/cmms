@@ -112,7 +112,7 @@
             <img src="{{ asset('images/pmsf-banner.png') }}" alt="NCMB Preventive Maintenance Banner" class="banner-full">
         </div>
 
-        @if(!empty($canAssignIt) && $request && Auth::user()->role === 'super_admin')
+        @if(!empty($canAssignIt) && $request && Auth::user()->role === 'super_admin' && (!$request->assigned_to || (int)$request->assigned_to !== (int)Auth::user()->id))
         <div id="assignItPanel" class="assign-panel">
             <div class="assign-panel-label">
                 <i class="fa-solid fa-user-gear"></i> Assign IT Personnel (PM)

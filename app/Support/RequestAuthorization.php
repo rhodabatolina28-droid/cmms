@@ -81,10 +81,8 @@ class RequestAuthorization
                 return (int) $ticket->assigned_to === (int) $user->id;
             }
             
-            // If NOT assigned, Super Admin can edit (acting as IT) — must be same branch
-            if ($user->role === 'super_admin') {
-                return self::ticketInSuperAdminBranch($user, $ticket);
-            }
+            // If NOT assigned, NO ONE can edit (must be assigned first)
+            return false;
         }
 
         return false;

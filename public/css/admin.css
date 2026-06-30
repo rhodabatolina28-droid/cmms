@@ -34,12 +34,6 @@ body {
     overflow: hidden;
 }
 
-/* Prevent transition flash on page load */
-.sidebar.no-transition,
-.main.no-transition {
-    transition: none !important;
-}
-
 .sidebar.collapsed {
     width: 0;
     padding: 0;

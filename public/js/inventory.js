@@ -869,9 +869,9 @@ async function saveAsset(event) {
                 title: 'Saved!',
                 text: result.message || 'Asset record saved successfully.',
                 confirmButtonColor: '#0038A8',
-                confirmButtonText: 'OK',
-                showConfirmButton: true,
-                showCancelButton: false
+                timer: 2000,
+                timerProgressBar: true,
+                showConfirmButton: false
             });
             loadInventory();
         } else {

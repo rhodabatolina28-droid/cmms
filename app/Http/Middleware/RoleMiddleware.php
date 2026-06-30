@@ -21,6 +21,11 @@ class RoleMiddleware
 
         $userRole = auth()->user()->role;
 
+        // Treat supply_officer as admin for role-based access
+        if ($userRole === 'supply_officer' && in_array('admin', $roles)) {
+            return $next($request);
+        }
+
         if (!in_array($userRole, $roles)) {
             // Return JSON for AJAX/API requests
             if ($request->expectsJson()) {

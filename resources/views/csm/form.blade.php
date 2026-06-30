@@ -23,7 +23,7 @@
         .td-left { text-align: left; }
     </style>
 
-    <script nonce="{{ $cspNonce }}" src="{{ asset('csm/csm_survey.js') }}" defer></script>
+    <script nonce="{{ $cspNonce }}" src="{{ asset('csm/csm_survey.js') }}"></script>
     <script nonce="{{ $cspNonce }}" src="{{ asset('csm/disabled_button.js') }}" defer></script>
     <script nonce="{{ $cspNonce }}" src="{{ asset('csm/consent_see_more.js') }}" defer></script>
 </head>

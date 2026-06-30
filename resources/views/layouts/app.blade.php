@@ -157,7 +157,7 @@
                 <h1 class="sidebar-title">CMMS PORTAL</h1>
                 <p class="sidebar-role">
                     @if(Auth::user()->role === 'super_admin') SUPER ADMIN
-                    @elseif(Auth::user()->role === 'admin') 
+                    @elseif(Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer') 
                         {{ Auth::user()->canProcessSupply() ? 'ADMIN & SUPPLY' : 'DIVISION ADMIN' }}
                     @elseif(Auth::user()->role === 'it') IT PERSONNEL
                     @else USER
@@ -198,8 +198,8 @@
                     <a href="{{ route('pm-schedules.index') }}" class="nav-link {{ request()->routeIs('pm-schedules.*') ? 'active' : '' }}" data-tooltip="PM Schedules">
                         <i class="fa-solid fa-calendar-clock"></i> <span>PM Schedules</span>
                     </a>
-                @elseif(Auth::user()->role === 'admin')
-                    <!-- DIVISION ADMIN MODULES -->
+                @elseif(Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer')
+                    <!-- DIVISION ADMIN / SUPPLY OFFICER MODULES -->
                     <a href="{{ route('personnel.index') }}" class="nav-link {{ request()->routeIs('personnel.*') ? 'active' : '' }}" data-tooltip="Manage Personnel">
                         <i class="fa-solid fa-users"></i> <span>Manage Personnel</span>
                     </a>
@@ -312,7 +312,7 @@
             </header>
 
             <div class="content-wrapper">
-                @if(session('success'))
+                @if(session('success') && !str_contains(session('success'), 'Thank you for completing the survey') && !str_contains(session('success'), 'You have already submitted'))
                     <div class="alert alert-success" id="globalAlertSuccess">
                         {{ session('success') }}
                     </div>
@@ -359,18 +359,25 @@
             }
         }
 
-        // On page load: if saved collapsed AND desktop, switch from data-sidebar to .collapsed for smooth transitions
+        // On page load: if saved collapsed AND desktop, switch from data-sidebar to .collapsed
         (function() {
             var saved = localStorage.getItem('cmms_sidebar_collapsed');
             var sidebar = document.getElementById('sidebar');
             var main = document.getElementById('mainContent');
             if (saved === 'true' && window.innerWidth >= 1024 && sidebar && main) {
-                // Remove flash-prevention data-sidebar, use .collapsed class instead for smooth transitions
+                // Disable transition temporarily to prevent flash
+                sidebar.style.transition = 'none';
+                main.style.transition = 'none';
                 document.documentElement.removeAttribute('data-sidebar');
                 sidebar.classList.add('collapsed');
                 main.classList.add('expanded');
+                // Force reflow then restore transition
+                sidebar.offsetHeight;
+                setTimeout(function() {
+                    sidebar.style.transition = '';
+                    main.style.transition = '';
+                }, 20);
             } else {
-                // Clean up flash-prevention marker so transitions work
                 document.documentElement.removeAttribute('data-sidebar');
             }
         })();

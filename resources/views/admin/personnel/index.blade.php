@@ -332,7 +332,7 @@
                 <h3 class="h3-title">{{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Personnel Registry</h3>
                 <p class="p-subtitle">Manage user access, roles, and account status within your jurisdiction.</p>
             </div>
-            @if(Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin')
+            @if(Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer')
             <button id="addPersonnelBtn" class="btn-primary-solid">
                 <i class="fa-solid fa-user-plus"></i> Add New Personnel
             </button>
@@ -484,9 +484,14 @@
                             <option value="it">IT Personnel</option>
                         </select>
                     </div>
-                    <div>
+                    <div style="position:relative;">
                         <label class="form-label-gov">Temporary Password</label>
-                        <input type="password" name="password" required class="form-input-gov" placeholder="Minimum 6 characters" minlength="6">
+                        <div style="display:flex;align-items:center;">
+                            <input type="password" name="password" id="personnelPassword" required class="form-input-gov" placeholder="Minimum 6 characters" minlength="6" style="padding-right:40px;width:100%;">
+                            <button type="button" id="togglePersonnelPassword" style="position:absolute;right:10px;top:32px;border:none;background:none;padding:8px;cursor:pointer;font-size:16px;color:#64748b;" tabindex="-1">
+                                <i class="fa-solid fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -838,6 +843,22 @@
         }
     }
 document.addEventListener('DOMContentLoaded', function() {
+    // Password toggle
+    var togglePw = document.getElementById('togglePersonnelPassword');
+    if (togglePw) {
+        togglePw.addEventListener('click', function() {
+            var pwInput = document.getElementById('personnelPassword');
+            var icon = this.querySelector('i');
+            if (pwInput.type === 'password') {
+                pwInput.type = 'text';
+                icon.className = 'fa-solid fa-eye-slash';
+            } else {
+                pwInput.type = 'password';
+                icon.className = 'fa-solid fa-eye';
+            }
+        });
+    }
+
     document.getElementById('searchPersonnel').addEventListener('keyup', filterTable);
     var fd = document.getElementById('filterDivision');
     if (fd) { fd.addEventListener('keyup', filterTable); }

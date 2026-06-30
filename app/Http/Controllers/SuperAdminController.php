@@ -19,10 +19,8 @@ class SuperAdminController extends Controller
     public function auditLogs()
     {
         $actor = Auth::user();
-        // Super Admin sees audit logs for their entire branch.
-        // Note: audit_logs uses the 'region' column to store branch/office scope info.
+        // Super Admin sees ALL audit logs across all offices/divisions
         $logs = \App\Models\AuditLog::with('user')
-            ->when($actor->branch, fn ($query) => $query->where('region', $actor->branch))
             ->orderBy('created_at', 'desc')
             ->paginate(50);
 
@@ -59,10 +57,18 @@ class SuperAdminController extends Controller
             'branch'     => 'nullable|string',
             'office'     => 'required|string|max:255',
             'department' => 'nullable|string',
+            'can_supply' => 'nullable|boolean',
         ]);
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;
+        
+        // Auto-set can_supply=1 for supply_officer role
+        if ($validated['role'] === 'supply_officer') {
+            $validated['can_supply'] = true;
+        } else {
+            $validated['can_supply'] = $request->boolean('can_supply');
+        }
 
         // Always inherit region and branch from the creating super admin
         $validated['region'] = Auth::user()->region;

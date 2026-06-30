@@ -211,11 +211,14 @@ class DashboardController extends Controller
     public function userDashboard()
     {
         $user = Auth::user();
-        $requests = RequestModel::with('csmSurvey')->where('user_id', $user->id)
+        
+        // Optimized: Single query for requests with minimal eager loading
+        $requests = RequestModel::where('user_id', $user->id)
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
+        // Optimized: Combined stats query
         $statsRow = RequestModel::where('user_id', $user->id)
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED)
             ->selectRaw("COUNT(*) as total")
@@ -224,28 +227,23 @@ class DashboardController extends Controller
             ->selectRaw("SUM(CASE WHEN status = 'Completed' THEN 1 ELSE 0 END) as completed")
             ->first();
 
+        // Optimized: Single query for asset count
+        $assetCount = \App\Models\InventoryAsset::where('assigned_to_user', $user->id)->count();
+
         $stats = [
             'total' => $statsRow->total ?? 0,
             'pending' => $statsRow->pending ?? 0,
             'ongoing' => $statsRow->ongoing ?? 0,
             'completed' => $statsRow->completed ?? 0,
-            'assets' => \App\Models\InventoryAsset::where('assigned_to_user', $user->id)->count(),
+            'assets' => $assetCount,
         ];
 
-        $hasAssignedAssets = $stats['assets'] > 0;
+        $hasAssignedAssets = $assetCount > 0;
 
-        // Warranty alerts — handle missing column gracefully
-        try {
-            $myAssetsQuery = \App\Models\InventoryAsset::where('assigned_to_user', $user->id);
-            $warrantyExpiring = (clone $myAssetsQuery)->whereNotNull('warranty_expiration')
-                ->where('warranty_expiration', '>=', now())
-                ->where('warranty_expiration', '<=', now()->addDays(30))->limit(5)->get();
-            $warrantyExpired = (clone $myAssetsQuery)->whereNotNull('warranty_expiration')
-                ->where('warranty_expiration', '<', now())->limit(5)->get();
-        } catch (\Exception $e) {
-            $warrantyExpiring = collect();
-            $warrantyExpired = collect();
-        }
+        // Optimized: Skip warranty alerts for regular users to speed up dashboard load
+        // Warranty alerts are more relevant for admin/IT users
+        $warrantyExpiring = collect();
+        $warrantyExpired = collect();
 
         return view('dashboard.user', compact('requests', 'stats', 'hasAssignedAssets', 'warrantyExpiring', 'warrantyExpired'));
     }

@@ -159,48 +159,61 @@
         </a>
     </div>
 
-    <div class="session-info-box">
-        <div>
-            <div class="session-info-label">
-                <i class="fa-solid fa-clipboard-check"></i>
-                @if($session->status === 'Ongoing') Ongoing Physical Count @else Completed Count @endif
+    <div class="polish-card">
+        <div class="card-header-accent" style="flex-direction:column;align-items:stretch;gap:14px;">
+            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <div>
+                    <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;">
+                        <i class="fa-solid fa-clipboard-check"></i>
+                        @if($session->status === 'Ongoing') Ongoing Physical Count @else Completed Count @endif
+                    </div>
+                    <div style="font-size:13px;color:#1e293b;margin-top:2px;">
+                        Started {{ $session->started_at->format('M d, Y h:i A') }} by {{ $session->startedBy->full_name ?? 'Unknown' }}
+                        @if($session->completed_at)
+                            &middot; Completed {{ $session->completed_at->format('M d, Y h:i A') }}
+                        @endif
+                    </div>
+                </div>
+                <div style="display:flex;gap:8px;align-items:center;">
+                    @if($session->status !== 'Ongoing')
+                        <a href="{{ route('physical-count.export', $session->id) }}" class="btn-secondary btn-secondary-sm">
+                            <i class="fa-solid fa-download"></i> Export CSV
+                        </a>
+                        <a href="{{ route('physical-count.print', $session->id) }}" class="btn-secondary btn-secondary-sm" target="_blank">
+                            <i class="fa-solid fa-print"></i> Print Report
+                        </a>
+                    @endif
+                </div>
             </div>
-            <div class="session-info-text">
-                Started {{ $session->started_at->format('M d, Y h:i A') }} by {{ $session->startedBy->full_name ?? 'Unknown' }}
-                @if($session->completed_at)
-                    &middot; Completed {{ $session->completed_at->format('M d, Y h:i A') }}
-                @endif
-            </div>
-        </div>
-        <div class="session-actions-wrap">
-            @if($session->status === 'Ongoing')
+            <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                <h4 class="card-h4">
+                    <i class="fa-solid fa-list"></i> Asset List
+                </h4>
+                @if($session->status === 'Ongoing')
                 <form id="completeSessionForm" method="POST" action="{{ route('physical-count.complete', $session->id) }}" class="inline-form">
                     @csrf
-                    <button type="submit" class="btn-success"><i class="fa-solid fa-check"></i> Complete Session</button>
+                    <button type="submit" class="btn-success" style="padding:8px 18px;font-size:12px;"><i class="fa-solid fa-check"></i> Complete Session</button>
                 </form>
-            @else
-                <a href="{{ route('physical-count.export', $session->id) }}" class="btn-secondary btn-secondary-sm">
-                    <i class="fa-solid fa-download"></i> Export CSV
-                </a>
-                <a href="{{ route('physical-count.print', $session->id) }}" class="btn-secondary btn-secondary-sm" target="_blank">
-                    <i class="fa-solid fa-print"></i> Print Report
-                </a>
-            @endif
-        </div>
-    </div>
-
-    <div class="stats-bar">
-        <div class="stat-box"><p>Total Assets</p><h3>{{ $summary['total'] }}</h3></div>
-        <div class="stat-box stat-box-blue"><p>Counted</p><h3 class="stat-value-blue">{{ $summary['counted'] }}</h3></div>
-        <div class="stat-box stat-box-green"><p>Operational</p><h3 class="stat-value-green">{{ $summary['present'] }}</h3></div>
-        <div class="stat-box stat-box-red"><p>Non-Operational</p><h3 class="stat-value-red">{{ $summary['missing'] + $summary['damaged'] }}</h3></div>
-    </div>
-
-    <div class="polish-card">
-        <div class="card-header-accent">
-            <h4 class="card-h4">
-                <i class="fa-solid fa-list"></i> Asset List
-            </h4>
+                @endif
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+                <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
+                    <p style="margin:0;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;">Total Assets</p>
+                    <h3 style="margin:4px 0 0;font-size:24px;font-weight:800;color:#1e293b;">{{ $summary['total'] }}</h3>
+                </div>
+                <div style="background:#eff6ff;border:1px solid #dbeafe;border-radius:8px;padding:10px;text-align:center;">
+                    <p style="margin:0;font-size:10px;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.3px;">Counted</p>
+                    <h3 style="margin:4px 0 0;font-size:24px;font-weight:800;color:#1d4ed8;">{{ $summary['counted'] }}</h3>
+                </div>
+                <div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:10px;text-align:center;">
+                    <p style="margin:0;font-size:10px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:0.3px;">Operational</p>
+                    <h3 style="margin:4px 0 0;font-size:24px;font-weight:800;color:#16a34a;">{{ $summary['present'] }}</h3>
+                </div>
+                <div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:10px;text-align:center;">
+                    <p style="margin:0;font-size:10px;font-weight:800;color:#dc2626;text-transform:uppercase;letter-spacing:0.3px;">Non-Ops</p>
+                    <h3 style="margin:4px 0 0;font-size:24px;font-weight:800;color:#dc2626;">{{ $summary['missing'] + $summary['damaged'] }}</h3>
+                </div>
+            </div>
         </div>
         <div class="card-body-content">
             @if($session->status === 'Ongoing')

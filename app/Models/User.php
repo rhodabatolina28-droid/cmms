@@ -89,7 +89,7 @@ class User extends Authenticatable
     // Helpers
     public function isAdmin()
     {
-        return $this->role === 'admin';
+        return $this->role === 'admin' || $this->role === 'supply_officer';
     }
 
     public function isSuperAdmin()
@@ -112,12 +112,17 @@ class User extends Authenticatable
         return $this->isAdmin();
     }
 
+    public function isSupplyOfficer(): bool
+    {
+        return $this->role === 'supply_officer';
+    }
+
     public function canProcessSupply(): bool
     {
         // Supply admin must be:
-        // 1. Admin role
+        // 1. Admin or supply_officer role
         // 2. Has can_supply flag
-        return $this->isAdmin() && $this->can_supply;
+        return ($this->isAdmin() || $this->isSupplyOfficer()) && $this->can_supply;
     }
 
     /** Named route for role dashboard (e.g. dashboard.admin). */
@@ -125,6 +130,7 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'admin' => 'dashboard.admin',
+            'supply_officer' => 'dashboard.admin',
             'super_admin' => 'dashboard.super-admin',
             'it' => 'dashboard.it',
             default => 'dashboard.user',
@@ -135,6 +141,7 @@ class User extends Authenticatable
     {
         return match ($this->role) {
             'admin' => '/dashboard/admin',
+            'supply_officer' => '/dashboard/admin',
             'super_admin' => '/dashboard/super-admin',
             'it' => '/dashboard/it',
             default => '/dashboard/user',
@@ -143,6 +150,6 @@ class User extends Authenticatable
 
     public static function assignableRoles(): array
     {
-        return ['user', 'admin', 'super_admin', 'it'];
+        return ['user', 'admin', 'supply_officer', 'super_admin', 'it'];
     }
 }

@@ -17,7 +17,7 @@ class PersonnelController extends Controller
         $user = Auth::user();
         $query = User::query();
 
-        if ($user->role === 'admin') {
+        if ($user->role === 'admin' || $user->role === 'supply_officer') {
             // Division admin: scope to their branch AND office (division-level)
             if ($user->branch) {
                 $query->where('branch', $user->branch);
@@ -48,7 +48,7 @@ class PersonnelController extends Controller
         }
 
         // Admin (including supply officer): division-specific lang sa personnel management
-        if ($actor->role === 'admin' && $actor->office && $user->office !== $actor->office) {
+        if (($actor->role === 'admin' || $actor->role === 'supply_officer') && $actor->office && $user->office !== $actor->office) {
             return response()->json(['error' => 'Unauthorized - outside division'], 403);
         }
 
@@ -78,7 +78,7 @@ class PersonnelController extends Controller
         $user = User::findOrFail($id);
         $actor = Auth::user();
         
-        if ($actor->role === 'admin') {
+        if ($actor->role === 'admin' || $actor->role === 'supply_officer') {
             if ($user->office !== $actor->office) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
@@ -136,7 +136,7 @@ class PersonnelController extends Controller
         $validated = $request->validate([
             'full_name'  => 'required|string|max:255',
             'email'      => 'required|email|unique:users,email',
-            'role'       => 'required|in:' . implode(',', array_diff(config('roles.list', ['user','admin','it']), ['super_admin'])),
+            'role'       => 'required|in:' . implode(',', array_diff(config('roles.list', ['user','admin','it']), ['super_admin', 'supply_officer'])),
             'position'   => 'nullable|string',
             'branch'     => 'nullable|string',
             'office'     => 'nullable|string',
@@ -149,7 +149,7 @@ class PersonnelController extends Controller
         $validated['is_active'] = true;
 
         // Admin can ONLY create users in their own division (common sense)
-        if ($actor->role === 'admin') {
+        if ($actor->role === 'admin' || $actor->role === 'supply_officer') {
             $validated['region'] = $actor->region;
             $validated['branch'] = $actor->branch;
             $validated['office'] = $actor->office;  // FORCE same division

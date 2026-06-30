@@ -13,6 +13,7 @@ return [
     'list' => [
         'super_admin',
         'admin',
+        'supply_officer',
         'it',
         'user',
     ],
@@ -20,6 +21,7 @@ return [
     'labels' => [
         'super_admin'    => 'Super Admin (IT)',
         'admin'          => 'Division Admin',
+        'supply_officer' => 'Supply Officer / Admin (Administrative Div.)',
         'it'             => 'IT Personnel',
         'user'           => 'End User',
     ],

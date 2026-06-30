@@ -39,8 +39,8 @@ class ICTRequestController extends Controller
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
             }
             return view('requests.index', compact('requests'));
-        } elseif ($user->role === 'admin' || $user->role === 'super_admin') {
-            if ($user->role === 'admin') {
+        } elseif ($user->role === 'admin' || $user->role === 'supply_officer' || $user->role === 'super_admin') {
+            if ($user->role === 'admin' || $user->role === 'supply_officer') {
                 // Admin is division-scoped - sees requests from their division only
                 $query->whereHas('user', function($q) use ($user) {
                     if ($user->branch) {

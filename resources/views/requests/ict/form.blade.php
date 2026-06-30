@@ -178,7 +178,7 @@
             }
         @endphp
 
-        @if(!empty($canAssignIt) && $isUpdate && Auth::user()->role === 'super_admin')
+        @if(!empty($canAssignIt) && $isUpdate && Auth::user()->role === 'super_admin' && (!$request->assigned_to || (int)$request->assigned_to !== (int)Auth::user()->id))
         <div id="assignItPanel" class="ict-assign-panel">
             <div class="ict-assign-inner">
                 <div class="ict-assign-left">
@@ -478,20 +478,37 @@
                     <div class="form-col">
                         <div class="form-group compact">
                             <label>RECEIVED by:</label>
-                            <div class="form-row compact-row">
-                                <div class="form-col">
-                                    <label class="inline-label">LAST NAME</label>
-                                    <input type="text" id="itReceivedLastName" name="itReceivedLastName" value="{{ $repairRequest->it_received_last_name ?? '' }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                @php
+                                    $autoItName = '';
+                                    $autoItLastName = '';
+                                    $autoItFirstName = '';
+                                    $autoItMiddleName = '';
+                                    if ($canEditTechnician && empty($repairRequest->it_received_last_name)) {
+                                        $autoItName = Auth::user()->full_name;
+                                        $nameParts = explode(' ', trim($autoItName));
+                                        $autoItLastName = count($nameParts) > 1 ? array_pop($nameParts) : $autoItName;
+                                        $autoItMiddleName = '';
+                                        if (count($nameParts) > 1) {
+                                            $middleWord = array_pop($nameParts);
+                                            $autoItMiddleName = $middleWord;
+                                        }
+                                        $autoItFirstName = count($nameParts) > 0 ? implode(' ', $nameParts) : '';
+                                    }
+                                @endphp
+                                <div class="form-row compact-row">
+                                    <div class="form-col">
+                                        <label class="inline-label">LAST NAME</label>
+                                        <input type="text" id="itReceivedLastName" name="itReceivedLastName" value="{{ $repairRequest->it_received_last_name ?? $autoItLastName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                    </div>
+                                    <div class="form-col">
+                                        <label class="inline-label">FIRST NAME</label>
+                                        <input type="text" id="itReceivedFirstName" name="itReceivedFirstName" value="{{ $repairRequest->it_received_first_name ?? $autoItFirstName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                    </div>
                                 </div>
-                                <div class="form-col">
-                                    <label class="inline-label">FIRST NAME</label>
-                                    <input type="text" id="itReceivedFirstName" name="itReceivedFirstName" value="{{ $repairRequest->it_received_first_name ?? '' }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                <div class="form-group compact ict-mt-8">
+                                    <input type="text" id="itReceivedMiddleName" name="itReceivedMiddleName"
+                                        placeholder="MIDDLE NAME" value="{{ $repairRequest->it_received_middle_name ?? $autoItMiddleName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                                 </div>
-                            </div>
-                            <div class="form-group compact ict-mt-8">
-                                <input type="text" id="itReceivedMiddleName" name="itReceivedMiddleName"
-                                    placeholder="MIDDLE NAME" value="{{ $repairRequest->it_received_middle_name ?? '' }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
-                            </div>
                         </div>
 
                         <div class="form-group compact">
@@ -743,7 +760,7 @@
                                 </div>
                                 <div class="signature-line"></div>
                                 <input type="text" id="itPersonnelPrintedName" name="itPersonnelPrintedName"
-                                    placeholder="Printed Name" class="signature-name-input" value="{{ $repairRequest->it_personnel_printed_name ?? '' }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                    placeholder="Printed Name" class="signature-name-input" value="{{ $repairRequest->it_personnel_printed_name ?? ($canEditTechnician ? Auth::user()->full_name : '') }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                             </div>
                         </div>
                     </div>
