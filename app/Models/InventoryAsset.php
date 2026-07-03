@@ -11,6 +11,36 @@ class InventoryAsset extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'inventory_assets';
+
+    /**
+     * Boot the model and enforce status integrity.
+     * Active assets MUST have an assigned user. If unassigned, auto-convert to Spare.
+     * Spare assets with an assigned user auto-convert to Active.
+     * This prevents data inconsistency across all locations (regions/branches).
+     */
+    protected static function booted(): void
+    {
+        static::saving(function ($asset) {
+            if ($asset->status === 'Disposed') {
+                $asset->status = 'For Disposal';
+                $asset->assigned_to_user = null;
+            }
+
+            // Never override locked statuses
+            $preservedStatuses = ['Defective', 'For Repair', 'Scrapped', 'For Disposal'];
+
+            if (!in_array($asset->status, $preservedStatuses, true)) {
+                // Active without user = Spare
+                if (empty($asset->assigned_to_user) && $asset->status === 'Active') {
+                    $asset->status = 'Spare';
+                }
+                // Spare with user = Active
+                if (!empty($asset->assigned_to_user) && $asset->status === 'Spare') {
+                    $asset->status = 'Active';
+                }
+            }
+        });
+    }
     protected $primaryKey = 'asset_id';
     
     protected $appends = ['is_depreciated', 'warranty_status'];

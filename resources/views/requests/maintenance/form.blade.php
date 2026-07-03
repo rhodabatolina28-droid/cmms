@@ -285,7 +285,22 @@
                         <div id="suggestionSection" class="{{ (!$isAdmin || $viewMode) ? 'disabled-section' : '' }}">
                             <div class="section-label">SUGGESTION/RECOMMENDATION</div>
                             <div class="checkbox-group-minimal">
-                                <label><input type="checkbox" name="for_disposal" value="YES" {{ ($maintenance->for_disposal ?? '') == 'YES' ? 'checked' : '' }}> FOR DISPOSAL</label>
+                                <label><input type="checkbox" name="for_disposal" id="forDisposalCheck" value="YES" {{ ($maintenance->for_disposal ?? '') == 'YES' ? 'checked' : '' }}> FOR DISPOSAL</label>
+                            </div>
+                            <div id="disposalAssetSelector" class="input-group" style="display: {{ ($maintenance->for_disposal ?? '') == 'YES' ? 'block' : 'none' }};">
+                                <label>SELECT ASSET TO DISPOSE</label>
+                                <select name="disposal_asset_id" class="minimal-input">
+                                    <option value="">-- Select Asset --</option>
+                                    @foreach($myAssets ?? [] as $asset)
+                                        <option value="{{ $asset->asset_id }}" 
+                                            data-name="{{ $asset->item_name }}" 
+                                            data-sn="{{ $asset->serial_number }}"
+                                            {{ ($maintenance->disposal_asset_id ?? '') == $asset->asset_id ? 'selected' : '' }}>
+                                            {{ $asset->item_name }} ({{ $asset->serial_number }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="hint">Select the specific asset to be disposed from this user's assigned equipment.</div>
                             </div>
                             <div class="input-group">
                                 <label>REASON FOR DISPOSAL</label>
@@ -866,8 +881,18 @@
                         🖨️ Print / Download PDF
                     </a>
                 @endif
+                @if($request && $request->status === 'Completed' && ($maintenance->for_disposal ?? '') === 'YES')
+                    <a href="{{ route('maintenance.disposal-tag', $request->id) }}" target="_blank"
+                       class="pdf-download-link" style="background:#dc2626; margin-left:10px;">
+                        🗑️ Print Disposal Tag
+                    </a>
+                @endif
             </div>
+            @if(isset($request) && $request && $request->is_auto_generated)
+            <a href="{{ route('pm-schedules.orders') }}" class="btn-back-link">← Back to PM Work Orders</a>
+            @else
             <a href="{{ route('maintenance.index') }}" class="btn-back-link">← Back to Maintenance List</a>
+            @endif
 
         </form>
     </div>
@@ -944,6 +969,18 @@
                 // Prevent scrolling while signing
                 canvas.style.touchAction = 'none';
             });
+
+            // FOR DISPOSAL checkbox toggle
+            const forDisposalCheck = document.getElementById('forDisposalCheck');
+            const disposalAssetSelector = document.getElementById('disposalAssetSelector');
+            if (forDisposalCheck && disposalAssetSelector) {
+                forDisposalCheck.addEventListener('change', function() {
+                    disposalAssetSelector.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="disposal_asset_id"]').value = '';
+                    }
+                });
+            }
 
             // AJAX Form Submission
             const form = document.getElementById('pmForm');

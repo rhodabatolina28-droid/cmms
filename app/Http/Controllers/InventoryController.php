@@ -144,16 +144,8 @@ class InventoryController extends Controller
             }
         }
 
-        // Auto-enforce status integrity
-        // Only flip between Active/Spare — never override Defective/For Repair/Scrapped
-        $preservedStatuses = ['Defective', 'For Repair', 'Scrapped'];
-        if (!in_array($validated['status'], $preservedStatuses, true)) {
-            if (!empty($validated['assigned_to_user']) && $validated['status'] === 'Spare') {
-                $validated['status'] = 'Active';
-            } elseif (empty($validated['assigned_to_user']) && $validated['status'] === 'Active') {
-                $validated['status'] = 'Spare';
-            }
-        }
+        // Auto-enforce status integrity is now handled by InventoryAsset model event (booted())
+        // This applies to all saves across all locations/regions
 
         // Auto-generate PAR only when asset is assigned to a custodian
         if (!empty($validated['assigned_to_user'])) {

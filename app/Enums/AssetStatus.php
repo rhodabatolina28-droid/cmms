@@ -10,6 +10,7 @@ class AssetStatus
     const FOR_REPAIR = 'For Repair';
     const FOR_DISPOSAL = 'For Disposal';
     const SCRAPPED = 'Scrapped';
+    const DISPOSED = 'Disposed';
 
     const ALL = [
         self::ACTIVE,
@@ -23,5 +24,6 @@ class AssetStatus
     const LOCKED = [
         self::SCRAPPED,
         self::FOR_DISPOSAL,
+        self::DISPOSED,
     ];
 }

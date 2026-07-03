@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\PMSchedule;
 use App\Models\PMScheduleHistory;
+use App\Models\PMCycle;
 use App\Models\AuditLog;
 use App\Services\GeneratePMScheduleService;
 use Illuminate\Http\Request;
@@ -26,83 +27,97 @@ class PMScheduleController extends Controller
         
         // Calculate progress for each schedule
         $schedules->each(function ($schedule) {
-            $yearMonth = now()->format('Y-m');
-            $totalUsers = \App\Models\InventoryAsset::whereIn('status', ['Active', 'Spare'])
-                ->whereNotNull('assigned_to_user')
-                ->when($schedule->division_filter, function ($q) use ($schedule) {
-                    $divisionMappings = [
-                        'RID' => ['RESEARCH AND INFORMATION', 'RID'],
-                        'AD' => ['ADMINISTRATIVE', 'AD'],
-                        'FMD' => ['FINANCIAL AND MANAGEMENT', 'FMD'],
-                        'COA' => ['COMMISSION ON AUDIT', 'COA'],
-                        'CMD' => ['CONCILIATION AND MEDIATION', 'CMD'],
-                        'VAD' => ['VOLUNTARY ARBITRATION', 'VAD'],
-                        'WRED' => ['WORKPLACE RELATIONS', 'WRED'],
-                        'OED' => ['EXECUTIVE DIRECTOR', 'OED'],
-                    ];
-                    $keywords = $divisionMappings[$schedule->division_filter] ?? [$schedule->division_filter];
-                    $q->where(function ($q2) use ($keywords) {
-                        foreach ($keywords as $kw) {
-                            $q2->orWhere('department', 'LIKE', "%{$kw}%")
-                               ->orWhere('office', 'LIKE', "%{$kw}%");
-                        }
-                    });
-                })
-                ->distinct('assigned_to_user')
-                ->count('assigned_to_user');
-            
-            $completedUsers = \App\Models\Request::where('pm_schedule_id', $schedule->id)
-                ->where('is_auto_generated', true)
-                ->where('status', 'Completed')
-                ->distinct('user_id')
-                ->count('user_id');
-            
-            $schedule->total_users = $totalUsers;
-            $schedule->completed_users = $completedUsers;
-            $schedule->progress_percentage = $totalUsers > 0 ? round(($completedUsers / $totalUsers) * 100) : 0;
+            $completedDivisions = 0;
+
+            if ($schedule->current_cycle_id) {
+                // Total = distinct divisions that have ANY auto-generated PM request in this cycle
+                $activeCycle = \App\Models\PMCycle::find($schedule->current_cycle_id);
+                $cycleStart  = $activeCycle?->started_at ?? now();
+
+                $totalDivisions = \App\Models\Request::where('pm_schedule_id', $schedule->id)
+                    ->where('is_auto_generated', true)
+                    ->where('created_at', '>=', $cycleStart)
+                    ->distinct('office')
+                    ->count('office');
+
+                // Completed = divisions recorded in pm_division_schedules for this cycle
+                $completedDivisions = \App\Models\PMDivisionSchedule::where('pm_cycle_id', $schedule->current_cycle_id)
+                    ->whereNotNull('last_completed_at')
+                    ->count();
+
+                // If no requests yet, fall back to counting active-asset divisions
+                if ($totalDivisions === 0) {
+                    $totalDivisions = \App\Models\InventoryAsset::where('status', 'Active')
+                        ->whereNotNull('assigned_to_user')
+                        ->distinct('office')
+                        ->count('office');
+                }
+            } else {
+                // Idle — count all active-asset divisions as baseline
+                $totalDivisions = \App\Models\InventoryAsset::where('status', 'Active')
+                    ->whereNotNull('assigned_to_user')
+                    ->distinct('office')
+                    ->count('office');
+            }
+
+            // Fallback
+            if ($totalDivisions === 0) {
+                $totalDivisions = 1;
+            }
+
+            $schedule->total_divisions     = $totalDivisions;
+            $schedule->completed_divisions = min($completedDivisions, $totalDivisions);
+
+            if (is_null($schedule->current_focus_division) && is_null($schedule->current_cycle_id) && $completedDivisions > 0) {
+                // Cycle just finished
+                $schedule->progress_percentage = 100;
+            } elseif (is_null($schedule->current_focus_division) && $schedule->current_cycle_id === null) {
+                $schedule->progress_percentage = 0; // idle/not started
+            } else {
+                $schedule->progress_percentage = $totalDivisions > 0
+                    ? round(($completedDivisions / $totalDivisions) * 100)
+                    : 0;
+            }
         });
 
-        $user = Auth::user();
-        $yearMonth = now()->format('Y-m');
-
-        $generatedQuery = \App\Models\Request::where('type', 'Preventive Maintenance')
+        $user = \Illuminate\Support\Facades\Auth::user();
+        // Top Dashboard Stats
+        $statTotalSchedules = \App\Models\PMSchedule::count();
+        $statActiveSchedules = \App\Models\PMSchedule::where('is_active', true)->count();
+        
+        $statActiveWorkOrders = \App\Models\Request::where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true)
-            ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$yearMonth]);
-
-        $completedQuery = \App\Models\Request::where('type', 'Preventive Maintenance')
+            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature'])
+            ->count();
+            
+        $statCompletedThisMonth = \App\Models\Request::where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true)
             ->where('status', 'Completed')
-            ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [$yearMonth]);
-
-        if ($user && $user->branch) {
-            $generatedQuery->where('branch', $user->branch);
-            $completedQuery->where('branch', $user->branch);
-        }
-
-        $generatedThisCycle = $generatedQuery->count();
-        $completedThisCycle = $completedQuery->count();
-
-        $pendingQuery = \App\Models\Request::where('type', 'Preventive Maintenance')
-            ->where('is_auto_generated', true)
-            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature']);
-
-        if ($user && $user->branch) {
-            $pendingQuery->where('branch', $user->branch);
-        }
-
-        $pendingCompletion = $pendingQuery->count();
+            ->whereRaw("DATE_FORMAT(created_at, '%Y-%m') = ?", [now()->format('Y-m')])
+            ->count();
 
         $workOrderQuery = \App\Models\Request::with(['user', 'assignedTo', 'maintenanceRequest'])
             ->where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true)
-            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature']); // Only show active orders
+            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature']);
 
         if ($user && $user->branch) {
             $workOrderQuery->where('branch', $user->branch);
         }
 
-        $workOrders = $workOrderQuery->limit(15)->get();
-        
+        // Index page shows CURRENT FOCUS DIVISION only (dashboard widget).
+        // For full paginated list → /pm-schedules/orders
+        $activeSchedule = PMSchedule::active()->first();
+        $currentFocus = $activeSchedule?->current_focus_division;
+        if ($currentFocus) {
+            $workOrderQuery->where('office', $currentFocus);
+        }
+
+        // Total count for "View All" badge
+        $totalActiveWorkOrderCount = (clone $workOrderQuery)->count();
+
+        $workOrders = $workOrderQuery->limit(20)->get();
+
         // Get oldest asset date for each work order's end user
         $userIds = $workOrders->pluck('user_id')->unique()->filter();
         $oldestAssets = \App\Models\InventoryAsset::whereIn('assigned_to_user', $userIds)
@@ -118,13 +133,13 @@ class PMScheduleController extends Controller
             $order->schedule_date = $order->maintenanceRequest?->maintenance_date ?? $order->created_at->toDateString();
             $order->oldest_asset_date = $oldestAssets[$order->user_id] ?? null;
         }
-        
+
         // Sort by oldest asset date (oldest first)
         $workOrders = $workOrders->sortBy(function ($order) {
             return $order->oldest_asset_date ? \Carbon\Carbon::parse($order->oldest_asset_date)->timestamp : PHP_INT_MAX;
-        })->take(10)->values();
-        
-        // Dynamic priority: assign based on position in sorted list (no hardcoded months)
+        })->values();
+
+        // Dynamic priority
         $total = $workOrders->count();
         $workOrders->each(function ($order, $index) use ($total) {
             $percentile = $total > 1 ? ($index / ($total - 1)) : 0;
@@ -137,15 +152,16 @@ class PMScheduleController extends Controller
             }
         });
 
-        // Get current focus division from the first active schedule
+        // Get current focus division directly from DB (most reliable source of truth)
         $focusDivision = null;
-        $activeSchedule = PMSchedule::active()->first();
         if ($activeSchedule) {
-            $queueStatus = $this->pmService->getQueueStatus($activeSchedule);
-            $focusDivision = $queueStatus['focus_division'] ?? null;
+            $focusDivision = $activeSchedule->current_focus_division;
         }
-
-        return view('pm-schedules.index', compact('schedules', 'generatedThisCycle', 'completedThisCycle', 'pendingCompletion', 'workOrders', 'focusDivision'));
+        return view('pm-schedules.index', compact(
+            'schedules', 'workOrders', 'focusDivision', 'activeSchedule',
+            'statTotalSchedules', 'statActiveSchedules', 'statActiveWorkOrders', 'statCompletedThisMonth',
+            'totalActiveWorkOrderCount'
+        ));
     }
 
     public function create()
@@ -160,6 +176,24 @@ class PMScheduleController extends Controller
             'division_filter' => 'nullable|string|max:50',
             'frequency'       => 'required|in:Monthly,Quarterly,Semi-annual,Annual',
         ]);
+
+        // Enforce one active PM schedule per branch.
+        // Government CMMS only needs one standardized schedule per branch/office.
+        // Prevent accidental duplicate active schedules which would cause
+        // the cron to silently skip the second one (active()->first() issue).
+        $actorBranch = Auth::user()?->branch;
+        $existingActive = PMSchedule::active()
+            ->when($actorBranch, function ($q) use ($actorBranch) {
+                // Check schedules created by users in the same branch
+                $q->whereHas('creator', fn($u) => $u->where('branch', $actorBranch));
+            })
+            ->first();
+
+        if ($existingActive) {
+            return redirect()->back()
+                ->withInput()
+                ->with('error', "An active PM Schedule already exists for your branch: \"{$existingActive->schedule_name}\". Please deactivate or delete it before creating a new one.");
+        }
 
         $schedule = PMSchedule::create([
             'schedule_name'      => $validated['schedule_name'],
@@ -177,7 +211,100 @@ class PMScheduleController extends Controller
     public function show(PMSchedule $pmSchedule)
     {
         $pmSchedule->load(['creator', 'history']);
-        return view('pm-schedules.show', compact('pmSchedule'));
+        
+        $pmDivisions = [];
+        $pmTotalPending = 0;
+        $pmTotalCompleted = 0;
+
+        $focusDivision = $pmSchedule->current_focus_division;
+        
+        // Calculate PM Divisions progress
+        $assets = \App\Models\InventoryAsset::where('status', 'Active')
+            ->whereNotNull('assigned_to_user')
+            ->get();
+        
+        $usersByDivision = [];
+        foreach ($assets as $asset) {
+            $div = $asset->office ?? $asset->department ?? 'Unassigned';
+            $usersByDivision[$div][$asset->assigned_to_user] = true;
+        }
+
+        $completedDivisions = collect();
+
+        // If a cycle is currently active, show its division progress
+        // If idle (no active cycle), show the last completed cycle's results
+        $displayCycle = $pmSchedule->current_cycle_id
+            ? \App\Models\PMCycle::find($pmSchedule->current_cycle_id)
+            : \App\Models\PMCycle::where('pm_schedule_id', $pmSchedule->id)
+                ->whereNotNull('completed_at')
+                ->latest('completed_at')
+                ->first();
+
+        if ($displayCycle) {
+            $completedDivisions = \App\Models\PMDivisionSchedule::where('pm_cycle_id', $displayCycle->id)
+                ->whereNotNull('last_completed_at')
+                ->get()
+                ->keyBy('division_name');
+        }
+            
+        $completedUsersQuery = \App\Models\Request::where('pm_schedule_id', $pmSchedule->id)
+            ->where('is_auto_generated', true)
+            ->where('status', 'Completed');
+
+        if ($displayCycle) {
+            $completedUsersQuery->where('created_at', '>=', $displayCycle->started_at);
+        }
+
+        $completedUsersThisWave = $completedUsersQuery->get()
+            ->groupBy('office')
+            ->map(fn($reqs) => $reqs->unique('user_id')->count());
+
+        foreach ($usersByDivision as $div => $users) {
+            $total = count($users);
+            $isCompleted = $completedDivisions->has($div);
+            
+            if ($isCompleted) {
+                $done = $total;
+                $nextScheduleDate = $completedDivisions[$div]->next_scheduled_at ? \Carbon\Carbon::parse($completedDivisions[$div]->next_scheduled_at)->format('M d, Y') : null;
+            } else {
+                $done = $completedUsersThisWave[$div] ?? 0;
+                $nextScheduleDate = null;
+            }
+            
+            $done = min($done, $total);
+            
+            $pmDivisions[$div] = [
+                'total' => $total,
+                'done'  => $done,
+                'next_date' => $nextScheduleDate,
+                'status' => $isCompleted ? 'Completed' : ($focusDivision === $div ? 'In Progress' : 'Pending')
+            ];
+            
+            if ($isCompleted) {
+                $pmTotalCompleted++;
+            } else {
+                $pmTotalPending++;
+            }
+        }
+
+        // Include any divisions that completed this cycle but no longer have active assets
+        foreach ($completedDivisions as $divName => $divRecord) {
+            if (!isset($pmDivisions[$divName])) {
+                $pmDivisions[$divName] = [
+                    'total' => 0,
+                    'done'  => 0,
+                    'next_date' => $divRecord->next_scheduled_at ? \Carbon\Carbon::parse($divRecord->next_scheduled_at)->format('M d, Y') : null,
+                    'status' => 'Completed'
+                ];
+                $pmTotalCompleted++;
+            }
+        }
+        
+        ksort($pmDivisions);
+        
+        return view('pm-schedules.show', compact(
+            'pmSchedule', 'pmDivisions', 'pmTotalPending', 'pmTotalCompleted', 'displayCycle'
+        ));
     }
 
     public function edit(PMSchedule $pmSchedule)
@@ -258,6 +385,17 @@ class PMScheduleController extends Controller
 
         try {
             $created = $this->pmService->generate($pmSchedule);
+
+            // Cooldown signal — cycle just completed, not yet due for new cycle
+            if (isset($created['__cooldown__'])) {
+                $nextDate = \Carbon\Carbon::parse($created['__cooldown__'])->format('F d, Y');
+                return response()->json([
+                    'success' => false,
+                    'message' => "PM cycle is on cooldown. Next generation is allowed on or after {$nextDate}.",
+                    'cooldown_until' => $created['__cooldown__'],
+                ], 422);
+            }
+
             $count = count($created);
 
             return response()->json([
@@ -295,7 +433,7 @@ class PMScheduleController extends Controller
 
         $status = request('status', 'all');
 
-        $query = \App\Models\Request::with(['user', 'assignedTo', 'pmSchedule', 'maintenanceRequest'])
+        $query = \App\Models\Request::with(['user', 'assignedTo', 'maintenanceRequest'])
             ->where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true);
 
@@ -444,19 +582,47 @@ class PMScheduleController extends Controller
                 }
 
                 $created = $this->pmService->generate($schedule);
+                
+                if (isset($created['__cooldown__'])) {
+                    $nextDate = \Carbon\Carbon::parse($created['__cooldown__'])->format('F d, Y');
+                    $results[] = [
+                        'schedule_name' => $schedule->schedule_name,
+                        'message' => "Skipped - on cooldown until {$nextDate}",
+                        'generated' => 0,
+                    ];
+                    AuditLog::log(
+                        'Manual PM Generation Skipped',
+                        'PM Schedule',
+                        "Super admin attempted to generate PM for '{$schedule->schedule_name}' but it is on cooldown until {$nextDate}",
+                        $user->branch ?? 'System'
+                    );
+                    continue;
+                }
+
                 $count = count($created);
                 $totalGenerated += $count;
                 $results[] = [
                     'schedule_name' => $schedule->schedule_name,
                     'generated' => $count,
                 ];
+
+                // Audit log — track manual generation by super admin
+                $division = $schedule->fresh()->current_focus_division ?? 'N/A';
+                AuditLog::log(
+                    'Manual PM Generation',
+                    'PM Schedule',
+                    "Super admin manually generated {$count} PM work order(s) for '{$schedule->schedule_name}' — Division: {$division}",
+                    $user->branch ?? 'System'
+                );
             }
 
             return response()->json([
                 'success' => true,
                 'message' => $totalGenerated > 0 
                     ? "Generated {$totalGenerated} PM request(s) for the next division."
-                    : "No eligible users found. All users may already have PM tickets this cycle.",
+                    : (isset($results[0]) && str_contains($results[0]['message'], 'cooldown') 
+                        ? $results[0]['message'] 
+                        : "No eligible users found or cycle is already complete."),
                 'total_generated' => $totalGenerated,
                 'results' => $results,
             ]);
@@ -527,15 +693,23 @@ class PMScheduleController extends Controller
         }
 
         $schedule->update([
-            'is_active' => false,
-            'cycle_stopped_at' => now(),
+            'is_active'              => true,  // Keep schedule active — only stop the current cycle
+            'is_paused'              => false,
             'current_focus_division' => null,
+            'current_cycle_id'       => null,
+            'cycle_stopped_at'       => now(),
         ]);
 
-        AuditLog::log("Stopped PM Cycle", "PM Schedule",
-            "Stopped PM cycle for {$schedule->schedule_name}", "System");
+        // Mark the current cycle as completed if one exists
+        if ($schedule->current_cycle_id) {
+            \App\Models\PMCycle::where('id', $schedule->current_cycle_id)
+                ->update(['completed_at' => now()]);
+        }
 
-        return response()->json(['success' => true, 'message' => 'PM cycle stopped. Create a new schedule to start again.']);
+        AuditLog::log("Stopped PM Cycle", "PM Schedule",
+            "Stopped PM cycle for {$schedule->schedule_name}. Schedule remains active for next generation.", "System");
+
+        return response()->json(['success' => true, 'message' => 'PM cycle stopped. The schedule is still active — click "Generate PM" to start a new cycle.']);
     }
 
     /**
@@ -549,13 +723,25 @@ class PMScheduleController extends Controller
         }
 
         try {
-            $nextDivision = $this->pmService->checkAndAdvance();
+            $schedule = PMSchedule::active()->first();
+            if (!$schedule) {
+                return response()->json(['success' => false, 'message' => 'No active schedule found.'], 404);
+            }
+
+            [$nextDivision, $cycleComplete] = $this->pmService->checkAndAdvance($schedule);
             
             if ($nextDivision) {
                 return response()->json([
                     'success' => true,
                     'message' => "Advanced to next division: {$nextDivision}",
                     'next_division' => $nextDivision,
+                ]);
+            }
+
+            if ($cycleComplete) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Cycle complete! Next generation will start a new cycle.',
                 ]);
             }
 

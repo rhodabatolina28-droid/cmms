@@ -33,6 +33,7 @@
     .cycle-badge-active { background:#dcfce7; color:#166534; }
     .cycle-badge-paused { background:#fef3c7; color:#92400e; }
     .cycle-badge-idle { background:#f1f5f9; color:#64748b; }
+    .cycle-badge-completed { background:#dbeafe; color:#1e40af; }
     .div-card { border-radius: 8px; padding: 10px 12px; border: 1px solid #e2e8f0; transition: all 0.2s; background: white; }
     .div-card:hover { border-color: #0038A8; }
     .div-card.completed { border-color: #86efac; background: #f0fdf4; }
@@ -161,6 +162,13 @@
             $cyclePaused = $activeSchedule->is_paused;
             if ($cycleDivision) {
                 $cycleStatus = $cyclePaused ? 'paused' : 'active';
+            } elseif ($activeSchedule->current_cycle_id === null && $activeSchedule->cycle_count > 0) {
+                // No active cycle but has completed at least one — last cycle finished
+                $lastCycle = \App\Models\PMCycle::where('pm_schedule_id', $activeSchedule->id)
+                    ->whereNotNull('completed_at')
+                    ->latest('completed_at')
+                    ->first();
+                $cycleStatus = $lastCycle ? 'completed' : 'idle';
             }
         }
     @endphp
@@ -179,20 +187,20 @@
 
         <div class="stats-grid-custom">
             <div class="schedule-card stat-card">
-                <div class="stat-count">{{ $totalSchedules }}</div>
-                <div class="stat-label">Total Schedules</div>
+                <div class="stat-count">{{ $statTotalSchedules }}</div>
+                <div class="stat-label">Total PM Schedules</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count" style="color:#059669;">{{ $activeSchedules }}</div>
+                <div class="stat-count" style="color:#059669;">{{ $statActiveSchedules }}</div>
                 <div class="stat-label">Active Schedules</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count">{{ $totalWorkOrders }}</div>
-                <div class="stat-label">Total Work Orders</div>
+                <div class="stat-count" style="color:#d97706;">{{ $statActiveWorkOrders }}</div>
+                <div class="stat-label">Active Work Orders</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count" style="color:#059669;">{{ $completedWorkOrders }}</div>
-                <div class="stat-label">Completed WOs</div>
+                <div class="stat-count" style="color:#0038A8;">{{ $statCompletedThisMonth }}</div>
+                <div class="stat-label">Completed WOs (This Month)</div>
             </div>
         </div>
 
@@ -203,12 +211,14 @@
                         <h2 class="cycle-title">PM Cycle Control</h2>
                         <span class="cycle-status-badge cycle-badge-{{ $cycleStatus }}">
                             <i class="fa-solid fa-circle" style="font-size:6px;"></i>
-                            {{ $cycleStatus === 'active' ? 'Active' : ($cycleStatus === 'paused' ? 'Paused' : 'Idle') }}
+                            {{ $cycleStatus === 'active' ? 'Active' : ($cycleStatus === 'paused' ? 'Paused' : ($cycleStatus === 'completed' ? 'Cycle Complete' : 'Idle')) }}
                         </span>
                     </div>
                     <p style="margin:4px 0 0;font-size:11px;color:#64748b;">
                         @if($cycleDivision)
                             Currently processing: <strong>{{ $cycleDivision }}</strong>
+                        @elseif($cycleStatus === 'completed')
+                            All divisions done. Ready to start a new cycle.
                         @else
                             No active PM cycle. Click "Generate PM" to start.
                         @endif
@@ -225,44 +235,34 @@
                     @endif
                     <button type="button" id="forceRunBtn" class="btn-control btn-generate" {{ $cycleStatus === 'active' ? 'disabled' : '' }}>
                         <i class="fa-solid fa-{{ $cycleStatus === 'active' ? 'spinner fa-spin' : 'play' }}"></i>
-                        {{ $cycleStatus === 'active' ? 'Processing...' : ($cycleStatus === 'paused' ? 'Paused' : 'Generate PM') }}
+                        @if($cycleStatus === 'active') Processing...
+                        @elseif($cycleStatus === 'paused') Paused
+                        @elseif($cycleStatus === 'completed') Start New Cycle
+                        @else Generate PM
+                        @endif
                     </button>
                 </div>
             </div>
 
-            @if(!empty($pmDivisions))
-            <div class="div-grid-custom">
-                @foreach($pmDivisions as $div => $data)
-                    @php
-                        $isFocus = $div === $cycleDivision;
-                        $isDone = $data['done'] >= $data['total'];
-                        $cardClass = $isDone ? 'completed' : ($isFocus ? 'active' : 'queued');
-                        $icon = $isDone ? '✓' : ($isFocus ? '⟳' : '○');
-                    @endphp
-                    <div class="div-card {{ $cardClass }}">
-                        <div class="div-header">
-                            <strong class="div-name">{{ $icon }} {{ $div }}</strong>
-                            <span class="div-count">{{ $data['done'] }}/{{ $data['total'] }}</span>
-                        </div>
-                        @if($data['total'] > 0)
-                        <div class="div-bar-track">
-                            <div class="div-bar-fill" data-pct="{{ ($data['done']/$data['total'])*100 }}"></div>
-                        </div>
-                        @endif
-                    </div>
-                @endforeach
-            </div>
-            <div class="div-footer-custom">
-                <span>{{ $pmTotalPending ?? 0 }} pending · {{ $pmTotalCompleted ?? 0 }} completed</span>
-                <button type="button" id="refreshStatusBtn" class="btn-control btn-refresh"><i class="fa-solid fa-rotate"></i> Refresh</button>
-            </div>
-            @endif
+
         </div>
     </div>
 
     {{-- WORK ORDERS CARD --}}
     <div class="premium-card">
-        <div class="pm-section-title"><i class="fa-solid fa-clipboard-list"></i> Work Orders</div>
+        <div class="pm-section-title" style="justify-content:space-between;">
+            <span><i class="fa-solid fa-clipboard-list"></i> Work Orders
+                @if(isset($totalActiveWorkOrderCount) && $totalActiveWorkOrderCount > 0)
+                    <span style="background:#0038A8;color:white;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:6px;">{{ $totalActiveWorkOrderCount }}</span>
+                @endif
+                @if($focusDivision)
+                    <span style="color:#64748b;font-size:10px;font-weight:500;margin-left:6px;">— {{ $focusDivision }}</span>
+                @endif
+            </span>
+            <a href="{{ route('pm-schedules.orders') }}" style="font-size:11px;font-weight:700;color:#0038A8;text-decoration:none;">
+                <i class="fa-solid fa-list"></i> View All Work Orders
+            </a>
+        </div>
         @php
             $displayOrders = $focusDivision 
                 ? ($workOrders ?? collect())->filter(function($order) use ($focusDivision) {
@@ -361,13 +361,20 @@
                                 <span class="sched-progress-pct">{{ $schedule->progress_percentage ?? 0 }}%</span>
                             </div>
                             <div class="sched-bar-track">
-                                <div class="sched-bar-fill {{ ($schedule->progress_percentage ?? 0) == 100 ? 'bar-done' : 'bar-pending' }}" data-pct="{{ $schedule->progress_percentage ?? 0 }}"></div>
+                                <div class="sched-bar-fill {{ ($schedule->progress_percentage ?? 0) >= 100 ? 'bar-done' : 'bar-pending' }}" data-pct="{{ $schedule->progress_percentage ?? 0 }}"></div>
                             </div>
-                            <div class="sched-progress-users">{{ $schedule->completed_users ?? 0 }} / {{ $schedule->total_users ?? 0 }} users completed</div>
+                            <div class="sched-progress-users">{{ $schedule->completed_divisions ?? 0 }} / {{ $schedule->total_divisions ?? 0 }} divisions completed</div>
                         </div>
-                        <div class="sched-dates">
-                            <div><strong>Last Run:</strong> {{ $schedule->last_generated_date ? $schedule->last_generated_date->format('M d, Y \a\t h:i A') : '—' }}</div>
-                            <div><strong>Next Run:</strong> {{ $schedule->next_scheduled_date ? \Carbon\Carbon::parse($schedule->next_scheduled_date)->format('M d, Y') : '—' }}</div>
+                        <div style="font-size:11px; color:#475569; margin-top:10px; padding-top:10px; border-top:1px solid #f1f5f9;">
+                            @if($schedule->current_focus_division)
+                                <div><strong>Status:</strong> <span style="color:#0038A8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:9px;"></i> Processing {{ $schedule->current_focus_division }}</span></div>
+                            @elseif(($schedule->completed_divisions ?? 0) >= ($schedule->total_divisions ?? 1) && ($schedule->total_divisions ?? 0) > 0)
+                                <div><strong>Status:</strong> <span style="color:#059669;"><i class="fa-solid fa-check-circle"></i> Cycle Complete</span></div>
+                            @elseif(($schedule->completed_divisions ?? 0) > 0)
+                                <div><strong>Status:</strong> <span style="color:#0038A8;"><i class="fa-solid fa-hourglass-half"></i> In Progress</span></div>
+                            @else
+                                <div><strong>Status:</strong> <span style="color:#64748b;">Idle / Not Started</span></div>
+                            @endif
                         </div>
                     </div>
                 @endforeach
@@ -387,6 +394,11 @@
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
 const PM_SCHEDULES_BASE_URL = '{{ route('pm-schedules.index') }}';
+
+// Set progress bar widths from data-pct attribute
+document.querySelectorAll('.sched-bar-fill[data-pct]').forEach(function(el) {
+    el.style.width = (el.getAttribute('data-pct') || 0) + '%';
+});
 
 // Force Run / Generate PM
 document.getElementById('forceRunBtn')?.addEventListener('click', function () {
@@ -495,7 +507,7 @@ document.getElementById('stopCycleBtn')?.addEventListener('click', function () {
     
     Swal.fire({
         title: 'Stop PM Cycle?',
-        text: 'This will end the entire cycle. Current division will remain as-is.',
+        text: 'This will stop the current cycle. The schedule stays active — you can generate a new cycle anytime.',
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#dc2626',

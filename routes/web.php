@@ -83,6 +83,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::get('/requests/maintenance/{id}', [MaintenanceController::class, 'show'])->name('maintenance.show')->middleware('role:user,it,admin,super_admin');
     Route::get('/requests/maintenance/{id}/edit', [MaintenanceController::class, 'edit'])->name('maintenance.edit')->middleware('role:user,it,admin,super_admin');
     Route::put('/requests/maintenance/{id}', [MaintenanceController::class, 'update'])->name('maintenance.update')->middleware('role:user,it,admin,super_admin', 'throttle:30,1');
+    Route::get('/requests/maintenance/{id}/disposal-tag', [MaintenanceController::class, 'disposalTag'])->name('maintenance.disposal-tag')->middleware('role:it,super_admin');
     Route::delete('/requests/maintenance/{id}', [MaintenanceController::class, 'destroy'])->name('maintenance.destroy')->middleware('role:super_admin', 'throttle:30,1');
     Route::get('/requests/maintenance/{id}/pdf', [MaintenanceController::class, 'downloadPdf'])
         ->middleware('role:user,it,admin,super_admin')

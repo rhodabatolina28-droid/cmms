@@ -816,16 +816,19 @@ class ICTRequestController extends Controller
                 if (!empty($mappedData['after_repair_status']) && $mappedData['after_repair_status'] === 'FOR DISPOSAL') {
                     $asset = $trackingRequest->linkedAsset;
                     if ($asset && !in_array($asset->status, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED, 'Disposed', 'Pending'])) {
+                        // Remove user assignment since asset is being turned over to Supply Officer
+                        $previousUserId = $asset->assigned_to_user;
                         $asset->status = \App\Enums\AssetStatus::FOR_DISPOSAL;
+                        $asset->assigned_to_user = null;
                         $asset->save();
 
                         \App\Models\InventoryHistory::create([
                             'asset_id' => $asset->asset_id,
                             'action' => 'IT Recommended For Disposal',
-                            'previous_user_id' => $asset->assigned_to_user,
-                            'new_user_id' => $asset->assigned_to_user,
+                            'previous_user_id' => $previousUserId,
+                            'new_user_id' => null,
                             'performed_by' => $user->id,
-                            'remarks' => "Asset recommended for disposal via ICT Request form {$trackingRequest->request_number}",
+                            'remarks' => "Asset recommended for disposal via ICT Request form {$trackingRequest->request_number}. Assignment removed - turned over to Supply Officer.",
                         ]);
 
                         AuditLog::log(
@@ -1198,16 +1201,19 @@ class ICTRequestController extends Controller
 
         DB::beginTransaction();
         try {
+            // Remove user assignment since asset is being turned over to Supply Officer
+            $previousUserId = $asset->assigned_to_user;
             $asset->status = \App\Enums\AssetStatus::FOR_DISPOSAL;
+            $asset->assigned_to_user = null;
             $asset->save();
 
             \App\Models\InventoryHistory::create([
                 'asset_id' => $asset->asset_id,
                 'action' => 'IT Recommended For Disposal',
-                'previous_user_id' => $asset->assigned_to_user,
-                'new_user_id' => $asset->assigned_to_user,
+                'previous_user_id' => $previousUserId,
+                'new_user_id' => null,
                 'performed_by' => $user->id,
-                'remarks' => "Asset recommended for disposal via ICT Request {$trackingRequest->request_number}",
+                'remarks' => "Asset recommended for disposal via ICT Request {$trackingRequest->request_number}. Assignment removed - turned over to Supply Officer.",
             ]);
 
             AuditLog::log(

@@ -252,10 +252,10 @@ function renderInventoryTable(assets) {
     tbody.innerHTML = sorted.map(asset => {
         let statusClass = 'sp-active'; 
         if (asset.status === 'Spare') statusClass = 'sp-spare';
-        if (['Defective', 'Scrapped'].includes(asset.status)) statusClass = 'sp-defective';
+        if (asset.status === 'Defective') statusClass = 'sp-defective';
         if (asset.status === 'For Repair') statusClass = 'sp-repair';
         if (asset.status === 'For Disposal') statusClass = 'sp-disposal';
-        if (asset.status === 'Scrapped') statusClass = 'sp-scrapped';
+        if (asset.status === 'Scrapped' || asset.status === 'Disposed') statusClass = 'sp-scrapped';
 
         let rowClass = '';
         if (asset.status === 'For Disposal') rowClass = 'row-disposal';

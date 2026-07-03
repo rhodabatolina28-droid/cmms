@@ -187,28 +187,93 @@
             </div>
             <div class="info-item">
                 <div class="info-label">Last Generated</div>
-                <div class="info-value">{{ $pmSchedule->last_generated_date ? $pmSchedule->last_generated_date->format('M d, Y') : 'Not yet generated' }}</div>
+                <div class="info-value">
+                    @php
+                        $lastCycle = $pmSchedule->cycles()->latest('started_at')->first();
+                    @endphp
+                    {{ $lastCycle ? $lastCycle->started_at->format('M d, Y') : 'Not yet generated' }}
+                </div>
             </div>
             <div class="info-item">
                 <div class="info-label">Next Scheduled</div>
-                <div class="info-value">{{ $pmSchedule->next_scheduled_date ? $pmSchedule->next_scheduled_date->format('M d, Y') : '—' }}</div>
+                <div class="info-value">
+                    @php
+                        $soonestNext = \App\Models\PMDivisionSchedule::where('pm_schedule_id', $pmSchedule->id)
+                            ->whereNotNull('next_scheduled_at')
+                            ->min('next_scheduled_at');
+                    @endphp
+                    {{ $soonestNext ? \Carbon\Carbon::parse($soonestNext)->format('M d, Y') : '—' }}
+                </div>
             </div>
         </div>
     </div>
 
     {{-- Queue Monitor --}}
     <div class="premium-card" style="padding: 28px; margin-bottom: 40px;">
-        <div class="monitor-header">
-            <h3 class="monitor-title">
-                <i class="fa-solid fa-chart-line"></i> Queue Status
-            </h3>
-            <span id="queueLoading" class="monitor-status">Loading...</span>
-        </div>
-        <div id="queueContent">
-            <div id="queueSummary" class="summary-grid"></div>
-            <div id="queueDivisions"></div>
-            <div id="queueNextUser" class="next-user-box"></div>
-        </div>
+        @if($pmSchedule->current_focus_division)
+            <div class="monitor-header">
+                <h3 class="monitor-title">
+                    <i class="fa-solid fa-chart-line"></i> Queue Status
+                </h3>
+                <span id="queueLoading" class="monitor-status">Loading...</span>
+            </div>
+            <div id="queueContent">
+                <div id="queueSummary" class="summary-grid"></div>
+                <div id="queueDivisions"></div>
+                <div id="queueNextUser" class="next-user-box"></div>
+            </div>
+        @else
+            <div class="monitor-header">
+                <h3 class="monitor-title">
+                    Division PM Status
+                </h3>
+                <span class="monitor-status">
+                    {{ $pmTotalCompleted }} Completed Divisions
+                </span>
+            </div>
+            <div style="overflow-x:auto; margin-top: 16px;">
+                <table style="width:100%; border-collapse:collapse; text-align:left; font-size:13px;">
+                    <thead>
+                        <tr style="border-bottom:2px solid #e2e8f0; color:#64748b;">
+                            <th style="padding:12px; font-weight:700;">Division</th>
+                            <th style="padding:12px; font-weight:700;">Status</th>
+                            <th style="padding:12px; font-weight:700;">Progress</th>
+                            <th style="padding:12px; font-weight:700;">Next Scheduled Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @forelse($pmDivisions as $div => $data)
+                            @php
+                                $isDone = $data['status'] === 'Completed';
+                                $isFocus = $data['status'] === 'In Progress';
+                                $statusColor = $isDone ? '#166534' : ($isFocus ? '#1e40af' : '#64748b');
+                                $statusBg = $isDone ? '#dcfce7' : ($isFocus ? '#dbeafe' : '#f1f5f9');
+                            @endphp
+                            <tr style="border-bottom:1px solid #f1f5f9;">
+                                <td style="padding:12px; font-weight:600; color:#1e293b;">
+                                    {{ $div }}
+                                </td>
+                                <td style="padding:12px;">
+                                    <span style="background:{{ $statusBg }}; color:{{ $statusColor }}; padding:4px 10px; border-radius:20px; font-size:11px; font-weight:700;">
+                                        {{ $data['status'] }}
+                                    </span>
+                                </td>
+                                <td style="padding:12px; font-weight:600; color:#475569;">
+                                    {{ $data['done'] }} / {{ $data['total'] }} Users
+                                </td>
+                                <td style="padding:12px; font-weight:600; color:{{ $isDone ? '#059669' : '#94a3b8' }};">
+                                    {{ $data['next_date'] ?? '—' }}
+                                </td>
+                            </tr>
+                        @empty
+                            <tr>
+                                <td colspan="4" style="text-align:center; padding:20px; color:#64748b;">No divisions found with active users.</td>
+                            </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+        @endif
     </div>
 
     {{-- Generation History --}}
@@ -242,6 +307,13 @@
 
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
+document.addEventListener('DOMContentLoaded', function() {
+    @if($pmSchedule->current_focus_division)
+    loadQueueStatus();
+    @endif
+});
+
+@if($pmSchedule->current_focus_division)
 function loadQueueStatus() {
     const loading = document.getElementById('queueLoading');
     const summary = document.getElementById('queueSummary');
@@ -322,7 +394,6 @@ function loadQueueStatus() {
         loading.style.color = '#dc2626';
     });
 }
-
-document.addEventListener('DOMContentLoaded', loadQueueStatus);
+@endif
 </script>
 @endsection

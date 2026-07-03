@@ -59,6 +59,27 @@ class RequestAuthorization
             return 'The selected asset is not assigned to you. Contact your Administrative supply admin to update your accountable equipment.';
         }
 
+        $asset = InventoryAsset::where('asset_id', (int) $assetId)->first();
+        
+        if (!$asset) {
+            return 'The selected asset does not exist.';
+        }
+
+        // Block requests for disposed/scrapped assets
+        if (in_array($asset->status, ['For Disposal', 'Scrapped', 'Disposed'], true)) {
+            return "This asset is marked as '{$asset->status}' and cannot be used for new requests.";
+        }
+
+        // Block if asset has a completed ICT ticket (unless it's a PM cycle)
+        $hasCompletedTicket = \App\Models\Request::where('linked_asset_id', $asset->asset_id)
+            ->where('type', 'ICT')
+            ->where('status', \App\Models\Request::STATUS_COMPLETED)
+            ->exists();
+            
+        if ($hasCompletedTicket) {
+            return 'This asset already has a completed ICT request. Please create a new Preventive Maintenance request instead.';
+        }
+
         return null;
     }
 

@@ -3,6 +3,8 @@
 namespace App\Services;
 
 use App\Models\PMSchedule;
+use App\Models\PMCycle;
+use App\Models\PMDivisionSchedule;
 use App\Models\PMScheduleHistory;
 use App\Models\InventoryAsset;
 use App\Models\Request as RequestModel;
@@ -15,6 +17,33 @@ use Illuminate\Support\Facades\Log;
 
 class GeneratePMScheduleService
 {
+    /**
+     * Resolve the actor (user performing the action).
+     * In HTTP context: returns Auth::user().
+     * In console/cron context: Auth::user() is null, so falls back to
+     * the schedule's creator, or the first active super_admin.
+     * This ensures branch scoping works correctly in all contexts.
+     */
+    private function resolveActor(PMSchedule $schedule): ?User
+    {
+        // HTTP context — logged-in user
+        if (Auth::check()) {
+            return Auth::user();
+        }
+
+        // Cron context — use the schedule's creator (has branch context)
+        if ($schedule->created_by) {
+            $creator = User::find($schedule->created_by);
+            if ($creator) {
+                return $creator;
+            }
+        }
+
+        // Last resort fallback — first active super_admin
+        return User::where('role', 'super_admin')
+            ->where('is_active', true)
+            ->first();
+    }
     public function generate(PMSchedule $schedule): array
     {
         if (!$schedule->is_active) {
@@ -22,10 +51,41 @@ class GeneratePMScheduleService
             return [];
         }
 
-        // Anti-Spam: Check if there's already an IN PROGRESS cycle
+        // Anti-Spam: Check if there's already an IN PROGRESS cycle with requests
         if ($schedule->current_focus_division) {
-            Log::warning("PM cycle already running for schedule {$schedule->id}, focus: {$schedule->current_focus_division}");
-            return [];
+            // Check if there are already pending requests for this division
+            // Uses actual system status values: Scheduled, Ongoing, Awaiting Signature
+            $existingPending = \App\Models\Request::where('pm_schedule_id', $schedule->id)
+                ->where('is_auto_generated', true)
+                ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature'])
+                ->exists();
+
+            if ($existingPending) {
+                Log::warning("PM cycle already running for schedule {$schedule->id}, focus: {$schedule->current_focus_division}");
+                return [];
+            }
+            // If no pending requests, this is a resumed/advanced cycle — continue generation
+        }
+
+        // Cooldown Guard: If no active cycle (idle), check the last completed cycle's
+        // next_scheduled_at to prevent premature re-generation.
+        if (!$schedule->current_cycle_id) {
+            $lastCycle = PMCycle::where('pm_schedule_id', $schedule->id)
+                ->whereNotNull('completed_at')
+                ->latest('completed_at')
+                ->first();
+
+            if ($lastCycle) {
+                // Find the soonest next_scheduled_at across all divisions in the last cycle
+                $soonestNextDate = PMDivisionSchedule::where('pm_cycle_id', $lastCycle->id)
+                    ->whereNotNull('next_scheduled_at')
+                    ->min('next_scheduled_at');
+
+                if ($soonestNextDate && now()->lt(\Carbon\Carbon::parse($soonestNextDate))) {
+                    Log::warning("PM schedule {$schedule->id} is in cooldown. Next allowed: {$soonestNextDate}");
+                    return ['__cooldown__' => $soonestNextDate]; // Signal cooldown to caller
+                }
+            }
         }
 
         $eligibleUsers = $this->getEligibleUsers($schedule);
@@ -34,27 +94,43 @@ class GeneratePMScheduleService
             return [];
         }
 
-        // BATCH GENERATION: Process ALL eligible users in the focus division
-        $actor = Auth::user();
+        // CYCLE MANAGEMENT: Get or create the active PMCycle for this generation run.
+        // If no current_cycle_id exists on the schedule, this is a brand-new cycle.
+        $actor = $this->resolveActor($schedule);
         $now = now();
+
         $created = [];
 
         DB::beginTransaction();
         try {
+            $activeCycle = $schedule->current_cycle_id
+                ? PMCycle::find($schedule->current_cycle_id)
+                : null;
+
+            if (!$activeCycle) {
+                // Start a new cycle — increment cycle_count
+                $newCycleNumber = ($schedule->cycle_count ?? 0) + 1;
+                $activeCycle = PMCycle::create([
+                    'pm_schedule_id' => $schedule->id,
+                    'cycle_number'   => $newCycleNumber,
+                    'started_at'     => $now,
+                ]);
+                $schedule->update([
+                    'current_cycle_id' => $activeCycle->id,
+                    'cycle_count'      => $newCycleNumber,
+                ]);
+                Log::info("PM Cycle #{$newCycleNumber} started for schedule {$schedule->id} (cycle_id: {$activeCycle->id})");
+            }
+
             // Get the focus division name from the first user
             $firstUserData = reset($eligibleUsers);
             $focusDivision = $firstUserData['division'] ?? 'Unassigned';
 
-            // Mark division as IN PROGRESS.
-            // next_scheduled_date is intentionally NOT updated here —
-            // it only advances after the full cycle (all divisions) is completed.
-            $schedule->update([
-                'current_focus_division' => $focusDivision,
-                'last_generated_date'    => $now->toDateString(),
-            ]);
+            // Mark division as IN PROGRESS on the schedule
+            $schedule->update(['current_focus_division' => $focusDivision]);
 
             foreach ($eligibleUsers as $userId => $data) {
-                $requestNumber = $this->generateRequestNumber();
+                $requestNumber = $this->generateRequestNumber($actor);
                 $user = User::find($userId);
                 
                 $endUserName   = $user?->full_name ?? 'Auto-generated';
@@ -133,67 +209,168 @@ class GeneratePMScheduleService
     /**
      * Check if current division is complete and auto-advance to next.
      *
+     * Returns: [$nextDivision, $cycleComplete]
+     *  - $nextDivision (string|null): name of the next division to process,
+     *    or null if the cycle is still in progress OR the full cycle just completed.
+     *  - $cycleComplete (bool): true when ALL divisions are done and next_scheduled_date was advanced.
+     *
      * Cycle logic:
-     * - When a division is fully done → record its completion date, advance to next division
-     * - The next_scheduled_date updates per division completion (now + frequency)
-     *   so each division gets its own "next due" date based on when IT was actually done
-     * - When ALL divisions are done → reset current_focus_division = null (cycle complete)
+     * - When a division is fully done → record its completion, advance to next division
+     * - When ALL divisions are done → reset current_focus_division = null, advance next_scheduled_date
      */
-    public function checkAndAdvance(): ?string
+    public function checkAndAdvance(PMSchedule $schedule): array
     {
-        $schedule = PMSchedule::active()->first();
-
-        if (!$schedule || $schedule->is_paused) {
-            return null;
+        if (!$schedule->is_active || $schedule->is_paused) {
+            return [null, false];
         }
 
         $focusDivision = $schedule->current_focus_division;
         if (!$focusDivision) {
-            return null;
+            return [null, false];
         }
 
-        $divisionStatus = $this->getQueueStatus($schedule);
-        $divisionData   = $divisionStatus['divisions'][$focusDivision] ?? null;
+        // Division is complete when ALL requests for the current focus division
+        // are Completed (no more Scheduled or In Progress requests).
+        $pendingRequests = RequestModel::where('pm_schedule_id', $schedule->id)
+            ->where('is_auto_generated', true)
+            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature'])
+            ->where('office', $focusDivision)
+            ->count();
 
-        // Current division is complete when all PENDING (due) users are done.
-        // not_due users are excluded from the completion check.
-        $pendingInFocus = $divisionData['pending'] ?? 0;
-        if (!$divisionData || $pendingInFocus > 0) {
-            return null; // Still has pending users in current division
+        if ($pendingRequests > 0) {
+            return [null, false]; // Still has unfinished requests in current division
+        }
+
+        // Also verify there ARE completed requests for this division in this cycle
+        // (guards against advancing on a division that was never started)
+        $activeCycle = $schedule->current_cycle_id
+            ? \App\Models\PMCycle::find($schedule->current_cycle_id)
+            : null;
+
+        $completedCount = RequestModel::where('pm_schedule_id', $schedule->id)
+            ->where('is_auto_generated', true)
+            ->where('status', 'Completed')
+            ->where('office', $focusDivision)
+            ->when($activeCycle, fn($q) => $q->where('created_at', '>=', $activeCycle->started_at))
+            ->count();
+
+        if ($completedCount === 0) {
+            return [null, false]; // No completed requests yet for this division
         }
 
         // --- Current division is complete ---
-        // Update next_scheduled_date based on when THIS division finished.
-        // Each division sets its own next due date = today + frequency.
-        $nextDateForThisDivision = $schedule->calculateNextDate();
+        // Record this division's completion date and compute its next schedule
+        // Scoped to the CURRENT CYCLE — no cross-cycle contamination.
+        $completedDate    = now()->toDateString();
+        $nextDivisionDate = $schedule->calculateNextDate($completedDate);
+        $currentCycleId   = $schedule->current_cycle_id;
 
-        $nextDivision = $divisionStatus['next_division'] ?? null;
+        if ($currentCycleId) {
+            PMDivisionSchedule::updateOrCreate(
+                ['pm_cycle_id' => $currentCycleId, 'division_name' => $focusDivision],
+                [
+                    'pm_schedule_id'  => $schedule->id,
+                    'last_completed_at' => $completedDate,
+                    'next_scheduled_at' => $nextDivisionDate,
+                ]
+            );
+        }
 
-        if ($nextDivision && $nextDivision !== $focusDivision) {
-            // Update date for the completed division, then reset focus
-            // so generate() can pick the next division naturally
-            $schedule->update([
-                'next_scheduled_date' => $nextDateForThisDivision,
-                'last_generated_date' => now()->toDateString(),
-                'current_focus_division' => null,
-            ]);
+        Log::info("PM division '{$focusDivision}' completed (cycle #{$schedule->cycle_count}). Next scheduled: {$nextDivisionDate}");
 
-            // Re-fetch fresh model so generate() anti-spam check reads correct DB state
-            $fresh = $schedule->fresh();
-            $this->generate($fresh);
+        // Find the next division that has eligible users not yet processed in this cycle
+        $nextDivision = $this->getNextEligibleDivision($schedule, $focusDivision);
 
-            Log::info("PM advanced from {$focusDivision} to next division for schedule {$schedule->id}");
-            return $nextDivision;
+        if ($nextDivision) {
+            // More divisions to process — clear focus so cron advances to next division
+            $schedule->update(['current_focus_division' => null]);
+            Log::info("PM advanced from '{$focusDivision}' to '{$nextDivision}' for schedule {$schedule->id}");
+            return [$nextDivision, false];
         }
 
         // --- All divisions complete — full cycle done ---
+        // Mark the PMCycle record as completed — history is PRESERVED.
+        // Next time Generate PM is triggered, a brand-new cycle will be created.
+        if ($currentCycleId) {
+            PMCycle::where('id', $currentCycleId)->update(['completed_at' => now()]);
+        }
+
+        // Reset the schedule: clear focus and current_cycle_id so next Generate starts fresh
         $schedule->update([
-            'next_scheduled_date'    => $nextDateForThisDivision,
             'current_focus_division' => null,
+            'current_cycle_id'       => null,
         ]);
 
-        Log::info("PM full cycle complete for schedule {$schedule->id}. Next: {$nextDateForThisDivision}");
-        return null;
+        Log::info("PM full cycle #{$schedule->cycle_count} complete for schedule {$schedule->id}. Cycle record preserved for audit.");
+        return [null, true];
+    }
+
+    /**
+     * Find the next division that still has eligible users not yet processed
+     * in the CURRENT CYCLE. Ordered by oldest asset date (government priority).
+     */
+    private function getNextEligibleDivision(PMSchedule $schedule, string $currentDivision): ?string
+    {
+        $actor = $this->resolveActor($schedule);
+        $query = InventoryAsset::where('status', 'Active')
+            ->whereNotNull('assigned_to_user');
+
+        if ($actor && $actor->branch) {
+            $query->where('branch', $actor->branch);
+        }
+
+        if (!empty($schedule->asset_categories)) {
+            $query->whereIn('category', $schedule->asset_categories);
+        }
+
+        // Apply division filter to prevent cycle-advance into other divisions
+        $this->applyDivisionFilter($query, $schedule);
+
+        $assets = $query->get();
+
+        // Get divisions already COMPLETED in the CURRENT CYCLE (not all cycles)
+        $completedDivisionsThisCycle = [];
+        if ($schedule->current_cycle_id) {
+            $completedDivisionsThisCycle = PMDivisionSchedule::where('pm_cycle_id', $schedule->current_cycle_id)
+                ->whereNotNull('last_completed_at')
+                ->pluck('division_name')
+                ->toArray();
+        }
+
+        // Also include the current division as done (we just finished it)
+        $completedDivisionsThisCycle[] = $currentDivision;
+
+        // Get users with active requests in this cycle (in-progress, not yet complete)
+        $inProgressUserIds = RequestModel::where('pm_schedule_id', $schedule->id)
+            ->where('is_auto_generated', true)
+            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature'])
+            ->pluck('user_id')
+            ->toArray();
+
+        // Group unprocessed users by division, track oldest asset date
+        $divisionOldest = [];
+        foreach ($assets as $asset) {
+            $uid = $asset->assigned_to_user;
+            if (in_array($uid, $inProgressUserIds)) continue;
+
+            $div = $asset->office ?? $asset->department ?? 'Unassigned';
+            if (in_array($div, $completedDivisionsThisCycle)) continue;
+
+            $date = $asset->date_acquired
+                ? \Carbon\Carbon::parse($asset->date_acquired)->timestamp
+                : now()->timestamp;
+
+            if (!isset($divisionOldest[$div]) || $date < $divisionOldest[$div]) {
+                $divisionOldest[$div] = $date;
+            }
+        }
+
+        if (empty($divisionOldest)) {
+            return null;
+        }
+
+        asort($divisionOldest);
+        return array_key_first($divisionOldest);
     }
 
     public function preview(PMSchedule $schedule): array
@@ -216,13 +393,13 @@ class GeneratePMScheduleService
      */
     public function getQueueStatus(PMSchedule $schedule): array
     {
-        $user = Auth::user();
-        $query = InventoryAsset::whereIn('status', ['Active', 'Spare'])
+        $actor = $this->resolveActor($schedule);
+        $query = InventoryAsset::where('status', 'Active')
             ->whereNotNull('assigned_to_user');
         
         // Filter by user's branch for multi-location support
-        if ($user && $user->branch) {
-            $query->where('branch', $user->branch);
+        if ($actor && $actor->branch) {
+            $query->where('branch', $actor->branch);
         }
 
         // Filter by asset categories if specified
@@ -257,12 +434,25 @@ class GeneratePMScheduleService
         ][$schedule->frequency] ?? 3;
         $yearMonth = now()->format('Y-m');
 
-        // Get users who completed their PM within the current frequency window
-        $windowStart = now()->subMonths($freqMonths)->toDateTimeString();
+        // Get users who completed their PM within the current cycle window
+        if ($schedule->current_cycle_id) {
+            $activeCycle = \App\Models\PMCycle::find($schedule->current_cycle_id);
+            $cycleStart = $activeCycle ? $activeCycle->started_at->toDateTimeString() : now()->toDateTimeString();
+        } else {
+            $lastCycle = \App\Models\PMCycle::where('pm_schedule_id', $schedule->id)
+                ->whereNotNull('completed_at')
+                ->latest('completed_at')
+                ->first();
+                
+            $cycleStart = $lastCycle 
+                ? $lastCycle->started_at->toDateTimeString()
+                : now()->subMonths($freqMonths)->toDateTimeString();
+        }
+
         $completedUserIds = RequestModel::where('pm_schedule_id', $schedule->id)
             ->where('is_auto_generated', true)
             ->where('status', 'Completed')
-            ->where('created_at', '>=', $windowStart)
+            ->where('created_at', '>=', $cycleStart)
             ->pluck('user_id')
             ->toArray();
 
@@ -325,9 +515,8 @@ class GeneratePMScheduleService
             }
         }
 
-        // Find current focus division (division with oldest pending eligible asset)
-        $focusDivision = null;
-        $nextUser = null;
+        // Find current focus division based on DB or computation
+        $dbFocus = $schedule->current_focus_division;
         $pendingDivisions = [];
 
         foreach ($divisionStatus as $div => $status) {
@@ -336,36 +525,55 @@ class GeneratePMScheduleService
             }
         }
         asort($pendingDivisions);
-        $focusDivision = array_key_first($pendingDivisions);
+        
+        // If DB has a focus, use it. Otherwise, compute it.
+        $focusDivision = $dbFocus ?: array_key_first($pendingDivisions);
+
+        // Sort the divisions array so it appears perfectly in the UI
+        uksort($divisionStatus, function($a, $b) use ($focusDivision, $divisionStatus) {
+            // 1. Focus Division goes first
+            if ($a === $focusDivision) return -1;
+            if ($b === $focusDivision) return 1;
+
+            // 2. Sort by pending status (pending > completed)
+            $aPending = $divisionStatus[$a]['pending'] > 0;
+            $bPending = $divisionStatus[$b]['pending'] > 0;
+            
+            if ($aPending && !$bPending) return -1;
+            if (!$aPending && $bPending) return 1;
+
+            // 3. If both are pending (or both not), sort by oldest_date
+            return $divisionStatus[$a]['oldest_date']->timestamp <=> $divisionStatus[$b]['oldest_date']->timestamp;
+        });
 
         // Find next user in focus division
+        $nextUser = null;
         if ($focusDivision && isset($divisionStatus[$focusDivision])) {
             $pendingUsers = array_filter($divisionStatus[$focusDivision]['users'], fn($u) => !$u['is_done'] && $u['is_due']);
             usort($pendingUsers, fn($a, $b) => strtotime($a['oldest_date']) - strtotime($b['oldest_date']));
             $nextUser = $pendingUsers[0] ?? null;
         }
 
-        // Determine next division after current
+        // Determine next division after current focus
         $divisionOrder = array_keys($divisionStatus);
         $nextDivision = null;
         if ($focusDivision) {
             $found = false;
             foreach ($divisionOrder as $d) {
-                if ($found && $divisionStatus[$d]['pending'] > 0) {
+                if ($found && ($divisionStatus[$d]['pending'] ?? 0) > 0) {
                     $nextDivision = $d;
                     break;
                 }
                 if ($d === $focusDivision) $found = true;
             }
-            // If no next found, wrap to first
-            if (!$nextDivision && count($pendingDivisions) > 0) {
-                reset($pendingDivisions);
-                $nextDivision = key($pendingDivisions);
-            }
         }
+
+        $cycleComplete = empty($pendingDivisions);
 
         return [
             'success' => true,
+            'cycle_complete' => $cycleComplete,
+            'next_scheduled_date' => $schedule->next_scheduled_date?->toDateString(),
             'focus_division' => $focusDivision,
             'next_division' => $nextDivision,
             'next_user' => $nextUser,
@@ -378,13 +586,17 @@ class GeneratePMScheduleService
 
     private function getEligibleUsers(PMSchedule $schedule): array
     {
-        $user = Auth::user();
-        $query = InventoryAsset::whereIn('status', ['Active', 'Spare'])
+        $actor = $this->resolveActor($schedule);
+        // Only Active assets (assigned to users) are eligible for PM.
+        // Spare assets have no assigned user, so they are excluded.
+        // Disposed/Scrapped assets are also excluded automatically.
+        $query = InventoryAsset::where('status', 'Active')
             ->whereNotNull('assigned_to_user');
         
-        // Filter by user's branch for multi-location support
-        if ($user && $user->branch) {
-            $query->where('branch', $user->branch);
+        // Filter by actor's branch for multi-location support
+        // Works in both HTTP (Auth::user()) and cron (schedule creator) contexts
+        if ($actor && $actor->branch) {
+            $query->where('branch', $actor->branch);
         }
 
         // Filter by asset categories if specified
@@ -392,27 +604,12 @@ class GeneratePMScheduleService
             $query->whereIn('category', $schedule->asset_categories);
         }
 
-        if ($schedule->division_filter) {
-            $divisionMappings = [
-                'RID'  => ['RESEARCH AND INFORMATION', 'RID'],
-                'AD'   => ['ADMINISTRATIVE', 'AD'],
-                'FMD'  => ['FINANCIAL AND MANAGEMENT', 'FMD'],
-                'COA'  => ['COMMISSION ON AUDIT', 'COA'],
-                'CMD'  => ['CONCILIATION AND MEDIATION', 'CMD'],
-                'VAD'  => ['VOLUNTARY ARBITRATION', 'VAD'],
-                'WRED' => ['WORKPLACE RELATIONS', 'WRED'],
-                'OED'  => ['EXECUTIVE DIRECTOR', 'OED'],
-            ];
+        // Apply division filter — restricts generation to one division if configured.
+        // No-op when division_filter is null (all divisions included).
+        $this->applyDivisionFilter($query, $schedule);
 
-            $keywords = $divisionMappings[$schedule->division_filter] ?? [$schedule->division_filter];
-
-            $query->where(function ($q) use ($keywords) {
-                foreach ($keywords as $kw) {
-                    $q->orWhere('department', 'LIKE', "%{$kw}%")
-                      ->orWhere('office', 'LIKE', "%{$kw}%");
-                }
-            });
-        }
+        // NOTE: Division filter is applied above via applyDivisionFilter()
+        // This ensures we include only users in the configured division
 
         $assets = $query->get();
         $grouped = [];
@@ -443,35 +640,64 @@ class GeneratePMScheduleService
             'Annual'      => 12,
         ][$schedule->frequency] ?? 3;
 
-        // Filter out users who already completed their PM within the current frequency window.
-        // E.g. Semi-annual: if completed within last 6 months, skip them.
-        $windowStart = now()->subMonths($freqMonths)->toDateTimeString();
-        $completedUserIds = RequestModel::where('pm_schedule_id', $schedule->id)
+        // Filter out users whose DIVISION has already been completed in the CURRENT CYCLE ONLY.
+        // By scoping to current_cycle_id, we guarantee that completed divisions from
+        // previous cycles do NOT bleed into this cycle.
+        $completedDivisions = [];
+        if ($schedule->current_cycle_id) {
+            $completedDivisions = \App\Models\PMDivisionSchedule::where('pm_cycle_id', $schedule->current_cycle_id)
+                ->whereNotNull('last_completed_at')
+                ->pluck('division_name')
+                ->toArray();
+        }
+
+        // Also get users with active requests in the current wave (not yet complete)
+        $inProgressUserIds = RequestModel::where('pm_schedule_id', $schedule->id)
             ->where('is_auto_generated', true)
-            ->where('status', 'Completed')
-            ->where('created_at', '>=', $windowStart)
+            ->whereIn('status', ['Scheduled', 'Ongoing', 'Awaiting Signature'])
             ->pluck('user_id')
             ->toArray();
 
+        // Get users who already have a COMPLETED request in the current cycle.
+        // This prevents re-generating a PM for a user whose division was not yet
+        // recorded in pm_division_schedules (e.g. completed outside MaintenanceController).
+        $completedUserIdsThisCycle = [];
+        if ($schedule->current_cycle_id) {
+            $activeCycle = \App\Models\PMCycle::find($schedule->current_cycle_id);
+            if ($activeCycle) {
+                $completedUserIdsThisCycle = RequestModel::where('pm_schedule_id', $schedule->id)
+                    ->where('is_auto_generated', true)
+                    ->where('status', 'Completed')
+                    ->where('created_at', '>=', $activeCycle->started_at)
+                    ->pluck('user_id')
+                    ->toArray();
+            }
+        }
+
         // Group eligible users by division
+        // NOTE: All users with Active assets are included regardless of asset age.
+        // The monthsPassed/due date filter has been removed so that users with
+        // newly acquired assets are still included in the PM cycle.
         $byDivision = [];
         foreach ($grouped as $uid => $data) {
-            if (in_array($uid, $completedUserIds)) {
+            // Skip users in divisions already completed this cycle
+            $div = $data['division'] ?: 'Unassigned';
+            if (in_array($div, $completedDivisions)) {
+                continue;
+            }
+            // Skip users already in an active wave
+            if (in_array($uid, $inProgressUserIds)) {
+                continue;
+            }
+            // Skip users who already completed their PM in this cycle
+            if (in_array($uid, $completedUserIdsThisCycle)) {
                 continue;
             }
 
-            $oldestDate = $data['oldest_date'];
-            $monthsPassed = (now()->year * 12 + now()->month) - ($oldestDate->year * 12 + $oldestDate->month);
-
-            // Eligible if the asset is at least $freqMonths old
-            // (no need for modulo — any asset past the interval is due)
-            if ($monthsPassed >= $freqMonths) {
-                $div = $data['division'] ?: 'Unassigned';
-                if (!isset($byDivision[$div])) {
-                    $byDivision[$div] = [];
-                }
-                $byDivision[$div][$uid] = $data;
+            if (!isset($byDivision[$div])) {
+                $byDivision[$div] = [];
             }
+            $byDivision[$div][$uid] = $data;
         }
 
         if (empty($byDivision)) {
@@ -500,6 +726,38 @@ class GeneratePMScheduleService
         });
 
         return $eligible;
+    }
+
+    /**
+     * Apply the schedule's division_filter to an asset query.
+     * Maps short codes (e.g. 'RID') to full division name patterns.
+     * No-op when division_filter is null/empty — all divisions included.
+     */
+    private function applyDivisionFilter(\Illuminate\Database\Eloquent\Builder $query, PMSchedule $schedule): void
+    {
+        if (!$schedule->division_filter) {
+            return;
+        }
+
+        $divisionMappings = [
+            'RID'  => ['RESEARCH AND INFORMATION', 'RID'],
+            'AD'   => ['ADMINISTRATIVE', 'AD'],
+            'FMD'  => ['FINANCIAL AND MANAGEMENT', 'FMD'],
+            'COA'  => ['COMMISSION ON AUDIT', 'COA'],
+            'CMD'  => ['CONCILIATION AND MEDIATION', 'CMD'],
+            'VAD'  => ['VOLUNTARY ARBITRATION', 'VAD'],
+            'WRED' => ['WORKPLACE RELATIONS', 'WRED'],
+            'OED'  => ['EXECUTIVE DIRECTOR', 'OED'],
+        ];
+
+        $keywords = $divisionMappings[$schedule->division_filter] ?? [$schedule->division_filter];
+
+        $query->where(function ($q) use ($keywords) {
+            foreach ($keywords as $kw) {
+                $q->orWhere('office', 'LIKE', "%{$kw}%")
+                  ->orWhere('department', 'LIKE', "%{$kw}%");
+            }
+        });
     }
 
     private function mapUserAssetsToPMForm(array $assets): array
@@ -562,10 +820,14 @@ class GeneratePMScheduleService
                 $mapped['webcam_brand'] = $asset->brand;
                 $mapped['webcam_model'] = $asset->model;
                 $mapped['webcam_pno']   = $asset->property_number;
-            } elseif (str_contains($cat, 'speaker') || str_contains($cat, 'earphone')) {
+            } elseif (str_contains($cat, 'speaker')) {
                 $mapped['speakers_brand'] = $asset->brand;
                 $mapped['speakers_model'] = $asset->model;
                 $mapped['speakers_pno']   = $asset->property_number;
+            } elseif (str_contains($cat, 'earphone')) {
+                $mapped['earphone_brand'] = $asset->brand;
+                $mapped['earphone_model'] = $asset->model;
+                $mapped['earphone_pno']   = $asset->property_number;
             }
         }
         
@@ -582,29 +844,51 @@ class GeneratePMScheduleService
         ]);
     }
 
-    private function generateRequestNumber(): string
+    private function generateRequestNumber(?User $actorUser = null): string
     {
         $year = now()->format('Y');
-        $user = Auth::user();
-        
-        // Use region + branch from database for unique identification
-        $region = strtoupper($user->region ?? 'SYS');
-        $branchCode = $this->getBranchCode($user->branch);
-        
-        $searchPrefix = "PM-{$region}-{$branchCode}-{$year}";
-        
-        $last = RequestModel::where('request_number', 'LIKE', "{$searchPrefix}-%")
-            ->orderByDesc('request_number')
-            ->lockForUpdate()
-            ->value('request_number');
 
-        $next = 1;
-        if ($last) {
-            $parts = explode('-', $last);
-            $next = (int) end($parts) + 1;
+        // When running via cron, Auth::user() is null.
+        // Use the provided actor user, or fall back to SYS defaults.
+        $user = $actorUser ?? Auth::user();
+
+        $region     = strtoupper($user?->region ?? 'SYS');
+        $branchCode = $this->getBranchCode($user?->branch ?? null);
+
+        $searchPrefix = "PM-{$region}-{$branchCode}-{$year}";
+
+        // Use a MySQL advisory lock to prevent race conditions when two processes
+        // (e.g. cron + manual generate) try to generate request numbers simultaneously
+        // for the same branch. The lock is per-branch-per-year, so different branches
+        // can generate concurrently without blocking each other.
+        $lockName    = "pm_request_number_{$region}_{$branchCode}_{$year}";
+        $lockTimeout = 10; // seconds to wait for lock before giving up
+
+        $acquired = DB::select("SELECT GET_LOCK(?, ?) AS acquired", [$lockName, $lockTimeout]);
+
+        if (!($acquired[0]->acquired ?? false)) {
+            Log::warning("Could not acquire advisory lock for PM request number generation (prefix: {$searchPrefix}). Proceeding without lock.");
         }
 
-        return "PM-{$region}-{$branchCode}-{$year}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
+        try {
+            $last = RequestModel::withTrashed()
+                ->where('request_number', 'LIKE', "{$searchPrefix}-%")
+                ->orderByDesc('request_number')
+                ->value('request_number');
+
+            $next = 1;
+            if ($last) {
+                $parts = explode('-', $last);
+                $next  = (int) end($parts) + 1;
+            }
+
+            $requestNumber = "PM-{$region}-{$branchCode}-{$year}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
+        } finally {
+            // Always release the lock — even if an exception occurred
+            DB::select("SELECT RELEASE_LOCK(?)", [$lockName]);
+        }
+
+        return $requestNumber;
     }
     
     private function getBranchCode(?string $branch): string

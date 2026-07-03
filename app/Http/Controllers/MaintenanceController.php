@@ -40,11 +40,11 @@ class MaintenanceController extends Controller
         }
 
         $requests = $query->orderBy('created_at', 'desc')->paginate(20);
-        
+
         if (request()->wantsJson() || request()->expectsJson()) {
             return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
         }
-        
+
         return view('requests.maintenance.index', compact('requests'));
     }
 
@@ -55,7 +55,7 @@ class MaintenanceController extends Controller
     public function pmTasks()
     {
         $user = Auth::user();
-        
+
         $query = RequestModel::with(['user', 'maintenanceRequest', 'assignedTo'])
             ->where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true);
@@ -65,9 +65,17 @@ class MaintenanceController extends Controller
             $query->where('status', $status);
         }
 
-        // IT sees ONLY PMs assigned to them
+        // IT sees PMs assigned to them OR unassigned PMs in their branch
         if ($user->role === 'it') {
-            $query->where('assigned_to', $user->id);
+            $query->where(function ($q) use ($user) {
+                $q->where('assigned_to', $user->id)
+                  ->orWhere(function ($sub) use ($user) {
+                      $sub->whereNull('assigned_to');
+                      if ($user->branch) {
+                          $sub->where('branch', $user->branch);
+                      }
+                  });
+            });
         } elseif ($user->role === 'super_admin' && $user->branch) {
             $query->where('branch', $user->branch);
         }
@@ -88,12 +96,10 @@ class MaintenanceController extends Controller
             $query->where(function ($q) use ($user) {
                 $q->where('assigned_to', $user->id)
                   ->orWhere(function ($sub) use ($user) {
-                      $sub->whereNull('assigned_to')
-                          ->whereHas('linkedAsset', function ($asset) use ($user) {
-                              if ($user->branch) {
-                                  $asset->where('branch', $user->branch);
-                              }
-                          });
+                      $sub->whereNull('assigned_to');
+                      if ($user->branch) {
+                          $sub->where('branch', $user->branch);
+                      }
                   });
             });
         } elseif ($user->role === 'super_admin') {
@@ -238,8 +244,8 @@ class MaintenanceController extends Controller
             RequestNotificationService::notifySuperAdminsOfNewPmRequest($trackingRequest, $user);
 
             AuditLog::log(
-                "Created PM Request", 
-                "Requests", 
+                "Created PM Request",
+                "Requests",
                 "Created new Preventive Maintenance request {$requestNumber} for " . Auth::user()->full_name,
                 $trackingRequest->office
             );
@@ -266,7 +272,7 @@ class MaintenanceController extends Controller
     public function show($id)
     {
         $trackingRequest = RequestModel::with('assignedTo')->findOrFail($id);
-        
+
         $this->checkTicketAccess($trackingRequest);
 
         $maintenance = $this->resolveMaintenanceDetail($trackingRequest);
@@ -280,7 +286,7 @@ class MaintenanceController extends Controller
     public function edit($id)
     {
         $trackingRequest = RequestModel::with('assignedTo')->findOrFail($id);
-        
+
         $this->checkTicketAccess($trackingRequest);
 
         $user = Auth::user();
@@ -313,11 +319,11 @@ class MaintenanceController extends Controller
         ]);
 
         $itId = $validated['assigned_to'] ?? null;
-        
+
         // Super Admin can assign himself if no IT available or IT not present
         if ($itId) {
             $itUser = User::findOrFail($itId);
-            
+
             // Allow Super Admin to assign himself
             if ((int) $itId === (int) $admin->id) {
                 // Super Admin assigning himself - allowed
@@ -329,7 +335,7 @@ class MaintenanceController extends Controller
                 if ($itUser->role !== 'it') {
                     return response()->json(['success' => false, 'message' => 'Selected user must have IT role.'], 422);
                 }
-                
+
                 if ($admin->role !== 'super_admin' && !RequestAuthorization::itUserInAdminScope($admin, $itUser)) {
                     return response()->json(['success' => false, 'message' => 'Selected IT personnel is not in your scope.'], 422);
                 }
@@ -376,23 +382,23 @@ class MaintenanceController extends Controller
         try {
             DB::beginTransaction();
             $trackingRequest = RequestModel::findOrFail($id);
-            
+
             if ($trackingRequest->status === 'Completed') {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'This request is already completed and cannot be modified.'], 403);
             }
-            
+
             // Optimistic Locking Check
             if ($request->has('last_updated_at') && (string)$trackingRequest->updated_at !== $request->last_updated_at) {
                 DB::rollBack();
                 return response()->json([
-                    'success' => false, 
+                    'success' => false,
                     'message' => 'Conflict Error: Another user has updated this request while you were viewing it. Please refresh the page.'
                 ], 409);
             }
-            
+
             $maintenance = PreventiveMaintenance::findOrFail($trackingRequest->detail_id);
-            
+
             $user = Auth::user();
 
             if (!RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest)) {
@@ -416,12 +422,26 @@ class MaintenanceController extends Controller
                 'end_user_remarks' => 'nullable|string|max:2000',
                 'endUserRemarks' => 'nullable|string|max:2000',
                 'linked_asset_id' => 'nullable|integer|exists:inventory_assets,asset_id',
+                'disposal_asset_id' => 'nullable|integer|exists:inventory_assets,asset_id',
                 'last_updated_at' => 'nullable|string|max:50',
             ]);
 
             $data = $this->filterMaintenanceInput($request);
 
             $mappedData = $this->mapLegacyData($data);
+
+            if (($mappedData['for_disposal'] ?? null) === 'YES') {
+                $mappedData['disposal_asset_id'] = ($mappedData['disposal_asset_id'] ?? null)
+                    ?: $maintenance->disposal_asset_id;
+
+                if (empty($mappedData['disposal_asset_id'])) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select the specific asset to tag for disposal.',
+                    ], 422);
+                }
+            }
 
             // Handle signatures if provided
             $techSigData = $data['technicianSignature'] ?? $data['technician_signature'] ?? '';
@@ -446,7 +466,7 @@ class MaintenanceController extends Controller
             // Handle tasks JSON bundling dynamically in update
             $tasksObj = [];
             $checklistKeywords = ['Cleanup', 'Backup', 'Restore', 'Update', 'Temp', 'Recycle', 'Defrag', 'CheckDisk', 'Scan', 'Virus', 'Defender', 'Startup', 'Level', 'Quality', 'Toner', 'Updated', 'Charging', 'Overload'];
-            
+
             foreach ($data as $key => $value) {
                 foreach ($checklistKeywords as $kw) {
                     if (str_contains(strtolower($key), strtolower($kw))) {
@@ -460,12 +480,72 @@ class MaintenanceController extends Controller
             }
 
             $maintenance->update($mappedData);
-            
+
+            // DISPOSAL LOGIC: If for_disposal is checked and an asset is selected, mark it as For Disposal
+            if (!empty($mappedData['for_disposal']) && $mappedData['for_disposal'] === 'YES') {
+                $disposalAssetId = $mappedData['disposal_asset_id'] ?? null;
+
+                if ($disposalAssetId) {
+                    $disposalAsset = \App\Models\InventoryAsset::find($disposalAssetId);
+
+                    if ($disposalAsset && $disposalAsset->status !== 'Scrapped') {
+                        // Remove user assignment since asset is being turned over to Supply Officer
+                        $previousUserId = $disposalAsset->assigned_to_user;
+                        $disposalAsset->status = 'For Disposal';
+                        $disposalAsset->assigned_to_user = null;
+                        $disposalAsset->save();
+
+                        // Log to inventory history
+                        \App\Models\InventoryHistory::create([
+                            'asset_id' => $disposalAsset->asset_id,
+                            'action' => 'IT Recommended For Disposal (PM)',
+                            'performed_by' => $user->id,
+                            'previous_user_id' => $previousUserId,
+                            'new_user_id' => null,
+                            'remarks' => "Asset recommended for disposal via PM request {$trackingRequest->request_number}. Assignment removed - turned over to Supply Officer.",
+                        ]);
+
+                        // Audit log
+                        \App\Models\AuditLog::log(
+                            "Recommended Asset For Disposal",
+                            "Inventory",
+                            "Recommended asset {$disposalAsset->property_number} for disposal via PM request {$trackingRequest->request_number}",
+                            $trackingRequest->office
+                        );
+
+                        // Notify admin/supply officer about the disposal
+                        $admins = \App\Models\User::where('role', 'admin')->get();
+                        foreach ($admins as $admin) {
+                            \App\Models\Notification::send(
+                                $admin->id,
+                                $trackingRequest->id,
+                                'Asset Tagged for Disposal',
+                                "Asset [{$disposalAsset->item_name} | SN: {$disposalAsset->serial_number}] marked for disposal via PM request {$trackingRequest->request_number}. Please process."
+                            );
+                        }
+                    }
+                }
+            }
+
             // Automatic Status Logic
             $oldStatus = $trackingRequest->status;
             $newStatus = $oldStatus;
 
             if ($user->role === 'it' || $user->role === 'super_admin') {
+                // Auto-assign to the user submitting if currently unassigned
+                if (is_null($trackingRequest->assigned_to)) {
+                    $trackingRequest->assigned_to = $user->id;
+                    $trackingRequest->save(); // Persist the assignment to the database
+
+                    // Also log the auto-assignment
+                    \App\Models\AuditLog::log(
+                        'Assigned PM Request',
+                        'Requests',
+                        "Auto-assigned {$trackingRequest->request_number} to " . ($user->role === 'super_admin' ? 'Super Admin' : 'IT') . " user #{$user->id} upon form submission",
+                        $trackingRequest->office
+                    );
+                }
+
                 if (in_array($oldStatus, [RequestModel::STATUS_PENDING, RequestModel::STATUS_SCHEDULED])) {
                     $newStatus = RequestModel::STATUS_ONGOING;
                 }
@@ -480,21 +560,32 @@ class MaintenanceController extends Controller
             }
 
             // Shared completion: update asset PM dates when status becomes COMPLETED
-            if ($newStatus === RequestModel::STATUS_COMPLETED && $trackingRequest->linked_asset_id) {
-                $asset = \App\Models\InventoryAsset::find($trackingRequest->linked_asset_id);
-                if ($asset) {
-                    $asset->last_pm_date = now();
-                    if ($trackingRequest->pm_schedule_id) {
-                        $schedule = \App\Models\PMSchedule::find($trackingRequest->pm_schedule_id);
-                        if ($schedule && $schedule->is_active) {
-                            $asset->next_pm_due_date = $schedule->calculateNextDate();
-                        } else {
-                            $asset->next_pm_due_date = now()->addMonths(3);
-                        }
-                    } else {
-                        $asset->next_pm_due_date = now()->addMonths(3);
+            if ($newStatus === RequestModel::STATUS_COMPLETED) {
+
+                // --- Manual PM: single linked asset ---
+                if ($trackingRequest->linked_asset_id) {
+                    $asset = \App\Models\InventoryAsset::find($trackingRequest->linked_asset_id);
+                    if ($asset) {
+                        $asset->last_pm_date     = now();
+                        $asset->next_pm_due_date = $this->resolveNextPmDate($trackingRequest);
+                        $asset->save();
                     }
-                    $asset->save();
+                }
+
+                // --- Auto-generated (bundled) PM: update ALL active assets assigned to user ---
+                // Auto-generated PMs have linked_asset_id = null because one PM covers all assets.
+                // We query all active assets for the user and stamp them with PM dates.
+                elseif ($trackingRequest->is_auto_generated && $trackingRequest->user_id) {
+                    $nextDate   = $this->resolveNextPmDate($trackingRequest);
+                    $userAssets = \App\Models\InventoryAsset::where('assigned_to_user', $trackingRequest->user_id)
+                        ->where('status', 'Active')
+                        ->get();
+
+                    foreach ($userAssets as $asset) {
+                        $asset->last_pm_date     = now();
+                        $asset->next_pm_due_date = $nextDate;
+                        $asset->save();
+                    }
                 }
             }
 
@@ -523,8 +614,8 @@ class MaintenanceController extends Controller
             }
 
             AuditLog::log(
-                "Updated PM Request", 
-                "Requests", 
+                "Updated PM Request",
+                "Requests",
                 "Updated Preventive Maintenance request {$trackingRequest->request_number} (Status: {$trackingRequest->status})",
                 $trackingRequest->office
             );
@@ -537,14 +628,17 @@ class MaintenanceController extends Controller
                 && $trackingRequest->is_auto_generated
                 && $trackingRequest->pm_schedule_id) {
                 try {
-                    app(\App\Services\GeneratePMScheduleService::class)->checkAndAdvance();
+                    $schedule = \App\Models\PMSchedule::find($trackingRequest->pm_schedule_id);
+                    if ($schedule) {
+                        app(\App\Services\GeneratePMScheduleService::class)->checkAndAdvance($schedule);
+                    }
                 } catch (\Exception $e) {
                     Log::warning("PM auto-advance failed after completing {$trackingRequest->request_number}: {$e->getMessage()}");
                 }
             }
 
             return response()->json([
-                'success' => true, 
+                'success' => true,
                 'message' => 'Maintenance record updated successfully',
                 'redirect' => route('maintenance.edit', $id)
             ]);
@@ -557,6 +651,21 @@ class MaintenanceController extends Controller
             }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Resolve next PM due date for a completed request.
+     * Uses the schedule's frequency if available, falls back to 3 months.
+     */
+    private function resolveNextPmDate(\App\Models\Request $trackingRequest): string
+    {
+        if ($trackingRequest->pm_schedule_id) {
+            $schedule = \App\Models\PMSchedule::find($trackingRequest->pm_schedule_id);
+            if ($schedule && $schedule->is_active) {
+                return $schedule->calculateNextDate();
+            }
+        }
+        return now()->addMonths(3)->toDateString();
     }
 
     private function saveSignature($base64Data, $type, $name)
@@ -575,10 +684,10 @@ class MaintenanceController extends Controller
             }
             $filename = $type . '_' . $safeName . '_' . time() . '.png';
             $filepath = 'signatures/' . $filename;
-            
+
             // Save to storage/app/public (served via storage symlink)
             Storage::disk('public')->put($filepath, base64_decode($image));
-            
+
             return $filepath;
         } catch (\Exception $e) {
             \Illuminate\Support\Facades\Log::error('Signature save failed: ' . $e->getMessage());
@@ -600,7 +709,7 @@ class MaintenanceController extends Controller
         // where two simultaneous requests could get the same request number.
         return DB::transaction(function () use ($prefix, $year, $region, $branchCode) {
             $searchPrefix = "{$prefix}-{$region}-{$branchCode}-{$year}";
-            
+
             $lastRequest = RequestModel::where('request_number', 'like', "{$searchPrefix}-%")
                 ->orderBy('id', 'desc')
                 ->lockForUpdate()
@@ -618,12 +727,68 @@ class MaintenanceController extends Controller
         });
     }
 
+    /**
+     * Download the disposal tag PDF for a PM request.
+     * Shows the specific asset selected for disposal.
+     */
+    public function disposalTag($id)
+    {
+        $trackingRequest = RequestModel::findOrFail($id);
+        $user = Auth::user();
+
+        // Relaxed access: Super Admin always allowed, assigned IT allowed
+        $isAssignedIt = $user->role === 'it' && (int) $trackingRequest->assigned_to === (int) $user->id;
+        $isSuperAdmin = $user->role === 'super_admin';
+
+        if (!$isSuperAdmin && !$isAssignedIt) {
+            $this->checkTicketAccess($trackingRequest);
+        }
+
+        $maintenance = PreventiveMaintenance::findOrFail($trackingRequest->detail_id);
+
+        // Verify disposal was actually marked
+        if ($maintenance->for_disposal !== 'YES' || !$maintenance->disposal_asset_id) {
+            abort(403, 'No asset was marked for disposal in this request.');
+        }
+
+        $asset = \App\Models\InventoryAsset::findOrFail($maintenance->disposal_asset_id);
+
+        // Get the IT user who completed the PM (assigned user or current user)
+        $itUser = null;
+        if ($trackingRequest->assigned_to) {
+            $itUser = \App\Models\User::find($trackingRequest->assigned_to);
+        }
+        if (!$itUser) {
+            $itUser = Auth::user();
+        }
+
+        // Reuse the existing disposal tag PDF view from ICT
+        $pdf = Pdf::loadView('pdf.disposal-tag', [
+            'request' => $trackingRequest,
+            'asset'   => $asset,
+            'reason'  => $maintenance->disposal_reason ?? 'Not specified',
+            'itUser'  => $itUser,
+        ])->setPaper('a4', 'portrait');
+
+        if (ob_get_length()) {
+            ob_end_clean();
+        }
+
+        return response($pdf->output(), 200, [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="DisposalTag-' . $trackingRequest->request_number . '.pdf"',
+            'Cache-Control' => 'no-cache, no-store, must-revalidate',
+            'Pragma' => 'no-cache',
+            'Expires' => '0',
+        ]);
+    }
+
     public function downloadPdf($id)
     {
         $trackingRequest = RequestModel::findOrFail($id);
- 
+
         $this->checkTicketAccess($trackingRequest);
- 
+
         $maintenance = PreventiveMaintenance::findOrFail($trackingRequest->detail_id);
         $tasks = json_decode($maintenance->maintenance_tasks_json ?? '{}', true) ?: [];
 
@@ -667,6 +832,7 @@ class MaintenanceController extends Controller
             'end_user_remarks', 'endUserRemarks',
 
             // Recommendations
+            'disposal_asset_id', 'disposalAssetId',
             'disposal_reason', 'disposalReason',
             'repair_parts', 'repairParts',
             'for_disposal', 'forDisposal',
@@ -799,54 +965,54 @@ class MaintenanceController extends Controller
             'end_user_signature_date' => ['end_user_signature_date', 'endUserSignatureDate'],
             'disposal_reason' => ['disposal_reason', 'disposalReason'],
             'repair_parts' => ['repair_parts', 'repairParts'],
-            
+
             // Device Info
             'desktop_brand' => ['desktop_brand', 'desktopBrand'],
             'desktop_model' => ['desktop_model', 'desktopModel'],
             'desktop_pno' => ['desktop_pno', 'desktopPno'],
             'desktop_computer_name' => ['desktop_computer_name', 'computerName'],
-            
+
             'monitor1_pno' => ['monitor1_pno', 'monitor1Pno'],
             'monitor1_brand' => ['monitor1_brand', 'monitor1Brand'],
             'monitor1_model' => ['monitor1_model', 'monitor1Model'],
             'monitor2_pno' => ['monitor2_pno', 'monitor2Pno'],
             'monitor2_brand' => ['monitor2_brand', 'monitor2Brand'],
             'monitor2_model' => ['monitor2_model', 'monitor2Model'],
-            
+
             'printer1_pno' => ['printer1_pno', 'printer1Pno'],
             'printer1_brand' => ['printer1_brand', 'printer1Brand'],
             'printer1_model' => ['printer1_model', 'printer1Model'],
-            
+
             'printer2_pno' => ['printer2_pno', 'printer2Pno'],
             'printer2_brand' => ['printer2_brand', 'printer2Brand'],
             'printer2_model' => ['printer2_model', 'printer2Model'],
-            
+
             'ups_pno' => ['ups_pno', 'upsPno'],
             'ups_brand' => ['ups_brand', 'upsBrand'],
             'ups_model' => ['ups_model', 'upsModel'],
-            
+
             'scanner_pno' => ['scanner_pno', 'scannerPno'],
             'scanner_brand' => ['scanner_brand', 'scannerBrand'],
             'scanner_model' => ['scanner_model', 'scannerModel'],
-            
+
             'laptop_pno' => ['laptop_pno', 'laptopPno'],
             'laptop_brand' => ['laptop_brand', 'laptopBrand'],
             'laptop_model' => ['laptop_model', 'laptopModel'],
             'laptop_computer_name' => ['laptop_computer_name', 'laptopComputerName'],
-            
+
             'webcam_brand' => ['webcam_brand', 'webcamBrand'],
             'webcam_model' => ['webcam_model', 'webcamModel'],
             'webcam_pno' => ['webcam_pno', 'webcamPno'],
-            
+
             'speakers_brand' => ['speakers_brand', 'speakersBrand'],
             'speakers_model' => ['speakers_model', 'speakersModel'],
             'speakers_pno' => ['speakers_pno', 'speakersPno'],
-            
+
             'earphone_brand' => ['earphone_brand', 'earphoneBrand'],
             'earphone_model' => ['earphone_model', 'earphoneModel'],
-            
+
             'other_equipment_model_pno' => ['other_equipment_model_pno', 'otherModelPno', 'other_model_pno'],
-            
+
             // Device Specs
             'desktop_cpu' => ['desktop_cpu', 'dt_cpu', 'dtCpu'],
             'desktop_ram' => ['desktop_ram', 'dt_ram', 'dtRam'],
@@ -856,7 +1022,7 @@ class MaintenanceController extends Controller
             'desktop_hd2' => ['desktop_hd2', 'dt_hd2', 'dtHd2'],
             'desktop_office' => ['desktop_office', 'dt_office', 'dtOffice'],
             'desktop_year_purchased' => ['desktop_year_purchased', 'dt_year', 'dtYear'],
-            
+
             'laptop_cpu' => ['laptop_cpu', 'lt_cpu', 'ltCpu'],
             'laptop_ram' => ['laptop_ram', 'lt_ram', 'ltRam'],
             'laptop_gpu' => ['laptop_gpu', 'lt_gpu', 'ltGpu'],
@@ -893,6 +1059,13 @@ class MaintenanceController extends Controller
         }
         if (array_key_exists('for_repair', $data) || array_key_exists('forRepair', $data)) {
             $mapped['for_repair'] = (isset($data['for_repair']) || isset($data['forRepair'])) ? 'YES' : 'NO';
+        }
+
+        // Map disposal_asset_id directly
+        if (array_key_exists('disposal_asset_id', $data)) {
+            $mapped['disposal_asset_id'] = $data['disposal_asset_id'];
+        } elseif (array_key_exists('disposalAssetId', $data)) {
+            $mapped['disposal_asset_id'] = $data['disposalAssetId'];
         }
 
         return $mapped;
@@ -948,6 +1121,13 @@ class MaintenanceController extends Controller
             }
         }
 
+        if ($maintenance->disposal_asset_id) {
+            $disposalAsset = \App\Models\InventoryAsset::find($maintenance->disposal_asset_id);
+            if ($disposalAsset && !$myAssets->contains('asset_id', $disposalAsset->asset_id)) {
+                $myAssets->push($disposalAsset);
+            }
+        }
+
         $data = array_merge([
             'request'    => $trackingRequest,
             'maintenance' => $maintenance,
@@ -957,7 +1137,7 @@ class MaintenanceController extends Controller
 
         if (!empty($flags['canAssignIt'])) {
             $data['itPersonnel'] = RequestAuthorization::itPersonnelInAdminScope($user);
-            
+
             // Super Admin can always handle tickets themselves or assign to IT
             if ($user->role === 'super_admin') {
                 $data['canSelfAssign'] = true;
@@ -984,7 +1164,7 @@ class MaintenanceController extends Controller
             $maintenance = $trackingRequest->detail_id
                 ? PreventiveMaintenance::find($trackingRequest->detail_id)
                 : null;
-            
+
             // Due to Soft Deletes implementation, we do NOT delete signature files from storage anymore.
             // This ensures signatures remain intact if the request is restored.
 
