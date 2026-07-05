@@ -47,6 +47,7 @@ class InventoryAsset extends Model
 
     protected $fillable = [
         'asset_id',
+        'parent_asset_id',
         'category',
         'item_name',
         'serial_number',
@@ -100,6 +101,21 @@ class InventoryAsset extends Model
     public function attachments()
     {
         return $this->hasMany(\App\Models\AssetAttachment::class, 'asset_id', 'asset_id');
+    }
+
+    /**
+     * Self-referential set linkage.
+     * A "Complete Set" parent asset (CPU) owns component children (Monitor).
+     * Shared PAR number ties the set together per government PAR standard.
+     */
+    public function parentAsset()
+    {
+        return $this->belongsTo(self::class, 'parent_asset_id', 'asset_id');
+    }
+
+    public function components()
+    {
+        return $this->hasMany(self::class, 'parent_asset_id', 'asset_id');
     }
 
     /** All ICT and PM requests linked to this asset */

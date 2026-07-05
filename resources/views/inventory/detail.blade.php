@@ -422,12 +422,73 @@
                         @if($val && $val !== 'None' && $val !== 'Integrated Graphics')
                         <div class="field-row">
                             <span class="field-label">{{ $labelMap[$key] ?? ucwords(str_replace('_',' ',$key)) }}</span>
-                            <span class="field-value">{{ $val }}</span>
+                            <span class="field-value">{{ is_array($val) ? json_encode($val) : $val }}</span>
                         </div>
                         @endif
                     @endforeach
                 @else
                     <p class="text-specs">{{ $asset->specifications }}</p>
+                @endif
+            </div>
+        </div>
+        @endif
+
+        {{-- Set Components Card — only when this asset belongs to a Complete Set --}}
+        @if($asset->components->isNotEmpty() || $asset->parentAsset)
+        @php
+            $detailRouteName = isset($isSuperAdminView) && $isSuperAdminView
+                ? 'super_admin.inventory.detail'
+                : 'inventory.detail';
+        @endphp
+        <div class="detail-card">
+            <div class="detail-card-header"><i class="fa-solid fa-layer-group"></i> Set Components</div>
+            <div class="detail-card-body">
+                @if($asset->components->isNotEmpty())
+                    {{-- Parent view: list the components that share this asset's PAR. --}}
+                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Parent of a Complete Set — the following components share this asset's PAR number:</p>
+                    @foreach($asset->components as $component)
+                    <div class="field-row">
+                        <span class="field-label">{{ $component->category }}</span>
+                        <span class="field-value">
+                            <a href="{{ route($detailRouteName, $component->asset_id) }}" style="color: #0038A8; text-decoration: none; font-weight: 600;">{{ $component->item_name }}</a>
+                            @if($component->serial_number)
+                                <span class="font-mono" style="margin-left: 8px; font-size: 11px; color: #64748b;">SN: {{ $component->serial_number }}</span>
+                            @else
+                                <span style="margin-left: 8px; font-size: 11px; color: #d97706;">SN: pending verification</span>
+                            @endif
+                            <span style="margin-left: 8px; font-size: 11px; color: #64748b;">{{ $component->property_number }}</span>
+                        </span>
+                    </div>
+                    @endforeach
+                @endif
+
+                @if($asset->parentAsset)
+                    {{-- Component view: show parent and any sibling components. --}}
+                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">This asset is a component of a Complete Set:</p>
+                    <div class="field-row">
+                        <span class="field-label">Parent ({{ $asset->parentAsset->category }})</span>
+                        <span class="field-value">
+                            <a href="{{ route($detailRouteName, $asset->parentAsset->asset_id) }}" style="color: #0038A8; text-decoration: none; font-weight: 600;">{{ $asset->parentAsset->item_name }}</a>
+                            @if($asset->parentAsset->serial_number)
+                                <span class="font-mono" style="margin-left: 8px; font-size: 11px; color: #64748b;">SN: {{ $asset->parentAsset->serial_number }}</span>
+                            @endif
+                        </span>
+                    </div>
+                    @foreach($asset->parentAsset->components as $sibling)
+                        @if($sibling->asset_id !== $asset->asset_id)
+                        <div class="field-row">
+                            <span class="field-label">{{ $sibling->category }}</span>
+                            <span class="field-value">
+                                <a href="{{ route($detailRouteName, $sibling->asset_id) }}" style="color: #0038A8; text-decoration: none; font-weight: 600;">{{ $sibling->item_name }}</a>
+                                @if($sibling->serial_number)
+                                    <span class="font-mono" style="margin-left: 8px; font-size: 11px; color: #64748b;">SN: {{ $sibling->serial_number }}</span>
+                                @else
+                                    <span style="margin-left: 8px; font-size: 11px; color: #d97706;">SN: pending verification</span>
+                                @endif
+                            </span>
+                        </div>
+                        @endif
+                    @endforeach
                 @endif
             </div>
         </div>

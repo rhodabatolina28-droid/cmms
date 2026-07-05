@@ -1,6 +1,7 @@
  // Inventory Management Script for Laravel
 let allAssets = [];
 let allUsers = [];
+let currentInventoryImportToken = null;
 
 // Division abbreviation lookup — maps full office/division names to short codes
 function getDivisionAbbr(office) {
@@ -274,9 +275,19 @@ function renderInventoryTable(assets) {
         const brandModel = (asset.brand || asset.model)
             ? `<br><span style="font-size: 11px; color: #64748b; font-weight: 400;">${[asset.brand, asset.model].filter(Boolean).join(' ')}</span>`
             : '';
+        // ── Set badges ──
+        // Parent: show a teal badge with component count (e.g. "Set ▾ (1)")
+        // Child : show a muted indent badge ("⤷ Set component")
+        let setBadge = '';
+        if (asset.components_count > 0) {
+            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:1px 7px;letter-spacing:0.02em;"><i class="fa-solid fa-layer-group" style="font-size:9px;margin-right:3px;"></i>Set ▾ (${asset.components_count})</span>`;
+        } else if (asset.parent_asset_id) {
+            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 7px;">⤷ Set component</span>`;
+        }
+
         const itemNameDisplay = asset.is_depreciated 
-            ? `${asset.item_name}${brandModel}<br><span style="background: #fee2e2; color: #dc2626; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 1px solid #fca5a5;">DUE FOR REPLACEMENT</span>` 
-            : `${asset.item_name}${brandModel}`;
+            ? `${asset.item_name}${brandModel}${setBadge}<br><span style="background: #fee2e2; color: #dc2626; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 1px solid #fca5a5;">DUE FOR REPLACEMENT</span>` 
+            : `${asset.item_name}${brandModel}${setBadge}`;
 
         // ── Assigned To ──
         const userName = asset.assigned_user ? asset.assigned_user.full_name : '<span style="color:#94a3b8;font-style:italic;">Unassigned (Stock)</span>';
@@ -620,7 +631,27 @@ function toggleNetworkDeviceSpecs() {
 // Safe helper: sets an element's value only if the element exists
 function setInputVal(id, value, defaultVal = "") {
     const el = document.getElementById(id);
-    if (el) el.value = (value !== undefined && value !== null) ? value : defaultVal;
+    if (!el) return;
+    const v = (value !== undefined && value !== null && value !== '') ? value : defaultVal;
+
+    // For <select> elements, if the value (e.g. from CSV import) doesn't match
+    // any existing option, append it as a custom option so the imported spec is
+    // still visible to the supply officer instead of silently clearing the field.
+    if (el.tagName === 'SELECT' && v !== '' && v !== 'None') {
+        let exists = false;
+        for (const opt of el.options) {
+            if (opt.value === v) { exists = true; break; }
+        }
+        if (!exists) {
+            const custom = document.createElement('option');
+            custom.value = v;
+            // Tag imported specs so the supply officer can tell they're unverified.
+            custom.textContent = v + ' (imported)';
+            custom.dataset.imported = '1';
+            el.appendChild(custom);
+        }
+    }
+    el.value = v;
 }
 
 function openAddAssetModal() {
@@ -1110,6 +1141,143 @@ async function saveTransfer(event) {
     } finally {
         btn.disabled = false; btn.textContent = 'Confirm Transfer';
     }
+}
+
+// ==========================================
+// CSV IMPORT FUNCTIONALITY
+// ==========================================
+document.addEventListener("DOMContentLoaded", function () {
+    const importBtn = document.getElementById("importCsvBtn");
+    const csvInput = document.getElementById("inventoryCsvInput");
+
+    if (importBtn && csvInput) {
+        importBtn.addEventListener("click", function () {
+            csvInput.click();
+        });
+
+        csvInput.addEventListener("change", function () {
+            const file = this.files[0];
+            if (!file) return;
+
+            const formData = new FormData();
+            formData.append("file", file);
+            formData.append("_token", document.querySelector('meta[name="csrf-token"]').getAttribute("content"));
+
+            Swal.fire({
+                title: "Uploading CSV...",
+                text: "Please wait while we analyze your file.",
+                allowOutsideClick: false,
+                didOpen: () => Swal.showLoading()
+            });
+
+            fetch("/inventory/import/preview", {
+                method: "POST",
+                credentials: "include",
+                headers: { "Accept": "application/json", "X-Requested-With": "XMLHttpRequest" },
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (!data.success) {
+                    Swal.fire({ icon: "error", title: "Import Failed", text: data.message || "Could not parse CSV." });
+                    return;
+                }
+
+                currentInventoryImportToken = data.token;
+                const s = data.summary;
+                let html = `<div style="text-align:left;font-size:13px;">
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:6px 16px;background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:12px 16px;margin-bottom:12px;">
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Total Rows</span><br><strong style="font-size:16px;">${s.total_rows}</strong></div>
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Valid</span><br><strong style="font-size:16px;color:#16a34a;">${s.valid_rows}</strong></div>
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Errors/Duplicates</span><br><strong style="font-size:16px;color:#dc2626;">${s.duplicate_rows}</strong></div>
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Needs Review</span><br><strong style="font-size:16px;color:#d97706;">${s.needs_review_rows}</strong></div>
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Matched Custodians</span><br><strong style="font-size:16px;">${s.matched_custodians}</strong></div>
+                        <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Unmatched</span><br><strong style="font-size:16px;">${s.unmatched_custodians}</strong></div>
+                        ${s.set_rows > 0 ? `<div style="grid-column:span 2;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;"><span style="font-size:11px;font-weight:700;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:2px 8px;"><i class="fa-solid fa-layer-group" style="font-size:10px;margin-right:4px;"></i>${s.set_rows} Complete Set row(s) → ${s.set_rows + s.component_rows} asset records (${s.component_rows} Monitor component(s) split out)</span></div>` : ''}
+                    </div>`;
+
+                if (data.items && data.items.length > 0) {
+                    html += `<p style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Preview (first ${data.preview_limit} rows):</p>`;
+                    data.items.forEach(item => {
+                        const badge = item.status === "valid" ? "✅" : item.status === "needs_review" ? "⚠️" : "❌";
+                        const errs = item.errors.length ? `<br><span style="color:#dc2626;font-size:11px;">${item.errors.join("; ")}</span>` : "";
+                        const warns = item.warnings.length ? `<br><span style="color:#d97706;font-size:11px;">${item.warnings.join("; ")}</span>` : "";
+                        // Use records[0] for item name (new format after service refactor)
+                        const firstName = (item.records && item.records[0]) ? (item.records[0].item_name || "N/A") : "N/A";
+                        const setTag = item.is_set
+                            ? ` <span style="font-size:10px;font-weight:800;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:3px;padding:1px 6px;"><i class="fa-solid fa-layer-group" style="font-size:9px;"></i> Set (${item.records.length} records)</span>`
+                            : '';
+                        html += `<div style="padding:7px 0;border-bottom:1px solid #f1f5f9;font-size:12px;">
+                            ${badge} <strong>Row ${item.row_number}:</strong> ${firstName}${setTag} ${errs} ${warns}
+                        </div>`;
+                    });
+                }
+                html += `</div>`;
+
+                Swal.fire({
+                    title: "Import Preview",
+                    html: html,
+                    icon: "info",
+                    showCancelButton: true,
+                    confirmButtonText: `<i class="fa-solid fa-check"></i> Import ${s.valid_rows} Records`,
+                    cancelButtonText: "Cancel",
+                    confirmButtonColor: "#16a34a",
+                    cancelButtonColor: "#64748b"
+                }).then(result => {
+                    if (result.isConfirmed) {
+                        commitImport();
+                    }
+                });
+            })
+            .catch(err => {
+                Swal.fire({ icon: "error", title: "Upload Error", text: "Could not connect to server." });
+            });
+
+            this.value = "";
+        });
+    }
+});
+
+function commitImport() {
+    if (!currentInventoryImportToken) return;
+
+    Swal.fire({
+        title: "Importing Records...",
+        text: "Please wait while records are being saved.",
+        allowOutsideClick: false,
+        didOpen: () => Swal.showLoading()
+    });
+
+    fetch("/inventory/import/commit", {
+        method: "POST",
+        credentials: "include",
+        headers: {
+            "Content-Type": "application/json",
+            "Accept": "application/json",
+            "X-CSRF-TOKEN": document.querySelector('meta[name="csrf-token"]').getAttribute("content"),
+            "X-Requested-With": "XMLHttpRequest"
+        },
+        body: JSON.stringify({ token: currentInventoryImportToken })
+    })
+    .then(r => r.json())
+    .then(data => {
+        if (data.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Import Complete!",
+                text: data.message || `Successfully imported records.`,
+                confirmButtonColor: "#0038A8"
+            }).then(() => {
+                currentInventoryImportToken = null;
+                loadInventory();
+            });
+        } else {
+            Swal.fire({ icon: "error", title: "Import Failed", text: data.message || "Could not complete import." });
+        }
+    })
+    .catch(err => {
+        Swal.fire({ icon: "error", title: "Import Error", text: "Could not connect to server." });
+    });
 }
 
 // Global modal close — click outside overlay to dismiss

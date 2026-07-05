@@ -133,6 +133,8 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::get('/inventory/search-assets', [InventoryController::class, 'searchAssets'])->name('inventory.search-assets');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store')->middleware('throttle:30,1');
+        Route::post('/inventory/import/preview', [InventoryController::class, 'previewImport'])->name('inventory.import.preview')->middleware('throttle:10,1');
+        Route::post('/inventory/import/commit', [InventoryController::class, 'commitImport'])->name('inventory.import.commit')->middleware('throttle:5,1');
         Route::put('/inventory/{inventory}', [InventoryController::class, 'update'])->name('inventory.update')->middleware('throttle:30,1');
         Route::delete('/inventory/{inventory}', [InventoryController::class, 'destroy'])->name('inventory.destroy')->middleware('throttle:30,1');
         // Parameterized routes after statics

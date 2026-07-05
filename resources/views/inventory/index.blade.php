@@ -421,6 +421,8 @@
         .btn-group { display: flex; gap: 8px; }
         .btn-qr { background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-pc { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
+        .btn-import { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .btn-import:hover { background: #dcfce7; }
         .btn-add { background: #0038A8; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-viewonly { background: #f8fafc; color: #475569; border: 1px solid #cbd5e1; padding: 9px 14px; border-radius: 8px; font-size: 12px; font-weight: 800; }
         .search-wrapper { position: relative; flex: 1; min-width: 250px; }
@@ -580,6 +582,10 @@
                     <a href="{{ route('physical-count.index') }}" class="btn-pc">
                         <i class="fa-solid fa-clipboard-check"></i> Physical Count
                     </a>
+                    <button id="importCsvBtn" class="btn-import" type="button">
+                        <i class="fa-solid fa-file-csv"></i> Import CSV
+                    </button>
+                    <input type="file" id="inventoryCsvInput" accept=".csv,text/csv" class="d-none">
                     <button id="addAssetBtn" class="btn-add">
                         <i class="fa-solid fa-plus"></i> Register Asset
                     </button>

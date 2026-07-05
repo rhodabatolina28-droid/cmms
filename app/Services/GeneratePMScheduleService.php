@@ -768,9 +768,64 @@ class GeneratePMScheduleService
 
         foreach ($assets as $asset) {
             $cat = strtolower($asset->category ?? '');
+            $name = strtolower($asset->item_name ?? '');
+            $typeStr = $cat . ' ' . $name;
             $specs = is_array($asset->specifications) ? $asset->specifications : json_decode($asset->specifications ?? '[]', true);
+
+            // Peripherals stored inside the parent Desktop/Laptop specs as set_includes[].
+            // Peripherals stored as rich objects: [{'type':'Speaker','brand':'HT','model':'HT-208'}, ...]
+            // We surface them in the PM form without separate DB records.
+            $rawIncludes = $specs['set_includes'] ?? [];
+            foreach ($rawIncludes as $peripheral) {
+                // Support both legacy plain strings ('Speaker') and rich objects (['type'=>'Speaker','brand'=>...])
+                if (is_string($peripheral)) {
+                    $pType  = strtolower($peripheral);
+                    $pBrand = null;
+                    $pModel = null;
+                } else {
+                    $pType  = strtolower($peripheral['type'] ?? '');
+                    $pBrand = $peripheral['brand'] ?? null;
+                    $pModel = $peripheral['model'] ?? null;
+                }
+                $pno = 'Included in set ' . $asset->property_number;
+
+                match (true) {
+                    $pType === 'speaker' && empty($mapped['speakers_pno']) => (function () use (&$mapped, $pBrand, $pModel, $pno) {
+                        $mapped['speakers_brand'] = $pBrand;
+                        $mapped['speakers_model'] = $pModel;
+                        $mapped['speakers_pno']   = $pno;
+                    })(),
+                    $pType === 'ups' && empty($mapped['ups_pno']) => (function () use (&$mapped, $pBrand, $pModel, $pno) {
+                        $mapped['ups_brand'] = $pBrand;
+                        $mapped['ups_model'] = $pModel;
+                        $mapped['ups_pno']   = $pno;
+                    })(),
+                    in_array($pType, ['camera', 'webcam']) && empty($mapped['webcam_pno']) => (function () use (&$mapped, $pBrand, $pModel, $pno) {
+                        $mapped['webcam_brand'] = $pBrand;
+                        $mapped['webcam_model'] = $pModel;
+                        $mapped['webcam_pno']   = $pno;
+                    })(),
+                    $pType === 'printer' && empty($mapped['printer1_pno']) => (function () use (&$mapped, &$printers, $pBrand, $pModel, $pno) {
+                        $printers++;
+                        $mapped["printer{$printers}_brand"] = $pBrand;
+                        $mapped["printer{$printers}_model"] = $pModel;
+                        $mapped["printer{$printers}_pno"]   = $pno;
+                    })(),
+                    $pType === 'scanner' && empty($mapped['scanner_pno']) => (function () use (&$mapped, $pBrand, $pModel, $pno) {
+                        $mapped['scanner_brand'] = $pBrand;
+                        $mapped['scanner_model'] = $pModel;
+                        $mapped['scanner_pno']   = $pno;
+                    })(),
+                    in_array($pType, ['headset', 'earphone']) && empty($mapped['earphone_pno']) => (function () use (&$mapped, $pBrand, $pModel, $pno) {
+                        $mapped['earphone_brand'] = $pBrand;
+                        $mapped['earphone_model'] = $pModel;
+                        $mapped['earphone_pno']   = $pno;
+                    })(),
+                    default => null,
+                };
+            }
             
-            if (str_contains($cat, 'desktop')) {
+            if (str_contains($typeStr, 'desktop')) {
                 $mapped['desktop_brand'] = $asset->brand;
                 $mapped['desktop_model'] = $asset->model;
                 $mapped['desktop_pno']   = $asset->property_number;
@@ -782,7 +837,7 @@ class GeneratePMScheduleService
                 $mapped['desktop_hd2']   = $specs['hd2'] ?? null;
                 $mapped['desktop_office'] = $specs['office'] ?? null;
                 $mapped['desktop_year_purchased'] = $asset->date_acquired ? \Carbon\Carbon::parse($asset->date_acquired)->format('Y') : null;
-            } elseif (str_contains($cat, 'laptop')) {
+            } elseif (str_contains($typeStr, 'laptop')) {
                 $mapped['laptop_brand'] = $asset->brand;
                 $mapped['laptop_model'] = $asset->model;
                 $mapped['laptop_pno']   = $asset->property_number;
@@ -794,37 +849,39 @@ class GeneratePMScheduleService
                 $mapped['laptop_hd2']   = $specs['hd2'] ?? null;
                 $mapped['laptop_office'] = $specs['office'] ?? null;
                 $mapped['laptop_year_purchased'] = $asset->date_acquired ? \Carbon\Carbon::parse($asset->date_acquired)->format('Y') : null;
-            } elseif (str_contains($cat, 'monitor')) {
+            } elseif (str_contains($typeStr, 'monitor')) {
                 $monitors++;
                 if ($monitors <= 2) {
                     $mapped["monitor{$monitors}_brand"] = $asset->brand;
                     $mapped["monitor{$monitors}_model"] = $asset->model;
                     $mapped["monitor{$monitors}_pno"]   = $asset->property_number;
                 }
-            } elseif (str_contains($cat, 'printer') || str_contains($cat, 'printer/scanner')) {
-                $printers++;
-                if ($printers <= 2) {
-                    $mapped["printer{$printers}_brand"] = $asset->brand;
-                    $mapped["printer{$printers}_model"] = $asset->model;
-                    $mapped["printer{$printers}_pno"]   = $asset->property_number;
+            } elseif (str_contains($typeStr, 'printer') || str_contains($typeStr, 'scanner')) {
+                if (str_contains($typeStr, 'scanner') && !str_contains($typeStr, 'printer')) {
+                    $mapped['scanner_brand'] = $asset->brand;
+                    $mapped['scanner_model'] = $asset->model;
+                    $mapped['scanner_pno']   = $asset->property_number;
+                } else {
+                    $printers++;
+                    if ($printers <= 2) {
+                        $mapped["printer{$printers}_brand"] = $asset->brand;
+                        $mapped["printer{$printers}_model"] = $asset->model;
+                        $mapped["printer{$printers}_pno"]   = $asset->property_number;
+                    }
                 }
-            } elseif (str_contains($cat, 'ups')) {
+            } elseif (str_contains($typeStr, 'ups') || str_contains($typeStr, 'uninterruptible')) {
                 $mapped['ups_brand'] = $asset->brand;
                 $mapped['ups_model'] = $asset->model;
                 $mapped['ups_pno']   = $asset->property_number;
-            } elseif (str_contains($cat, 'scanner') && !str_contains($cat, 'printer')) {
-                $mapped['scanner_brand'] = $asset->brand;
-                $mapped['scanner_model'] = $asset->model;
-                $mapped['scanner_pno']   = $asset->property_number;
-            } elseif (str_contains($cat, 'webcam')) {
+            } elseif (str_contains($typeStr, 'webcam') || str_contains($typeStr, 'camera')) {
                 $mapped['webcam_brand'] = $asset->brand;
                 $mapped['webcam_model'] = $asset->model;
                 $mapped['webcam_pno']   = $asset->property_number;
-            } elseif (str_contains($cat, 'speaker')) {
+            } elseif (str_contains($typeStr, 'speaker')) {
                 $mapped['speakers_brand'] = $asset->brand;
                 $mapped['speakers_model'] = $asset->model;
                 $mapped['speakers_pno']   = $asset->property_number;
-            } elseif (str_contains($cat, 'earphone')) {
+            } elseif (str_contains($typeStr, 'earphone') || str_contains($typeStr, 'headset')) {
                 $mapped['earphone_brand'] = $asset->brand;
                 $mapped['earphone_model'] = $asset->model;
                 $mapped['earphone_pno']   = $asset->property_number;
