@@ -23,8 +23,11 @@ class InventoryCsvImportService
 {
     public function preview(string $path, User $actor): array
     {
-        $rows = $this->assetRows($path);
+        $rows = $this->dataRows($path);
         $users = $this->candidateUsers($actor);
+
+        // Detect PMS format from first row
+        $isPms = !empty($rows) && !empty($rows[0]['_pms_type']);
 
         $seenPar = [];        // singletons + set parents (strict uniqueness)
         $seenParSets = [];    // PARs that head a set — their children may reuse the PAR
@@ -44,10 +47,17 @@ class InventoryCsvImportService
         ];
 
         foreach ($rows as $index => $row) {
-            $mapped = $this->mapRow($row, $actor, $users);
+            $mapped = $isPms
+                ? $this->mapPmsRow($row, $actor, $users)
+                : $this->mapRow($row, $actor, $users);
             $warnings = $mapped['warnings'];
             $records = $mapped['records'];
             $errors = [];
+
+            // Skip PMS rows that had no assets (e.g. blank Laptop/Scanner rows)
+            if (empty($records) && $isPms) {
+                continue;
+            }
 
             foreach ($records as $record) {
                 $isComponent = !empty($record['_is_component']);
@@ -64,10 +74,8 @@ class InventoryCsvImportService
                     }
                 }
 
-                // Property number: always enforced (monitor carries the -M suffix to stay unique).
-                if (!$propKey) {
-                    $errors[] = 'Missing property number.';
-                } elseif (isset($seenProperty[$propKey]) || InventoryAsset::where('property_number', $record['property_number'])->exists()) {
+                // Property number: validate uniqueness when present (PMS imports may lack prop# for some accessories).
+                if ($propKey && (isset($seenProperty[$propKey]) || InventoryAsset::where('property_number', $record['property_number'])->exists())) {
                     $errors[] = 'Duplicate property number.';
                 }
 
@@ -110,9 +118,10 @@ class InventoryCsvImportService
                 $summary['unmatched_custodians']++;
             }
 
-            if (count($records) > 1) {
+            $componentCount = count(array_filter($records, fn ($r) => !empty($r['_is_component'])));
+            if ($componentCount > 0) {
                 $summary['set_rows']++;
-                $summary['component_rows'] += count($records) - 1;
+                $summary['component_rows'] += $componentCount;
             }
 
             $status = empty($errors) ? (empty($warnings) ? 'valid' : 'needs_review') : 'blocked';
@@ -131,7 +140,7 @@ class InventoryCsvImportService
                 'errors' => $errors,
                 'warnings' => $warnings,
                 'records' => $records,
-                'is_set' => count($records) > 1,
+                'is_set' => $componentCount > 0,
                 'raw' => $mapped['raw'],
                 'responsible_officer_raw' => $mapped['responsible_officer_raw'],
                 'location_raw' => $mapped['location_raw'],
@@ -152,20 +161,56 @@ class InventoryCsvImportService
         }));
     }
 
-    private function assetRows(string $path): array
+    private function dataRows(string $path): array
     {
+        $rows = [];
+
         $handle = fopen($path, 'r');
         if (!$handle) return [];
-
-        $rows = [];
         while (($row = fgetcsv($handle)) !== false) {
-            $row = array_pad($row, 16, '');
-            if (str_starts_with(trim((string) $row[0]), 'ICT-')) {
-                $rows[] = $row;
-            }
+            // Normalize row length to prevent index errors
+            $rows[] = $row;
         }
         fclose($handle);
-        return $rows;
+
+        // Detect format
+        if (!empty($rows) && isset($rows[0][0]) && str_starts_with(trim((string) $rows[0][0]), 'ICT-')) {
+            // ICT PAR format: each row starting with ICT- is a record
+            return array_values(array_filter($rows, fn ($r) => str_starts_with(trim((string) ($r[0] ?? '')), 'ICT-')));
+        }
+
+        // PMS format: detect type from headers (line 2, 0-indexed: index 1)
+        // Row 0: DATE header, Row 1: column group headers, Row 2: sub-headers
+        if (count($rows) >= 4) {
+            $headerRow = $rows[1] ?? [];
+            $headerText = strtoupper(implode(' ', array_slice($headerRow, 0, 8)));
+
+            $pmsType = match (true) {
+                str_contains($headerText, 'DESKTOP') => 'pms_desktop',
+                str_contains($headerText, 'LAPTOP')  => 'pms_laptop',
+                str_contains($headerText, 'INKJET') || str_contains($headerText, 'LASERJET') => 'pms_printer',
+                str_contains($headerText, 'SCANNER') => 'pms_scanner',
+                default => 'pms_others',
+            };
+
+            // Data starts at row index 3 (0-based)
+            for ($i = 3; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                $col0 = trim((string) ($row[0] ?? ''));
+                // Skip completely empty rows or rows without a row number
+                if ($col0 === '' && count(array_filter($row, fn ($v) => trim((string) $v) !== '')) === 0) continue;
+                // Mark the row with PMS type
+                $row['_pms_type'] = $pmsType;
+                $rows[$i] = $row;
+            }
+
+            return array_values(array_filter(
+                array_slice($rows, 3),
+                fn ($r) => isset($r['_pms_type'])
+            ));
+        }
+
+        return [];
     }
 
     /**
@@ -218,29 +263,24 @@ class InventoryCsvImportService
         $unitUpper = strtoupper($raw['unit_measure']);
         $isSet = $unitUpper === 'SET' || str_contains($descUpper, 'COMPLETE SET') || !empty($parsed['set_type']);
 
-        // Detect peripherals mentioned in the description and store them as
-        // rich objects {type, brand, model} inside the parent asset's specs.
-        // They do NOT become separate inventory records.
-        $setIncludes = $isSet ? $this->extractSetIncludes($description) : [];
-
         $baseSpecs = array_filter([
             'cpu' => $parsed['processor'] ?? null,
             'ram' => $parsed['ram'] ?? null,
             'hd1' => $parsed['storage'] ?? null,
             'os' => $parsed['operating_system'] ?? null,
+            'gpu' => $parsed['gpu'] ?? null,
+            'office' => $parsed['office'] ?? null,
             'set_type' => $parsed['set_type'] ?? null,
             'speed' => $parsed['speed'] ?? null,
             'capacity' => $parsed['capacity'] ?? null,
             'network_role' => $parsed['network_role'] ?? null,
-            'set_includes' => !empty($setIncludes) ? $setIncludes : null,
         ], fn ($value) => $value !== null && $value !== '' && $value !== []);
 
         $itemName = $this->itemName($description, $raw['article']);
-        $shouldSplit = $this->shouldSplitSet($raw, $category, $serials, $parsed, $description);
 
         // Build the parent (main unit) record always.
         $parentCpuSerial = $serials['cpu'] ?? ($parsed['serial_number'] ?? null);
-        $parentNotes = $this->buildNotes($raw, $isTransferred, $shouldSplit && empty($serials['monitor']));
+        $parentNotes = $this->buildNotes($raw, $isTransferred);
 
         $parent = [
             'category' => $category,
@@ -265,51 +305,42 @@ class InventoryCsvImportService
 
         $records = [$parent];
 
-        // Split out a Monitor as its own accountable record when this row is a
-        // Desktop/Laptop Complete Set that includes a monitor.
-        if ($shouldSplit) {
-            $monitorSerial = $serials['monitor'] ?? null;
-            $monitorBrand = $this->extractMonitorBrand($description, $parsed);
-            $monitorModel = $this->extractMonitorModel($description, $parsed);
+        // Detect accessories from description and create separate child records
+        if ($isSet && in_array($category, ['Desktop', 'Laptop'], true)) {
+            $accessories = $this->extractAccessories($description);
 
-            $monitorSpecs = array_filter([
-                'monitor_brand' => $monitorBrand,
-                'monitor_model' => $monitorModel,
-                'monitor_size' => $parsed['monitor_size'] ?? null,
-                'monitor_resolution' => $parsed['monitor_resolution'] ?? null,
-                'monitor_notes' => $monitorSerial ? null : 'S/N to verify during physical inventory',
-            ], fn ($value) => $value !== null && $value !== '');
+            foreach ($accessories as $acc) {
+                $typeKey = strtolower($acc['type']);
+                $accSerial = $serials[$typeKey] ?? null;
+                $suffix = $this->componentSuffix($acc['type']);
+                $accCategory = $acc['type'] === 'Monitor' ? 'Monitor' : 'Peripherals';
 
-            $records[] = [
-                'category' => 'Monitor',
-                'item_name' => 'Monitor (set component)',
-                'serial_number' => $monitorSerial,
-                'property_number' => $raw['new_property_number'] . '-M',
-                'par_number' => $raw['par_number'],
-                'brand' => $monitorBrand,
-                'model' => $monitorModel,
-                'specifications' => $monitorSpecs,
-                'assigned_to_user' => $custodian?->id,
-                'region' => $actor->region,
-                'branch' => $actor->branch,
-                'office' => $custodian?->office ?: $office,
-                'department' => $custodian?->department,
-                'status' => $custodian ? 'Active' : 'Spare',
-                'date_acquired' => $this->parseDate($raw['date_of_acquisition']),
-                'acquisition_cost' => null,
-                'asset_notes' => $parentNotes,
-                '_is_component' => true,
-            ];
+                $records[] = [
+                    'category' => $accCategory,
+                    'item_name' => $acc['type'] . ' - ' . ($acc['brand'] ?? 'Unknown'),
+                    'serial_number' => $accSerial,
+                    'property_number' => $raw['new_property_number'] . '-' . $suffix,
+                    'par_number' => $raw['par_number'],
+                    'brand' => $acc['brand'],
+                    'model' => $acc['model'],
+                    'specifications' => null,
+                    'assigned_to_user' => $custodian?->id,
+                    'region' => $actor->region,
+                    'branch' => $actor->branch,
+                    'office' => $custodian?->office ?: $office,
+                    'department' => $custodian?->department,
+                    'status' => $custodian ? 'Active' : 'Spare',
+                    'date_acquired' => $this->parseDate($raw['date_of_acquisition']),
+                    'acquisition_cost' => null,
+                    'asset_notes' => ($accSerial ? '' : $acc['type'] . ' S/N to verify during physical inventory. ') . $parentNotes,
+                    '_is_component' => true,
+                ];
 
-            if (empty($monitorSerial)) {
-                $warnings[] = 'Monitor S/N not found in CSV — created with null serial for verification.';
+                if (empty($accSerial)) {
+                    $warnings[] = $acc['type'] . ' S/N not found in CSV — created with null serial for verification.';
+                }
             }
         }
-
-        // Peripherals (Keyboard, Mouse, Speaker, UPS, Camera) are stored inside
-        // the parent asset's specifications['set_includes'] array — NOT as separate
-        // inventory records. Only Monitor is split as its own accountable record.
-        // (set_includes was already injected into $baseSpecs and applied to $parent above)
 
         return [
             'records' => $records,
@@ -322,99 +353,415 @@ class InventoryCsvImportService
     }
 
     /**
-     * Decide whether a row should be split into a CPU parent + Monitor child.
-     * Triggered only for Desktop/Laptop Complete Sets that mention a monitor
-     * or carry a monitor S/N — keyboards/mice/etc. stay inside the CPU specs.
-     */
-    private function shouldSplitSet(array $raw, string $category, array $serials, array $parsed, string $description): bool
-    {
-        if (!in_array($category, ['Desktop', 'Laptop'], true)) {
-            return false;
-        }
-        $unitUpper = strtoupper($raw['unit_measure']);
-        $descUpper = strtoupper($description);
-        $isSet = $unitUpper === 'SET'
-            || str_contains($descUpper, 'COMPLETE SET')
-            || !empty($parsed['set_type']);
-        if (!$isSet) {
-            return false;
-        }
-        $mentionsMonitor = str_contains($descUpper, 'MONITOR')
-            || !empty($serials['monitor']);
-
-        return $mentionsMonitor;
-    }
-
-    /**
-     * Extract CPU and monitor serial numbers. Newer CSVs carry the S/N block
-     * in column 4 with explicit "(CPU)"/"(monitor)" labels and embedded
-     * newlines. Older CSVs only carry one S/N inline in the description.
+     * Extract serial numbers from column 4 (structured S/N block). Supports
+     * labeled serials: (CPU), (MONITOR), (UPS), (SPEAKER), (WEBCAM), etc.
+     * Unlabeled serials are assigned to CPU. Older CSVs fall back to the
+     * description for a single S/N.
      *
-     * Returns ['cpu' => ?string, 'monitor' => ?string].
+     * Returns a map of lowercase labels → S/N values (e.g. ['cpu' => ..., 'monitor' => ...]).
      */
     private function extractSerials(string $serialBlock, string $description): array
     {
-        $cpu = null;
-        $monitor = null;
+        $serials = [];
 
         // Prefer the structured col-4 block when present.
         if ($serialBlock !== '' && stripos($serialBlock, 'S/N') !== false) {
-            preg_match_all('/S\/N\s*[:;#\-]?\s*([A-Z0-9][A-Z0-9\-]*)\s*(?:\((CPU|MONITOR)\))?/i', $serialBlock, $matches, PREG_SET_ORDER);
+            preg_match_all('/S\/N\s*[:;#\-]?\s*([A-Z0-9][A-Z0-9\-]*)\s*(?:\(([^)]+)\))?/i', $serialBlock, $matches, PREG_SET_ORDER);
             foreach ($matches as $m) {
                 $value = trim($m[1], " .;,)");
-                $label = strtoupper($m[2] ?? '');
-                if ($label === 'MONITOR' || ($monitor === null && $cpu !== null && $label === '')) {
-                    if ($label === 'MONITOR') {
-                        $monitor = $value;
-                    } else {
-                        // Unlabeled second S/N — best effort assign to monitor.
-                        $monitor = $monitor ?? $value;
+                $label = strtoupper(trim($m[2] ?? ''));
+                if ($label === '') {
+                    // Unlabeled — assign to CPU if not already set
+                    if (!isset($serials['cpu'])) {
+                        $serials['cpu'] = $value;
                     }
                 } else {
-                    $cpu = $cpu ?? $value;
+                    $serials[strtolower($label)] = $value;
                 }
             }
         }
 
         // Fall back to the description for the (single) S/N when col 4 was empty.
-        if ($cpu === null && preg_match('/(?:S\/N|S\.N\.|SN|SERIAL(?:\s+NO\.?)?)\s*[:;#\-]?\s*([A-Z0-9][A-Z0-9\-]+)/i', $description, $m)) {
-            $cpu = trim($m[1], " .;,)");
+        if (!isset($serials['cpu']) && preg_match('/(?:S\/N|S\.N\.|SN|SERIAL(?:\s+NO\.?)?)\s*[:;#\-]?\s*([A-Z0-9][A-Z0-9\-]+)/i', $description, $m)) {
+            $serials['cpu'] = trim($m[1], " .;,)");
         }
 
-        return array_filter([
-            'cpu' => $cpu,
-            'monitor' => $monitor,
-        ], fn ($v) => $v !== null && $v !== '');
+        return $serials;
     }
 
-    private function buildNotes(array $raw, bool $isTransferred, bool $monitorNeedsVerification): string
+    private function buildNotes(array $raw, bool $isTransferred): string
     {
         $parts = ["CSV import. Officer: {$raw['responsible_officer']}; Location: {$raw['location']}"];
         if ($isTransferred) {
             $parts[] = 'TRANSFERRED per CSV — awaiting reassignment';
         }
-        if ($monitorNeedsVerification) {
-            $parts[] = 'Monitor S/N to verify during physical inventory';
-        }
         return trim(implode('; ', $parts));
     }
 
-    private function extractMonitorBrand(string $description, array $parsed): ?string
+    /**
+     * PMSF The dispatcher for all PMS CSV format rows.
+     */
+    private function mapPmsRow(array $row, User $actor, Collection $users): array
     {
-        if (preg_match('/(ASUS|DELL|HP|LENOVO|ACER|SAMSUNG|AOC|LG|BENQ|PHILIPS|VIEWSONIC)\s+(?:[A-Z0-9][A-Z0-9\-]{2,}\s+)?(?:LED\s+)?(?:LCD\s+)?(?:MONITOR|FH|HZ|FLATRON|DISPLAY)/i', $description, $m)) {
-            return strtoupper(trim($m[1]));
-        }
-        return $parsed['brand'] ?? null;
+        $pmsType = $row['_pms_type'];
+        unset($row['_pms_type']);
+
+        return match ($pmsType) {
+            'pms_desktop' => $this->mapPmsDesktop($row, $actor, $users),
+            'pms_laptop'  => $this->mapPmsLaptop($row, $actor, $users),
+            'pms_printer' => $this->mapPmsPrinter($row, $actor, $users),
+            'pms_scanner' => $this->mapPmsScanner($row, $actor, $users),
+            'pms_others'  => $this->mapPmsOthers($row, $actor, $users),
+            default       => $this->mapPmsOthers($row, $actor, $users),
+        };
     }
 
-    private function extractMonitorModel(string $description, array $parsed): ?string
+    /**
+     * PMS Desktop CSV. Columns:
+     *   0:No. 1:End-user 2:FLR 3:DIV 4:Brand/Model 5:PropertyNo 6:ComputerName
+     *   7:Year 8:CPU 9:RAM 10:GPU 11:HD-1 12:HD-2 13:OS
+     *   14:Mon1Brand 15:Mon1Model 16:Mon1Prop 17:Mon2Brand 18:Mon2Model 19:Mon2Prop 20:MSOffice
+     */
+    private function mapPmsDesktop(array $row, User $actor, Collection $users): array
     {
-        // Surface a monitor-specific model only when explicitly described.
-        // Example: "SAMSUNG 34-inch MONITOR" or "HP 324pf 100Hz MONITOR"
-        if (preg_match('/(?:ASUS|DELL|HP|LENOVO|ACER|SAMSUNG|AOC|LG|BENQ|PHILIPS|VIEWSONIC)\s+(?:SERIES\s+[A-Z0-9\s]+\s+)?([A-Z0-9][A-Z0-9\-]{2,})\s+(?:LED\s+)?(?:LCD\s+)?(?:MONITOR|FH|HZ|FLATRON|DISPLAY)/i', $description, $m)) {
-            return trim($m[1]);
+        $row = array_pad($row, 21, '');
+        [$no, $officer, $flr, $div, $brandModel, $propNo, $compName, $year, $cpu, $ram, $gpu, $hd1, $hd2, $os, $m1b, $m1m, $m1p, $m2b, $m2m, $m2p, $office] = $row;
+
+        $officer = $this->clean($officer);
+        $brand = null;
+        $model = null;
+        $upperBm = strtoupper($brandModel);
+        foreach (['LENOVO', 'DELL', 'HP', 'HPE', 'ACER', 'ASUS', 'SAMSUNG', 'AOC', 'LG', 'BENQ', 'PHILIPS'] as $kb) {
+            if (str_contains($upperBm, $kb)) { $brand = $kb; break; }
         }
-        return null;
+        $model = $brand ? trim(str_ireplace($brand, '', $brandModel)) : $brandModel;
+
+        $isTransferred = $this->isTransferred($officer);
+        $custodian = $isTransferred ? null : $this->matchUser($officer, $users);
+        $warnings = [];
+        if ($isTransferred) $warnings[] = 'Responsible officer marked TRANSFERRED';
+        elseif (!$custodian && $officer) $warnings[] = 'No matching user found for: ' . $officer;
+
+        $parNumber = $propNo ?: ('PMS-DT-' . $no);
+        $specs = array_filter(compact('cpu', 'ram', 'gpu', 'hd1', 'hd2', 'os', 'office'), fn ($v) => $v !== null && $v !== '' && $v !== false);
+        $baseNotes = "PMS import. Officer: {$officer}; Location: {$div}/{$flr}";
+
+        $parent = [
+            'category' => 'Desktop', 'item_name' => $brandModel, 'serial_number' => null,
+            'property_number' => $propNo, 'par_number' => $parNumber,
+            'brand' => $brand, 'model' => $model, 'specifications' => $specs,
+            'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+            'office' => $div, 'department' => $div,
+            'status' => $custodian ? 'Active' : 'Spare',
+            'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+            'asset_notes' => $baseNotes, '_is_component' => false,
+        ];
+        $records = [$parent];
+
+        // Monitor 1
+        if ($this->clean($m1b) || $this->clean($m1m)) {
+            $records[] = [
+                'category' => 'Monitor', 'item_name' => 'Monitor - ' . ($this->clean($m1b) ?: 'Unknown'),
+                'serial_number' => null, 'property_number' => $this->clean($m1p) ?: ($propNo ? $propNo . '-M1' : null),
+                'par_number' => $parNumber, 'brand' => $this->clean($m1b) ?: null, 'model' => $this->clean($m1m) ?: null,
+                'specifications' => null, 'assigned_to_user' => $custodian?->id,
+                'region' => $actor->region, 'branch' => $actor->branch, 'office' => $div, 'department' => $div,
+                'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'asset_notes' => $baseNotes, '_is_component' => true,
+            ];
+        }
+        // Monitor 2
+        if ($this->clean($m2b) || $this->clean($m2m)) {
+            $records[] = [
+                'category' => 'Monitor', 'item_name' => 'Monitor - ' . ($this->clean($m2b) ?: 'Unknown'),
+                'serial_number' => null, 'property_number' => $this->clean($m2p) ?: ($propNo ? $propNo . '-M2' : null),
+                'par_number' => $parNumber, 'brand' => $this->clean($m2b) ?: null, 'model' => $this->clean($m2m) ?: null,
+                'specifications' => null, 'assigned_to_user' => $custodian?->id,
+                'region' => $actor->region, 'branch' => $actor->branch, 'office' => $div, 'department' => $div,
+                'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'asset_notes' => $baseNotes, '_is_component' => true,
+            ];
+        }
+
+        return [
+            'records' => $records, 'raw' => ['par_number' => $parNumber, 'article' => 'Desktop Computer', 'description' => $brandModel, 'responsible_officer' => $officer, 'location' => $div],
+            'warnings' => $warnings, 'custodian_matched' => (bool) $custodian,
+            'responsible_officer_raw' => $officer, 'location_raw' => $div,
+        ];
+    }
+
+    /**
+     * PMS Laptop CSV.
+     *   0:No. 1:End-user 2:DIV 3:(-) 4:Brand 5:Model 6:PropertyNo 7:ComputerName
+     *   8:Year 9:CPU 10:RAM 11:GPU 12:HD-1 13:HD-2 14:OS 15:MSOffice
+     */
+    private function mapPmsLaptop(array $row, User $actor, Collection $users): array
+    {
+        $row = array_pad($row, 16, '');
+        [$no, $officer, $div,,,, $propNo, $compName, $year, $cpu, $ram, $gpu, $hd1, $hd2, $os, $office] = $row;
+        $officer = $this->clean($officer);
+        $brand = $this->clean($row[4] ?? '');
+        $model = $this->clean($row[5] ?? '');
+
+        // Skip empty rows (no laptop data)
+        if (!$brand && !$model && !$propNo) {
+            return [
+                'records' => [], 'raw' => [], 'warnings' => [],
+                'custodian_matched' => false, 'responsible_officer_raw' => $officer, 'location_raw' => $div,
+            ];
+        }
+
+        $isTransferred = $this->isTransferred($officer);
+        $custodian = $isTransferred ? null : $this->matchUser($officer, $users);
+        $warnings = [];
+        if ($isTransferred) $warnings[] = 'Responsible officer marked TRANSFERRED';
+        elseif (!$custodian && $officer) $warnings[] = 'No matching user found for: ' . $officer;
+
+        $parNumber = $propNo ?: ('PMS-LT-' . $no);
+        $specs = array_filter(compact('cpu', 'ram', 'gpu', 'hd1', 'hd2', 'os', 'office'), fn ($v) => $v !== null && $v !== '' && $v !== false);
+
+        return [
+            'records' => [[
+                'category' => 'Laptop', 'item_name' => trim($brand . ' ' . $model) ?: 'Laptop',
+                'serial_number' => null, 'property_number' => $propNo, 'par_number' => $parNumber,
+                'brand' => $brand ?: null, 'model' => $model ?: null, 'specifications' => $specs,
+                'assigned_to_user' => $custodian?->id,
+                'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div,
+                'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ]],
+            'raw' => ['par_number' => $parNumber, 'article' => 'Laptop Computer', 'description' => $brand . ' ' . $model, 'responsible_officer' => $officer, 'location' => $div],
+            'warnings' => $warnings, 'custodian_matched' => (bool) $custodian,
+            'responsible_officer_raw' => $officer, 'location_raw' => $div,
+        ];
+    }
+
+    /**
+     * PMS Printer CSV. Up to 3 printers per row (Inkjet + LaserJet x 2).
+     *   0:No. 1:End-user 2:DIV
+     *   3:IJBrand 4:IJModel 5:IJProp 6:IJYear 7:LJ1Brand 8:LJ1Model 9:LJ1Prop 10:LJ1Year
+     *   11:LJ2Brand 12:LJ2Model 13:LJ2Prop 14:LJ2Year
+     */
+    private function mapPmsPrinter(array $row, User $actor, Collection $users): array
+    {
+        $row = array_pad($row, 15, '');
+        [$no, $officer, $div, $ijB, $ijM, $ijP, $ijY, $lj1B, $lj1M, $lj1P, $lj1Y, $lj2B, $lj2M, $lj2P, $lj2Y] = $row;
+        $officer = $this->clean($officer);
+        $warnings = [];
+
+        $isTransferred = $this->isTransferred($officer);
+        $custodian = $isTransferred ? null : $this->matchUser($officer, $users);
+        if ($isTransferred) $warnings[] = 'Responsible officer marked TRANSFERRED';
+        elseif (!$custodian && $officer) $warnings[] = 'No matching user found for: ' . $officer;
+
+        $records = [];
+
+        $printerSlots = [
+            ['b' => $ijB, 'm' => $ijM, 'p' => $ijP, 'y' => $ijY, 's' => 'IJ'],
+            ['b' => $lj1B, 'm' => $lj1M, 'p' => $lj1P, 'y' => $lj1Y, 's' => 'LJ1'],
+            ['b' => $lj2B, 'm' => $lj2M, 'p' => $lj2P, 'y' => $lj2Y, 's' => 'LJ2'],
+        ];
+
+        foreach ($printerSlots as $slot) {
+            $brand = $this->clean($slot['b']);
+            $model = $this->clean($slot['m']);
+            if (!$brand && !$model) continue;
+            $prop = $this->clean($slot['p']);
+            $year = $this->clean($slot['y']);
+            $parNumber = $prop ?: ($brand . '-' . $model . '-' . $no);
+
+            $records[] = [
+                'category' => 'Printer/Scanner', 'item_name' => ($brand ?: 'Printer') . ($model ? ' ' . $model : ''),
+                'serial_number' => null, 'property_number' => $prop, 'par_number' => $parNumber,
+                'brand' => $brand ?: null, 'model' => $model ?: null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id,
+                'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div,
+                'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        return [
+            'records' => $records,
+            'raw' => ['par_number' => '', 'article' => 'Printer', 'description' => '', 'responsible_officer' => $officer, 'location' => $div],
+            'warnings' => $warnings, 'custodian_matched' => (bool) $custodian,
+            'responsible_officer_raw' => $officer, 'location_raw' => $div,
+        ];
+    }
+
+    /**
+     * PMS Scanner CSV.
+     *   0:No. 1:End-user 2:DIV 3:Brand 4:Model 5:PropertyNo 6:Year
+     */
+    private function mapPmsScanner(array $row, User $actor, Collection $users): array
+    {
+        $row = array_pad($row, 7, '');
+        [$no, $officer, $div, $brand, $model, $prop, $year] = $row;
+        $officer = $this->clean($officer);
+        $brand = $this->clean($brand);
+        $model = $this->clean($model);
+
+        if (!$brand && !$model) {
+            return [
+                'records' => [], 'raw' => [], 'warnings' => [],
+                'custodian_matched' => false, 'responsible_officer_raw' => $officer, 'location_raw' => $div,
+            ];
+        }
+
+        $isTransferred = $this->isTransferred($officer);
+        $custodian = $isTransferred ? null : $this->matchUser($officer, $users);
+        $warnings = [];
+        if ($isTransferred) $warnings[] = 'Responsible officer marked TRANSFERRED';
+        elseif (!$custodian && $officer) $warnings[] = 'No matching user found for: ' . $officer;
+
+        $prop = $this->clean($prop);
+        $year = $this->clean($year);
+        $parNumber = $prop ?: ('PMS-SC-' . $no);
+
+        return [
+            'records' => [[
+                'category' => 'Printer/Scanner', 'item_name' => ($brand ?: 'Scanner') . ($model ? ' ' . $model : ''),
+                'serial_number' => null, 'property_number' => $prop, 'par_number' => $parNumber,
+                'brand' => $brand ?: null, 'model' => $model ?: null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id,
+                'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div,
+                'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ]],
+            'raw' => ['par_number' => $parNumber, 'article' => 'Scanner', 'description' => $brand . ' ' . $model, 'responsible_officer' => $officer, 'location' => $div],
+            'warnings' => $warnings, 'custodian_matched' => (bool) $custodian,
+            'responsible_officer_raw' => $officer, 'location_raw' => $div,
+        ];
+    }
+
+    /**
+     * PMS Others CSV (UPS, IP Phone, Webcam, Speaker, Headphones, Others).
+     *   0:No. 1:End-user 2:DIV
+     *   3:UPS Brand 4:UPS Model 5:UPS Prop 6:IP Phone 7:Webcam 8:WebcamProp
+     *   9:SpkBrand 10:SpkModel 11:SpkProp 12:HpBrand 13:HpModel
+     *   14:Oth1 15:Oth1Prop 16:Oth2 17:Oth2Prop 18:MSOffice
+     */
+    private function mapPmsOthers(array $row, User $actor, Collection $users): array
+    {
+        $row = array_pad($row, 19, '');
+        [$no, $officer, $div, $upB, $upM, $upP, $ip, $webB, $webP, $spkB, $spkM, $spkP, $hpB, $hpM, $oth1, $oth1P, $oth2, $oth2P, $office] = $row;
+        $officer = $this->clean($officer);
+        $warnings = [];
+
+        $isTransferred = $this->isTransferred($officer);
+        $custodian = $isTransferred ? null : $this->matchUser($officer, $users);
+        if ($isTransferred) $warnings[] = 'Responsible officer marked TRANSFERRED';
+        elseif (!$custodian && $officer) $warnings[] = 'No matching user found for: ' . $officer;
+
+        $records = [];
+
+        // UPS
+        $b = $this->clean($upB); $m = $this->clean($upM); $p = $this->clean($upP);
+        if ($b || $m) {
+            $records[] = [
+                'category' => 'Peripherals', 'item_name' => 'UPS - ' . ($b ?: 'Unknown'),
+                'serial_number' => null, 'property_number' => $p, 'par_number' => $p ?: ('PMS-UPS-' . $no),
+                'brand' => $b ?: null, 'model' => $m ?: null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => null, 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        // IP Phone
+        $v = $this->clean($ip);
+        if ($v) {
+            $records[] = [
+                'category' => 'Network/Server', 'item_name' => 'IP Phone - ' . $v,
+                'serial_number' => null, 'property_number' => null, 'par_number' => 'PMS-IP-' . $no,
+                'brand' => null, 'model' => $v, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => null, 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        // Webcam
+        $b = $this->clean($webB); $p = $this->clean($webP);
+        if ($b) {
+            $records[] = [
+                'category' => 'Peripherals', 'item_name' => 'Webcam - ' . $b,
+                'serial_number' => null, 'property_number' => $p, 'par_number' => $p ?: ('PMS-WEB-' . $no),
+                'brand' => $b, 'model' => null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => null, 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        // Speaker
+        $b = $this->clean($spkB); $m = $this->clean($spkM); $p = $this->clean($spkP);
+        if ($b || $m) {
+            $records[] = [
+                'category' => 'Peripherals', 'item_name' => 'Speaker - ' . ($b ?: 'Unknown'),
+                'serial_number' => null, 'property_number' => $p, 'par_number' => $p ?: ('PMS-SPK-' . $no),
+                'brand' => $b ?: null, 'model' => $m ?: null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => null, 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        // Headphones
+        $b = $this->clean($hpB); $m = $this->clean($hpM);
+        if ($b || $m) {
+            $records[] = [
+                'category' => 'Peripherals', 'item_name' => 'Headphones - ' . ($b ?: 'Unknown'),
+                'serial_number' => null, 'property_number' => null, 'par_number' => 'PMS-HP-' . $no,
+                'brand' => $b ?: null, 'model' => $m ?: null, 'specifications' => null,
+                'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                'date_acquired' => null, 'acquisition_cost' => null,
+                'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+            ];
+        }
+
+        // Others 1 & 2
+        foreach ([['v' => $oth1, 'p' => $oth1P, 's' => 'O1'], ['v' => $oth2, 'p' => $oth2P, 's' => 'O2']] as $o) {
+            $v = $this->clean($o['v']);
+            $oP = $this->clean($o['p']);
+            if ($v) {
+                $records[] = [
+                    'category' => 'Others', 'item_name' => $v,
+                    'serial_number' => null, 'property_number' => $oP, 'par_number' => $oP ?: ('PMS-OTH-' . $no . '-' . $o['s']),
+                    'brand' => null, 'model' => $v, 'specifications' => null,
+                    'assigned_to_user' => $custodian?->id, 'region' => $actor->region, 'branch' => $actor->branch,
+                    'office' => $div, 'department' => $div, 'status' => $custodian ? 'Active' : 'Spare',
+                    'date_acquired' => null, 'acquisition_cost' => null,
+                    'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
+                ];
+            }
+        }
+
+        // MS Office — store in first record's specs if any record exists
+        $officeVer = $this->clean($office);
+        if ($officeVer && !empty($records)) {
+            $records[0]['specifications'] = ['office' => 'MS OFFICE ' . $officeVer];
+        }
+
+        return [
+            'records' => $records,
+            'raw' => ['par_number' => '', 'article' => 'Peripherals', 'description' => 'Others', 'responsible_officer' => $officer, 'location' => $div],
+            'warnings' => $warnings, 'custodian_matched' => (bool) $custodian,
+            'responsible_officer_raw' => $officer, 'location_raw' => $div,
+        ];
     }
 
     private function parseDescription(string $description, string $article): array
@@ -429,7 +776,7 @@ class InventoryCsvImportService
             $parsed['serial_number'] = trim($m[1], " .;,)");
         }
 
-        $brands = ['LENOVO', 'DELL', 'HP', 'HPE', 'ACER', 'ASUS', 'EPSON', 'CANON', 'BROTHER', 'SAMSUNG', 'CISCO', 'FORTINET', 'APC', 'EATON', 'FUJITSU', 'PANASONIC', 'RICOH'];
+        $brands = ['LENOVO', 'DELL', 'HP', 'HPE', 'ACER', 'ASUS', 'EPSON', 'CANON', 'BROTHER', 'SAMSUNG', 'CISCO', 'FORTINET', 'APC', 'EATON', 'FUJITSU', 'PANASONIC', 'RICOH', 'LEXMARK'];
         foreach ($brands as $brand) {
             if (str_contains($upper, $brand)) {
                 $parsed['brand'] = $brand;
@@ -438,12 +785,25 @@ class InventoryCsvImportService
             }
         }
 
-        if (preg_match('/((?:INTEL\s+)?CORE\s+I[3579][-\s]?\d{3,5}[A-Z]*|INTEL\s+CORE\s+2\s+DUO|XEON\s+[A-Z0-9\-]+|RYZEN\s+\d\s*[A-Z0-9\-]*)/i', $text, $m)) {
-            $parsed['processor'] = trim($m[1]);
+        // CPU: handle modern formats like "CORE 7 240H", "CORE i5 14TH GEN", "INTEL CORE I7-13700H"
+        if (preg_match('/((?:INTEL\s+)?CORE\s+(?:\d+\s+\d{3,5}[A-Z]*|I[3579]\s+\d+TH\s+GEN|(?:I[3579])?[-\s]?\d{3,5}[A-Z]*|2\s+DUO)|XEON\s+[A-Z0-9\-]+|RYZEN\s+\d\s*[A-Z0-9\-]*)/i', $text, $m)) {
+            $parsed['processor'] = trim(preg_replace('/\s+/', ' ', $m[1]));
         }
 
-        if (preg_match('/(\d+\s*GB)\s*(?:RAM|MEMORY)?/i', $text, $m)) {
-            $parsed['ram'] = strtoupper(str_replace(' ', '', $m[1]));
+        if (preg_match('/(\d+\s*GB)\s*(DDR[0-9])?\s*(?:RAM|MEMORY)?/i', $text, $m)) {
+            $ram = strtoupper(str_replace(' ', '', $m[1]));
+            if (!empty($m[2])) {
+                $ram .= ' ' . strtoupper(trim($m[2]));
+            }
+            $parsed['ram'] = $ram;
+        }
+
+        if (preg_match('/((?:NVIDIA\s+)?(?:GeForce|GEFORCE|RTX|GTX|QUADRO|TITAN)\s+[A-Z0-9\s]+(?:\d+GB\s*(?:GDDR[0-9])?)?|INTEL\s+(?:HD\s+|UHD\s+|IRIS\s+)?GRAPHICS|AMD\s+(?:RADEON|FIREPRO)\s+[A-Z0-9\s]+)/i', $text, $m)) {
+            $parsed['gpu'] = trim(preg_replace('/\s+/', ' ', $m[1]));
+        }
+
+        if (preg_match('/(?:MS\s+)?OFFICE\s+(?:PRO(?:FESSIONAL)?\s+)?(?:\d{4}|20\d{2})?(?:\s+(?:PRO|PLUS|HOME|STUDENT|BUSINESS|ENTERPRISE|STANDARD))?/i', $text, $m)) {
+            $parsed['office'] = trim(preg_replace('/\s+/', ' ', $m[0]));
         }
 
         if (preg_match('/(\d+(?:\.\d+)?\s*(?:TB|GB)\s*(?:HDD|SSD|DRIVE|STORAGE)?)/i', $text, $m)) {
@@ -647,65 +1007,198 @@ class InventoryCsvImportService
     }
 
     /**
-     * Parse peripheral accessories from a set description.
-     * Returns an array of objects: [['type'=>'Speaker','brand'=>'HT','model'=>'HT-208'], ...]
+     * Extract accessories from a set description. Returns an array of detected
+     * components: [['type'=>'Monitor','brand'=>'ASUS','model'=>'23" MONITOR','serial'=>?], ...].
      *
-     * Handles patterns like:
-     *  - "MULTIMEDIA USB SPEAKER HT-208"
-     *  - "APC UPS 650VA"
-     *  - "LOGITECH WEBCAM C270"
-     *  - "WIRED USB KEYBOARD"
-     *  - "OPTICAL MOUSE"
-     *  - "ASUS EXPERTCENTER C2241FH 100HZ MONITOR"  ← already split as separate record, skip here
+     * Handles two real-world formats:
+     *  1. Slash-separated — each segment is a component (first = parent, rest = accessories)
+     *  2. Comma/keyword  — free-text description scanned for known keywords
+     *
+     * Rules:
+     *  - Monitor       → always created (brand default to preceding word)
+     *  - Speaker       → created only if brand present (GENIUS, CREATIVE, MULTIMEDIA)
+     *  - UPS           → created only if brand present (SOCOMEC, PHOENIX, APC, EATON)
+     *  - Webcam        → created only if brand present
+     *  - Earphone      → created only if brand present
+     *  - IP Phone/VoIP → created only if brand present
+     *  - Mouse/Keyboard / Cables/Adapters → SKIPPED
      */
-    private function extractSetIncludes(string $description): array
+    private function extractAccessories(string $description): array
     {
-        $items = [];
+        if (str_contains($description, '/')) {
+            return $this->extractAccessoriesSlash($description);
+        }
+        return $this->extractAccessoriesKeyword($description);
+    }
 
-        // Helper: grab the token(s) immediately before the keyword as brand,
-        // and any alphanumeric token after the keyword as model.
-        // Pattern: ([BRAND_WORDS...]) KEYWORD ([MODEL])?
-        $peripherals = [
-            'Keyboard' => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,3})\s+)?KEYBOARD(?:\s+([\w\-]+))?/i',
-            'Mouse'    => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,3})\s+)?MOUSE(?:\s+([\w\-]+))?/i',
-            'Speaker'  => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,3})\s+)?SPEAKER(?:S)?(?:\s+([\w\-]+))?/i',
-            'UPS'      => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,2})\s+)?UPS(?:\s+([\w\-]+(?:\s*(?:VA|W|WATTS?))?))?\b/i',
-            'Camera'   => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,2})\s+)?(?:CAMERA|WEBCAM)(?:\s+([\w\-]+))?/i',
-            'Scanner'  => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,2})\s+)?SCANNER(?:\s+([\w\-]+))?/i',
-            'Headset'  => '/(?:([\w\-\/&]+(?:\s+[\w\-\/&]+){0,2})\s+)?(?:HEADSET|EARPHONE)(?:S)?(?:\s+([\w\-]+))?/i',
-        ];
+    /**
+     * Parse slash-separated format. First segment is the parent item and is
+     * skipped. Each subsequent segment is checked for accessory keywords.
+     */
+    private function extractAccessoriesSlash(string $description): array
+    {
+        $accessories = [];
+        $parts = explode('/', $description);
 
-        // Words that are NOT brands (articles, descriptors, conjunctions)
+        $skipWords = ['CABLE', 'ADAPTER', 'CONVERTER', 'HUB', 'SPLITTER', 'EXTENSION'];
+        $upsBrands = ['SOCOMEC', 'PHOENIX', 'APC', 'EATON'];
+        $speakerBrands = ['GENIUS', 'CREATIVE', 'MULTIMEDIA'];
+        $knownBrands = ['ASUS', 'DELL', 'HP', 'HPE', 'LENOVO', 'ACER', 'SAMSUNG', 'AOC', 'LG',
+                        'BENQ', 'PHILIPS', 'VIEWSONIC', 'AOPEN', 'LOGITECH', 'EPSON',
+                        'BROTHER', 'CANON', 'FUJITSU', 'PANASONIC', 'RICOH', 'LEXMARK'];
         $stopWords = ['WITH', 'AND', 'OR', 'A', 'AN', 'THE', 'W/', 'WIRED', 'WIRELESS',
                       'USB', 'OPTICAL', 'MULTIMEDIA', 'STANDARD', 'SET', 'COMPLETE',
-                      'BLACK', 'WHITE', 'GRAY', 'GREY', 'FOR', 'OF', 'IN', 'TO'];
+                      'BLACK', 'WHITE', 'GRAY', 'GREY', 'FOR', 'OF', 'IN', 'TO', 'LED', 'LCD'];
 
-        foreach ($peripherals as $type => $pattern) {
+        for ($i = 1; $i < count($parts); $i++) {
+            $segment = trim($parts[$i]);
+            if ($segment === '') continue;
+            $upper = strtoupper($segment);
+
+            // Skip consumables
+            $isSkip = false;
+            foreach ($skipWords as $sw) {
+                if (str_contains($upper, $sw)) { $isSkip = true; break; }
+            }
+            if ($isSkip) continue;
+
+            // Detect type
+            $type = null;
+            if (preg_match('/\bMONITOR\b/', $upper)) $type = 'Monitor';
+            elseif (preg_match('/\bUPS\b/', $upper) || str_contains($upper, 'UNINTERRUPTED')) $type = 'UPS';
+            elseif (preg_match('/\bSPEAKER\b/', $upper)) $type = 'Speaker';
+            elseif (preg_match('/\b(?:WEBCAM|CAMERA)\b/', $upper)) $type = 'Webcam';
+            elseif (preg_match('/\b(?:EARPHONE|HEADSET)\b/', $upper)) $type = 'Earphone';
+            elseif (preg_match('/\b(?:IP\s*PHONE|VOIP)\b/', $upper)) $type = 'IP Phone';
+            elseif (preg_match('/\bMOUSE\b/', $upper) || preg_match('/\bKEYBOARD\b/', $upper)) continue;
+
+            if ($type === null) continue;
+
+            // Brand extraction
+            $brand = $this->extractBrandFromSegment($segment, $type, $upper, $upsBrands, $speakerBrands, $knownBrands, $stopWords);
+
+            // Non-Monitor types skip when brandless
+            if ($type !== 'Monitor' && $brand === null) continue;
+
+            // Model extraction
+            $model = $this->extractModelFromSegment($segment, $brand, $type);
+
+            $accessories[] = [
+                'type' => $type,
+                'brand' => $brand,
+                'model' => $model,
+            ];
+        }
+
+        return $accessories;
+    }
+
+    private function extractBrandFromSegment(string $segment, string $type, string $upper, array $upsBrands, array $speakerBrands, array $knownBrands, array $stopWords): ?string
+    {
+        switch ($type) {
+            case 'UPS':
+                foreach ($upsBrands as $b) {
+                    if (str_contains($upper, $b)) return $b;
+                }
+                return null;
+            case 'Speaker':
+                foreach ($speakerBrands as $b) {
+                    if (str_contains($upper, $b)) return $b;
+                }
+                return null;
+        }
+
+        // Try known brands first
+        foreach ($knownBrands as $b) {
+            if (str_contains($upper, $b)) return $b;
+        }
+
+        // Fallback: word immediately before type keyword
+        $typeKw = $type === 'IP Phone' ? '(?:IP\s*)?PHONE|VOIP' : $type;
+        if (preg_match('/([A-Z][A-Z0-9]{1,})\s+' . $typeKw . '/i', $segment, $m)) {
+            $candidate = strtoupper($m[1]);
+            if (!in_array($candidate, $stopWords)) return $candidate;
+        }
+        // Or the first word if it looks like a brand
+        if (preg_match('/^([A-Z][A-Z0-9\-]+)\s/', $segment, $m)) {
+            $candidate = strtoupper($m[1]);
+            if (!in_array($candidate, $stopWords)) return $candidate;
+        }
+        return null;
+    }
+
+    private function extractModelFromSegment(string $segment, ?string $brand, string $type): ?string
+    {
+        $modelText = $segment;
+        if ($brand) {
+            $modelText = trim(str_ireplace($brand, '', $modelText));
+        }
+        $modelText = trim(preg_replace('/\b(?:MONITOR|SPEAKER|UPS|WEBCAM|CAMERA|EARPHONE|HEADSET|IP\s*PHONE|VOIP|WIRED|WIRELESS|USB|OPTICAL|MULTIMEDIA|STANDARD|LED|LCD|INCH)\b/i', '', $modelText));
+        // Remove leading/trailing formatting punctuation (keep " for inches)
+        $modelText = trim(preg_replace('/^[,\;\-\s]+/', '', trim($modelText)));
+        $modelText = trim(preg_replace('/[,\;\-]+$/', '', $modelText));
+        $modelText = trim(preg_replace('/\s+/', ' ', $modelText));
+        return $modelText !== '' ? $modelText : null;
+    }
+
+    /**
+     * Scan free-text description for accessory keywords (comma/keyword format).
+     */
+    private function extractAccessoriesKeyword(string $description): array
+    {
+        $accessories = [];
+        $stopWords = ['WITH', 'AND', 'OR', 'A', 'AN', 'THE', 'W/', 'WIRED', 'WIRELESS',
+                      'USB', 'OPTICAL', 'MULTIMEDIA', 'STANDARD', 'SET', 'COMPLETE',
+                      'BLACK', 'WHITE', 'GRAY', 'GREY', 'FOR', 'OF', 'IN', 'TO', 'LED', 'LCD'];
+
+        $patterns = [
+            'Monitor'  => '/(?:(ASUS|DELL|HP|LENOVO|ACER|SAMSUNG|AOC|LG|BENQ|PHILIPS|VIEWSONIC|AOPEN)\s+)?(.*?)\s*(?:MONITOR|DISPLAY)(?:\s+(\d+\s*["\']?))?/i',
+            'Speaker'  => '/(?:(GENIUS|CREATIVE|MULTIMEDIA|LOGITECH)\s+)?(?:USB\s+)?(?:MULTIMEDIA\s+)?SPEAKER(?:S)?(?:\s+([A-Z0-9][A-Z0-9\-]+))?/i',
+            'UPS'      => '/(?:(SOCOMEC|PHOENIX|APC|EATON)\s+)?UPS(?:\s+([A-Z0-9][A-Z0-9\-]+(?:\s*(?:VA|W|WATTS?))?))?\b/i',
+            'Webcam'   => '/(?:(LOGITECH|MICROSOFT|LENOVO|ASUS|HP|CREATIVE)\s+)?(?:WEBCAM|CAMERA)(?:\s+([A-Z0-9][A-Z0-9\-]+))?/i',
+            'Earphone' => '/(?:(SONY|JBL|LOGITECH|PLANTRONICS|JABRA|LENOVO|ASUS|HP)\s+)?(?:EARPHONE|HEADSET)(?:S)?(?:\s+([A-Z0-9][A-Z0-9\-]+))?/i',
+        ];
+
+        foreach ($patterns as $type => $pattern) {
             if (preg_match($pattern, $description, $m)) {
                 $rawBrand = trim($m[1] ?? '');
                 $rawModel = trim($m[2] ?? '');
 
-                // Strip stop words from the brand side
                 $brandTokens = array_filter(
                     preg_split('/\s+/', strtoupper($rawBrand)),
                     fn ($t) => $t !== '' && !in_array($t, $stopWords, true)
                 );
                 $brand = implode(' ', $brandTokens) ?: null;
 
-                // Model: must look like a real model code (letters+digits or has a dash)
+                // Non-Monitor types without brand → skip (unless model contains a known brand)
+                if ($type !== 'Monitor' && $brand === null) continue;
+
                 $model = null;
-                if ($rawModel && preg_match('/[0-9]/', $rawModel)) {
-                    $model = strtoupper(trim($rawModel));
+                if ($rawModel && preg_match('/[A-Z0-9]/i', $rawModel)) {
+                    $model = strtoupper(trim(preg_replace('/\s+/', ' ', $rawModel)));
                 }
 
-                $items[] = array_filter([
-                    'type'  => $type,
+                $accessories[] = array_filter([
+                    'type' => $type,
                     'brand' => $brand,
                     'model' => $model,
                 ], fn ($v) => $v !== null && $v !== '');
             }
         }
 
-        return $items;
+        return $accessories;
+    }
+
+    private function componentSuffix(string $type): string
+    {
+        return match ($type) {
+            'Monitor' => 'M',
+            'UPS'     => 'U',
+            'Speaker' => 'S',
+            'Webcam'  => 'W',
+            'Earphone'=> 'E',
+            'IP Phone' => 'IP',
+            default   => 'X',
+        };
     }
 }

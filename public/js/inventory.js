@@ -1,7 +1,12 @@
  // Inventory Management Script for Laravel
 let allAssets = [];
+let assetLookup = {};
 let allUsers = [];
 let currentInventoryImportToken = null;
+let currentPage = 1;
+let lastPage = 1;
+const perPage = 50;
+let filterChangeTimer = null;
 
 // Division abbreviation lookup — maps full office/division names to short codes
 function getDivisionAbbr(office) {
@@ -65,13 +70,12 @@ document.addEventListener("DOMContentLoaded", function () {
     const categoryFilter = document.getElementById("filterAssetCategory");
     const statusFilter = document.getElementById("filterAssetStatus");
 
-    function filterAndResetPage() { currentPage = 1; filterInventory(); }
-    if (searchInput) searchInput.addEventListener("keyup", filterAndResetPage);
-    if (regionFilter) regionFilter.addEventListener("change", filterAndResetPage);
-    if (divFilter) divFilter.addEventListener("change", filterAndResetPage);
-    if (deptFilter) deptFilter.addEventListener("change", filterAndResetPage);
-    if (categoryFilter) categoryFilter.addEventListener("change", filterAndResetPage);
-    if (statusFilter) statusFilter.addEventListener("change", filterAndResetPage);
+    if (searchInput) searchInput.addEventListener("keyup", onFilterChange);
+    if (regionFilter) regionFilter.addEventListener("change", () => loadInventory(1));
+    if (divFilter) divFilter.addEventListener("change", () => loadInventory(1));
+    if (deptFilter) deptFilter.addEventListener("change", () => loadInventory(1));
+    if (categoryFilter) categoryFilter.addEventListener("change", () => loadInventory(1));
+    if (statusFilter) statusFilter.addEventListener("change", () => loadInventory(1));
 
     // Form submission
     const assetForm = document.getElementById("assetForm");
@@ -167,11 +171,7 @@ async function fetchFilteredUsers() {
 }
 
 
-let inventoryTotal = 0;
-let currentPage = 1;
-const perPage = 50;
-
-async function loadInventory() {
+async function loadInventory(page) {
     try {
         const params = new URLSearchParams();
         const searchInput = document.getElementById("searchInventoryInput");
@@ -181,6 +181,8 @@ async function loadInventory() {
         if (searchInput && searchInput.value) params.set('search', searchInput.value);
         if (catFilter && catFilter.value) params.set('category', catFilter.value);
         if (statFilter && statFilter.value) params.set('status', statFilter.value);
+        if (page) params.set('page', page);
+        params.set('per_page', perPage);
 
         const qs = params.toString();
         const dataUrl = (window.CMMS_INVENTORY_DATA_URL || '/inventory/data') + (qs ? '?' + qs : '');
@@ -193,13 +195,16 @@ async function loadInventory() {
             }
         });
         const result = await response.json();
-        
-        allUsers = [];
 
-        allAssets = result.success ? result.assets : [];
-        inventoryTotal = result.total || allAssets.length;
-        currentPage = 1;
-        filterInventory();
+        if (result.success) {
+            allAssets = result.assets || [];
+            allAssets.forEach(a => { assetLookup[a.asset_id || a.id] = a; });
+            currentPage = result.current_page || 1;
+            lastPage = result.last_page || 1;
+            renderInventoryTable(allAssets);
+            renderPagination(result.total || 0);
+            updateInventorySummary(result.total || 0);
+        }
     } catch (error) {
         console.error("Error loading inventory:", error);
         document.getElementById("inventoryTableBody").innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error loading inventory.</td></tr>';
@@ -218,15 +223,15 @@ function exportFilteredInventory() {
     window.location.href = prefix + '/export?' + params.toString();
 }
 
-function updateInventorySummary(assets) {
+function updateInventorySummary(total) {
     if (!document.getElementById("statTotal")) return;
+    document.getElementById("statTotal").textContent = total || 0;
 
-    const total = inventoryTotal || assets.length;
-    const active = assets.filter(a => a.status === 'Active').length;
-    const spare = assets.filter(a => a.status === 'Spare').length;
-    const defective = assets.filter(a => ['Defective', 'For Repair', 'Scrapped'].includes(a.status)).length;
+    // Counts come from server — stats show current filtered total
+    const active = allAssets.filter(a => a.status === 'Active').length;
+    const spare = allAssets.filter(a => a.status === 'Spare').length;
+    const defective = allAssets.filter(a => ['Defective', 'For Repair', 'Scrapped'].includes(a.status)).length;
 
-    document.getElementById("statTotal").textContent = total;
     document.getElementById("statActive").textContent = active;
     document.getElementById("statSpare").textContent = spare;
     document.getElementById("statDefective").textContent = defective;
@@ -241,16 +246,7 @@ function renderInventoryTable(assets) {
         return;
     }
 
-    // Sort: Active → Spare → For Repair → Defective → For Disposal → Scrapped
-    const statusOrder = { 'Active': 0, 'Spare': 1, 'For Repair': 2, 'Defective': 3, 'For Disposal': 4, 'Scrapped': 5 };
-    const sorted = [...assets].sort((a, b) => {
-        const aOrder = statusOrder[a.status] ?? 99;
-        const bOrder = statusOrder[b.status] ?? 99;
-        if (aOrder !== bOrder) return aOrder - bOrder;
-        return (a.item_name || '').localeCompare(b.item_name || '');
-    });
-
-    tbody.innerHTML = sorted.map(asset => {
+    tbody.innerHTML = assets.map(asset => {
         let statusClass = 'sp-active'; 
         if (asset.status === 'Spare') statusClass = 'sp-spare';
         if (asset.status === 'Defective') statusClass = 'sp-defective';
@@ -392,7 +388,7 @@ document.addEventListener('keydown', function(e) {
 // ── Delete Asset ──
 function confirmDeleteAsset(assetId) {
     closeAllDropdowns();
-    const asset = allAssets.find(a => (a.asset_id || a.id) == assetId);
+    const asset = assetLookup[assetId];
     if (!asset) return;
 
     Swal.fire({
@@ -438,100 +434,19 @@ function confirmDeleteAsset(assetId) {
 }
 
 function filterInventory() {
-    const searchInput = document.getElementById("searchInventoryInput");
-    const regFilter = document.getElementById("filterAssetRegion");
-    const deptFilter = document.getElementById("filterAssetDepartment");
-    const divFilter = document.getElementById("filterAssetDivision");
-    const catFilter = document.getElementById("filterAssetCategory");
-    const statFilter = document.getElementById("filterAssetStatus");
+    loadInventory(1);
+}
 
-    const searchTerm = searchInput ? searchInput.value.toLowerCase() : "";
-    const departmentFilterValue = deptFilter ? deptFilter.value.toUpperCase() : "";
-    const divisionFilterValue = divFilter ? divFilter.value.toUpperCase() : "";
-    const categoryFilterValue = catFilter ? catFilter.value : "";
-    const statusFilterValue = statFilter ? statFilter.value : "";
-
-    function normalizeOfficeDept(officeRaw) {
-        if (!officeRaw) return "";
-        let cleanRow = officeRaw.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
-        
-        if (cleanRow === 'RID' || cleanRow === 'RIDOFFICE' || cleanRow === 'RESEARCHANDINFORMATIONDIVISION' || cleanRow === 'RESEARCHANDINFODIVISION' || cleanRow === 'RESEARCHANDINFO' || cleanRow === 'RESEARCHINFO' || cleanRow === 'RESEARCHANDINFORMATION' || cleanRow === 'ICT' || cleanRow === 'ICTOFFICE' || cleanRow === 'RESEARCH' || cleanRow === 'RESEARCHDIVISION') return 'RESEARCHANDINFORMATIONDIVISION';
-        if (cleanRow === 'AD' || cleanRow === 'ADMIN' || cleanRow === 'ADMINOFFICE' || cleanRow === 'ADMINISTRATIVEDIVISION' || cleanRow === 'ADMINISTRATIVE') return 'ADMINISTRATIVEDIVISION';
-        if (cleanRow === 'CMD' || cleanRow === 'CMDOFFICE' || cleanRow === 'CONCILIATIONANDMEDIATIONDIVISION' || cleanRow === 'CONCILIATIONANDMEDIATION' || cleanRow === 'CONCILIATIONMEDIATION' || cleanRow === 'CONCILIATION' || cleanRow === 'CONCILIATIONDIVISION') return 'CONCILIATIONANDMEDIATIONDIVISION';
-        if (cleanRow === 'OED' || cleanRow === 'OEDOFFICE' || cleanRow === 'OFFICEOFTHEEXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOROFFICE') return 'OFFICEOFTHEEXECUTIVEDIRECTOR';
-        if (cleanRow === 'COA' || cleanRow === 'COAOFFICE' || cleanRow === 'COMMISSIONONAUDIT' || cleanRow === 'AUDIT') return 'COMMISSIONONAUDIT';
-        if (cleanRow === 'TSD' || cleanRow === 'TSDOFFICE' || cleanRow === 'TECHNICALSERVICESDIVISION' || cleanRow === 'TECHNICALSERVICES' || cleanRow === 'TECHNICALSERVICESDEPARTMENT' || cleanRow === 'TECHNICALSERVICESDIV' || cleanRow === 'TECHNICAL' || cleanRow === 'TECHNICALSERVICESDEPT' || cleanRow === 'TECHNICALDEPT') return 'TECHNICALSERVICESDEPARTMENT';
-        if (cleanRow === 'ISD' || cleanRow === 'ISDOFFICE' || cleanRow === 'INTERNALSERVICESDIVISION' || cleanRow === 'INTERNALSERVICES' || cleanRow === 'INTERNALSERVICESDEPARTMENT' || cleanRow === 'INTERNALSERVICESDIV' || cleanRow === 'INTERNAL' || cleanRow === 'INTERNALSERVICESDEPT' || cleanRow === 'INTERNALDEPT') return 'INTERNALSERVICESDEPARTMENT';
-        if (cleanRow === 'FMD' || cleanRow === 'FMDOFFICE' || cleanRow === 'FINANCIALANDMANAGEMENTDIVISION' || cleanRow === 'FINANCIALANDMANAGEMENT' || cleanRow === 'FINANCIALMANAGEMENT' || cleanRow === 'FINANCIAL' || cleanRow === 'FINANCE' || cleanRow === 'FINANCEDIVISION' || cleanRow === 'FINANCIALDIVISION' || cleanRow === 'FINANCEMODULE') return 'FINANCIALANDMANAGEMENTDIVISION';
-        if (cleanRow === 'VAD' || cleanRow === 'VADOFFICE' || cleanRow === 'VOLUNTARYARBITRATIONDIVISION' || cleanRow === 'VOLUNTARYARBITRATION' || cleanRow === 'VOLUNTARY') return 'VOLUNTARYARBITRATIONDIVISION';
-        if (cleanRow === 'WRED' || cleanRow === 'WREDOFFICE' || cleanRow === 'WORKPLACERELATIONSENHANCEMENTDIVISION' || cleanRow === 'WORKPLACERELATIONSENHANCEMENT' || cleanRow === 'WORKPLACERELATIONS' || cleanRow === 'WORKPLACE') return 'WORKPLACERELATIONSENHANCEMENTDIVISION';
-        
-        return cleanRow;
-    }
-
-    const filtered = allAssets.filter(a => {
-        const custodian = a.assigned_user ? a.assigned_user : null;
-        const userName = custodian ? custodian.full_name : "";
-        const custodianOffice = custodian ? custodian.office : ""; // This is Division in DB
-        const custodianDeptRaw = custodian ? custodian.department : ""; // This is Department in DB
-
-        const matchesSearch = (a.item_name || "").toLowerCase().includes(searchTerm) || 
-                              (a.serial_number || "").toLowerCase().includes(searchTerm) ||
-                              userName.toLowerCase().includes(searchTerm);
-
-        const normDivision = normalizeOfficeDept(custodianOffice);
-        const normDepartment = normalizeOfficeDept(custodianDeptRaw);
-
-        const internalOffices = ['ADMINISTRATIVEDIVISION', 'INTERNALSERVICESDEPARTMENT', 'COMMISSIONONAUDIT', 'FINANCIALANDMANAGEMENTDIVISION', 'RESEARCHANDINFORMATIONDIVISION'];
-        const technicalOffices = ['CONCILIATIONANDMEDIATIONDIVISION', 'TECHNICALSERVICESDEPARTMENT', 'OFFICEOFTHEEXECUTIVEDIRECTOR', 'VOLUNTARYARBITRATIONDIVISION', 'WORKPLACERELATIONSENHANCEMENTDIVISION'];
-
-        // KEY FIX: Unassigned/spare assets (no custodian) always pass dept/division filters.
-        // Spare assets belong to the region pool, not to any specific division.
-        let matchesDept = departmentFilterValue === "" || !custodian;
-        if (departmentFilterValue !== "" && custodian) {
-            const cleanSearch = departmentFilterValue.replace(/[^A-Z0-9]/g, '').trim();
-            if (cleanSearch === 'INTERNALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'INTERNALSERVICESDEPARTMENT') || internalOffices.includes(normDivision);
-            } else if (cleanSearch === 'TECHNICALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'TECHNICALSERVICESDEPARTMENT') || technicalOffices.includes(normDivision);
-            } else {
-                matchesDept = (normDepartment === cleanSearch) || normDepartment.includes(cleanSearch);
-            }
-        }
-
-        let matchesDiv = divisionFilterValue === "" || !custodian;
-        if (divisionFilterValue !== "" && custodian) {
-            const cleanSearch = divisionFilterValue.replace(/[^A-Z0-9]/g, '').trim();
-            matchesDiv = (normDivision === cleanSearch) || normDivision.includes(cleanSearch);
-        }
-
-        const matchesCategory = categoryFilterValue === "" || a.category === categoryFilterValue;
-        const matchesStatus = statusFilterValue === "" || a.status === statusFilterValue;
-
-        // Supply admin sees ALL assets — bypass division/department filtering
-        if (window.CMMS_IS_SUPPLY_ADMIN) {
-            return matchesSearch && matchesCategory && matchesStatus;
-        }
-
-        return matchesSearch && matchesDiv && matchesDept && matchesCategory && matchesStatus;
-    });
-
-    // Client-side pagination
-    currentPage = Math.min(currentPage, Math.ceil(filtered.length / perPage) || 1);
-    const start = (currentPage - 1) * perPage;
-    const pageItems = filtered.slice(start, start + perPage);
-
-    renderInventoryTable(pageItems);
-    renderPagination(filtered.length);
-    updateInventorySummary(filtered);
+function onFilterChange() {
+    clearTimeout(filterChangeTimer);
+    filterChangeTimer = setTimeout(() => loadInventory(1), 300);
 }
 
 function renderPagination(totalFiltered) {
     const container = document.getElementById("inventoryPagination");
     if (!container) return;
 
-    const totalPages = Math.ceil(totalFiltered / perPage) || 1;
-    if (totalPages <= 1) {
+    if (lastPage <= 1) {
         container.innerHTML = "";
         return;
     }
@@ -540,12 +455,10 @@ function renderPagination(totalFiltered) {
     html += `<span style="font-size:12px;color:#64748b;">Showing ${Math.min((currentPage-1)*perPage+1, totalFiltered)}–${Math.min(currentPage*perPage, totalFiltered)} of ${totalFiltered}</span>`;
     html += '<div style="display:flex;gap:4px;">';
 
-    // Prev button
     html += `<button onclick="goToPage(${currentPage - 1})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage <= 1 ? '#f1f5f9' : 'white'};color:${currentPage <= 1 ? '#94a3b8' : '#1e293b'};cursor:${currentPage <= 1 ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
 
-    // Page numbers
     let startPage = Math.max(1, currentPage - 2);
-    let endPage = Math.min(totalPages, currentPage + 2);
+    let endPage = Math.min(lastPage, currentPage + 2);
     if (startPage > 1) {
         html += `<button onclick="goToPage(1)" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">1</button>`;
         if (startPage > 2) html += '<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
@@ -554,21 +467,20 @@ function renderPagination(totalFiltered) {
         const active = i === currentPage;
         html += `<button onclick="goToPage(${i})" style="padding:5px 10px;border:1px solid ${active ? '#0038A8' : '#cbd5e1'};border-radius:4px;background:${active ? '#0038A8' : 'white'};color:${active ? 'white' : '#1e293b'};cursor:pointer;font-size:12px;font-weight:700;">${i}</button>`;
     }
-    if (endPage < totalPages) {
-        if (endPage < totalPages - 1) html += '<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
-        html += `<button onclick="goToPage(${totalPages})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">${totalPages}</button>`;
+    if (endPage < lastPage) {
+        if (endPage < lastPage - 1) html += '<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
+        html += `<button onclick="goToPage(${lastPage})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">${lastPage}</button>`;
     }
 
-    // Next button
-    html += `<button onclick="goToPage(${currentPage + 1})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage >= totalPages ? '#f1f5f9' : 'white'};color:${currentPage >= totalPages ? '#94a3b8' : '#1e293b'};cursor:${currentPage >= totalPages ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage >= totalPages ? 'disabled' : ''}>Next &rsaquo;</button>`;
+    html += `<button onclick="goToPage(${currentPage + 1})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage >= lastPage ? '#f1f5f9' : 'white'};color:${currentPage >= lastPage ? '#94a3b8' : '#1e293b'};cursor:${currentPage >= lastPage ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage >= lastPage ? 'disabled' : ''}>Next &rsaquo;</button>`;
 
     html += '</div></div>';
     container.innerHTML = html;
 }
 
 function goToPage(page) {
-    currentPage = page;
-    filterInventory();
+    if (page < 1 || page > lastPage || page === currentPage) return;
+    loadInventory(page);
 }
 
 function toggleSpecsForm() {
@@ -673,7 +585,7 @@ function closeAssetModal() {
 }
 
 async function editAsset(id) {
-    const asset = allAssets.find(a => (a.asset_id || a.id) == id);
+    const asset = assetLookup[id];
     if (!asset) {
         console.warn("editAsset: asset not found for id:", id);
         return;
@@ -998,9 +910,9 @@ function openDisposalFromList(assetId) {
 
 function openTransferModal(assetId) {
     console.log("Opening transfer modal for asset ID: ", assetId);
-    const asset = allAssets.find(a => (a.asset_id || a.id) == assetId);
+    const asset = assetLookup[assetId];
     if (!asset) {
-        console.error("Asset not found in allAssets array!");
+        console.error("Asset not found in assetLookup!");
         Swal.fire('Error', 'Could not find asset data locally. Try refreshing the page.', 'error');
         return;
     }
@@ -1065,7 +977,7 @@ async function saveTransfer(event) {
     const transferReceiptNoEl = document.getElementById("transferReceiptNo");
     const transferReceiptNo = transferReceiptNoEl ? transferReceiptNoEl.value : '';
 
-    const asset = allAssets.find(a => a.asset_id == assetId);
+    const asset = assetLookup[assetId];
     if (!asset) return;
 
     // Prevent transferring to the same custodian
@@ -1193,7 +1105,7 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Needs Review</span><br><strong style="font-size:16px;color:#d97706;">${s.needs_review_rows}</strong></div>
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Matched Custodians</span><br><strong style="font-size:16px;">${s.matched_custodians}</strong></div>
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Unmatched</span><br><strong style="font-size:16px;">${s.unmatched_custodians}</strong></div>
-                        ${s.set_rows > 0 ? `<div style="grid-column:span 2;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;"><span style="font-size:11px;font-weight:700;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:2px 8px;"><i class="fa-solid fa-layer-group" style="font-size:10px;margin-right:4px;"></i>${s.set_rows} Complete Set row(s) → ${s.set_rows + s.component_rows} asset records (${s.component_rows} Monitor component(s) split out)</span></div>` : ''}
+                        ${s.set_rows > 0 ? `<div style="grid-column:span 2;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;"><span style="font-size:11px;font-weight:700;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:2px 8px;"><i class="fa-solid fa-layer-group" style="font-size:10px;margin-right:4px;"></i>${s.set_rows} Complete Set row(s) → ${s.set_rows + s.component_rows} asset records (${s.component_rows} component(s) split out)</span></div>` : ''}
                     </div>`;
 
                 if (data.items && data.items.length > 0) {

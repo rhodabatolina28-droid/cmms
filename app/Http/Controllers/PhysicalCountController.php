@@ -71,14 +71,16 @@ class PhysicalCountController extends Controller
         $session = PhysicalCountSession::with(['startedBy', 'counts.asset.assignedUser', 'counts.countedBy'])
             ->findOrFail($id);
 
-        if ($session->scope_region !== $user->region ||
-            ($user->branch && $session->scope_branch !== $user->branch)) {
+        if ($session->scope_region && $session->scope_region !== $user->region) {
+            abort(403);
+        }
+        if ($user->branch && $session->scope_branch && $session->scope_branch !== $user->branch) {
             abort(403);
         }
 
         $allAssets = InventoryAsset::with('assignedUser');
         app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
-        $allAssets = $allAssets->orderBy('item_name')->get();
+        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')->get();
 
         $countedIds = $session->counts->pluck('asset_id')->toArray();
 
@@ -226,14 +228,16 @@ class PhysicalCountController extends Controller
         $session = PhysicalCountSession::with(['startedBy', 'counts.asset.assignedUser', 'counts.countedBy'])
             ->findOrFail($id);
 
-        if ($session->scope_region !== $user->region ||
-            ($user->branch && $session->scope_branch !== $user->branch)) {
+        if ($session->scope_region && $session->scope_region !== $user->region) {
+            abort(403);
+        }
+        if ($user->branch && $session->scope_branch && $session->scope_branch !== $user->branch) {
             abort(403);
         }
 
         $allAssets = InventoryAsset::with('assignedUser');
         app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
-        $allAssets = $allAssets->orderBy('item_name')->get();
+        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')->get();
 
         $filename = 'physical-count-' . $session->id . '-' . now()->format('Y-m-d') . '.csv';
 
@@ -302,14 +306,16 @@ class PhysicalCountController extends Controller
         $session = PhysicalCountSession::with(['startedBy', 'counts.asset.assignedUser', 'counts.countedBy'])
             ->findOrFail($id);
 
-        if ($session->scope_region !== $user->region ||
-            ($user->branch && $session->scope_branch !== $user->branch)) {
+        if ($session->scope_region && $session->scope_region !== $user->region) {
+            abort(403);
+        }
+        if ($user->branch && $session->scope_branch && $session->scope_branch !== $user->branch) {
             abort(403);
         }
 
         $allAssets = InventoryAsset::with('assignedUser');
         app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
-        $allAssets = $allAssets->orderBy('item_name')->get();
+        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')->get();
 
         $summary = [
             'total'   => $allAssets->count(),
@@ -319,6 +325,9 @@ class PhysicalCountController extends Controller
             'damaged' => $session->counts->where('status', 'Damaged')->count(),
         ];
 
-        return view('inventory.physical-count-print', compact('session', 'allAssets', 'summary'));
+        // Group assets by category for organized display
+        $grouped = $allAssets->groupBy('category')->sortKeys();
+
+        return view('inventory.physical-count-print', compact('session', 'allAssets', 'summary', 'grouped'));
     }
 }

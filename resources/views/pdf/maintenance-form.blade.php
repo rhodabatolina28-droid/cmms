@@ -12,61 +12,62 @@
         .fb { border-bottom: 1.5px solid #000; min-height: 14px; padding: 0 3px; overflow: hidden; word-wrap: break-word; font-size: 9px; }
         .cb { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #000; margin-right: 2px; position: relative; top: 2px; text-align: center; line-height: 12px; font-size: 9px; }
         .cb.x:after { content: "X"; font-weight: bold; }
-        .sec { text-align: center; font-weight: bold; font-size: 11px; margin: 4px 0 3px 0; text-transform: uppercase; letter-spacing: 0.5px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 3px; }
+        .sec { text-align: center; font-weight: bold; font-size: 11px; margin: 2px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 2px; }
         .sub { font-size: 7px; text-align: center; display: block; margin-top: 1px; text-transform: uppercase; color: #333; }
         .sig-name { font-weight: bold; font-size: 10px; text-transform: uppercase; min-height: 14px; }
         .sig-line { border-bottom: 1px solid #000; width: 80%; margin: 0 auto; min-height: 2px; }
-        .hdr { font-size: 10px; font-weight: bold; text-align: center; background: #334155; color: #ffffff; padding: 4px 3px; border: 1.5px solid #000; text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; margin-bottom: 2px; }
+        .hdr { font-size: 10px; font-weight: bold; text-align: center; background: #334155; color: #ffffff; padding: 3px 3px; border: 1.5px solid #000; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; margin-bottom: 1px; }
         .dt td, .dt th { border: 1px solid #000; padding: 3px 4px; font-size: 8.5px; }
         .dt th { background: #e8eef5; font-weight: bold; text-align: center; }
-        .chk td { border: 1px solid #000; padding: 2.5px 4px; font-size: 8px; vertical-align: middle; }
-        .chk th { border: 1px solid #000; padding: 3px 4px; font-size: 8.5px; font-weight: bold; text-align: center; background: #e8eef5; }
+        .chk td { border: 1px solid #000; padding: 2px 3px; font-size: 7.5px; vertical-align: middle; }
+        .chk th { border: 1px solid #000; padding: 2px 3px; font-size: 8px; font-weight: bold; text-align: center; background: #e8eef5; }
         .chk .eq { font-weight: bold; text-align: center; }
         .chk .no { text-align: center; font-weight: bold; }
-        .footer { text-align: center; font-size: 8px; color: #666; margin-top: 4px; border-top: 1px solid #ccc; padding-top: 2px; }
+        .chk .lb { display: inline-block; width: 72px; }
+        .footer { text-align: center; font-size: 8px; color: #666; margin-top: 2px; border-top: 1px solid #ccc; padding-top: 1px; }
     
         .s16 { width: 55%; vertical-align: bottom; padding-right: 10px; }
         .s38 { width: 45px; }
-        .s33 { margin-bottom: 2px; }
+        .s33 { margin-bottom: 1px; }
         .s17 { font-size: 8px; font-weight: bold; margin-bottom: 2px; }
         .s40 { width: 120px; }
         .s4 { width:40px; height:40px; vertical-align: middle; margin-right: 8px; }
-        .s15 { width: 100%; margin-top: 4px; border-collapse: collapse; }
+        .s15 { width: 100%; margin-top: 2px; border-collapse: collapse; }
         .s43 { font-weight:bold; text-align:center; }
-        .s27 { min-height: 50px; margin-top: 2px; }
+        .s27 { min-height: 36px; margin-top: 1px; }
         .s31 { text-align: center; font-size: 8px; font-weight: bold; margin-top: 2px; text-transform: uppercase; }
-        .s30 { min-height: 18px; border-bottom: 1.5px solid #000; text-align: center; }
+        .s30 { min-height: 14px; border-bottom: 1.5px solid #000; text-align: center; }
         .s39 { width: 45%; padding: 0; }
         .s41 { width: 25px; }
         .s28 { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .s12 { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+        .s12 { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
         .s5 { font-size: 20px; font-weight: bold; letter-spacing: 1px; vertical-align: middle; }
-        .s23 { margin-top: 3px; font-weight: bold; }
+        .s23 { margin-top: 2px; font-weight: bold; }
         .s25 { width: 40%; padding: 4px 5px; }
         .s42 { width: 65px; }
         .s3 { width: 65%; vertical-align: middle; }
         .s21 { text-align: center; padding-right: 10px; }
-        .s2 { margin-bottom: 5px; }
-        .s29 { font-size: 7px; font-style: italic; margin-bottom: 2px; color: #555; line-height: 1.2; }
+        .s2 { margin-bottom: 3px; }
+        .s29 { font-size: 7px; font-style: italic; margin-bottom: 1px; color: #555; line-height: 1.2; }
         .s13 { width: 75px; font-weight: bold; font-size: 9px; vertical-align: bottom; white-space: nowrap; padding-bottom: 2px; }
         .s6 { font-size: 16px; vertical-align: middle; }
         .s1 { max-width:100px;max-height:28px; }
-        .s35 { margin: 3px 0 2px; font-weight: bold; }
+        .s35 { margin: 2px 0 1px; font-weight: bold; }
         .s14 { border-bottom: 1.5px solid #000; font-size: 9px; vertical-align: bottom; padding: 0 4px 1px 4px; }
-        .s11 { font-weight: bold; font-size: 9px; margin-bottom: 3px; text-decoration: underline; }
+        .s11 { font-weight: bold; font-size: 9px; margin-bottom: 2px; text-decoration: underline; }
         .s36 { width: 55%; padding: 0; border-right: 1px solid #000; }
-        .s9 { border: 1px solid #000; margin-bottom: 4px; }
-        .s34 { min-height: 14px; margin-top: 1px; }
-        .s18 { min-height: 20px; border-bottom: 1.5px solid #000; text-align: center; }
+        .s9 { border: 1px solid #000; margin-bottom: 2px; }
+        .s34 { min-height: 12px; margin-top: 1px; }
+        .s18 { min-height: 16px; border-bottom: 1.5px solid #000; text-align: center; }
         .s19 { width: 45%; vertical-align: bottom; }
         .s10 { width: 60%; padding: 4px 5px; border-right: 1px solid #000; }
         .s20 { border-bottom: 1.5px solid #000; text-align: center; font-size: 8px; min-height: 14px; padding-bottom: 2px; }
         .s8 { width: 120px; text-align: center; font-weight: bold; }
         .s26 { font-weight: bold; }
-        .s32 { margin-bottom: 2px; font-weight: bold; }
+        .s32 { margin-bottom: 1px; font-weight: bold; }
         .s7 { width: 35%; text-align: right; font-size: 11px; }
-        .s22 { height: 20px; }
-        .s24 { min-height: 16px; margin-top: 2px; }
+        .s22 { height: 10px; }
+        .s24 { min-height: 12px; margin-top: 1px; }
         .s37 { width: 100px; }
     </style>
 </head>
@@ -74,6 +75,9 @@
     @php
         $check = function($field) use ($tasks) {
             return (isset($tasks[$field]) && ($tasks[$field] === 'YES' || $tasks[$field] === 'on' || $tasks[$field] === '1' || $tasks[$field] == 1)) ? 'x' : '';
+        };
+        $intChk = function($label, $field, $value) use ($check) {
+            return '<span class="lb">' . $label . '</span> <span class="cb ' . $check($field) . '"></span> ' . $value;
         };
         function pmSigImg($path) {
             if (!$path) return '';
@@ -290,31 +294,31 @@
             <tr>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('desktopCableCleanup') }}"></span> Yes</td>
-                <td>DATA BACK-UP: <span class="cb {{ $check('desktopDataBackup') }}"></span> Yes</td>
-                <td>CHARGING: <span class="cb {{ $check('upsCharging') }}"></span> YES</td>
+                <td>{!! $intChk('DATA BACK-UP:', 'desktopDataBackup', 'Yes') !!}</td>
+                <td>{!! $intChk('CHARGING:', 'upsCharging', 'YES') !!}</td>
             </tr>
             <tr>
                 <td>SYSTEM FAN CLEAN-UP</td>
                 <td><span class="cb {{ $check('desktopSystemFanCleanup') }}"></span> Yes</td>
-                <td>RESTORE POINT: <span class="cb {{ $check('desktopRestorePoint') }}"></span> Yes</td>
-                <td>OVERLOAD: <span class="cb {{ $check('upsOverload') }}"></span> NO</td>
+                <td>{!! $intChk('RESTORE POINT:', 'desktopRestorePoint', 'Yes') !!}</td>
+                <td>{!! $intChk('OVERLOAD:', 'upsOverload', 'NO') !!}</td>
             </tr>
             <tr>
                 <td>CPU FAN CLEAN-UP</td>
                 <td><span class="cb {{ $check('desktopCpuFanCleanup') }}"></span> Yes</td>
-                <td>WINDOWS UPDATE: <span class="cb {{ $check('desktopWindowsUpdate') }}"></span> Yes</td>
+                <td>{!! $intChk('WINDOWS UPDATE:', 'desktopWindowsUpdate', 'Yes') !!}</td>
                 <td class="s43">IP PHONE</td>
             </tr>
             <tr>
                 <td>MOTHER BOARD CLEAN-UP</td>
                 <td><span class="cb {{ $check('desktopMotherboardCleanup') }}"></span> Yes</td>
-                <td>TEMP FILES: <span class="cb {{ $check('desktopTempFiles') }}"></span> CLEAN</td>
-                <td>UPDATED: <span class="cb {{ $check('ipPhoneUpdated') }}"></span> YES</td>
+                <td>{!! $intChk('TEMP FILES:', 'desktopTempFiles', 'CLEAN') !!}</td>
+                <td>{!! $intChk('UPDATED:', 'ipPhoneUpdated', 'YES') !!}</td>
             </tr>
             <tr>
                 <td>PSU CLEAN-UP</td>
                 <td><span class="cb {{ $check('desktopPsuCleanup') }}"></span> Yes</td>
-                <td>RECYCLE BIN: <span class="cb {{ $check('desktopRecycleBin') }}"></span> CLEAN</td>
+                <td>{!! $intChk('RECYCLE BIN:', 'desktopRecycleBin', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
 
@@ -324,14 +328,14 @@
                 <td class="eq">MON-1</td>
                 <td>SCREEN CLEAN-UP</td>
                 <td><span class="cb {{ $check('monitorScreenCleanup') }}"></span> Yes</td>
-                <td>HDD DEFRAG: <span class="cb {{ $check('desktopHddDefrag') }}"></span> Yes</td>
+                <td>{!! $intChk('HDD DEFRAG:', 'desktopHddDefrag', 'Yes') !!}</td>
                 <td></td>
             </tr>
             <tr>
                 <td class="eq"></td>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('monitorCableCleanup') }}"></span> Yes</td>
-                <td>HDD CHECK DISK: <span class="cb {{ $check('desktopHddCheckDisk') }}"></span> Yes</td>
+                <td>{!! $intChk('HDD CHECK DISK:', 'desktopHddCheckDisk', 'Yes') !!}</td>
                 <td></td>
             </tr>
 
@@ -341,14 +345,14 @@
                 <td class="eq">PRINTER-1</td>
                 <td>CASE CLEAN-UP</td>
                 <td><span class="cb {{ $check('printerCaseCleanup') }}"></span> Yes</td>
-                <td>VIRUS SCAN: <span class="cb {{ $check('desktopVirusScan') }}"></span> Yes</td>
+                <td>{!! $intChk('VIRUS SCAN:', 'desktopVirusScan', 'Yes') !!}</td>
                 <td></td>
             </tr>
             <tr>
                 <td class="eq"></td>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('printerCableCleanup') }}"></span> Yes</td>
-                <td>START-UP FILE: <span class="cb {{ $check('desktopStartupFile') }}"></span> CLEAN</td>
+                <td>{!! $intChk('START-UP FILE:', 'desktopStartupFile', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
 
@@ -364,7 +368,7 @@
             <tr>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('keyboardCableCleanup') }}"></span> Yes</td>
-                <td>DATA BACK-UP: <span class="cb {{ $check('laptopDataBackup') }}"></span> Yes</td>
+                <td>{!! $intChk('DATA BACK-UP:', 'laptopDataBackup', 'Yes') !!}</td>
                 <td></td>
             </tr>
 
@@ -374,7 +378,7 @@
                 <td class="eq">MOUSE</td>
                 <td>CLEAN-UP</td>
                 <td><span class="cb {{ $check('mouseCleanup') }}"></span> Yes</td>
-                <td>RESTORE POINT: <span class="cb {{ $check('laptopRestorePoint') }}"></span> Yes</td>
+                <td>{!! $intChk('RESTORE POINT:', 'laptopRestorePoint', 'Yes') !!}</td>
                 <td></td>
             </tr>
 
@@ -384,13 +388,13 @@
                 <td class="eq" rowspan="2">UPS/AVR</td>
                 <td>CASE CLEAN-UP</td>
                 <td><span class="cb {{ $check('upsCaseCleanup') }}"></span> Yes</td>
-                <td>WINDOWS UPDATE: <span class="cb {{ $check('laptopWindowsUpdate') }}"></span> Yes</td>
+                <td>{!! $intChk('WINDOWS UPDATE:', 'laptopWindowsUpdate', 'Yes') !!}</td>
                 <td></td>
             </tr>
             <tr>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('upsCableCleanup') }}"></span> Yes</td>
-                <td>TEMP FILES: <span class="cb {{ $check('laptopTempFiles') }}"></span> CLEAN</td>
+                <td>{!! $intChk('TEMP FILES:', 'laptopTempFiles', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
 
@@ -400,13 +404,13 @@
                 <td class="eq" rowspan="2">SCANNER</td>
                 <td>CASE CLEAN-UP</td>
                 <td><span class="cb {{ $check('scannerCaseCleanup') }}"></span> Yes</td>
-                <td>RECYCLE BIN: <span class="cb {{ $check('laptopRecycleBin') }}"></span> CLEAN</td>
+                <td>{!! $intChk('RECYCLE BIN:', 'laptopRecycleBin', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
             <tr>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('scannerCableCleanup') }}"></span> Yes</td>
-                <td>HDD DEFRAG: <span class="cb {{ $check('laptopHddDefrag') }}"></span> Yes</td>
+                <td>{!! $intChk('HDD DEFRAG:', 'laptopHddDefrag', 'Yes') !!}</td>
                 <td></td>
             </tr>
 
@@ -416,14 +420,14 @@
                 <td class="eq" rowspan="2">IP PHONE</td>
                 <td>UNIT CLEAN-UP</td>
                 <td><span class="cb {{ $check('ipPhoneUnitCleanup') }}"></span> Yes</td>
-                <td>HDD CHECK DISK: <span class="cb {{ $check('laptopHddCheckDisk') }}"></span> Yes</td>
+                <td>{!! $intChk('HDD CHECK DISK:', 'laptopHddCheckDisk', 'Yes') !!}</td>
                 <td class="s43">INKJET</td>
             </tr>
             <tr>
                 <td>CABLE / PLUG CLEAN-UP</td>
                 <td><span class="cb {{ $check('ipPhoneCableCleanup') }}"></span> Yes</td>
-                <td>SSD CHECK DISK: <span class="cb {{ $check('laptopSsdCheckDisk') }}"></span> Yes</td>
-                <td>INK LEVEL: <span class="cb {{ $check('printerInkjetInkLevel') }}"></span> OK</td>
+                <td>{!! $intChk('SSD CHECK DISK:', 'laptopSsdCheckDisk', 'Yes') !!}</td>
+                <td>{!! $intChk('INK LEVEL:', 'printerInkjetInkLevel', 'OK') !!}</td>
             </tr>
 
             {{-- 9. LAPTOP --}}
@@ -432,8 +436,8 @@
                 <td class="eq">LAPTOP</td>
                 <td>UNIT CLEAN-UP</td>
                 <td><span class="cb {{ $check('laptopUnitCleanup') }}"></span> Yes</td>
-                <td>ENDPOINT SCAN: <span class="cb {{ $check('laptopEndpointScan') }}"></span> Yes</td>
-                <td>PRINT QUALITY: <span class="cb {{ $check('printerInkjetPrintQuality') }}"></span> OK</td>
+                <td>{!! $intChk('ENDPOINT SCAN:', 'laptopEndpointScan', 'Yes') !!}</td>
+                <td>{!! $intChk('PRINT QUALITY:', 'printerInkjetPrintQuality', 'OK') !!}</td>
             </tr>
 
             {{-- 10. WEBCAM --}}
@@ -442,15 +446,15 @@
                 <td class="eq">WEBCAM</td>
                 <td>UNIT CLEAN-UP</td>
                 <td><span class="cb {{ $check('webcamUnitCleanup') }}"></span> Yes</td>
-                <td>VIRUS SCAN: <span class="cb {{ $check('laptopVirusScan') }}"></span> Yes</td>
+                <td>{!! $intChk('VIRUS SCAN:', 'laptopVirusScan', 'Yes') !!}</td>
                 <td class="s43">LASERJET</td>
             </tr>
             <tr>
                 <td class="eq"></td>
                 <td></td>
                 <td></td>
-                <td>START-UP FILE: <span class="cb {{ $check('laptopStartupFile') }}"></span> CLEAN</td>
-                <td>TONER: <span class="cb {{ $check('printerLaserjetToner') }}"></span> OK</td>
+                <td>{!! $intChk('START-UP FILE:', 'laptopStartupFile', 'CLEAN') !!}</td>
+                <td>{!! $intChk('TONER:', 'printerLaserjetToner', 'OK') !!}</td>
             </tr>
 
             {{-- 11. SPEAKER --}}
@@ -459,8 +463,8 @@
                 <td class="eq">SPEAKER</td>
                 <td>UNIT CLEAN-UP</td>
                 <td><span class="cb {{ $check('speakerUnitCleanup') }}"></span> Yes</td>
-                <td>WIN DEFENDER: <span class="cb {{ $check('laptopWindowsDefender') }}"></span> ON</td>
-                <td>PRINT QUALITY: <span class="cb {{ $check('printerLaserjetPrintQuality') }}"></span> OK</td>
+                <td>{!! $intChk('WIN DEFENDER:', 'laptopWindowsDefender', 'ON') !!}</td>
+                <td>{!! $intChk('PRINT QUALITY:', 'printerLaserjetPrintQuality', 'OK') !!}</td>
             </td>
         </tbody>
     </table>

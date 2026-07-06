@@ -39,10 +39,8 @@ class InventoryController extends Controller
 
         $this->scopeAssetsToActor($query, $user);
 
-        // Set badge support: parent assets show their component count.
         $query->withCount('components');
 
-        // Server-side search/filter para hindi lahat ng assets i-load
         if ($search = $request->input('search')) {
             $search = strtolower($search);
             $query->where(function ($q) use ($search) {
@@ -61,11 +59,16 @@ class InventoryController extends Controller
             $query->where('status', $status);
         }
 
-        $total = $query->count();
+		$cats = ['Desktop','Laptop','Monitor','Printer/Scanner','Peripherals','Network/Server','Others'];
+		$fieldList = implode(',', array_map(fn($c) => "'$c'", $cats));
 
-        $assets = $query->orderBy('created_at', 'desc')
-            ->get()
-            ->map(function ($asset) {
+		$perPage = min((int) $request->input('per_page', 50), 100);
+		$page = max((int) $request->input('page', 1), 1);
+
+		$assets = $query->orderByRaw("FIELD(category, $fieldList)")
+			->orderBy('created_at', 'desc')
+			->paginate($perPage, ['*'], 'page', $page)
+			->through(function ($asset) {
                 if ($asset->assignedUser) {
                     $asset->assigned_to_name = $asset->assignedUser->full_name;
                     $asset->assigned_to_department = $asset->assignedUser->department ?? '';
@@ -78,8 +81,11 @@ class InventoryController extends Controller
 
         return response()->json([
             'success' => true,
-            'assets' => $assets,
-            'total' => $total,
+            'assets' => $assets->items(),
+            'total' => $assets->total(),
+            'per_page' => $assets->perPage(),
+            'current_page' => $assets->currentPage(),
+            'last_page' => $assets->lastPage(),
         ]);
     }
 
@@ -737,12 +743,24 @@ class InventoryController extends Controller
             $query->where('status', $status);
         }
 
-        $total = $query->count();
+		$cats = ['Desktop','Laptop','Monitor','Printer/Scanner','Peripherals','Network/Server','Others'];
+		$fieldList = implode(',', array_map(fn($c) => "'$c'", $cats));
 
-        $assets = $query->orderBy('created_at', 'desc')
-            ->get();
+		$perPage = min((int) $request->input('per_page', 50), 100);
+		$page = max((int) $request->input('page', 1), 1);
 
-        return response()->json(['success' => true, 'assets' => $assets, 'total' => $total]);
+		$assets = $query->orderByRaw("FIELD(category, $fieldList)")
+			->orderBy('created_at', 'desc')
+			->paginate($perPage, ['*'], 'page', $page);
+
+		return response()->json([
+			'success' => true,
+			'assets' => $assets->items(),
+			'total' => $assets->total(),
+			'per_page' => $assets->perPage(),
+			'current_page' => $assets->currentPage(),
+			'last_page' => $assets->lastPage(),
+        ]);
     }
 
     /**

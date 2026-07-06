@@ -4,127 +4,413 @@
     <meta charset="UTF-8">
     <title>Physical Count Report #{{ $session->id }}</title>
     <style nonce="{{ $cspNonce }}">
+        /* ── PAGE SETUP: A4, back-to-back ── */
+        @page {
+            size: A4 landscape;
+            margin: 0.35in 0.35in 0.5in 0.35in;
+        }
+        @page :left {
+            margin-left: 0.45in;
+            margin-right: 0.3in;
+        }
+        @page :right {
+            margin-left: 0.3in;
+            margin-right: 0.45in;
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Courier New', Courier, monospace; font-size: 11px; color: #000; padding: 20px; }
-        .header { text-align: center; margin-bottom: 20px; border-bottom: 2px solid #000; padding-bottom: 12px; }
-        .header h1 { font-size: 16px; font-weight: 800; text-transform: uppercase; margin-bottom: 4px; }
-        .header p { font-size: 11px; color: #333; }
-        .section { margin-bottom: 16px; }
-        .section-title { font-size: 12px; font-weight: 800; text-transform: uppercase; border-bottom: 1px solid #666; padding-bottom: 4px; margin-bottom: 8px; }
-        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 24px; font-size: 11px; }
-        .info-grid .label { font-weight: 700; }
-        .summary-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 16px; }
-        .summary-box { border: 1px solid #000; padding: 8px 10px; text-align: center; }
-        .summary-box .num { font-size: 20px; font-weight: 800; }
-        .summary-box .lbl { font-size: 9px; text-transform: uppercase; margin-top: 2px; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 16px; }
-        th { background: #eee; padding: 6px 8px; font-size: 9px; font-weight: 800; text-transform: uppercase; text-align: left; border: 1px solid #000; }
-        td { padding: 5px 8px; font-size: 10px; border: 1px solid #ccc; }
-        td.centered { text-align: center; }
-        .pill { display: inline-block; padding: 1px 6px; font-size: 9px; font-weight: 700; border: 1px solid #000; }
-        .pill-present { background: #fff; }
-        .pill-missing { background: #fff; }
-        .pill-damaged { background: #fff; }
-        .footer { text-align: center; font-size: 9px; color: #666; border-top: 1px solid #ccc; padding-top: 8px; margin-top: 20px; }
-        .counted-row { }
-        .not-counted { color: #999; }
-        .print-hide { display: none; }
-    .no-print { text-align:right;margin-bottom:12px; }
-    .print-btn { padding:8px 16px;font-size:13px;font-weight:700;cursor:pointer; }
-    .th-width { width:30px; }
-    .td-bold { font-weight:700; }
-    .empty-print { text-align:center;padding:20px; }
-        @media print {
-            body { padding: 0.5in; }
-            .no-print { display: none; }
+
+        body {
+            font-family: 'Calibri', 'Segoe UI', Arial, sans-serif;
+            font-size: 8pt;
+            color: #000;
+            line-height: 1.2;
+        }
+
+        /* ── NO PRINT ── */
+        .no-print {
+            text-align: right;
+            margin-bottom: 8px;
+        }
+        .no-print button {
+            padding: 6px 12px; font-size: 11px; font-weight: 700;
+            cursor: pointer; border: 1px solid #999; border-radius: 3px; background: #fff;
+        }
+        .no-print button:hover { background: #eee; }
+        @media print { .no-print { display: none; } }
+
+        /* ── HEADER (repeats on every page) ── */
+        .page-header {
+            text-align: center;
+            border-bottom: 2px solid #0038A8;
+            padding-bottom: 4px;
+            margin-bottom: 6px;
+        }
+        .page-header .repub {
+            font-size: 8pt; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+        }
+        .page-header .agency {
+            font-size: 9.5pt; font-weight: 800;
+            text-transform: uppercase; letter-spacing: 0.5px;
+        }
+        .page-header .title {
+            font-size: 10pt; font-weight: 800;
+            text-transform: uppercase; margin-top: 1px; letter-spacing: 1px;
+        }
+        .page-header .sub {
+            font-size: 7pt; color: #555;
+        }
+        .page-header .page-num {
+            font-size: 6.5pt; color: #888; float: right; margin-top: -14px;
+        }
+
+        /* ── SESSION INFO ── */
+        .session-bar {
+            font-size: 7.5pt;
+            margin-bottom: 6px;
+            padding: 2px 5px;
+            background: #f2f2f2;
+            border: 1px solid #bbb;
+        }
+        .session-bar span { margin-right: 14px; }
+        .session-bar .lbl { font-weight: 700; }
+
+        /* ── SUMMARY ── */
+        .summary-row {
+            display: flex; gap: 4px; margin-bottom: 6px;
+        }
+        .summary-item {
+            flex: 1; border: 1px solid #888; text-align: center; padding: 2px 2px;
+        }
+        .summary-item .num { font-size: 13pt; font-weight: 800; }
+        .summary-item .lbl { font-size: 6pt; font-weight: 700; text-transform: uppercase; }
+
+        /* ── ASSET TABLE ── */
+        table.asset-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7pt;
+        }
+        table.asset-table thead { display: table-header-group; }
+        table.asset-table thead th {
+            background: #0038A8;
+            color: #fff;
+            padding: 3px 2px;
+            font-size: 6pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            text-align: left;
+            border: 1px solid #0038A8;
+            letter-spacing: 0.2px;
+        }
+        table.asset-table thead th.c { text-align: center; }
+        table.asset-table tbody tr { page-break-inside: avoid; }
+        table.asset-table tbody td {
+            padding: 2px 2px;
+            border: 0.5px solid #bbb;
+            vertical-align: top;
+        }
+        table.asset-table tbody td.c { text-align: center; vertical-align: middle; }
+        table.asset-table tbody tr:nth-child(even) { background: #f8f8f8; }
+        .td-bold { font-weight: 600; }
+        .serial { font-family: 'Courier New', monospace; font-size: 6.5pt; }
+
+        /* Category divider row */
+        .cat-div td {
+            background: #e8e8e8;
+            font-weight: 800;
+            font-size: 7.5pt;
+            padding: 3px 2px;
+            border: 1px solid #888;
+            text-transform: uppercase;
+        }
+
+        /* Checkbox column */
+        .chk { width: 20px; text-align: center; }
+
+        /* ── PAGE BREAK before maintenance section ── */
+        .maintenance-section {
+            page-break-before: always;
+            page-break-after: always;
+        }
+        .maintenance-section .section-title {
+            font-size: 10pt; font-weight: 800; text-transform: uppercase;
+            border-bottom: 2px solid #0038A8;
+            padding-bottom: 3px; margin-bottom: 8px;
+        }
+        .maintenance-section .instructions {
+            font-size: 7pt; color: #555; margin-bottom: 8px;
+        }
+
+        table.maintenance-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 7.5pt;
+        }
+        table.maintenance-table thead th {
+            background: #0038A8;
+            color: #fff;
+            padding: 4px 3px;
+            font-size: 6.5pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            border: 1px solid #0038A8;
+            text-align: left;
+        }
+        table.maintenance-table thead th.c { text-align: center; }
+        table.maintenance-table tbody td {
+            padding: 3px;
+            border: 0.5px solid #bbb;
+            vertical-align: top;
+        }
+        table.maintenance-table tbody td.c { text-align: center; vertical-align: middle; }
+        /* Row height for handwritten entries */
+        table.maintenance-table tbody tr { height: 18px; }
+        .maintenance-empty td { color: #bbb; font-style: italic; }
+
+        /* ── LEGEND ── */
+        .legend {
+            display: flex; gap: 10px; font-size: 6.5pt; color: #555; margin-bottom: 4px;
+        }
+
+        /* ── SIGNATURES ── */
+        .signatures {
+            display: flex; gap: 20px; margin: 18px 0 6px 0; page-break-inside: avoid;
+        }
+        .sig { flex: 1; text-align: center; }
+        .sig .line {
+            border-top: 1px solid #000;
+            margin-top: 40px;
+            padding-top: 3px;
+            font-weight: 700;
+            font-size: 8pt;
+        }
+        .sig .title { font-size: 6.5pt; color: #555; margin-top: 1px; }
+
+        /* ── FOOTER ── */
+        .print-footer {
+            text-align: center;
+            font-size: 6pt;
+            color: #999;
+            border-top: 1px solid #ccc;
+            padding-top: 3px;
+            margin-top: 8px;
         }
     </style>
 </head>
 <body>
+
+    <!-- ════════════════════════════════ -->
+    <!--  FRONT: PHYSICAL COUNT REPORT   -->
+    <!-- ════════════════════════════════ -->
+
     <div class="no-print">
-        <button id="printBtn" class="print-btn">Print / Save PDF</button>
-        <button id="closePrintBtn" class="print-btn">Close</button>
+        <button id="printBtn">🖨 Print / Save PDF</button>
+        <button id="closePrintBtn">✕ Close</button>
     </div>
 
-    <div class="header">
-        <h1>Physical Inventory Count Report</h1>
-        <p>Session #{{ $session->id }}</p>
+    <div class="page-header">
+        <span class="page-num">Page 1</span>
+        <div class="repub">Republic of the Philippines</div>
+        <div class="agency">National Conciliation and Mediation Board</div>
+        <div class="title">Physical Inventory Count Report</div>
+        <div class="sub">Session #{{ $session->id }} &middot; {{ now()->format('F j, Y') }}</div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Session Information</div>
-        <div class="info-grid">
-            <div><span class="label">Region:</span> {{ $session->scope_region }}</div>
-            <div><span class="label">Branch:</span> {{ $session->scope_branch ?? 'All' }}</div>
-            <div><span class="label">Started By:</span> {{ $session->startedBy->full_name ?? $session->startedBy->name ?? 'Unknown' }}</div>
-            <div><span class="label">Date Started:</span> {{ $session->started_at->format('F j, Y g:i A') }}</div>
-            <div><span class="label">Status:</span> {{ $session->status }}</div>
-            @if($session->completed_at)
-            <div><span class="label">Date Completed:</span> {{ $session->completed_at->format('F j, Y g:i A') }}</div>
-            @endif
+    <div class="session-bar">
+        <span><span class="lbl">Region:</span> {{ $session->scope_region ?? 'N/A' }}</span>
+        <span><span class="lbl">Branch:</span> {{ $session->scope_branch ?? 'All' }}</span>
+        <span><span class="lbl">Started By:</span> {{ $session->startedBy->full_name ?? $session->startedBy->name ?? 'Unknown' }}</span>
+        <span><span class="lbl">Date:</span> {{ $session->started_at->format('M d, Y') }}</span>
+        <span><span class="lbl">Status:</span> {{ $session->status }}</span>
+        @if($session->completed_at)
+        <span><span class="lbl">Completed:</span> {{ $session->completed_at->format('M d, Y') }}</span>
+        @endif
+    </div>
+
+    <div class="summary-row">
+        <div class="summary-item">
+            <div class="num">{{ $summary['total'] }}</div>
+            <div class="lbl">Total</div>
+        </div>
+        <div class="summary-item">
+            <div class="num">{{ $summary['counted'] }}</div>
+            <div class="lbl">Counted</div>
+        </div>
+        <div class="summary-item">
+            <div class="num" style="color:#166534;">{{ $summary['present'] }}</div>
+            <div class="lbl">Present</div>
+        </div>
+        <div class="summary-item">
+            <div class="num" style="color:#b91c1c;">{{ $summary['missing'] }}</div>
+            <div class="lbl">Missing</div>
+        </div>
+        <div class="summary-item">
+            <div class="num" style="color:#92400e;">{{ $summary['damaged'] }}</div>
+            <div class="lbl">Damaged</div>
         </div>
     </div>
 
-    <div class="section">
-        <div class="section-title">Summary</div>
-        <div class="summary-grid">
-            <div class="summary-box"><div class="num">{{ $summary['total'] }}</div><div class="lbl">Total Assets</div></div>
-            <div class="summary-box"><div class="num">{{ $summary['counted'] }}</div><div class="lbl">Counted</div></div>
-            <div class="summary-box"><div class="num">{{ $summary['present'] }}</div><div class="lbl">Present</div></div>
-            <div class="summary-box"><div class="num">{{ $summary['missing'] }}</div><div class="lbl">Missing</div></div>
-            <div class="summary-box"><div class="num">{{ $summary['damaged'] }}</div><div class="lbl">Damaged</div></div>
-        </div>
+    <div class="legend">
+        <span>☐ = Check if present</span>
+        <span>OK = Present</span>
+        <span>MISS = Missing</span>
+        <span>DAM = Damaged</span>
+        <span style="margin-left:auto;">Count = Initial of counter</span>
     </div>
 
-    <div class="section">
-        <div class="section-title">Asset Details</div>
-        <table>
-            <thead>
-                <tr>
-                    <th class="th-width">#</th>
-                    <th>Item Name</th>
-                    <th>Serial No</th>
-                    <th>PAR No</th>
-                    <th>Property No</th>
-                    <th>Status</th>
-                    <th>Counted By</th>
-                    <th>Remarks</th>
+    <table class="asset-table">
+        <thead>
+            <tr>
+                <th class="c" style="width:16px;">#</th>
+                <th class="c" style="width:18px;">☐</th>
+                <th>Item Name</th>
+                <th style="width:48px;">Brand / Model</th>
+                <th style="width:65px;">Serial No</th>
+                <th style="width:65px;">PAR No</th>
+                <th style="width:65px;">Property No</th>
+                <th style="width:28px;" class="c">St</th>
+                <th style="width:34px;">Category</th>
+                <th style="width:65px;">Custodian</th>
+                <th style="width:26px;" class="c">Cnt</th>
+                <th>Remarks</th>
+            </tr>
+        </thead>
+        <tbody>
+            @php $rowNum = 0; @endphp
+            @forelse($grouped as $category => $assets)
+                <tr class="cat-div">
+                    <td colspan="12">{{ $category }} ({{ $assets->count() }})</td>
                 </tr>
-            </thead>
-            <tbody>
-                @forelse($allAssets as $idx => $asset)
+                @foreach($assets as $asset)
                     @php
+                        $rowNum++;
                         $count = $session->counts->firstWhere('asset_id', $asset->asset_id);
                     @endphp
                     <tr>
-                        <td class="centered">{{ $idx + 1 }}</td>
+                        <td class="c">{{ $rowNum }}</td>
+                        <td class="chk">☐</td>
                         <td class="td-bold">{{ $asset->item_name }}</td>
-                        <td>{{ $asset->serial_number ?? '—' }}</td>
+                        <td>{{ $asset->brand ? $asset->brand . ($asset->model ? ' ' . $asset->model : '') : ($asset->model ?? '—') }}</td>
+                        <td class="serial">{{ $asset->serial_number ?? '—' }}</td>
                         <td>{{ $asset->par_number ?? '—' }}</td>
                         <td>{{ $asset->property_number ?? '—' }}</td>
-                        <td class="centered">
+                        <td class="c">
                             @if($count)
-                                <span class="pill pill-{{ $count->status }}">{{ $count->status }}</span>
+                                {{ $count->status === 'Present' ? 'OK' : ($count->status === 'Missing' ? 'MISS' : 'DAM') }}
                             @else
-                                <span class="not-counted">Not Counted</span>
+                                <span style="color:#ccc;">—</span>
                             @endif
                         </td>
-                        <td>{{ $count ? ($count->countedBy->full_name ?? $count->countedBy->name ?? '—') : '—' }}</td>
-                        <td>{{ $count->remarks ?? '—' }}</td>
+                        <td>{{ $asset->category ?? '—' }}</td>
+                        <td>{{ $asset->assignedUser->full_name ?? $asset->assignedUser->name ?? '—' }}</td>
+                        <td class="c">{{ $count && $count->countedBy ? (substr($count->countedBy->full_name, 0, 1) ?? '✓') : '—' }}</td>
+                        <td>{{ $count->remarks ?? '' }}</td>
                     </tr>
-                @empty
-                    <tr><td colspan="8" class="empty-print">No assets found.</td></tr>
-                @endforelse
-            </tbody>
-        </table>
+                @endforeach
+            @empty
+                <tr><td colspan="12" style="text-align:center;padding:20px;color:#999;">No assets found.</td></tr>
+            @endforelse
+        </tbody>
+    </table>
+
+    <div class="signatures">
+        <div class="sig">
+            <div class="line">COUNTED BY</div>
+            <div class="title">Signature over Printed Name — Date</div>
+        </div>
+        <div class="sig">
+            <div class="line">VERIFIED BY</div>
+            <div class="title">Supply Officer / Designee — Date</div>
+        </div>
+        <div class="sig">
+            <div class="line">NOTED BY</div>
+            <div class="title">Chief Administrative Officer — Date</div>
+        </div>
     </div>
 
-    <div class="footer">
-        Generated on {{ now()->format('F j, Y g:i A') }} &middot; NCMB ICT System &middot; Physical Count Report
+    <!-- ═══════════════════════════════════ -->
+    <!--  BACK: MAINTENANCE FINDINGS FORM   -->
+    <!-- ═══════════════════════════════════ -->
+
+    <div class="maintenance-section">
+        <div class="page-header">
+            <span class="page-num">Page 2</span>
+            <div class="repub">Republic of the Philippines</div>
+            <div class="agency">National Conciliation and Mediation Board</div>
+            <div class="title">Preventive Maintenance / Repair Findings</div>
+            <div class="sub">Physical Count Session #{{ $session->id }} — To be filled during inspection</div>
+        </div>
+
+        <div class="section-title">Instructions</div>
+        <div class="instructions">
+            For assets marked as <strong>Damaged</strong> or <strong>Missing</strong> during the physical count,
+            or any asset requiring preventive maintenance, indicate the findings and recommended action below.
+            This section serves as the referral for the Maintenance Team.
+        </div>
+
+        <table class="maintenance-table">
+            <thead>
+                <tr>
+                    <th class="c" style="width:16px;">#</th>
+                    <th style="width:80px;">Item Name</th>
+                    <th style="width:50px;">Serial No</th>
+                    <th style="width:40px;">Found Status</th>
+                    <th style="width:80px;">Defect / Issue Observed</th>
+                    <th style="width:70px;">Recommended Action</th>
+                    <th style="width:50px;">Priority</th>
+                    <th style="width:50px;">Assigned To</th>
+                    <th style="width:40px;">Date<br>Attended</th>
+                    <th style="width:40px;">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                @php $maintenanceRows = max(20, $summary['missing'] + $summary['damaged'] + 5); @endphp
+                @for ($i = 1; $i <= $maintenanceRows; $i++)
+                    <tr @if($i > $summary['missing'] + $summary['damaged']) class="maintenance-empty" @endif>
+                        <td class="c">{{ $i }}</td>
+                        <td>@if($i <= $summary['missing'] + $summary['damaged']) _________________ @endif</td>
+                        <td>_________________</td>
+                        <td class="c">
+                            @if($i <= $summary['missing'] + $summary['damaged'])
+                                ☐ OK &nbsp; ☐ MISS &nbsp; ☐ DAM
+                            @endif
+                        </td>
+                        <td>_________________________</td>
+                        <td>_________________________</td>
+                        <td class="c">☐ Low ☐ Med ☐ High</td>
+                        <td>_________________</td>
+                        <td>__________</td>
+                        <td class="c">☐ Open<br>☐ Done</td>
+                    </tr>
+                @endfor
+            </tbody>
+        </table>
+
+        <div class="signatures">
+            <div class="sig">
+                <div class="line">ENDORSED BY</div>
+                <div class="title">Supply Officer — Signature — Date</div>
+            </div>
+            <div class="sig">
+                <div class="line">RECEIVED BY</div>
+                <div class="title">Maintenance Team / ICT — Signature — Date</div>
+            </div>
+            <div class="sig">
+                <div class="line">COMPLETED BY</div>
+                <div class="title">Technician — Signature — Date</div>
+            </div>
+        </div>
     </div>
-<script nonce="{{ $cspNonce }}">
-document.getElementById('printBtn').addEventListener('click', function() { window.print(); });
-document.getElementById('closePrintBtn').addEventListener('click', function() { window.close(); });
-</script>
+
+    <div class="print-footer">
+        NCMB ICT System · Physical Count & Maintenance Report · {{ date('Y') }}
+    </div>
+
+    <script nonce="{{ $cspNonce }}">
+        document.getElementById('printBtn').addEventListener('click', function() { window.print(); });
+        document.getElementById('closePrintBtn').addEventListener('click', function() { window.close(); });
+    </script>
 </body>
 </html>
