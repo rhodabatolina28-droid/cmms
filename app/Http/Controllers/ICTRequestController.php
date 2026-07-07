@@ -19,21 +19,29 @@ class ICTRequestController extends Controller
 {
 
 
-    // Show ALL requests for the user (ICT and Preventive)
+    // Show requests based on role (ICT only for users/admin, ICT+PM for IT/super_admin)
     public function index()
     {
         $user = Auth::user();
         $query = RequestModel::with(['user', 'repairRequest', 'assignedTo']);
 
         if ($user->role === 'user') {
-            $query->where('user_id', $user->id);
+            // Regular users: ICT only (no PM)
+            $query->where('type', 'ICT')->where('user_id', $user->id);
             $requests = $query->orderBy('created_at', 'desc')->paginate(20);
             if (request()->wantsJson() || request()->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
             }
             return view('requests.index', compact('requests'));
         } elseif ($user->role === 'it') {
-            $query->where('assigned_to', $user->id);
+            // IT: ICT + PM assigned to them
+            $query->where(function ($q) use ($user) {
+                $q->where('type', 'ICT')
+                  ->orWhere(function ($sub) use ($user) {
+                      $sub->where('type', 'Preventive Maintenance')
+                          ->where('assigned_to', $user->id);
+                  });
+            });
             $requests = $query->orderBy('created_at', 'desc')->paginate(20);
             if (request()->wantsJson() || request()->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
@@ -41,8 +49,8 @@ class ICTRequestController extends Controller
             return view('requests.index', compact('requests'));
         } elseif ($user->role === 'admin' || $user->role === 'supply_officer' || $user->role === 'super_admin') {
             if ($user->role === 'admin' || $user->role === 'supply_officer') {
-                // Admin is division-scoped - sees requests from their division only
-                $query->whereHas('user', function($q) use ($user) {
+                // Admin/Supply Officer: ICT only (no PM)
+                $query->where('type', 'ICT')->whereHas('user', function($q) use ($user) {
                     if ($user->branch) {
                         $q->where('branch', $user->branch);
                     }
@@ -56,7 +64,7 @@ class ICTRequestController extends Controller
                 }
                 return view('admin.requests.index', compact('requests'));
             } else {
-                // Super Admin is office-scoped (branch level) - sees all approved requests in their branch
+                // Super Admin: ICT + PM (all)
                 $requests = $query->where('division_admin_review_status', 'Approved')
                     ->whereHas('user', function ($q) use ($user) {
                         if ($user->branch) {

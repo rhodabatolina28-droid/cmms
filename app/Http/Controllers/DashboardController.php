@@ -15,16 +15,45 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
 
-        // Admin is division-scoped - fetch ICT requests from their division
-        $requestsQuery = RequestModel::where('type', 'ICT')->whereHas('user', function($q) use ($user) {
-            if ($user->branch) {
-                $q->where('branch', $user->branch);
-            }
-            if ($user->office) {
-                $q->where('office', $user->office);
-            }
-            // Department filter removed - office (division) is sufficient
-        });
+        // Role-based request visibility
+        if ($user->role === 'user' || $user->role === 'admin' || $user->role === 'supply_officer') {
+            // Regular users and Admin/Supply Officer: ICT only
+            $requestsQuery = RequestModel::where('type', 'ICT')->whereHas('user', function($q) use ($user) {
+                if ($user->branch) {
+                    $q->where('branch', $user->branch);
+                }
+                if ($user->office) {
+                    $q->where('office', $user->office);
+                }
+                // Department filter removed - office (division) is sufficient
+            });
+        } elseif ($user->role === 'it') {
+            // IT: ICT + PM assigned to them
+            $requestsQuery = RequestModel::where(function ($q) use ($user) {
+                $q->where('type', 'ICT')
+                  ->orWhere(function ($sub) use ($user) {
+                      $sub->where('type', 'Preventive Maintenance')
+                          ->where('assigned_to', $user->id);
+                  });
+            })->whereHas('user', function($q) use ($user) {
+                if ($user->branch) {
+                    $q->where('branch', $user->branch);
+                }
+                if ($user->office) {
+                    $q->where('office', $user->office);
+                }
+            });
+        } else {
+            // Super Admin: All requests (ICT + PM)
+            $requestsQuery = RequestModel::whereHas('user', function($q) use ($user) {
+                if ($user->branch) {
+                    $q->where('branch', $user->branch);
+                }
+                if ($user->office) {
+                    $q->where('office', $user->office);
+                }
+            });
+        }
         
         $requests = $requestsQuery->with('user')->orderBy('created_at', 'desc')->limit(10)->get();
 

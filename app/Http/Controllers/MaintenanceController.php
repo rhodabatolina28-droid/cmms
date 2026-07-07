@@ -23,13 +23,17 @@ class MaintenanceController extends Controller
     public function index()
     {
         $user = Auth::user();
+
+        // Block access for regular users and admin/supply officer - PM is for IT/Super Admin only
+        if ($user->role === 'user' || $user->role === 'admin' || $user->role === 'supply_officer') {
+            abort(403, 'Preventive Maintenance requests are managed by IT personnel and Super Admin only.');
+        }
+
         $query = RequestModel::with(['user', 'maintenanceRequest', 'assignedTo'])
             ->where('type', 'Preventive Maintenance')
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED);
 
-        if ($user->role === 'user') {
-            $query->where('user_id', $user->id);
-        } elseif ($user->role === 'it') {
+        if ($user->role === 'it') {
             $query->where('assigned_to', $user->id);
         } elseif ($user->role === 'super_admin') {
             // Super Admin sees all PM requests in their branch (since PM skips division admin review)
