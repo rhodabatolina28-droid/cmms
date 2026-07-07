@@ -83,6 +83,15 @@ class InventoryController extends Controller
                 return $asset;
             });
 
+        // Get total counts across all statuses (unfiltered by search/category/status)
+        $baseQuery = InventoryAsset::query();
+        $this->scopeAssetsToActor($baseQuery, $user);
+        $totalActive = (clone $baseQuery)->where('status', 'Active')->count();
+        $totalSpare = (clone $baseQuery)->where('status', 'Spare')->count();
+        $totalRepair = (clone $baseQuery)->where('status', 'For Repair')->count();
+        $totalDisposal = (clone $baseQuery)->whereIn('status', ['For Disposal', 'Scrapped', 'Disposed'])->count();
+        $totalAll = (clone $baseQuery)->count();
+
         return response()->json([
             'success' => true,
             'assets' => $assets->items(),
@@ -90,6 +99,13 @@ class InventoryController extends Controller
             'per_page' => $assets->perPage(),
             'current_page' => $assets->currentPage(),
             'last_page' => $assets->lastPage(),
+            'stats' => [
+                'total' => $totalAll,
+                'active' => $totalActive,
+                'spare' => $totalSpare,
+                'repair' => $totalRepair,
+                'disposal' => $totalDisposal,
+            ],
         ]);
     }
 

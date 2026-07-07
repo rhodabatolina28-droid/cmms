@@ -203,7 +203,7 @@ async function loadInventory(page) {
             lastPage = result.last_page || 1;
             renderInventoryTable(allAssets);
             renderPagination(result.total || 0);
-            updateInventorySummary(result.total || 0);
+            updateInventorySummary(result.total || 0, result.stats);
         }
     } catch (error) {
         console.error("Error loading inventory:", error);
@@ -223,20 +223,24 @@ function exportFilteredInventory() {
     window.location.href = prefix + '/export?' + params.toString();
 }
 
-function updateInventorySummary(total) {
+function updateInventorySummary(total, stats) {
     if (!document.getElementById("statTotal")) return;
-    document.getElementById("statTotal").textContent = total || 0;
 
-    // Counts come from server — stats show current filtered total
-    const active = allAssets.filter(a => a.status === 'Active').length;
-    const spare = allAssets.filter(a => a.status === 'Spare').length;
-    const repair = allAssets.filter(a => a.status === 'For Repair').length;
-    const disposal = allAssets.filter(a => ['For Disposal', 'Scrapped', 'Disposed'].includes(a.status)).length;
-
-    document.getElementById("statActive").textContent = active;
-    document.getElementById("statSpare").textContent = spare;
-    document.getElementById("statRepair").textContent = repair;
-    document.getElementById("statDisposal").textContent = disposal;
+    // Use server-provided stats for unfiltered totals (not affected by search/category/status filters)
+    if (stats) {
+        document.getElementById("statTotal").textContent = stats.total || 0;
+        document.getElementById("statActive").textContent = stats.active || 0;
+        document.getElementById("statSpare").textContent = stats.spare || 0;
+        document.getElementById("statRepair").textContent = stats.repair || 0;
+        document.getElementById("statDisposal").textContent = stats.disposal || 0;
+    } else {
+        // Fallback: calculate from current page's assets
+        document.getElementById("statTotal").textContent = total || 0;
+        document.getElementById("statActive").textContent = allAssets.filter(a => a.status === 'Active').length;
+        document.getElementById("statSpare").textContent = allAssets.filter(a => a.status === 'Spare').length;
+        document.getElementById("statRepair").textContent = allAssets.filter(a => a.status === 'For Repair').length;
+        document.getElementById("statDisposal").textContent = allAssets.filter(a => ['For Disposal', 'Scrapped', 'Disposed'].includes(a.status)).length;
+    }
 }
 
 function renderInventoryTable(assets) {
