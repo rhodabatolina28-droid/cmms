@@ -1356,14 +1356,6 @@
     window.CMMS_RECEIPT_PREFIX = '{{ url('inventory') }}';
     @endif
 
-    // Stats calculation helper (called after fetching assets)
-    function updateInventoryStats(assets) {
-        document.getElementById('statTotal').textContent = window.inventoryTotal || assets.length;
-        document.getElementById('statActive').textContent = assets.filter(a => a.status === 'Active').length;
-        document.getElementById('statSpare').textContent = assets.filter(a => a.status === 'Spare').length;
-        document.getElementById('statDefective').textContent = assets.filter(a => ['Defective', 'For Repair'].includes(a.status)).length;
-    }
-
     // Wait for inventory.js to load before calling its functions
     document.addEventListener('DOMContentLoaded', function() {
         const transferForm = document.getElementById('transferForm');
