@@ -859,6 +859,30 @@ class ICTRequestController extends Controller
                         );
                         // NOTE: No supply notification here — fires on ticket Completion in Request::booted()
                     }
+                } elseif (!empty($mappedData['after_repair_status']) && $mappedData['after_repair_status'] === 'FOR REPAIR') {
+                    // FOR REPAIR: keep the asset assigned to user, just update status
+                    $asset = $trackingRequest->linkedAsset;
+                    if ($asset && $asset->status !== \App\Enums\AssetStatus::FOR_REPAIR) {
+                        $asset->status = \App\Enums\AssetStatus::FOR_REPAIR;
+                        // Keep assigned_to_user intact - asset is still with the user
+                        $asset->save();
+
+                        \App\Models\InventoryHistory::create([
+                            'asset_id' => $asset->asset_id,
+                            'action' => 'IT Marked For Repair',
+                            'previous_user_id' => $asset->assigned_to_user,
+                            'new_user_id' => $asset->assigned_to_user,
+                            'performed_by' => $user->id,
+                            'remarks' => "Asset marked for repair via ICT Request form {$trackingRequest->request_number}. Asset remains with user.",
+                        ]);
+
+                        AuditLog::log(
+                            "Marked Asset For Repair",
+                            "Inventory",
+                            "Marked asset {$asset->property_number} for repair via ICT request {$trackingRequest->request_number}",
+                            $trackingRequest->office
+                        );
+                    }
                 }
 
                 // Even if Admin marks it as "COMPLETED" or "FOR DISPOSAL" in the form,
