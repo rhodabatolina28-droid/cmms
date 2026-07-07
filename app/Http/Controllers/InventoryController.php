@@ -62,10 +62,14 @@ class InventoryController extends Controller
 		$cats = ['Desktop','Laptop','Monitor','Printer/Scanner','Peripherals','Network/Server','Others'];
 		$fieldList = implode(',', array_map(fn($c) => "'$c'", $cats));
 
+		// Status priority: Active first, then Spare, then For Repair, then everything else
+		$statusOrder = "'Active','Spare','For Repair','For Disposal','Scrapped','Disposed','Pending'";
+
 		$perPage = min((int) $request->input('per_page', 50), 100);
 		$page = max((int) $request->input('page', 1), 1);
 
-		$assets = $query->orderByRaw("FIELD(category, $fieldList)")
+		$assets = $query->orderByRaw("FIELD(status, $statusOrder)")
+			->orderByRaw("FIELD(category, $fieldList)")
 			->orderBy('created_at', 'desc')
 			->paginate($perPage, ['*'], 'page', $page)
 			->through(function ($asset) {
@@ -746,10 +750,14 @@ class InventoryController extends Controller
 		$cats = ['Desktop','Laptop','Monitor','Printer/Scanner','Peripherals','Network/Server','Others'];
 		$fieldList = implode(',', array_map(fn($c) => "'$c'", $cats));
 
+		// Status priority: Active first, then Spare, then For Repair, then everything else
+		$statusOrder = "'Active','Spare','For Repair','For Disposal','Scrapped','Disposed','Pending'";
+
 		$perPage = min((int) $request->input('per_page', 50), 100);
 		$page = max((int) $request->input('page', 1), 1);
 
-		$assets = $query->orderByRaw("FIELD(category, $fieldList)")
+		$assets = $query->orderByRaw("FIELD(status, $statusOrder)")
+			->orderByRaw("FIELD(category, $fieldList)")
 			->orderBy('created_at', 'desc')
 			->paginate($perPage, ['*'], 'page', $page);
 
