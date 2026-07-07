@@ -41,6 +41,7 @@ function getDivisionAbbr(office) {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+    // Load inventory data immediately on page load
     loadInventory();
     
     // Auto-update status when assigned user changes
