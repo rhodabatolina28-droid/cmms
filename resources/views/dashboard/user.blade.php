@@ -312,28 +312,6 @@
         
         <!-- LEFT: RECENT ACTIVITY -->
         <div class="premium-table-box">
-            @php
-                $unratedRequests = Auth::user()->requests()
-                    ->where('status', 'Completed')
-                    ->whereDoesntHave('csmSurvey')
-                    ->get();
-            @endphp
-            @if($unratedRequests->count() > 0)
-                <div class="banner-alert">
-                    <div class="banner-text">
-                        <i class="fa-solid fa-circle-exclamation banner-icon"></i>
-                        <span class="banner-msg">Required: complete the satisfaction survey for these finished requests:</span>
-                    </div>
-                    <div class="flex-wrap-gap">
-                        @foreach($unratedRequests as $unrated)
-                            <a href="{{ route('csm.create', $unrated->id) }}" class="survey-link link-hover-survey">
-                                <i class="fa-solid fa-star star-icon"></i> {{ $unrated->display_number ?? $unrated->request_number }}
-                            </a>
-                        @endforeach
-                    </div>
-                </div>
-            @endif
-
             <div class="flex-sb mb-20">
                 <h3 class="table-title">Recent Activity</h3>
                 <a href="{{ route('ict.index') }}" class="link-master">View All</a>
