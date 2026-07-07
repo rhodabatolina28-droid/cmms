@@ -11,7 +11,7 @@ class AssetController extends Controller
     public function myAssets()
     {
         $assets = InventoryAsset::where('assigned_to_user', Auth::id())
-            ->whereNotIn('status', ['For Repair', 'For Disposal', 'Scrapped'])
+            ->whereNotIn('status', ['For Disposal', 'Scrapped'])
             ->get();
 
         return view('profile.assets', [
