@@ -241,8 +241,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Optimized: Single query for requests with minimal eager loading
+        // Users see both ICT and PM requests (PM needs CSM survey completion)
         $requests = RequestModel::where('user_id', $user->id)
+            ->whereIn('type', ['ICT', 'Preventive Maintenance'])
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
