@@ -167,6 +167,21 @@ class ICTRequestController extends Controller
             }
         }
 
+        // Build ICT assets map for JS auto-fill on asset selection
+        $ictAssetsMap = [];
+        foreach ($myAssets as $asset) {
+            $ictAssetsMap[$asset->asset_id] = [
+                'serial_number'   => $asset->serial_number,
+                'property_number' => $asset->property_number,
+                'par_number'      => $asset->par_number,
+                'date_acquired'   => $asset->date_acquired
+                    ? \Carbon\Carbon::parse($asset->date_acquired)->format('Y-m-d')
+                    : null,
+                'item_name'       => $asset->item_name,
+                'category'        => $asset->category,
+            ];
+        }
+
         return view('requests.ict.form', array_merge([
             'request' => null,
             'repairRequest' => null,
@@ -174,6 +189,7 @@ class ICTRequestController extends Controller
             'hasAssignedAssets' => $hasAssignedAssets,
             'preselectedAssetId' => $preselectedAssetId,
             'linkedAssetData' => null,
+            'ictAssetsMap' => $ictAssetsMap,
         ], $flags));
     }
 
@@ -445,6 +461,8 @@ class ICTRequestController extends Controller
                     'endUserSignature', 'end_user_signature',
                     'endUserPrintedName', 'end_user_printed_name',
                     'endUserDate', 'date_requested',
+                    'articleSerialNo', 'article_serial_no',
+                    'propertyNo', 'property_no',
                 ])
                 : $request->only($this->ictAllowedKeys());
 
@@ -657,6 +675,8 @@ class ICTRequestController extends Controller
                         'endUserDate', 'date_requested',
                         'linked_asset_id',
                         'last_updated_at',
+                        'articleSerialNo', 'article_serial_no',
+                        'propertyNo', 'property_no',
                     ]);
 
                     $mappedData = $this->mapLegacyData($data);
@@ -1150,15 +1170,32 @@ class ICTRequestController extends Controller
             $linkedAsset = \App\Models\InventoryAsset::find($trackingRequest->linked_asset_id);
             if ($linkedAsset) {
                 $linkedAssetData = [
-                    'serial_number' => $linkedAsset->serial_number,
-                    'item_name'     => $linkedAsset->item_name,
-                    'category'      => $linkedAsset->category,
-                    'specifications'=> $linkedAsset->specifications ?? [],
-                    'date_acquired' => $linkedAsset->date_acquired
+                    'serial_number'   => $linkedAsset->serial_number,
+                    'property_number' => $linkedAsset->property_number,
+                    'par_number'      => $linkedAsset->par_number,
+                    'item_name'       => $linkedAsset->item_name,
+                    'category'        => $linkedAsset->category,
+                    'specifications'  => $linkedAsset->specifications ?? [],
+                    'date_acquired'   => $linkedAsset->date_acquired
                         ? \Carbon\Carbon::parse($linkedAsset->date_acquired)->format('Y-m-d')
                         : null,
                 ];
             }
+        }
+
+        // Build ICT assets map for JS auto-fill on asset selection
+        $ictAssetsMap = [];
+        foreach ($myAssets as $asset) {
+            $ictAssetsMap[$asset->asset_id] = [
+                'serial_number'   => $asset->serial_number,
+                'property_number' => $asset->property_number,
+                'par_number'      => $asset->par_number,
+                'date_acquired'   => $asset->date_acquired
+                    ? \Carbon\Carbon::parse($asset->date_acquired)->format('Y-m-d')
+                    : null,
+                'item_name'       => $asset->item_name,
+                'category'        => $asset->category,
+            ];
         }
 
         $data = array_merge([
@@ -1166,6 +1203,7 @@ class ICTRequestController extends Controller
             'repairRequest' => $repairRequest,
             'myAssets' => $myAssets,
             'linkedAssetData' => $linkedAssetData,
+            'ictAssetsMap' => $ictAssetsMap,
         ], $flags);
 
         if (!empty($flags['canAssignIt'])) {

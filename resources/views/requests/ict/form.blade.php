@@ -158,21 +158,24 @@
             }
 
             // Build ICT assets map for auto-fill on asset selection
-            $ictAssetsMap = [];
-            if (!empty($myAssets)) {
+            // If controller already passed one, use it (controller version includes property_number + par_number)
+            if (empty($ictAssetsMap) && !empty($myAssets)) {
+                $ictAssetsMap = [];
                 foreach ($myAssets as $asset) {
                     $specs = is_string($asset->specifications)
                         ? json_decode($asset->specifications, true) ?? []
                         : ($asset->specifications ?? []);
                     
                     $ictAssetsMap[(int)$asset->asset_id] = [
-                        'item_name'     => $asset->item_name,
-                        'category'      => $asset->category,
-                        'serial_number' => $asset->serial_number,
-                        'date_acquired' => $asset->date_acquired
+                        'item_name'       => $asset->item_name,
+                        'category'        => $asset->category,
+                        'serial_number'   => $asset->serial_number,
+                        'property_number' => $asset->property_number,
+                        'par_number'      => $asset->par_number,
+                        'date_acquired'   => $asset->date_acquired
                             ? \Carbon\Carbon::parse($asset->date_acquired)->format('Y-m-d')
                             : null,
-                        'specs'         => $specs,
+                        'specs'           => $specs,
                     ];
                 }
             }
@@ -994,16 +997,16 @@
                 const cat   = (LINKED_ASSET.category || '').toLowerCase();
                 const specs = LINKED_ASSET.specifications || {};
 
-                // ARTICLE / SERIAL NO  (always auto-fill from linked asset)
+                // ARTICLE / SERIAL NO (serial_number only)
                 const snEl = document.getElementById('articleSerialNo');
                 if (snEl && !snEl.value && LINKED_ASSET.serial_number) {
                     snEl.value = LINKED_ASSET.serial_number;
                 }
 
-                // PROPERTY NO  (same as serial — acts as property tag)
+                // PROPERTY NO (property_number only)
                 const propEl = document.getElementById('propertyNo');
-                if (propEl && !propEl.value && LINKED_ASSET.serial_number) {
-                    propEl.value = LINKED_ASSET.serial_number;
+                if (propEl && !propEl.value && LINKED_ASSET.property_number) {
+                    propEl.value = LINKED_ASSET.property_number;
                 }
 
                 // OFFICE / DATE ACQUIRED
@@ -1025,18 +1028,18 @@
             console.log('DEBUG: ictAutoFillFromAsset called with assetId:', assetId);
             console.log('DEBUG: asset:', asset);
 
-            // Auto-fill ARTICLE / SERIAL NO
+            // Auto-fill ARTICLE / SERIAL NO (from serial_number only)
             const snEl = document.getElementById('articleSerialNo');
             if (snEl && asset.serial_number) {
                 snEl.value = asset.serial_number;
                 console.log('DEBUG: Filled articleSerialNo with:', asset.serial_number);
             }
 
-            // Auto-fill PROPERTY NO (same as serial)
+            // Auto-fill PROPERTY NO (from property_number only)
             const propEl = document.getElementById('propertyNo');
-            if (propEl && asset.serial_number) {
-                propEl.value = asset.serial_number;
-                console.log('DEBUG: Filled propertyNo with:', asset.serial_number);
+            if (propEl && asset.property_number) {
+                propEl.value = asset.property_number;
+                console.log('DEBUG: Filled propertyNo with:', asset.property_number);
             }
 
             // Auto-fill OFFICE / DATE ACQUIRED

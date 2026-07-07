@@ -885,6 +885,12 @@ class GeneratePMScheduleService
                 $mapped['earphone_brand'] = $asset->brand;
                 $mapped['earphone_model'] = $asset->model;
                 $mapped['earphone_pno']   = $asset->property_number;
+            } elseif (str_contains($typeStr, 'network') || str_contains($typeStr, 'server') || str_contains($typeStr, 'ip phone')) {
+                // Map IP Phone / Network equipment to "Other Equipment" section
+                $brand = $asset->brand ?: $asset->model; // Use model as brand if brand is empty
+                $mapped['other_equipment'] = 'IP Phone';
+                $mapped['other_equipment_brand'] = $brand;
+                $mapped['other_equipment_model_pno'] = $asset->par_number ?: $asset->property_number;
             }
         }
         

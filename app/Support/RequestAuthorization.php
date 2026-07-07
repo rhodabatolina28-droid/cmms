@@ -70,16 +70,6 @@ class RequestAuthorization
             return "This asset is marked as '{$asset->status}' and cannot be used for new requests.";
         }
 
-        // Block if asset has a completed ICT ticket (unless it's a PM cycle)
-        $hasCompletedTicket = \App\Models\Request::where('linked_asset_id', $asset->asset_id)
-            ->where('type', 'ICT')
-            ->where('status', \App\Models\Request::STATUS_COMPLETED)
-            ->exists();
-            
-        if ($hasCompletedTicket) {
-            return 'This asset already has a completed ICT request. Please create a new Preventive Maintenance request instead.';
-        }
-
         return null;
     }
 
