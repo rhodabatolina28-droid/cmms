@@ -241,9 +241,9 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Users see both ICT and PM requests (PM needs CSM survey completion)
+        // Users see ICT requests only (PM is scheduled, not user-requested)
         $requests = RequestModel::where('user_id', $user->id)
-            ->whereIn('type', ['ICT', 'Preventive Maintenance'])
+            ->where('type', 'ICT')
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED)
             ->orderBy('created_at', 'desc')
             ->paginate(10);
