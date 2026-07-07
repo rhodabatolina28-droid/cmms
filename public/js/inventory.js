@@ -230,11 +230,13 @@ function updateInventorySummary(total) {
     // Counts come from server — stats show current filtered total
     const active = allAssets.filter(a => a.status === 'Active').length;
     const spare = allAssets.filter(a => a.status === 'Spare').length;
-    const defective = allAssets.filter(a => ['Defective', 'For Repair', 'Scrapped'].includes(a.status)).length;
+    const repair = allAssets.filter(a => a.status === 'For Repair').length;
+    const disposal = allAssets.filter(a => ['For Disposal', 'Scrapped', 'Disposed'].includes(a.status)).length;
 
     document.getElementById("statActive").textContent = active;
     document.getElementById("statSpare").textContent = spare;
-    document.getElementById("statDefective").textContent = defective;
+    document.getElementById("statRepair").textContent = repair;
+    document.getElementById("statDisposal").textContent = disposal;
 }
 
 function renderInventoryTable(assets) {

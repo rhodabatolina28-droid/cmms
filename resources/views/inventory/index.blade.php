@@ -34,7 +34,7 @@
         /* Summary Stats Ribbon */
         .stats-ribbon {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(5, 1fr);
             gap: 10px;
             margin-bottom: 16px;
         }
@@ -603,31 +603,33 @@
             <!-- SUMMARY RIBBON — inside card -->
             <div class="stats-ribbon">
                 <div class="stat-item-premium">
-                    <div class="stat-icon si-total"><i class="fa-solid fa-layer-group"></i></div>
                     <div class="stat-info">
                         <p>Total Assets</p>
                         <h4 id="statTotal">--</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
-                    <div class="stat-icon si-active"><i class="fa-solid fa-check-double"></i></div>
                     <div class="stat-info">
-                        <p>Active / In-Use</p>
+                        <p>Active</p>
                         <h4 id="statActive">--</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
-                    <div class="stat-icon si-spare"><i class="fa-solid fa-box-open"></i></div>
                     <div class="stat-info">
-                        <p>Available Spare</p>
+                        <p>Spare</p>
                         <h4 id="statSpare">--</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
-                    <div class="stat-icon si-defective"><i class="fa-solid fa-triangle-exclamation"></i></div>
                     <div class="stat-info">
-                        <p>Defective / Repair</p>
-                        <h4 id="statDefective">--</h4>
+                        <p>For Repair</p>
+                        <h4 id="statRepair">--</h4>
+                    </div>
+                </div>
+                <div class="stat-item-premium">
+                    <div class="stat-info">
+                        <p>For Disposal</p>
+                        <h4 id="statDisposal">--</h4>
                     </div>
                 </div>
             </div>
