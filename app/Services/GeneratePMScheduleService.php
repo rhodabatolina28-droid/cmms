@@ -909,83 +909,11 @@ class GeneratePMScheduleService
 
     private function generateRequestNumber(?User $actorUser = null): string
     {
-        $year = now()->format('Y');
-
-        // When running via cron, Auth::user() is null.
-        // Use the provided actor user, or fall back to SYS defaults.
-        $user = $actorUser ?? Auth::user();
-
-        $region     = strtoupper($user?->region ?? 'SYS');
-        $branchCode = $this->getBranchCode($user?->branch ?? null);
-
-        $searchPrefix = "PM-{$region}-{$branchCode}-{$year}";
-
-        // Use a MySQL advisory lock to prevent race conditions when two processes
-        // (e.g. cron + manual generate) try to generate request numbers simultaneously
-        // for the same branch. The lock is per-branch-per-year, so different branches
-        // can generate concurrently without blocking each other.
-        $lockName    = "pm_request_number_{$region}_{$branchCode}_{$year}";
-        $lockTimeout = 10; // seconds to wait for lock before giving up
-
-        $acquired = DB::select("SELECT GET_LOCK(?, ?) AS acquired", [$lockName, $lockTimeout]);
-
-        if (!($acquired[0]->acquired ?? false)) {
-            Log::warning("Could not acquire advisory lock for PM request number generation (prefix: {$searchPrefix}). Proceeding without lock.");
-        }
-
-        try {
-            $last = RequestModel::withTrashed()
-                ->where('request_number', 'LIKE', "{$searchPrefix}-%")
-                ->orderByDesc('request_number')
-                ->value('request_number');
-
-            $next = 1;
-            if ($last) {
-                $parts = explode('-', $last);
-                $next  = (int) end($parts) + 1;
-            }
-
-            $requestNumber = "PM-{$region}-{$branchCode}-{$year}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
-        } finally {
-            // Always release the lock — even if an exception occurred
-            DB::select("SELECT RELEASE_LOCK(?)", [$lockName]);
-        }
-
-        return $requestNumber;
+        return \App\Support\RequestHelpers::generateRequestNumber('PM', $actorUser);
     }
     
     private function getBranchCode(?string $branch): string
     {
-        if (!$branch) {
-            return 'SYS';
-        }
-        
-        // Use the actual branch name from database, just remove spaces and special characters
-        // This ensures each branch gets its unique identifier based on actual data
-        $clean = preg_replace('/[^A-Z0-9]/', '', strtoupper($branch));
-        
-        // If branch name is too long (>10 chars), use first meaningful part
-        if (strlen($clean) > 10) {
-            // Try to extract meaningful abbreviation from the branch name
-            $branchUpper = strtoupper($branch);
-            
-            // Common patterns in Philippine government branches
-            if (str_contains($branchUpper, 'RCMB')) {
-                $clean = 'RCMB';
-            } elseif (str_contains($branchUpper, 'NATIONAL CAPITAL')) {
-                $clean = 'NCR';
-            } elseif (preg_match('/REGION\s+([IVXLCDM]+)/i', $branchUpper, $matches)) {
-                $clean = 'R' . strtoupper($matches[1]);
-            } elseif (str_contains($branchUpper, 'CAR')) {
-                $clean = 'CAR';
-            } elseif (str_contains($branchUpper, 'BARMM')) {
-                $clean = 'BARMM';
-            } else {
-                // Fallback: use first 4-5 characters
-                $clean = substr($clean, 0, 5);
-            }
-        }
-        
-        return $clean ?: 'SYS';
+        return \App\Support\RequestHelpers::getBranchCode($branch);
     }
 }

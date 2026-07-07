@@ -947,103 +947,17 @@ class ICTRequestController extends Controller
 
     private function saveSignature($base64Data, $type, $name)
     {
-        if (empty($base64Data) || !str_contains($base64Data, 'data:image')) {
-            return null;
-        }
-
-        try {
-            $image = str_replace('data:image/png;base64,', '', $base64Data);
-            $image = str_replace(' ', '+', $image); // Resolve common spacing/plus urlencoding issue
-            // Bulletproof sanitization without class dependencies to prevent path traversal (removes slashes, dots, etc.)
-            $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '', str_replace(' ', '_', $name));
-            if (empty($safeName)) {
-                $safeName = 'signature';
-            }
-            $filename = $type . '_' . $safeName . '_' . time() . '.png';
-            $filepath = 'signatures/' . $filename;
-            
-            // Save to storage/app/public (served via storage symlink)
-            Storage::disk('public')->put($filepath, base64_decode($image));
-            
-            return $filepath;
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Signature save failed: ' . $e->getMessage());
-            return null;
-        }
+        return \App\Support\RequestHelpers::saveSignature($base64Data, $type, $name);
     }
 
     private function generateRequestNumber($type)
     {
-        $prefix = $type === 'ICT' ? 'REQ' : 'PM';
-        $year = date('Y');
-
-        $user = \Illuminate\Support\Facades\Auth::user();
-        $region = strtoupper($user->region ?? 'SYS');
-        $branchCode = $this->getBranchCode($user->branch);
-
-        // Use pessimistic locking inside a transaction to prevent race conditions
-        // where two simultaneous requests could get the same request number.
-        return \Illuminate\Support\Facades\DB::transaction(function () use ($prefix, $year, $region, $branchCode) {
-            $searchPrefix = "{$prefix}-{$region}-{$branchCode}-{$year}";
-            
-            $lastRequest = RequestModel::where('request_number', 'like', "{$searchPrefix}-%")
-                ->orderBy('id', 'desc')
-                ->lockForUpdate()
-                ->first();
-
-            if ($lastRequest) {
-                $parts = explode('-', $lastRequest->request_number);
-                $lastNumber = intval(end($parts));
-                $number = $lastNumber + 1;
-            } else {
-                $number = 1;
-            }
-
-            return sprintf("%s-%s-%s-%s-%03d", $prefix, $region, $branchCode, $year, $number);
-        });
+        return \App\Support\RequestHelpers::generateRequestNumber($type);
     }
     
     private function getBranchCode(?string $branch): string
     {
-        if (!$branch) {
-            return 'SYS';
-        }
-        
-        $branch = strtoupper($branch);
-        
-        // Map common branch names to short codes
-        $mapping = [
-            'RCMB' => 'RCMB',
-            'NATIONAL CAPITAL REGION' => 'NCR',
-            'NCR' => 'NCR',
-            'REGION I' => 'RI',
-            'REGION II' => 'RII',
-            'REGION III' => 'RIII',
-            'REGION IV-A' => 'R4A',
-            'REGION IV-B' => 'R4B',
-            'REGION V' => 'RV',
-            'REGION VI' => 'RVI',
-            'REGION VII' => 'RVII',
-            'REGION VIII' => 'RVIII',
-            'REGION IX' => 'RIX',
-            'REGION X' => 'RX',
-            'REGION XI' => 'RXI',
-            'REGION XII' => 'RXII',
-            'REGION XIII' => 'RXIII',
-            'CAR' => 'CAR',
-            'BARMM' => 'BARMM',
-        ];
-        
-        // Check if branch contains any of the mapping keys
-        foreach ($mapping as $keyword => $code) {
-            if (str_contains($branch, $keyword)) {
-                return $code;
-            }
-        }
-        
-        // Fallback: use first 3-4 characters of branch name
-        $clean = preg_replace('/[^A-Z0-9]/', '', $branch);
-        return substr($clean, 0, 4) ?: 'SYS';
+        return \App\Support\RequestHelpers::getBranchCode($branch);
     }
 
     private function ictAllowedKeys(): array

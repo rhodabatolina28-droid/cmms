@@ -670,117 +670,17 @@ class MaintenanceController extends Controller
 
     private function saveSignature($base64Data, $type, $name)
     {
-        if (empty($base64Data) || !str_contains($base64Data, 'data:image')) {
-            return null;
-        }
-
-        try {
-            $image = str_replace('data:image/png;base64,', '', $base64Data);
-            $image = str_replace(' ', '+', $image); // Resolve common spacing/plus urlencoding issue
-            // Bulletproof sanitization without class dependencies to prevent path traversal (removes slashes, dots, etc.)
-            $safeName = preg_replace('/[^A-Za-z0-9_\-]/', '', str_replace(' ', '_', $name));
-            if (empty($safeName)) {
-                $safeName = 'signature';
-            }
-            $filename = $type . '_' . $safeName . '_' . time() . '.png';
-            $filepath = 'signatures/' . $filename;
-
-            // Save to storage/app/public (served via storage symlink)
-            Storage::disk('public')->put($filepath, base64_decode($image));
-
-            return $filepath;
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Signature save failed: ' . $e->getMessage());
-            return null;
-        }
+        return \App\Support\RequestHelpers::saveSignature($base64Data, $type, $name);
     }
 
     private function generateRequestNumber($type)
     {
-        $prefix = $type === 'ICT' ? 'REQ' : 'PM';
-        $year = date('Y');
-
-        $user = \Illuminate\Support\Facades\Auth::user();
-        $region = strtoupper($user->region ?? 'SYS');
-        $branchCode = strtoupper($user->branch ?? 'SYS');
-        $branchCode = preg_replace('/[^A-Z0-9]/', '', $branchCode);
-
-        // Use pessimistic locking inside a transaction to prevent race conditions
-        // where two simultaneous requests could get the same request number.
-        return DB::transaction(function () use ($prefix, $year, $region, $branchCode) {
-            $searchPrefix = "{$prefix}-{$region}-{$branchCode}-{$year}";
-
-            $lastRequest = RequestModel::where('request_number', 'like', "{$searchPrefix}-%")
-                ->orderBy('id', 'desc')
-                ->lockForUpdate()
-                ->first();
-
-            if ($lastRequest) {
-                $parts = explode('-', $lastRequest->request_number);
-                $lastNumber = intval(end($parts));
-                $number = $lastNumber + 1;
-            } else {
-                $number = 1;
-            }
-
-            return sprintf("%s-%s-%s-%s-%03d", $prefix, $region, $branchCode, $year, $number);
-        });
+        return \App\Support\RequestHelpers::generateRequestNumber($type);
     }
-
-    /**
-     * Download the disposal tag PDF for a PM request.
-     * Shows the specific asset selected for disposal.
-     */
-    public function disposalTag($id)
+    
+    private function getBranchCode(?string $branch): string
     {
-        $trackingRequest = RequestModel::findOrFail($id);
-        $user = Auth::user();
-
-        // Relaxed access: Super Admin always allowed, assigned IT allowed
-        $isAssignedIt = $user->role === 'it' && (int) $trackingRequest->assigned_to === (int) $user->id;
-        $isSuperAdmin = $user->role === 'super_admin';
-
-        if (!$isSuperAdmin && !$isAssignedIt) {
-            $this->checkTicketAccess($trackingRequest);
-        }
-
-        $maintenance = PreventiveMaintenance::findOrFail($trackingRequest->detail_id);
-
-        // Verify disposal was actually marked
-        if ($maintenance->for_disposal !== 'YES' || !$maintenance->disposal_asset_id) {
-            abort(403, 'No asset was marked for disposal in this request.');
-        }
-
-        $asset = \App\Models\InventoryAsset::findOrFail($maintenance->disposal_asset_id);
-
-        // Get the IT user who completed the PM (assigned user or current user)
-        $itUser = null;
-        if ($trackingRequest->assigned_to) {
-            $itUser = \App\Models\User::find($trackingRequest->assigned_to);
-        }
-        if (!$itUser) {
-            $itUser = Auth::user();
-        }
-
-        // Reuse the existing disposal tag PDF view from ICT
-        $pdf = Pdf::loadView('pdf.disposal-tag', [
-            'request' => $trackingRequest,
-            'asset'   => $asset,
-            'reason'  => $maintenance->disposal_reason ?? 'Not specified',
-            'itUser'  => $itUser,
-        ])->setPaper('a4', 'portrait');
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-
-        return response($pdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="DisposalTag-' . $trackingRequest->request_number . '.pdf"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-        ]);
+        return \App\Support\RequestHelpers::getBranchCode($branch);
     }
 
     public function downloadPdf($id)
