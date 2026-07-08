@@ -350,16 +350,9 @@
                     <input type="text" id="searchRequest" placeholder="Search by ID, requestor, or office..." class="ribbon-input ad-search-input">
                 </div>
 
-                <select id="filterType" class="ribbon-input ad-filter-select">
-                    <option value="">All Service Types</option>
-                    <option value="ICT">ICT Support</option>
-                    <option value="Preventive Maintenance">Preventive Maintenance</option>
-                </select>
-
                 <select id="filterStatus" class="ribbon-input ad-filter-status">
                     <option value="">All Status</option>
                     <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
                     <option value="Ongoing">Ongoing</option>
                     <option value="Completed">Completed</option>
                     <option value="Rejected">Rejected</option>
@@ -371,12 +364,9 @@
                     <thead>
                         <tr>
                             <th>Request ID</th>
-                            <th>Service Type</th>
                             <th>Requestor</th>
-                            <th>Office</th>
                             <th>Date Filed</th>
                             <th class="ad-td-center">Status</th>
-                            <th class="ad-td-center" title="Division Admin Review Status"><i class="fa-solid fa-clipboard-check"></i> Div Review</th>
                             <th>IT Assigned</th>
                             <th class="ad-td-center">Actions</th>
                         </tr>
@@ -394,44 +384,29 @@
                                 <div class="ad-td-id">{{ $req->display_number ?? $req->request_number }}</div>
                                 <div class="ad-td-sub">#{{ $req->id }}</div>
                             </td>
-                            <td class="ad-td-type">{{ $req->type }}</td>
                             <td class="ad-td-name">{{ $req->requestor_name }}</td>
-                            <td class="ad-td-office">{{ $req->office }}</td>
                             <td class="ad-td-date">{{ $req->created_at->format('M d, Y') }}</td>
                             <td class="ad-td-center">
                                 <span class="status-pill @if($req->status === 'Pending') sp-pending @elseif($req->status === 'Ongoing') sp-ongoing @elseif($req->status === 'Completed') sp-completed @elseif($req->status === 'Rejected') sp-rejected @endif">
                                     {{ $req->status }}
                                 </span>
                             </td>
-                            <td class="ad-td-center">
-                                @if($req->division_admin_review_status === 'Approved')
-                                    <span class="ad-review-icon-green" title="Approved by Division Admin"><i class="fa-solid fa-circle-check"></i></span>
-                                @elseif($req->division_admin_review_status === 'Rejected')
-                                    <span class="ad-review-icon-red" title="Rejected by Division Admin"><i class="fa-solid fa-circle-xmark"></i></span>
-                                @else
-                                    <span class="ad-review-icon-gray" title="Pending Division Review"><i class="fa-regular fa-clock"></i></span>
-                                @endif
-                            </td>
                             <td class="it-assigned-cell">
-                                @if(in_array($req->type, ['ICT', 'Preventive Maintenance'], true))
-                                    @if($req->assignedTo)
-                                        <span class="ad-assigned-name">{{ $req->assignedTo->full_name }}</span>
-                                    @else
-                                        <span class="ad-assigned-none">UNASSIGNED</span>
-                                    @endif
+                                @if($req->assignedTo)
+                                    <span class="ad-assigned-name">{{ $req->assignedTo->full_name }}</span>
                                 @else
-                                    <span class="ad-assigned-na">—</span>
+                                    <span class="ad-assigned-none">UNASSIGNED</span>
                                 @endif
                             </td>
                             <td class="ad-td-center">
-                                <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="btn-action-modern" title="View & Assign IT">
+                                <a href="{{ route($req->getRoutePrefix() . '.show', $req->id) }}" class="btn-action-modern" title="View & Assign IT">
                                     <i class="fa-solid fa-eye"></i>
                                 </a>
                             </td>
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="8" class="ad-empty">
+                            <td colspan="6" class="ad-empty">
                                 <i class="fa-solid fa-inbox ad-empty-icon"></i>
                                 <span class="ad-empty-text">No requests recorded here.</span>
                             </td>
@@ -453,34 +428,25 @@
 <script nonce="{{ $cspNonce }}">
 function filterRequests() {
     const searchInput = document.getElementById('searchRequest').value.toLowerCase();
-    const typeFilter = document.getElementById('filterType').value.toLowerCase();
     const statusFilter = document.getElementById('filterStatus').value;
     const tableRows = document.querySelectorAll('#requestTable tr');
 
     tableRows.forEach(row => {
-        if (row.cells.length < 5) return;
+        if (row.cells.length < 4) return;
 
         const id = row.cells[0].textContent.toLowerCase();
-        const type = row.cells[1].textContent.toLowerCase();
-        const requestor = row.cells[2].textContent.toLowerCase();
-        const office = row.cells[3].textContent.toLowerCase();
+        const requestor = row.cells[1].textContent.toLowerCase();
         const statusSpan = row.querySelector('.status-pill');
         const status = statusSpan ? statusSpan.textContent.trim() : "";
 
-        const matchesSearch = id.includes(searchInput) || requestor.includes(searchInput) || office.includes(searchInput) || type.includes(searchInput);
-        const matchesType = typeFilter === "" || type.includes(typeFilter);
+        const matchesSearch = id.includes(searchInput) || requestor.includes(searchInput);
         const matchesStatus = statusFilter === "" || status === statusFilter;
 
-        if (matchesSearch && matchesType && matchesStatus) {
-            row.style.display = "";
-        } else {
-            row.style.display = "none";
-        }
+        row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchRequest').addEventListener('keyup', filterRequests);
-    document.getElementById('filterType').addEventListener('change', filterRequests);
     document.getElementById('filterStatus').addEventListener('change', filterRequests);
 });
 </script>
