@@ -235,6 +235,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::get('/pm-schedules/{pm_schedule}/queue', [\App\Http\Controllers\PMScheduleController::class, 'queueStatus'])->name('pm-schedules.queue')->where('pm_schedule', '[0-9]+');
         Route::post('/pm-schedules/repair-all', [\App\Http\Controllers\PMScheduleController::class, 'repairBrokenRecords'])->name('pm-schedules.repair');
         Route::get('/pm-schedules/orders', [\App\Http\Controllers\PMScheduleController::class, 'orders'])->name('pm-schedules.orders');
+        Route::get('/pm-schedules/orders/data', [\App\Http\Controllers\PMScheduleController::class, 'ordersData'])->name('pm-schedules.orders.data');
         Route::post('/pm-schedules/force-run', [\App\Http\Controllers\PMScheduleController::class, 'forceRun'])->name('pm-schedules.force-run')->middleware('throttle:10,1');
         Route::post('/pm-schedules/{pm_schedule}/pause', [\App\Http\Controllers\PMScheduleController::class, 'pauseCycle'])->name('pm-schedules.pause')->where('pm_schedule', '[0-9]+');
         Route::post('/pm-schedules/{pm_schedule}/resume', [\App\Http\Controllers\PMScheduleController::class, 'resumeCycle'])->name('pm-schedules.resume')->where('pm_schedule', '[0-9]+');

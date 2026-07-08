@@ -431,13 +431,25 @@ class PMScheduleController extends Controller
             abort(403, 'Only Super Admins can view PM Work Orders.');
         }
 
-        $status = request('status', 'all');
+        return view('pm-schedules.orders');
+    }
+
+    /**
+     * AJAX endpoint — returns paginated work orders with status filter.
+     */
+    public function ordersData(Request $request)
+    {
+        $user = Auth::user();
+        if (!$user || $user->role !== 'super_admin') {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+        }
+
+        $status = $request->input('status', 'all');
 
         $query = \App\Models\Request::with(['user', 'assignedTo', 'maintenanceRequest'])
             ->where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true);
 
-        // Super Admin sees all within branch
         if ($user->branch) {
             $query->where('branch', $user->branch);
         }
@@ -446,9 +458,26 @@ class PMScheduleController extends Controller
             $query->where('status', $status);
         }
 
-        $orders = $query->orderBy('created_at', 'desc')->paginate(20);
+        $perPage = min((int) $request->input('per_page', 20), 100);
+        $page    = max((int) $request->input('page', 1), 1);
 
-        return view('pm-schedules.orders', compact('orders', 'status'));
+        $orders = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Sort by status (To Do first, then Ongoing, then Completed)
+        $sortedItems = collect($orders->items())->sortBy(function($order) {
+            $orderMap = ['Scheduled' => 0, 'Ongoing' => 1, 'Awaiting Signature' => 2, 'Completed' => 3];
+            return $orderMap[$order->status] ?? 99;
+        })->values();
+
+        return response()->json([
+            'success'      => true,
+            'orders'       => $sortedItems,
+            'total'        => $orders->total(),
+            'per_page'     => $orders->perPage(),
+            'current_page' => $orders->currentPage(),
+            'last_page'    => $orders->lastPage(),
+        ]);
     }
 
     /**
