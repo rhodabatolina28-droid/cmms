@@ -82,6 +82,51 @@
         .gov-table-premium tr.tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .gov-table-premium tr.tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
 
+        /* Summary Stats Ribbon — inside card body */
+        .stats-ribbon {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .stat-item-premium {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .stat-item-premium:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 20px -8px rgba(0, 56, 168, 0.12);
+            border-color: rgba(0, 56, 168, 0.15);
+        }
+
+        .stat-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            flex-shrink: 0;
+        }
+
+        .stat-info p { margin: 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+
+        .sa-stat-icon-bg-orange { background: #fff7ed; color: #c2410c; }
+        .sa-stat-icon-bg-blue { background: #eff6ff; color: #1d4ed8; }
+        .sa-stat-icon-bg-green { background: #ecfdf5; color: #059669; }
+        .sa-stat-icon-bg-gray { background: #f8fafc; color: #1e293b; }
+        .sa-stat-card-accent { border-right: 4px solid #0038A8; }
+
         /* Status & Role Badges */
         .status-pill {
             display: inline-block;
@@ -343,31 +388,41 @@
 
         <div class="content-padding">
             <!-- STATS RIBBON -->
-            <div class="filter-ribbon" style="margin-bottom: 20px;">
-                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Users</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #0038A8;">{{ $users->total() }}</div>
+            <div class="stats-ribbon">
+                <div class="stat-item-premium">
+                    <div class="stat-icon sa-stat-icon-bg-blue">
+                        <i class="fa-solid fa-users"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p>Total Users</p>
+                        <h4>{{ $users->total() }}</h4>
+                    </div>
                 </div>
-                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Active</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #047857;">{{ $users->where('is_active', true)->count() }}</div>
+                <div class="stat-item-premium">
+                    <div class="stat-icon sa-stat-icon-bg-green">
+                        <i class="fa-solid fa-user-check"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p>Active</p>
+                        <h4>{{ $users->where('is_active', true)->count() }}</h4>
+                    </div>
                 </div>
-                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Inactive</div>
-                    <div style="font-size: 24px; font-weight: 800; color: #b91c1c;">{{ $users->where('is_active', false)->count() }}</div>
+                <div class="stat-item-premium">
+                    <div class="stat-icon" style="background: #fef2f2; color: #b91c1c;">
+                        <i class="fa-solid fa-user-xmark"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p>Inactive</p>
+                        <h4>{{ $users->where('is_active', false)->count() }}</h4>
+                    </div>
                 </div>
-                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">By Role</div>
-                    <div style="font-size: 12px; color: #475569; margin-top: 4px;">
-                        @php
-                            $roleCounts = $users->getCollection()->groupBy('role')->map->count();
-                        @endphp
-                        @foreach($roleCounts as $role => $count)
-                            <div style="display: flex; justify-content: space-between; padding: 2px 0;">
-                                <span style="text-transform: capitalize;">{{ str_replace('_', ' ', $role) }}</span>
-                                <span style="font-weight: 700; color: #0038A8;">{{ $count }}</span>
-                            </div>
-                        @endforeach
+                <div class="stat-item-premium sa-stat-card-accent">
+                    <div class="stat-icon sa-stat-icon-bg-orange">
+                        <i class="fa-solid fa-user-shield"></i>
+                    </div>
+                    <div class="stat-info">
+                        <p>Super Admin</p>
+                        <h4>{{ $users->where('role', 'super_admin')->count() }}</h4>
                     </div>
                 </div>
             </div>
@@ -481,77 +536,107 @@
 <div class="modal-overlay" id="editUserModal">
     <div class="modal-card">
         <div class="modal-header">
-            <h4 class="modal-title">Edit System Account</h4>
+            <div>
+                <h4 class="modal-title">Edit System Account</h4>
+                <p style="margin: 4px 0 0; font-size: 12px; color: #64748b;">Update user information and role assignments</p>
+            </div>
+            <button type="button" class="close-btn" onclick="document.getElementById('editUserModal').style.display='none'">
+                <i class="fa-solid fa-xmark"></i>
+            </button>
         </div>
         <form id="editUserForm">
             <div class="modal-body">
                 <input type="hidden" name="user_id" id="editUserId">
 
-                {{-- Row 1: Full Name --}}
-                <div class="form-group">
-                    <label class="form-label-gov">Personnel Full Name</label>
-                    <input type="text" name="full_name" id="editFullName" class="form-input-gov" required placeholder="Enter complete name">
-                </div>
-
-                {{-- Row 2: Email --}}
-                <div class="form-group">
-                    <label class="form-label-gov">Official Email Address</label>
-                    <input type="email" name="email" id="editEmail" class="form-input-gov" required placeholder="e.g. name@ncmb.gov.ph">
-                </div>
-
-                {{-- Row 3: Role --}}
-                <div class="form-group">
-                    <label class="form-label-gov">System Role</label>
-                    <select name="role" id="editUserRole" class="form-input-gov" required>
-                        <option value="user">User</option>
-                        <option value="admin">Division Admin</option>
-                        <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
-                        <option value="it">IT Personnel</option>
-                        <option value="super_admin">Super Admin</option>
-                    </select>
-                </div>
-
-                {{-- Row 4: Region | Branch --}}
-                <div class="form-grid">
-                    <div>
-                        <label class="form-label-gov">Region</label>
-                        <input type="text" name="region" id="editRegion" class="form-input-gov" readonly>
+                {{-- Personnel Information Section --}}
+                <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-user" style="color: #0038A8; margin-right: 6px;"></i>Personnel Information
                     </div>
-                    <div>
-                        <label class="form-label-gov">Branch</label>
-                        <input type="text" name="branch" id="editBranch" class="form-input-gov" readonly>
+                    
+                    {{-- Full Name --}}
+                    <div class="form-group">
+                        <label class="form-label-gov">Full Name <span style="color:#ef4444;">*</span></label>
+                        <input type="text" name="full_name" id="editFullName" class="form-input-gov" required placeholder="Enter complete name" style="font-size: 14px;">
+                    </div>
+
+                    {{-- Email --}}
+                    <div class="form-group">
+                        <label class="form-label-gov">Email Address <span style="color:#ef4444;">*</span></label>
+                        <input type="email" name="email" id="editEmail" class="form-input-gov" required placeholder="e.g. name@ncmb.gov.ph" style="font-size: 14px;">
                     </div>
                 </div>
 
-                {{-- Row 5: Department | Division --}}
-                <div class="form-grid">
-                    <div>
-                        <label class="form-label-gov">Department</label>
-                        <select name="department" id="editUserDepartment" class="form-input-gov">
-                            <option value="">None / Not Applicable</option>
-                            <option value="INTERNAL SERVICES DEPARTMENT">Internal Services Dept.</option>
-                            <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services Dept.</option>
+                {{-- Role & Assignment Section --}}
+                <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-shield-halved" style="color: #0038A8; margin-right: 6px;"></i>Role & Assignment
+                    </div>
+
+                    {{-- Role --}}
+                    <div class="form-group">
+                        <label class="form-label-gov">System Role <span style="color:#ef4444;">*</span></label>
+                        <select name="role" id="editUserRole" class="form-input-gov" required style="font-size: 14px;">
+                            <option value="user">User</option>
+                            <option value="admin">Division Admin</option>
+                            <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
+                            <option value="it">IT Personnel</option>
+                            <option value="super_admin">Super Admin</option>
                         </select>
+                        <p class="form-help" style="margin-top: 6px;">Supply Officer role is restricted to Administrative Division only.</p>
                     </div>
-                    <div>
-                        <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
-                        <select name="office" id="editUserOffice" class="form-input-gov" required>
-                            <option value="">— Select Division / Office —</option>
-                            <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
-                            <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
-                            <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
-                            <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
-                            <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
-                            <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
-                            <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
-                            <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
-                        </select>
-                        <p class="form-help">Required — determines the user's scope in the system.</p>
+
+                    {{-- Region | Branch --}}
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label-gov">Region</label>
+                            <input type="text" name="region" id="editRegion" class="form-input-gov" readonly style="background: #f8fafc; font-size: 13px;">
+                        </div>
+                        <div>
+                            <label class="form-label-gov">Branch</label>
+                            <input type="text" name="branch" id="editBranch" class="form-input-gov" readonly style="background: #f8fafc; font-size: 13px;">
+                        </div>
+                    </div>
+                </div>
+
+                {{-- Department & Division Section --}}
+                <div>
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
+                        <i class="fa-solid fa-building" style="color: #0038A8; margin-right: 6px;"></i>Department & Division
+                    </div>
+
+                    {{-- Department | Division --}}
+                    <div class="form-grid">
+                        <div>
+                            <label class="form-label-gov">Department</label>
+                            <select name="department" id="editUserDepartment" class="form-input-gov" style="font-size: 14px;">
+                                <option value="">None / Not Applicable</option>
+                                <option value="INTERNAL SERVICES DEPARTMENT">Internal Services Dept.</option>
+                                <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services Dept.</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
+                            <select name="office" id="editUserOffice" class="form-input-gov" required style="font-size: 14px;">
+                                <option value="">— Select Division / Office —</option>
+                                <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
+                                <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
+                                <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
+                                <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
+                                <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
+                                <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
+                                <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
+                                <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
+                            </select>
+                            <p class="form-help" style="margin-top: 6px;">Required — determines the user's scope in the system.</p>
+                        </div>
                     </div>
                 </div>
             </div>
             <div class="modal-foot">
-                <button type="button" class="btn-action-modern close-modal-btn btn-cancel" data-modal="editUserModal">Discard</button>
+                <button type="button" class="btn-action-modern" onclick="document.getElementById('editUserModal').style.display='none'">
+                    <i class="fa-solid fa-xmark" style="margin-right: 4px;"></i> Discard
+                </button>
                 <button type="submit" class="btn-gov-primary btn-submit">
                     <i class="fa-solid fa-save"></i> Update Account
                 </button>
