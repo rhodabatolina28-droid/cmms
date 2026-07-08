@@ -250,6 +250,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::middleware('role:super_admin')->prefix('super-admin')->group(function () {
         Route::get('/users', [SuperAdminController::class, 'users'])->name('super_admin.users');
         Route::get('/users/data', [SuperAdminController::class, 'usersData'])->name('super_admin.users.data');
+        Route::get('/requests/data', [SuperAdminController::class, 'requestsData'])->name('super_admin.requests.data');
         Route::post('/users', [SuperAdminController::class, 'storeUser'])->middleware('throttle:30,60')->name('super_admin.users.store');
         Route::put('/users/{id}', [SuperAdminController::class, 'updateUser'])->middleware('throttle:30,60')->name('super_admin.users.update');
         Route::post('/users/{id}/toggle', [SuperAdminController::class, 'toggleUserStatus'])->middleware('throttle:30,60')->name('super_admin.users.toggle');

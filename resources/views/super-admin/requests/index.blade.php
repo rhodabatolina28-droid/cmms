@@ -35,7 +35,7 @@
         /* Summary Stats Ribbon — inside card body */
         .stats-ribbon {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -253,28 +253,22 @@
         <div class="card-body-content">
             {{-- STATS RIBBON — inside the card --}}
             <div class="stats-ribbon">
-                <div class="stat-item-premium" data-stat-filter="Pending">
+                <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Total Pending</p>
-                        <h4 id="statPending">{{ $requests->where('status', 'Pending')->count() }}</h4>
+                        <h4 id="statPending">--</h4>
                     </div>
                 </div>
-                <div class="stat-item-premium" data-stat-filter="Ongoing">
+                <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Ongoing Repairs</p>
-                        <h4 id="statOngoing">{{ $requests->where('status', 'Ongoing')->count() }}</h4>
+                        <h4 id="statOngoing">--</h4>
                     </div>
                 </div>
-                <div class="stat-item-premium" data-stat-filter="Completed">
+                <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Completed</p>
-                        <h4 id="statCompleted">{{ $requests->where('status', 'Completed')->count() }}</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium sa-stat-card-accent" data-stat-filter="">
-                    <div class="stat-info">
-                        <p>Total Filed</p>
-                        <h4 id="statTotal">{{ $requests->count() }}</h4>
+                        <h4 id="statCompleted">--</h4>
                     </div>
                 </div>
             </div>
@@ -332,64 +326,10 @@
                         </tr>
                     </thead>
                     <tbody id="masterRequestTable">
-                        @forelse($requests as $req)
-                        @php $isAssignedToMe = (int)($req->assigned_to ?? 0) === Auth::id(); @endphp
-                        <tr class="tr-hover-row {{ $isAssignedToMe ? 'sa-row-assigned' : '' }}" data-region="{{ strtoupper($req->region ?? '') }}" 
-                            data-division="{{ strtoupper($req->office ?? '') }}"
-                            data-department="{{ strtoupper($req->user->department ?? '') }}"
-                            data-type="{{ strtoupper($req->type ?? '') }}" 
-                            data-status="{{ strtoupper($req->status ?? '') }}"
-                            data-assigned-me="{{ $isAssignedToMe ? '1' : '0' }}">
-                            <td>
-                                <div class="sa-td-id">
-                                    {{ $req->display_number ?? $req->request_number }}
-                                </div>
-                                <div class="sa-td-desc">{{ $req->description }}</div>
-                            </td>
-                            <td class="sa-td-office">{{ $req->office ?: 'N/A' }}</td>
-                            <td class="sa-td-requestor">
-                                {{ $req->requestor_name }}
-                                <div class="sa-td-requestor-sub">
-                                    {{ $req->office ?: 'N/A' }} 
-                                    @if($req->user && $req->user->department)
-                                        | {{ $req->user->department }}
-                                    @endif
-                                </div>
-                            </td>
-                            <td class="sa-td-assigned">
-                                @if($req->assignedTo)
-                                    <span class="{{ $isAssignedToMe ? 'sa-assigned-highlight' : 'sa-assigned-normal' }}">
-                                        {{ $isAssignedToMe ? '★ ' : '' }}{{ $req->assignedTo->full_name }}
-                                    </span>
-                                @else
-                                    <span class="sa-assigned-none">Unassigned</span>
-                                @endif
-                            </td>
-                            <td class="sa-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
-                            <td class="sa-td-center">
-                                <span class="status-pill @if($req->status === 'Pending') sp-pending @elseif($req->status === 'Ongoing') sp-ongoing @elseif($req->status === 'Completed') sp-completed @endif">
-                                    {{ $req->status }}
-                                </span>
-                            </td>
-                            <td class="sa-td-center">
-                                <a href="{{ route('ict.show', $req->id) }}" class="btn-action-modern sa-btn-row-inline">
-                                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
-                                </a>
-                            </td>
-                        </tr>
-                        @empty
-                        <tr>
-                            <td colspan="7" class="sa-empty">
-                                <i class="fa-solid fa-inbox sa-empty-icon"></i>
-                                <span class="sa-empty-text">No office requests recorded yet.</span>
-                            </td>
-                        </tr>
-                        @endforelse
+                        <tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                     </tbody>
                 </table>
-                <div class="sa-pagination">
-                    {{ $requests->links() }}
-                </div>
+                <div id="requestsPagination" class="sa-pagination"></div>
             </div>
         </div>
     </div>
@@ -398,6 +338,10 @@
 
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
+const REQUESTS_DATA_URL = '{{ route("super_admin.requests.data") }}';
+let requestsCurrentPage = 1;
+let requestsLastPage = 1;
+let requestsFilterTimer = null;
 let myAssignedOnly = false;
 
 function toggleMyAssigned() {
@@ -412,74 +356,144 @@ function toggleMyAssigned() {
         btn.style.color = '#475569';
         btn.style.borderColor = '#cbd5e1';
     }
-    filterRequests();
+    loadRequests(1);
 }
 
-function filterRequests() {
-    const search = document.getElementById('masterSearch').value.toLowerCase();
-    const department = document.getElementById('filterDepartment').value.toUpperCase();
-    const division = document.getElementById('filterDivision').value.toUpperCase();
-    const status = document.getElementById('filterStatus').value.toUpperCase();
-    
-    const rows = document.querySelectorAll('#masterRequestTable tr');
+async function loadRequests(page) {
+    page = page || 1;
+    const params = new URLSearchParams();
+    params.set('search', document.getElementById('masterSearch').value);
+    params.set('department', document.getElementById('filterDepartment').value);
+    params.set('division', document.getElementById('filterDivision').value);
+    params.set('status', document.getElementById('filterStatus').value);
+    params.set('my_assigned', myAssignedOnly ? '1' : '0');
+    params.set('page', page);
+    params.set('per_page', 20);
 
-    function normalizeOfficeDept(officeRaw) {
-        if (!officeRaw) return "";
-        let cleanRow = officeRaw.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
-        
-        if (cleanRow === 'RID' || cleanRow === 'RIDOFFICE' || cleanRow === 'RESEARCHANDINFORMATIONDIVISION' || cleanRow === 'RESEARCHANDINFODIVISION' || cleanRow === 'RESEARCHANDINFO' || cleanRow === 'RESEARCHINFO' || cleanRow === 'RESEARCHANDINFORMATION' || cleanRow === 'ICT' || cleanRow === 'ICTOFFICE' || cleanRow === 'RESEARCH' || cleanRow === 'RESEARCHDIVISION') return 'RESEARCHANDINFORMATIONDIVISION';
-        if (cleanRow === 'AD' || cleanRow === 'ADMIN' || cleanRow === 'ADMINOFFICE' || cleanRow === 'ADMINISTRATIVEDIVISION' || cleanRow === 'ADMINISTRATIVE') return 'ADMINISTRATIVEDIVISION';
-        if (cleanRow === 'CMD' || cleanRow === 'CMDOFFICE' || cleanRow === 'CONCILIATIONANDMEDIATIONDIVISION' || cleanRow === 'CONCILIATIONANDMEDIATION' || cleanRow === 'CONCILIATIONMEDIATION' || cleanRow === 'CONCILIATION' || cleanRow === 'CONCILIATIONDIVISION') return 'CONCILIATIONANDMEDIATIONDIVISION';
-        if (cleanRow === 'OED' || cleanRow === 'OEDOFFICE' || cleanRow === 'OFFICEOFTHEEXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOROFFICE') return 'OFFICEOFTHEEXECUTIVEDIRECTOR';
-        if (cleanRow === 'COA' || cleanRow === 'COAOFFICE' || cleanRow === 'COMMISSIONONAUDIT' || cleanRow === 'AUDIT') return 'COMMISSIONONAUDIT';
-        if (cleanRow === 'TSD' || cleanRow === 'TSDOFFICE' || cleanRow === 'TECHNICALSERVICESDIVISION' || cleanRow === 'TECHNICALSERVICES' || cleanRow === 'TECHNICALSERVICESDEPARTMENT' || cleanRow === 'TECHNICALSERVICESDIV' || cleanRow === 'TECHNICAL' || cleanRow === 'TECHNICALSERVICESDEPT' || cleanRow === 'TECHNICALDEPT') return 'TECHNICALSERVICESDEPARTMENT';
-        if (cleanRow === 'ISD' || cleanRow === 'ISDOFFICE' || cleanRow === 'INTERNALSERVICESDIVISION' || cleanRow === 'INTERNALSERVICES' || cleanRow === 'INTERNALSERVICESDEPARTMENT' || cleanRow === 'INTERNALSERVICESDIV' || cleanRow === 'INTERNAL' || cleanRow === 'INTERNALSERVICESDEPT' || cleanRow === 'INTERNALDEPT') return 'INTERNALSERVICESDEPARTMENT';
-        if (cleanRow === 'FMD' || cleanRow === 'FMDOFFICE' || cleanRow === 'FINANCIALANDMANAGEMENTDIVISION' || cleanRow === 'FINANCIALANDMANAGEMENT' || cleanRow === 'FINANCIALMANAGEMENT' || cleanRow === 'FINANCIAL' || cleanRow === 'FINANCE' || cleanRow === 'FINANCEDIVISION' || cleanRow === 'FINANCIALDIVISION' || cleanRow === 'FINANCEMODULE') return 'FINANCIALANDMANAGEMENTDIVISION';
-        if (cleanRow === 'VAD' || cleanRow === 'VADOFFICE' || cleanRow === 'VOLUNTARYARBITRATIONDIVISION' || cleanRow === 'VOLUNTARYARBITRATION' || cleanRow === 'VOLUNTARY') return 'VOLUNTARYARBITRATIONDIVISION';
-        if (cleanRow === 'WRED' || cleanRow === 'WREDOFFICE' || cleanRow === 'WORKPLACERELATIONSENHANCEMENTDIVISION' || cleanRow === 'WORKPLACERELATIONSENHANCEMENT' || cleanRow === 'WORKPLACERELATIONS' || cleanRow === 'WORKPLACE') return 'WORKPLACERELATIONSENHANCEMENTDIVISION';
-        
-        return cleanRow;
+    const tbody = document.getElementById('masterRequestTable');
+    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+
+    try {
+        const response = await fetch(REQUESTS_DATA_URL + '?' + params.toString(), {
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            requestsCurrentPage = result.current_page;
+            requestsLastPage    = result.last_page;
+            renderRequestsTable(result.requests);
+            renderRequestsPagination(result.total);
+            updateRequestStats(result.stats, result.filtered_stats);
+        } else {
+            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
+        }
+    } catch (e) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
+    }
+}
+
+function renderRequestsTable(requests) {
+    const tbody = document.getElementById('masterRequestTable');
+    if (!requests.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
+        return;
     }
 
-    rows.forEach(row => {
-        if (row.dataset.region === undefined) return;
+    tbody.innerHTML = requests.map(req => {
+        const created = new Date(req.created_at);
+        const dateStr = created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 
-        const text = row.textContent.toLowerCase();
-        const rowDivision = row.dataset.division || '';
-        const rowDepartment = row.dataset.department || '';
-        const rowStatus = row.dataset.status;
+        let statusClass = '';
+        if (req.status === 'Pending') statusClass = 'sp-pending';
+        else if (req.status === 'Ongoing') statusClass = 'sp-ongoing';
+        else if (req.status === 'Completed') statusClass = 'sp-completed';
 
-        const matchesSearch = text.includes(search);
+        const assignedName = req.assigned_to ? (req.assigned_to_user ? req.assigned_to_user.full_name : null) : null;
+        const isAssignedToMe = req.assigned_to === window.CMMS_USER_ID;
+        const rowClass = isAssignedToMe ? 'tr-hover-row sa-row-assigned' : 'tr-hover-row';
 
-        const normDivision = normalizeOfficeDept(rowDivision);
-        const normDepartment = normalizeOfficeDept(rowDepartment);
+        return `<tr class="${rowClass}">
+            <td>
+                <div class="sa-td-id">${req.display_number || req.request_number}</div>
+                <div class="sa-td-desc">${req.description || ''}</div>
+            </td>
+            <td class="sa-td-office">${req.office || 'N/A'}</td>
+            <td class="sa-td-requestor">
+                ${req.requestor_name}
+                <div class="sa-td-requestor-sub">${req.office || 'N/A'}</div>
+            </td>
+            <td class="sa-td-assigned">
+                ${assignedName
+                    ? `<span class="${isAssignedToMe ? 'sa-assigned-highlight' : 'sa-assigned-normal'}">${isAssignedToMe ? '★ ' : ''}${assignedName}</span>`
+                    : '<span class="sa-assigned-none">Unassigned</span>'}
+            </td>
+            <td class="sa-td-date">${dateStr} | ${timeStr}</td>
+            <td class="sa-td-center"><span class="status-pill ${statusClass}">${req.status}</span></td>
+            <td class="sa-td-center">
+                <a href="/requests/ict/${req.id}" class="btn-action-modern">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
+                </a>
+            </td>
+        </tr>`;
+    }).join('');
+}
 
-        const internalOffices = ['ADMINISTRATIVEDIVISION', 'INTERNALSERVICESDEPARTMENT', 'COMMISSIONONAUDIT', 'FINANCIALANDMANAGEMENTDIVISION', 'RESEARCHANDINFORMATIONDIVISION'];
-        const technicalOffices = ['CONCILIATIONANDMEDIATIONDIVISION', 'TECHNICALSERVICESDEPARTMENT', 'OFFICEOFTHEEXECUTIVEDIRECTOR', 'VOLUNTARYARBITRATIONDIVISION', 'WORKPLACERELATIONSENHANCEMENTDIVISION'];
+function renderRequestsPagination(total) {
+    const container = document.getElementById('requestsPagination');
+    if (!container) return;
 
-        let matchesDept = department === "";
-        if (!matchesDept) {
-            const cleanSearch = department.replace(/[^A-Z0-9]/g, '').trim();
-            if (cleanSearch === 'INTERNALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'INTERNALSERVICESDEPARTMENT') || internalOffices.includes(normDivision);
-            } else if (cleanSearch === 'TECHNICALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'TECHNICALSERVICESDEPARTMENT') || technicalOffices.includes(normDivision);
-            } else {
-                matchesDept = (normDepartment === cleanSearch) || normDepartment.includes(cleanSearch);
-            }
-        }
+    const totalPages = requestsLastPage;
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
 
-        let matchesDiv = division === "";
-        if (!matchesDiv) {
-            const cleanSearch = division.replace(/[^A-Z0-9]/g, '').trim();
-            matchesDiv = (normDivision === cleanSearch) || normDivision.includes(cleanSearch);
-        }
+    const btnStyle = (active, disabled) =>
+        `padding:5px 10px;border:1px solid ${active ? '#0038A8' : '#cbd5e1'};border-radius:4px;` +
+        `background:${active ? '#0038A8' : disabled ? '#f1f5f9' : 'white'};` +
+        `color:${active ? 'white' : disabled ? '#94a3b8' : '#1e293b'};` +
+        `cursor:${disabled ? 'default' : 'pointer'};font-size:12px;font-weight:700;`;
 
-        const matchesStatus = status === "" || rowStatus === status;
-        const matchesMyAssigned = !myAssignedOnly || row.dataset.assignedMe === '1';
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">`;
+    html += `<span style="font-size:12px;color:#64748b;">${total} request${total !== 1 ? 's' : ''} found</span>`;
+    html += `<div style="display:flex;gap:4px;">`;
 
-        row.style.display = (matchesSearch && matchesDiv && matchesDept && matchesStatus && matchesMyAssigned) ? "" : "none";
-    });
+    html += `<button onclick="loadRequests(${requestsCurrentPage - 1})" style="${btnStyle(false, requestsCurrentPage <= 1)}" ${requestsCurrentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
+
+    let start = Math.max(1, requestsCurrentPage - 2);
+    let end   = Math.min(totalPages, requestsCurrentPage + 2);
+    if (start > 1) {
+        html += `<button onclick="loadRequests(1)" style="${btnStyle(false, false)}">1</button>`;
+        if (start > 2) html += `<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>`;
+    }
+    for (let i = start; i <= end; i++) {
+        html += `<button onclick="loadRequests(${i})" style="${btnStyle(i === requestsCurrentPage, false)}">${i}</button>`;
+    }
+    if (end < totalPages) {
+        if (end < totalPages - 1) html += `<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>`;
+        html += `<button onclick="loadRequests(${totalPages})" style="${btnStyle(false, false)}">${totalPages}</button>`;
+    }
+
+    html += `<button onclick="loadRequests(${requestsCurrentPage + 1})" style="${btnStyle(false, requestsCurrentPage >= totalPages)}" ${requestsCurrentPage >= totalPages ? 'disabled' : ''}>Next &rsaquo;</button>`;
+    html += `</div></div>`;
+    container.innerHTML = html;
+}
+
+function updateRequestStats(stats, filteredStats) {
+    const isFiltered = document.getElementById('masterSearch').value ||
+        document.getElementById('filterDepartment').value ||
+        document.getElementById('filterDivision').value ||
+        document.getElementById('filterStatus').value ||
+        myAssignedOnly;
+    const s = isFiltered ? filteredStats : stats;
+    document.getElementById('statPending').textContent   = s ? s.pending : '--';
+    document.getElementById('statOngoing').textContent   = s ? s.ongoing : '--';
+    document.getElementById('statCompleted').textContent = s ? s.completed : '--';
+}
+
+function onFilterChange() {
+    clearTimeout(requestsFilterTimer);
+    requestsFilterTimer = setTimeout(() => loadRequests(1), 300);
 }
 
 function exportData() {
@@ -490,25 +504,19 @@ function exportData() {
         confirmButtonColor: '#0038A8'
     });
 }
+
 document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('masterSearch').addEventListener('keyup', filterRequests);
-    document.getElementById('filterDepartment').addEventListener('change', function() {
-        filterRequests();
-    });
-    document.getElementById('filterDivision').addEventListener('change', filterRequests);
-    document.getElementById('filterStatus').addEventListener('change', filterRequests);
+    // Store current user ID for my assigned check
+    window.CMMS_USER_ID = {{ Auth::id() }};
+
+    loadRequests(1);
+
+    document.getElementById('masterSearch').addEventListener('keyup', onFilterChange);
+    document.getElementById('filterDepartment').addEventListener('change', () => loadRequests(1));
+    document.getElementById('filterDivision').addEventListener('change', () => loadRequests(1));
+    document.getElementById('filterStatus').addEventListener('change', () => loadRequests(1));
     document.getElementById('exportBtn').addEventListener('click', exportData);
     document.getElementById('myAssignedToggle').addEventListener('click', toggleMyAssigned);
-    
-    // Clickable stats cards - filter by status when clicked
-    document.querySelectorAll('.stat-item-premium[data-stat-filter]').forEach(function(card) {
-        card.style.cursor = 'pointer';
-        card.addEventListener('click', function() {
-            const status = this.dataset.statFilter;
-            document.getElementById('filterStatus').value = status;
-            filterRequests();
-        });
-    });
 });
 </script>
 @endsection
