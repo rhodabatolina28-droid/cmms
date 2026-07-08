@@ -64,8 +64,9 @@ class ICTRequestController extends Controller
                 }
                 return view('admin.requests.index', compact('requests'));
             } else {
-                // Super Admin: ICT + PM (all)
-                $requests = $query->where('division_admin_review_status', 'Approved')
+                // Super Admin: ICT only (PM is in PM Schedule module)
+                $requests = $query->where('type', 'ICT')
+                    ->where('division_admin_review_status', 'Approved')
                     ->whereHas('user', function ($q) use ($user) {
                         if ($user->branch) {
                             $q->where('branch', $user->branch);
