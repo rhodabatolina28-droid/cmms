@@ -82,31 +82,6 @@
         .gov-table-premium tr.tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .gov-table-premium tr.tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
 
-        /* Summary Stats Ribbon */
-        .stats-ribbon {
-            display: grid;
-            grid-template-columns: repeat(5, 1fr);
-            gap: 12px;
-            margin-bottom: 20px;
-        }
-
-        .stat-item-premium {
-            background: white;
-            border: 1px solid #e2e8f0;
-            border-radius: 10px;
-            padding: 16px 20px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        }
-
-        .stat-item-premium:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 12px 20px -8px rgba(0, 56, 168, 0.12);
-            border-color: rgba(0, 56, 168, 0.15);
-        }
-
-        .stat-info p { margin: 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
-        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
-
         /* Module Badges */
         .module-badge {
             display: inline-block;
@@ -177,10 +152,6 @@
             .search-input { padding-left: 38px !important; }
             .search-icon { font-size: 14px !important; left: 14px !important; }
             .w-180 { width: 100% !important; }
-            .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
-            .stat-item-premium { padding: 10px 12px !important; }
-            .stat-info p { font-size: 9px !important; }
-            .stat-info h4 { font-size: 16px !important; }
             .table-wrap { overflow-x: auto !important; }
             .gov-table-premium th, .gov-table-premium td { padding: 8px 10px !important; font-size: 11px !important; }
             .gov-table-premium th { font-size: 10px !important; letter-spacing: 0.3px !important; }
@@ -228,40 +199,6 @@
         </div>
 
         <div class="content-padding">
-            <!-- STATS RIBBON -->
-            <div class="stats-ribbon">
-                <div class="stat-item-premium">
-                    <div class="stat-info">
-                        <p>Total Logs</p>
-                        <h4 id="statTotal">--</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium">
-                    <div class="stat-info">
-                        <p>Auth / Security</p>
-                        <h4 id="statAuth">--</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium">
-                    <div class="stat-info">
-                        <p>Inventory</p>
-                        <h4 id="statInventory">--</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium">
-                    <div class="stat-info">
-                        <p>Service Requests</p>
-                        <h4 id="statRequests">--</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium">
-                    <div class="stat-info">
-                        <p>User Management</p>
-                        <h4 id="statUsers">--</h4>
-                    </div>
-                </div>
-            </div>
-
             <!-- FILTER RIBBON -->
             <div class="filter-ribbon">
                 <div class="search-wrapper-lg">
@@ -331,7 +268,6 @@ async function loadLogs(page) {
             logsLastPage    = result.last_page;
             renderLogsTable(result.logs);
             renderLogsPagination(result.total);
-            updateLogStats(result.stats, result.filtered_stats, result.total);
         } else {
             tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:24px;color:#ef4444;">Failed to load logs.</td></tr>';
         }
@@ -414,16 +350,6 @@ function renderLogsPagination(total) {
     html += `<button onclick="loadLogs(${logsCurrentPage + 1})" style="${btnStyle(false, logsCurrentPage >= totalPages)}" ${logsCurrentPage >= totalPages ? 'disabled' : ''}>Next &rsaquo;</button>`;
     html += `</div></div>`;
     container.innerHTML = html;
-}
-
-function updateLogStats(stats, filteredStats, total) {
-    const isFiltered = document.getElementById('logSearch').value || document.getElementById('filterModule').value;
-    const s = isFiltered ? filteredStats : stats;
-    document.getElementById('statTotal').textContent     = s ? s.total : (total || 0);
-    document.getElementById('statAuth').textContent      = s ? s.auth : '--';
-    document.getElementById('statInventory').textContent = s ? s.inventory : '--';
-    document.getElementById('statRequests').textContent  = s ? s.requests : '--';
-    document.getElementById('statUsers').textContent     = s ? s.users : '--';
 }
 
 function onLogFilterChange() {
