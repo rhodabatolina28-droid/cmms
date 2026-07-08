@@ -324,11 +324,9 @@
                         <tr>
                             <th>Request ID</th>
                             <th>Office/Division</th>
-                            <th class="sa-td-center">Type</th>
                             <th>Requestor</th>
                             <th>Assigned IT</th>
                             <th>Date Filed</th>
-                            <th class="sa-td-center" title="Division Admin Review Status"><i class="fa-solid fa-clipboard-check"></i> Div Review</th>
                             <th class="sa-td-center">Status</th>
                             <th class="sa-td-center">Action</th>
                         </tr>
@@ -349,11 +347,6 @@
                                 <div class="sa-td-desc">{{ $req->description }}</div>
                             </td>
                             <td class="sa-td-office">{{ $req->office ?: 'N/A' }}</td>
-                            <td class="sa-td-center">
-                                <span class="type-pill sa-type-pill sa-type-{{ strtolower($req->type === 'ICT' ? 'ict' : 'pm') }}">
-                                    {{ $req->type }}
-                                </span>
-                            </td>
                             <td class="sa-td-requestor">
                                 {{ $req->requestor_name }}
                                 <div class="sa-td-requestor-sub">
@@ -374,21 +367,12 @@
                             </td>
                             <td class="sa-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
                             <td class="sa-td-center">
-                                @if($req->division_admin_review_status === 'Approved')
-                                    <span class="sa-review-icon-green" title="Approved by Division Admin"><i class="fa-solid fa-circle-check"></i></span>
-                                @elseif($req->division_admin_review_status === 'Rejected')
-                                    <span class="sa-review-icon-red" title="Rejected by Division Admin"><i class="fa-solid fa-circle-xmark"></i></span>
-                                @else
-                                    <span class="sa-review-icon-gray" title="Pending Division Review"><i class="fa-regular fa-clock"></i></span>
-                                @endif
-                            </td>
-                            <td class="sa-td-center">
                                 <span class="status-pill @if($req->status === 'Pending') sp-pending @elseif($req->status === 'Ongoing') sp-ongoing @elseif($req->status === 'Completed') sp-completed @endif">
                                     {{ $req->status }}
                                 </span>
                             </td>
                             <td class="sa-td-center">
-                                <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="btn-action-modern sa-btn-row-inline">
+                                <a href="{{ route('ict.show', $req->id) }}" class="btn-action-modern sa-btn-row-inline">
                                     <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
                                 </a>
                             </td>
