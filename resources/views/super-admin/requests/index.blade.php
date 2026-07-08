@@ -288,14 +288,14 @@
 
                 <select id="filterDivision" class="ribbon-input sa-filter-select-med">
                     <option value="">All Divisions</option>
-                    <option value="RESEARCH AND INFORMATION DIVISION">Research & Information Division</option>
-                    <option value="ADMINISTRATIVE DIVISION">Administrative Division</option>
-                    <option value="FINANCIAL AND MANAGEMENT DIVISION">Financial & Management Division</option>
-                    <option value="COMMISSION ON AUDIT">Commission on Audit</option>
-                    <option value="CONCILIATION AND MEDIATION DIVISION">Conciliation & Mediation Division</option>
-                    <option value="VOLUNTARY ARBITRATION DIVISION">Voluntary Arbitration Division</option>
-                    <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION">Workplace Relations Enhancement Division</option>
-                    <option value="OFFICE OF THE EXECUTIVE DIRECTOR">Office of the Executive Director</option>
+                    <option value="RESEARCH AND INFORMATION DIVISION" data-dept-group="INTERNAL">Research & Information Division</option>
+                    <option value="ADMINISTRATIVE DIVISION" data-dept-group="INTERNAL">Administrative Division</option>
+                    <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept-group="INTERNAL">Financial & Management Division</option>
+                    <option value="COMMISSION ON AUDIT" data-dept-group="INTERNAL">Commission on Audit</option>
+                    <option value="CONCILIATION AND MEDIATION DIVISION" data-dept-group="TECHNICAL">Conciliation & Mediation Division</option>
+                    <option value="VOLUNTARY ARBITRATION DIVISION" data-dept-group="TECHNICAL">Voluntary Arbitration Division</option>
+                    <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept-group="TECHNICAL">Workplace Relations Enhancement Division</option>
+                    <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept-group="TECHNICAL">Office of the Executive Director</option>
                 </select>
 
 
@@ -512,7 +512,18 @@ document.addEventListener('DOMContentLoaded', function() {
     loadRequests(1);
 
     document.getElementById('masterSearch').addEventListener('keyup', onFilterChange);
-    document.getElementById('filterDepartment').addEventListener('change', () => loadRequests(1));
+    document.getElementById('filterDepartment').addEventListener('change', function() {
+        // Cascade division dropdown based on selected department
+        const dept = this.value;
+        const divSelect = document.getElementById('filterDivision');
+        divSelect.querySelectorAll('option').forEach(opt => {
+            if (!opt.value) return;
+            const d = opt.getAttribute('data-dept-group');
+            opt.style.display = (!dept || !d || (dept === 'INTERNAL SERVICES DEPARTMENT' && d === 'INTERNAL') || (dept === 'TECHNICAL SERVICES DEPARTMENT' && d === 'TECHNICAL')) ? '' : 'none';
+        });
+        divSelect.value = '';
+        loadRequests(1);
+    });
     document.getElementById('filterDivision').addEventListener('change', () => loadRequests(1));
     document.getElementById('filterStatus').addEventListener('change', () => loadRequests(1));
     document.getElementById('exportBtn').addEventListener('click', exportData);

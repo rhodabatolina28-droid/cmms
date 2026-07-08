@@ -87,10 +87,6 @@
             height: 100%;
         }
 
-        .stat-total::before { background: #0038A8; }
-        .stat-pending::before { background: #f59e0b; }
-        .stat-ongoing::before { background: #3b82f6; }
-        .stat-completed::before { background: #10b981; }
 
         .stat-label {
             font-size: clamp(10px, 0.8vw, 11px);
