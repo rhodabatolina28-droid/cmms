@@ -13,18 +13,82 @@ use Illuminate\Support\Facades\Auth;
 
 class SuperAdminController extends Controller
 {
-    /**
-     * Display a listing of users for management.
-     */
     public function auditLogs()
     {
-        $actor = Auth::user();
-        // Super Admin sees ALL audit logs across all offices/divisions
-        $logs = \App\Models\AuditLog::with('user')
-            ->orderBy('created_at', 'desc')
-            ->paginate(50);
+        return view('super-admin.audit-logs.index');
+    }
 
-        return view('super-admin.audit-logs.index', compact('logs'));
+    /**
+     * AJAX endpoint — returns paginated, filtered audit logs with stats.
+     */
+    public function auditLogsData(Request $request)
+    {
+        $actor = Auth::user();
+
+        $query = AuditLog::with('user');
+
+        // Search
+        if ($search = $request->input('search')) {
+            $search = strtolower($search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(action) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(module) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(details) LIKE ?', ["%{$search}%"])
+                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$search}%"]));
+            });
+        }
+
+        // Module filter
+        if ($module = $request->input('module')) {
+            $query->where('module', $module);
+        }
+
+        $perPage = min((int) $request->input('per_page', 50), 100);
+        $page    = max((int) $request->input('page', 1), 1);
+
+        $logs = $query->orderBy('created_at', 'desc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Unfiltered stats
+        $baseQuery = AuditLog::query();
+
+        // Filtered stats
+        $filteredBase = AuditLog::query();
+        if ($search = $request->input('search')) {
+            $s = strtolower($search);
+            $filteredBase->where(function ($q) use ($s) {
+                $q->whereRaw('LOWER(action) LIKE ?', ["%{$s}%"])
+                  ->orWhereRaw('LOWER(module) LIKE ?', ["%{$s}%"])
+                  ->orWhereRaw('LOWER(details) LIKE ?', ["%{$s}%"])
+                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"]));
+            });
+        }
+        if ($module = $request->input('module')) {
+            $filteredBase->where('module', $module);
+        }
+
+        return response()->json([
+            'success'      => true,
+            'logs'         => $logs->items(),
+            'total'        => $logs->total(),
+            'per_page'     => $logs->perPage(),
+            'current_page' => $logs->currentPage(),
+            'last_page'    => $logs->lastPage(),
+            'stats'        => [
+                'total'    => (clone $baseQuery)->count(),
+                'auth'     => (clone $baseQuery)->where('module', 'Auth')->count(),
+                'inventory' => (clone $baseQuery)->where('module', 'Inventory')->count(),
+                'requests' => (clone $baseQuery)->where('module', 'Requests')->count(),
+                'users'    => (clone $baseQuery)->where('module', 'User Management')->count(),
+            ],
+            'filtered_stats' => [
+                'total'    => $logs->total(),
+                'auth'     => (clone $filteredBase)->where('module', 'Auth')->count(),
+                'inventory' => (clone $filteredBase)->where('module', 'Inventory')->count(),
+                'requests' => (clone $filteredBase)->where('module', 'Requests')->count(),
+                'users'    => (clone $filteredBase)->where('module', 'User Management')->count(),
+            ],
+        ]);
     }
 
     public function users(Request $request)
@@ -50,16 +114,92 @@ class SuperAdminController extends Controller
                 ]
             ]);
         }
-        
-        // Super Admin is office-scoped (branch level only)
-        // They should see ALL users in their branch, not filtered by division
-        $users = User::query()
-            ->when($actor->branch, fn ($query) => $query->where('branch', $actor->branch))
-            // Super Admin manages entire branch - no division filter
-            ->orderBy('full_name', 'asc')
-            ->paginate(20);
 
-        return view('super-admin.users.index', compact('users'));
+        return view('super-admin.users.index');
+    }
+
+    /**
+     * AJAX endpoint — returns paginated, filtered user list with stats.
+     */
+    public function usersData(Request $request)
+    {
+        $actor = Auth::user();
+
+        $query = User::query()
+            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
+
+        // Search
+        if ($search = $request->input('search')) {
+            $search = strtolower($search);
+            $query->where(function ($q) use ($search) {
+                $q->whereRaw('LOWER(full_name) LIKE ?', ["%{$search}%"])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$search}%"]);
+            });
+        }
+
+        // Department filter
+        if ($department = $request->input('department')) {
+            $query->where('department', $department);
+        }
+
+        // Division/Office filter
+        if ($division = $request->input('division')) {
+            $query->where('office', $division);
+        }
+
+        // Role filter
+        if ($role = $request->input('role')) {
+            $query->where('role', $role);
+        }
+
+        // Status filter
+        if ($status = $request->input('status')) {
+            $query->where('is_active', $status === 'active' ? 1 : 0);
+        }
+
+        $perPage = min((int) $request->input('per_page', 20), 100);
+        $page    = max((int) $request->input('page', 1), 1);
+
+        $users = $query->orderBy('full_name', 'asc')
+            ->paginate($perPage, ['*'], 'page', $page);
+
+        // Unfiltered stats for the branch
+        $baseQuery = User::query()
+            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
+
+        // Filtered stats (same filters as main query, without pagination)
+        $filteredBase = User::query()
+            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
+        if ($search = $request->input('search')) {
+            $s = strtolower($search);
+            $filteredBase->where(function ($q) use ($s) {
+                $q->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"])
+                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$s}%"]);
+            });
+        }
+        if ($department = $request->input('department')) $filteredBase->where('department', $department);
+        if ($division   = $request->input('division'))   $filteredBase->where('office', $division);
+        if ($role       = $request->input('role'))       $filteredBase->where('role', $role);
+        if ($status     = $request->input('status'))     $filteredBase->where('is_active', $status === 'active' ? 1 : 0);
+
+        return response()->json([
+            'success'      => true,
+            'users'        => $users->items(),
+            'total'        => $users->total(),
+            'per_page'     => $users->perPage(),
+            'current_page' => $users->currentPage(),
+            'last_page'    => $users->lastPage(),
+            'stats'        => [
+                'total'    => (clone $baseQuery)->count(),
+                'active'   => (clone $baseQuery)->where('is_active', 1)->count(),
+                'inactive' => (clone $baseQuery)->where('is_active', 0)->count(),
+            ],
+            'filtered_stats' => [
+                'total'    => $users->total(),
+                'active'   => (clone $filteredBase)->where('is_active', 1)->count(),
+                'inactive' => (clone $filteredBase)->where('is_active', 0)->count(),
+            ],
+        ]);
     }
 
     /**
