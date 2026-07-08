@@ -342,6 +342,36 @@
         </div>
 
         <div class="content-padding">
+            <!-- STATS RIBBON -->
+            <div class="filter-ribbon" style="margin-bottom: 20px;">
+                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Total Users</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #0038A8;">{{ $users->total() }}</div>
+                </div>
+                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Active</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #047857;">{{ $users->where('is_active', true)->count() }}</div>
+                </div>
+                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">Inactive</div>
+                    <div style="font-size: 24px; font-weight: 800; color: #b91c1c;">{{ $users->where('is_active', false)->count() }}</div>
+                </div>
+                <div style="flex: 1; min-width: 200px; background: white; padding: 15px 20px; border-radius: 8px; border: 1px solid #e2e8f0;">
+                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 4px;">By Role</div>
+                    <div style="font-size: 12px; color: #475569; margin-top: 4px;">
+                        @php
+                            $roleCounts = $users->getCollection()->groupBy('role')->map->count();
+                        @endphp
+                        @foreach($roleCounts as $role => $count)
+                            <div style="display: flex; justify-content: space-between; padding: 2px 0;">
+                                <span style="text-transform: capitalize;">{{ str_replace('_', ' ', $role) }}</span>
+                                <span style="font-weight: 700; color: #0038A8;">{{ $count }}</span>
+                            </div>
+                        @endforeach
+                    </div>
+                </div>
+            </div>
+
             <!-- FILTER RIBBON -->
             <div class="filter-ribbon">
                 <div class="search-wrapper">
@@ -430,8 +460,8 @@
                                     <button data-action="toggle-status" data-user-id="{{ $user->id }}" class="btn-action-modern" title="Toggle Access">
                                         <i class="fa-solid fa-power-off"></i>
                                     </button>
-                                    <button data-action="delete-notice" class="btn-action-modern btn-disabled" title="Permanent deletion is disabled. Deactivate instead.">
-                                        <i class="fa-solid fa-trash-can"></i>
+                                    <button data-action="edit-user" data-user-id="{{ $user->id }}" class="btn-action-modern" title="Edit User">
+                                        <i class="fa-solid fa-pen-to-square"></i>
                                     </button>
                                 </div>
                             </td>
@@ -444,6 +474,89 @@
                 </div>
             </div>
         </div>
+    </div>
+</div>
+
+<!-- EDIT USER MODAL -->
+<div class="modal-overlay" id="editUserModal">
+    <div class="modal-card">
+        <div class="modal-header">
+            <h4 class="modal-title">Edit System Account</h4>
+        </div>
+        <form id="editUserForm">
+            <div class="modal-body">
+                <input type="hidden" name="user_id" id="editUserId">
+
+                {{-- Row 1: Full Name --}}
+                <div class="form-group">
+                    <label class="form-label-gov">Personnel Full Name</label>
+                    <input type="text" name="full_name" id="editFullName" class="form-input-gov" required placeholder="Enter complete name">
+                </div>
+
+                {{-- Row 2: Email --}}
+                <div class="form-group">
+                    <label class="form-label-gov">Official Email Address</label>
+                    <input type="email" name="email" id="editEmail" class="form-input-gov" required placeholder="e.g. name@ncmb.gov.ph">
+                </div>
+
+                {{-- Row 3: Role --}}
+                <div class="form-group">
+                    <label class="form-label-gov">System Role</label>
+                    <select name="role" id="editUserRole" class="form-input-gov" required>
+                        <option value="user">User</option>
+                        <option value="admin">Division Admin</option>
+                        <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
+                        <option value="it">IT Personnel</option>
+                        <option value="super_admin">Super Admin</option>
+                    </select>
+                </div>
+
+                {{-- Row 4: Region | Branch --}}
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label-gov">Region</label>
+                        <input type="text" name="region" id="editRegion" class="form-input-gov" readonly>
+                    </div>
+                    <div>
+                        <label class="form-label-gov">Branch</label>
+                        <input type="text" name="branch" id="editBranch" class="form-input-gov" readonly>
+                    </div>
+                </div>
+
+                {{-- Row 5: Department | Division --}}
+                <div class="form-grid">
+                    <div>
+                        <label class="form-label-gov">Department</label>
+                        <select name="department" id="editUserDepartment" class="form-input-gov">
+                            <option value="">None / Not Applicable</option>
+                            <option value="INTERNAL SERVICES DEPARTMENT">Internal Services Dept.</option>
+                            <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services Dept.</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
+                        <select name="office" id="editUserOffice" class="form-input-gov" required>
+                            <option value="">— Select Division / Office —</option>
+                            <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
+                            <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
+                            <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
+                            <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
+                            <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
+                            <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
+                            <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
+                            <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
+                        </select>
+                        <p class="form-help">Required — determines the user's scope in the system.</p>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-action-modern close-modal-btn btn-cancel" data-modal="editUserModal">Discard</button>
+                <button type="submit" class="btn-gov-primary btn-submit">
+                    <i class="fa-solid fa-save"></i> Update Account
+                </button>
+            </div>
+        </form>
     </div>
 </div>
 
@@ -710,18 +823,6 @@ async function toggleUserStatus(id) {
     }
 }
 
-// Deletion is intentionally disabled to maintain CMMS audit trail integrity.
-function showDeleteNotice() {
-    Swal.fire({
-        title: 'Deletion Not Allowed',
-        html: `To maintain audit trail integrity, user accounts <strong>cannot be permanently deleted</strong>.<br><br>
-               Please <strong>Deactivate</strong> the account instead using the power button.`,
-        icon: 'info',
-        confirmButtonColor: '#0038A8',
-        confirmButtonText: 'Understood'
-    });
-}
-
 async function resetPassword(id) {
     const confirmResult = await Swal.fire({
         title: 'Reset Password?',
@@ -758,9 +859,94 @@ async function resetPassword(id) {
 
 // Close modal on outside click
 window.onclick = function(event) {
-    const modal = document.getElementById('addUserModal');
-    if (event.target === modal) closeAddUserModal();
+    if (event.target.classList.contains('modal-overlay')) {
+        event.target.style.display = 'none';
+    }
 }
+
+async function editUser(id) {
+    try {
+        const response = await fetch("{{ route('super_admin.users') }}?get_user=" + id);
+        const result = await response.json();
+        
+        if (result.success) {
+            const user = result.user;
+            document.getElementById('editUserId').value = user.id;
+            document.getElementById('editFullName').value = user.full_name;
+            document.getElementById('editEmail').value = user.email;
+            document.getElementById('editUserRole').value = user.role;
+            document.getElementById('editRegion').value = user.region || '';
+            document.getElementById('editBranch').value = user.branch || '';
+            document.getElementById('editUserDepartment').value = user.department || '';
+            document.getElementById('editUserOffice').value = user.office || '';
+            
+            document.getElementById('editUserModal').style.display = 'flex';
+        } else {
+            Swal.fire('Error!', result.message || 'Failed to load user data', 'error');
+        }
+    } catch (error) {
+        Swal.fire('Error!', 'An error occurred while loading user data.', 'error');
+    }
+}
+
+document.getElementById('editUserForm').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    const formData = new FormData(this);
+    const payload = Object.fromEntries(formData.entries());
+    const userId = payload.user_id;
+
+    try {
+        const response = await fetch("{{ route('super_admin.users.update', ':id') }}".replace(':id', userId), {
+            method: 'PUT',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                'X-Requested-With': 'XMLHttpRequest'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            await Swal.fire({
+                icon: 'success',
+                title: 'Success!',
+                text: result.message,
+                confirmButtonColor: '#0038A8',
+                timer: 2000,
+                showConfirmButton: false
+            });
+            document.getElementById('editUserModal').style.display = 'none';
+            location.reload();
+        } else if (result.errors) {
+            const errorMessages = Object.values(result.errors).flat().join('<br>');
+            Swal.fire({
+                icon: 'error',
+                title: 'Validation Error',
+                html: errorMessages,
+                confirmButtonColor: '#0038A8'
+            });
+        } else if (result.message) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: result.message,
+                confirmButtonColor: '#0038A8'
+            });
+        } else {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error!',
+                text: 'An unexpected error occurred.',
+                confirmButtonColor: '#0038A8'
+            });
+        }
+    } catch (error) {
+        Swal.fire('Error!', 'An unexpected error occurred.', 'error');
+    }
+});
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchUser').addEventListener('keyup', filterUsers);
     document.getElementById('filterDepartment').addEventListener('change', function() {
@@ -831,7 +1017,7 @@ document.addEventListener('DOMContentLoaded', function() {
             switch (this.dataset.action) {
                 case 'reset-password': resetPassword(id); break;
                 case 'toggle-status': toggleUserStatus(id); break;
-                case 'delete-notice': showDeleteNotice(); break;
+                case 'edit-user': editUser(id); break;
             }
         });
     });

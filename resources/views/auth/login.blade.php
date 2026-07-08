@@ -107,6 +107,15 @@
                 Login
             </button>
         </form>
+
+        @if($errors->any())
+            <div style="text-align:center; margin-top:16px; padding:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                <small style="color:#64748b; font-size:12px;">
+                    <i class="fa-solid fa-circle-info" style="color:#0038A8; margin-right:4px;"></i>
+                    Need help signing in? Please contact the <strong>ICT Unit</strong>.
+                </small>
+            </div>
+        @endif
     </div>
 
     <script nonce="{{ $cspNonce }}" src="{{ asset('js/login.js') }}"></script>

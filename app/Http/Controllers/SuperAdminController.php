@@ -27,9 +27,30 @@ class SuperAdminController extends Controller
         return view('super-admin.audit-logs.index', compact('logs'));
     }
 
-    public function users()
+    public function users(Request $request)
     {
         $actor = Auth::user();
+        
+        // Handle AJAX request for single user data (for edit modal)
+        if ($request->has('get_user')) {
+            $user = User::findOrFail($request->get('get_user'));
+            $this->abortIfOutsideOfficeScope($user);
+            
+            return response()->json([
+                'success' => true,
+                'user' => [
+                    'id' => $user->id,
+                    'full_name' => $user->full_name,
+                    'email' => $user->email,
+                    'role' => $user->role,
+                    'region' => $user->region,
+                    'branch' => $user->branch,
+                    'department' => $user->department,
+                    'office' => $user->office,
+                ]
+            ]);
+        }
+        
         // Super Admin is office-scoped (branch level only)
         // They should see ALL users in their branch, not filtered by division
         $users = User::query()
@@ -84,6 +105,55 @@ class SuperAdminController extends Controller
         );
 
         return response()->json(['success' => true, 'message' => 'User created successfully']);
+    }
+
+    /**
+     * Update an existing user.
+     */
+    public function updateUser(Request $request, $id)
+    {
+        $user = User::findOrFail($id);
+        $this->abortIfOutsideOfficeScope($user);
+
+        $validated = $request->validate([
+            'full_name'  => 'required|string|max:255',
+            'email'      => 'required|email|unique:users,email,' . $user->id,
+            'role'       => 'required|in:' . implode(',', config('roles.list', ['user','admin','super_admin','it'])),
+            'region'     => 'nullable|string',
+            'position'   => 'nullable|string',
+            'branch'     => 'nullable|string',
+            'office'     => 'required|string|max:255',
+            'department' => 'nullable|string',
+            'can_supply' => 'nullable|boolean',
+        ]);
+
+        // Supply Officer validation: must be in Administrative Division/Department
+        if ($validated['role'] === 'supply_officer') {
+            $dept = strtoupper($validated['department'] ?? '');
+            $office = strtoupper($validated['office'] ?? '');
+            $isAdminDept = in_array($dept, ['ADMINISTRATIVE DIVISION', 'ADMINISTRATIVE', 'ADMINISTRATIVE DEPARTMENT']) ||
+                          in_array($office, ['ADMINISTRATIVE DIVISION', 'ADMINISTRATIVE', 'ADMINISTRATIVE DEPARTMENT']);
+            if (!$isAdminDept) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Supply Officer role can only be assigned to users in the Administrative Division/Department.',
+                ], 422);
+            }
+            $validated['can_supply'] = true;
+        } else {
+            $validated['can_supply'] = $request->boolean('can_supply');
+        }
+
+        $user->update($validated);
+
+        AuditLog::log(
+            "Updated User Account",
+            "User Management",
+            "Updated account for {$user->full_name} ({$user->email}) with role {$user->role} in {$user->office}",
+            $user->office
+        );
+
+        return response()->json(['success' => true, 'message' => 'User updated successfully']);
     }
 
     /**
