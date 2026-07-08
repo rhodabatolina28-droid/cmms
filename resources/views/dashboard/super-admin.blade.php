@@ -316,7 +316,7 @@
     <div class="stats-grid">
         <div class="stat-card-premium stat-total">
             <i class="fa-solid fa-layer-group stat-bg-icon"></i>
-            <span class="stat-label">Total Requests</span>
+            <span class="stat-label">Total Tickets</span>
             <div class="stat-value">{{ $stats['total'] }}</div>
         </div>
         <div class="stat-card-premium stat-pending">
@@ -331,7 +331,7 @@
         </div>
         <div class="stat-card-premium stat-completed">
             <i class="fa-solid fa-check-double stat-bg-icon"></i>
-            <span class="stat-label">Resolved</span>
+            <span class="stat-label">Completed</span>
             <div class="stat-value stat-value-green">{{ $stats['completed'] }}</div>
         </div>
     </div>
@@ -349,11 +349,11 @@
                         Service Distribution
                     </div>
                     <div class="analytics-row">
-                        <span class="text-muted">ICT Technical Support</span>
+                        <span class="text-muted">ICT Tickets</span>
                         <span class="text-bold-dark">{{ $stats['ict'] }}</span>
                     </div>
                     <div class="analytics-row">
-                        <span class="text-muted">Preventive Maintenance</span>
+                        <span class="text-muted">PM Work Orders</span>
                         <span class="text-bold-dark">{{ $stats['maintenance'] }}</span>
                     </div>
                 </div>
@@ -394,7 +394,13 @@
                             </tr>
                         </thead>
                         <tbody>
-                            @forelse($recentRequests->take(8) as $req)
+                            @php
+                            $sortedRecent = $recentRequests->take(8)->sortBy(function($r) {
+                                $map = ['Pending' => 0, 'Scheduled' => 0, 'Ongoing' => 1, 'Completed' => 2];
+                                return $map[$r->status] ?? 99;
+                            });
+                        @endphp
+                        @forelse($sortedRecent as $req)
                                 <tr class="tr-hover-row table-row-border">
                                     <td class="table-cell-bold">
                                         <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="link-inherit">
@@ -440,7 +446,7 @@
                 </div>
             </a>
 
-            <a href="{{ route('personnel.index') }}" class="btn-action-premium mb-12">
+            <a href="{{ route('super_admin.users') }}" class="btn-action-premium mb-12">
                 <div class="icon-circle">
                     <i class="fa-solid fa-users-gear icon-blue"></i>
                 </div>
