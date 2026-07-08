@@ -253,32 +253,28 @@
         <div class="card-body-content">
             {{-- STATS RIBBON — inside the card --}}
             <div class="stats-ribbon">
-                <div class="stat-item-premium">
-                    <div class="stat-icon sa-stat-icon-bg-orange"><i class="fa-solid fa-clock"></i></div>
+                <div class="stat-item-premium" data-stat-filter="Pending">
                     <div class="stat-info">
                         <p>Total Pending</p>
-                        <h4>{{ $requests->where('status', 'Pending')->count() }}</h4>
+                        <h4 id="statPending">{{ $requests->where('status', 'Pending')->count() }}</h4>
                     </div>
                 </div>
-                <div class="stat-item-premium">
-                    <div class="stat-icon sa-stat-icon-bg-blue"><i class="fa-solid fa-gears"></i></div>
+                <div class="stat-item-premium" data-stat-filter="Ongoing">
                     <div class="stat-info">
                         <p>Ongoing Repairs</p>
-                        <h4>{{ $requests->where('status', 'Ongoing')->count() }}</h4>
+                        <h4 id="statOngoing">{{ $requests->where('status', 'Ongoing')->count() }}</h4>
                     </div>
                 </div>
-                <div class="stat-item-premium">
-                    <div class="stat-icon sa-stat-icon-bg-green"><i class="fa-solid fa-check-double"></i></div>
+                <div class="stat-item-premium" data-stat-filter="Completed">
                     <div class="stat-info">
                         <p>Completed</p>
-                        <h4>{{ $requests->where('status', 'Completed')->count() }}</h4>
+                        <h4 id="statCompleted">{{ $requests->where('status', 'Completed')->count() }}</h4>
                     </div>
                 </div>
-                <div class="stat-item-premium sa-stat-card-accent">
-                    <div class="stat-icon sa-stat-icon-bg-gray"><i class="fa-solid fa-clipboard-list"></i></div>
+                <div class="stat-item-premium sa-stat-card-accent" data-stat-filter="">
                     <div class="stat-info">
                         <p>Total Filed</p>
-                        <h4>{{ $requests->count() }}</h4>
+                        <h4 id="statTotal">{{ $requests->count() }}</h4>
                     </div>
                 </div>
             </div>
@@ -308,11 +304,6 @@
                     <option value="OFFICE OF THE EXECUTIVE DIRECTOR">Office of the Executive Director</option>
                 </select>
 
-                <select id="filterType" class="ribbon-input sa-filter-select-sm">
-                    <option value="">All Types</option>
-                    <option value="ICT">ICT Support</option>
-                    <option value="Preventive Maintenance">Preventive Maintenance</option>
-                </select>
 
                 <select id="filterStatus" class="ribbon-input sa-filter-select-sm">
                     <option value="">All Status</option>
@@ -444,7 +435,6 @@ function filterRequests() {
     const search = document.getElementById('masterSearch').value.toLowerCase();
     const department = document.getElementById('filterDepartment').value.toUpperCase();
     const division = document.getElementById('filterDivision').value.toUpperCase();
-    const type = document.getElementById('filterType').value.toUpperCase();
     const status = document.getElementById('filterStatus').value.toUpperCase();
     
     const rows = document.querySelectorAll('#masterRequestTable tr');
@@ -471,10 +461,8 @@ function filterRequests() {
         if (row.dataset.region === undefined) return;
 
         const text = row.textContent.toLowerCase();
-        const rowRegion = row.dataset.region || ''; 
         const rowDivision = row.dataset.division || '';
         const rowDepartment = row.dataset.department || '';
-        const rowType = row.dataset.type;
         const rowStatus = row.dataset.status;
 
         const matchesSearch = text.includes(search);
@@ -503,11 +491,10 @@ function filterRequests() {
             matchesDiv = (normDivision === cleanSearch) || normDivision.includes(cleanSearch);
         }
 
-        const matchesType = type === "" || rowType === type;
         const matchesStatus = status === "" || rowStatus === status;
         const matchesMyAssigned = !myAssignedOnly || row.dataset.assignedMe === '1';
 
-        row.style.display = (matchesSearch && matchesDiv && matchesDept && matchesType && matchesStatus && matchesMyAssigned) ? "" : "none";
+        row.style.display = (matchesSearch && matchesDiv && matchesDept && matchesStatus && matchesMyAssigned) ? "" : "none";
     });
 }
 
@@ -522,14 +509,22 @@ function exportData() {
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('masterSearch').addEventListener('keyup', filterRequests);
     document.getElementById('filterDepartment').addEventListener('change', function() {
-        updateDepartmentDropdown('filterDepartment', 'filterDivision');
         filterRequests();
     });
     document.getElementById('filterDivision').addEventListener('change', filterRequests);
-    document.getElementById('filterType').addEventListener('change', filterRequests);
     document.getElementById('filterStatus').addEventListener('change', filterRequests);
     document.getElementById('exportBtn').addEventListener('click', exportData);
     document.getElementById('myAssignedToggle').addEventListener('click', toggleMyAssigned);
+    
+    // Clickable stats cards - filter by status when clicked
+    document.querySelectorAll('.stat-item-premium[data-stat-filter]').forEach(function(card) {
+        card.style.cursor = 'pointer';
+        card.addEventListener('click', function() {
+            const status = this.dataset.statFilter;
+            document.getElementById('filterStatus').value = status;
+            filterRequests();
+        });
+    });
 });
 </script>
 @endsection
