@@ -411,8 +411,8 @@ function renderRequestsTable(requests) {
         else if (req.status === 'Ongoing') statusClass = 'sp-ongoing';
         else if (req.status === 'Completed') statusClass = 'sp-completed';
 
-        const assignedName = req.assigned_to ? (req.assigned_to_user ? req.assigned_to_user.full_name : null) : null;
-        const isAssignedToMe = req.assigned_to === window.CMMS_USER_ID;
+        const assignedName = req.assigned_to ? req.assigned_to.full_name : null;
+        const isAssignedToMe = req.assigned_to && req.assigned_to.id === window.CMMS_USER_ID;
         const rowClass = isAssignedToMe ? 'tr-hover-row sa-row-assigned' : 'tr-hover-row';
 
         return `<tr class="${rowClass}">
