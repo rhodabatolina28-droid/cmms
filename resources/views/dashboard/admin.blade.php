@@ -87,11 +87,6 @@
             height: 100%;
         }
 
-        .stat-pending::before { background: #f59e0b; }
-        .stat-ongoing::before { background: #3b82f6; }
-        .stat-completed::before { background: #10b981; }
-        .stat-total::before { background: #0038A8; }
-
         .stat-label {
             font-size: clamp(10px, 0.8vw, 11px);
             font-weight: 800;
@@ -191,10 +186,13 @@
         .text-red { color: #dc2626; }
         .text-green { color: #10b981; }
         .text-dark { color: #1e293b; }
-        .stat-value-warn { color: #f59e0b; }
-        .stat-value-blue { color: #3b82f6; }
-        .stat-value-green { color: #10b981; }
         .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
+        .status-pending   { background: #fffbeb; color: #92400e; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .status-ongoing   { background: #eff6ff; color: #1e40af; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .status-completed { background: #ecfdf5; color: #065f46; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-rejected  { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
+        .status-cancelled { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .status-other     { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }
@@ -263,7 +261,7 @@
             </div>
             <div class="hero-stats-box">
                 <div class="hero-stats-label">Managed Office</div>
-                <div class="hero-stats-value">{{ Auth::user()->office ?: 'Central Office' }}</div>
+                <div class="hero-stats-value">{{ Auth::user()->office ?: (Auth::user()->department ?: 'Central Office') }}</div>
             </div>
         </div>
     </div>
@@ -273,17 +271,17 @@
         <div class="stat-card-premium stat-pending">
             <i class="fa-regular fa-hourglass-half stat-bg-icon"></i>
             <span class="stat-label">Pending</span>
-            <div class="stat-value stat-value-warn">{{ $stats['pending'] }}</div>
+            <div class="stat-value">{{ $stats['pending'] }}</div>
         </div>
         <div class="stat-card-premium stat-ongoing">
             <i class="fa-solid fa-spinner stat-bg-icon"></i>
             <span class="stat-label">Ongoing</span>
-            <div class="stat-value stat-value-blue">{{ $stats['ongoing'] }}</div>
+            <div class="stat-value">{{ $stats['ongoing'] }}</div>
         </div>
         <div class="stat-card-premium stat-completed">
             <i class="fa-solid fa-check-double stat-bg-icon"></i>
             <span class="stat-label">Completed</span>
-            <div class="stat-value stat-value-green">{{ $stats['completed'] }}</div>
+            <div class="stat-value">{{ $stats['completed'] }}</div>
         </div>
         <div class="stat-card-premium stat-total">
             <i class="fa-solid fa-users-gear stat-bg-icon"></i>
@@ -306,27 +304,30 @@
                     <thead>
                         <tr class="table-row-header">
                             <th class="table-header">Tracking #</th>
-                            <th class="table-header">Type</th>
                             <th class="table-header">Requestor</th>
                             <th class="table-header center">Status</th>
                             <th class="table-header right">Action</th>
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($requests->take(10) as $req)
+                        @forelse($requests as $req)
+                            @php
+                                $statusKey = strtolower(str_replace([' ', '-'], '', $req->status));
+                                $safeStatus = in_array($statusKey, ['pending','ongoing','completed','rejected','cancelled'])
+                                    ? $statusKey : 'other';
+                            @endphp
                             <tr class="tr-hover-row table-row-border">
                                 <td class="table-cell-bold">{{ $req->display_number ?? $req->request_number }}</td>
-                                <td class="table-cell-gray">{{ $req->type }}</td>
                                 <td class="table-cell-dark">{{ $req->requestor_name }}</td>
                                 <td class="table-cell-center">
-                                    <span class="status-pill status-{{ strtolower($req->status) }}">{{ $req->status }}</span>
+                                    <span class="status-pill status-{{ $safeStatus }}">{{ $req->status }}</span>
                                 </td>
                                 <td class="table-cell-right">
-                                    <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                    <a href="{{ route($req->getRoutePrefix() . '.show', $req->id) }}" class="icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="empty-cell" style="padding: 50px 20px;">
+                            <tr><td colspan="4" class="empty-cell" style="padding: 50px 20px;">
                                 <i class="fa-solid fa-inbox" style="font-size: 42px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
                                 <div style="font-weight: 800; color: #64748b; font-size: 15px;">No Requests Yet</div>
                                 <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Your office hasn't received any requests at the moment.</div>
@@ -350,7 +351,7 @@
                         <div class="flex-start-gap">
                             <div>
                                 <div class="job-number">{{ $job->display_number ?? $job->request_number }}</div>
-                                <div class="job-meta">{{ $job->type }} &middot; {{ $job->requestor_name }}</div>
+                                <div class="job-meta">{{ $job->requestor_name }}</div>
                             </div>
                             <span class="assign-link">Assign</span>
                         </div>

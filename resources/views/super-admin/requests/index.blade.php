@@ -32,7 +32,7 @@
         .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
 
-        /* Summary Stats Ribbon — inside card body */
+        /* Summary Stats Ribbon - inside card body */
         .stats-ribbon {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -181,6 +181,8 @@
         .sa-filter-select-sm { width: 120px; }
         .sa-my-assigned-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #475569; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
         .sa-table-wrap { overflow-x: auto; }
+        .gov-table-premium tbody { transition: opacity 0.15s ease; }
+        .gov-table-premium tbody.fading { opacity: 0.3; }
         .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
         .sa-td-desc { font-size: 11px; color: #64748b; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sa-td-office { font-weight: 700; color: #475569; }
@@ -251,7 +253,7 @@
         </div>
 
         <div class="card-body-content">
-            {{-- STATS RIBBON — inside the card --}}
+            {{-- STATS RIBBON - inside the card --}}
             <div class="stats-ribbon">
                 <div class="stat-item-premium">
                     <div class="stat-info">
@@ -342,6 +344,8 @@ const REQUESTS_DATA_URL = '{{ route("super_admin.requests.data") }}';
 let requestsCurrentPage = 1;
 let requestsLastPage = 1;
 let requestsFilterTimer = null;
+let requestsAbortController = null;
+let requestsIsFirstLoad = true;
 let myAssignedOnly = false;
 
 function toggleMyAssigned() {
@@ -370,26 +374,39 @@ async function loadRequests(page) {
     params.set('page', page);
     params.set('per_page', 20);
 
+    // Cancel any in-flight request
+    if (requestsAbortController) requestsAbortController.abort();
+    requestsAbortController = new AbortController();
+
     const tbody = document.getElementById('masterRequestTable');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    if (requestsIsFirstLoad) {
+        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    } else {
+        tbody.classList.add('fading');
+    }
 
     try {
         const response = await fetch(REQUESTS_DATA_URL + '?' + params.toString(), {
             credentials: 'include',
-            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            signal: requestsAbortController.signal
         });
         const result = await response.json();
 
         if (result.success) {
             requestsCurrentPage = result.current_page;
             requestsLastPage    = result.last_page;
+            requestsIsFirstLoad = false;
             renderRequestsTable(result.requests);
             renderRequestsPagination(result.total);
             updateRequestStats(result.stats, result.filtered_stats);
         } else {
+            tbody.classList.remove('fading');
             tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
         }
     } catch (e) {
+        if (e.name === 'AbortError') return;
+        tbody.classList.remove('fading');
         tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
     }
 }
@@ -398,6 +415,7 @@ function renderRequestsTable(requests) {
     const tbody = document.getElementById('masterRequestTable');
     if (!requests.length) {
         tbody.innerHTML = '<tr><td colspan="7" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
+        tbody.classList.remove('fading');
         return;
     }
 
@@ -439,6 +457,7 @@ function renderRequestsTable(requests) {
             </td>
         </tr>`;
     }).join('');
+    tbody.classList.remove('fading');
 }
 
 function renderRequestsPagination(total) {

@@ -25,7 +25,7 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
-        $query = \App\Models\Request::with(['user', 'repairRequest', 'assignedTo'])
+        $query = \App\Models\Request::with(['assignedTo:id,full_name'])
             ->where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
             ->whereHas('user', function ($q) use ($actor) {

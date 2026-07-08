@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'User Management | Super Admin')
 @section('page-title', 'User Management')
@@ -94,7 +94,10 @@
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 16px 20px;
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -192,19 +195,23 @@
             background: white;
             border-radius: 15px;
             width: 100%;
-            max-width: 500px;
+            max-width: 560px;
+            max-height: 90vh;
+            display: flex;
+            flex-direction: column;
             box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
             overflow: hidden;
             animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
         .modal-header {
-            padding: 20px 25px;
+            padding: 18px 24px;
             background: #f8fafc;
             border-bottom: 1px solid #e2e8f0;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-shrink: 0;
         }
 
         .modal-body { padding: 25px; }
@@ -265,6 +272,8 @@
         .w-220 { width: 220px; }
         .w-120 { width: 120px; }
         .table-wrap { overflow-x: auto; }
+        .gov-table-premium tbody { transition: opacity 0.15s ease; }
+        .gov-table-premium tbody.fading { opacity: 0.3; }
         .th-center { text-align: center !important; }
         .th-right { text-align: center !important; }
         .name-bold { font-weight: 800; color: #1e293b; }
@@ -277,15 +286,17 @@
         .btn-disabled { color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; pointer-events: none; }
         .pagination-wrap { margin-top: 20px; }
         .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
-        .close-btn { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; }
-        .form-group { margin-bottom: 12px; }
-        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px; }
+        .close-btn { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
+        .close-btn:hover { background: #f1f5f9; color: #475569; }
+        .form-group { margin-bottom: 14px; }
+        .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
         .form-group-sm { margin-bottom: 4px; }
-        .form-help { margin: 2px 0 0; font-size: 11px; color: #64748b; line-height: 1.3; }
-        .modal-body { padding: 20px 25px; }
-        .modal-foot { padding: 12px 25px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; }
+        .form-help { margin: 4px 0 0; font-size: 11px; color: #64748b; line-height: 1.4; }
+        .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+        .modal-foot { padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
         .btn-cancel { padding: 10px 20px; }
         .btn-submit { padding: 10px 25px; }
+        .section-divider { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
         /* MOBILE RESPONSIVE */
         @media (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px 20px !important; }
@@ -320,15 +331,24 @@
                 font-size: 12px !important;
             }
             /* Modal: scroll inside, no full-height stretch that creates gap */
-            .modal-overlay { align-items: flex-start !important; padding: 0 !important; overflow-y: auto !important; }
-            .modal-card { width: 100% !important; max-width: 100% !important; margin: 0 !important; border-radius: 0 !important; min-height: auto !important; overflow: visible !important; }
-            .modal-body { padding: 16px !important; }
-            form { min-height: auto !important; display: block !important; }
+            .modal-overlay { align-items: flex-end !important; padding: 0 !important; overflow-y: auto !important; }
+            .modal-card { 
+                width: 100% !important; 
+                max-width: 100% !important; 
+                max-height: 92vh !important;
+                margin: 0 !important; 
+                border-radius: 16px 16px 0 0 !important;
+                overflow: hidden !important;
+            }
+            .modal-body { padding: 16px !important; overflow-y: auto !important; }
             .form-grid { grid-template-columns: 1fr !important; gap: 10px !important; }
-            .modal-foot { flex-direction: column !important; gap: 8px !important; padding: 14px 16px !important; margin-top: 0 !important; }
-            .modal-foot button { width: 100% !important; justify-content: center !important; }
+            .modal-foot { flex-direction: column !important; gap: 8px !important; padding: 14px 16px !important; }
+            .modal-foot button { width: 100% !important; justify-content: center !important; min-height: 48px !important; }
             .btn-gov-primary { min-height: 48px !important; justify-content: center !important; }
-            .close-btn { width: 44px !important; height: 44px !important; font-size: 24px !important; display: flex !important; align-items: center !important; justify-content: center !important; border-radius: 8px !important; }
+            .close-btn { width: 44px !important; height: 44px !important; font-size: 22px !important; display: flex !important; align-items: center !important; justify-content: center !important; }
+            .form-input-gov { min-height: 46px !important; font-size: 16px !important; }
+            .section-divider { font-size: 10px !important; }
+            .ribbon-input { min-height: 46px !important; font-size: 15px !important; }
         }
         /* Hide SweetAlert2 checkbox element forcefully */
         .swal2-checkbox,
@@ -389,19 +409,19 @@
                 <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Total Users</p>
-                        <h4>{{ $users->total() }}</h4>
+                        <h4 id="statTotal">--</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Active</p>
-                        <h4>{{ \App\Models\User::where('branch', auth()->user()->branch)->where('is_active', true)->count() }}</h4>
+                        <h4 id="statActive">--</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
                     <div class="stat-info">
                         <p>Inactive</p>
-                        <h4>{{ \App\Models\User::where('branch', auth()->user()->branch)->where('is_active', false)->count() }}</h4>
+                        <h4 id="statInactive">--</h4>
                     </div>
                 </div>
             </div>
@@ -421,14 +441,14 @@
 
                 <select id="filterDivision" class="ribbon-input w-220">
                     <option value="">All Divisions</option>
-                    <option value="RESEARCH AND INFORMATION DIVISION">Research & Information Division</option>
-                    <option value="ADMINISTRATIVE DIVISION">Administrative Division</option>
-                    <option value="FINANCIAL AND MANAGEMENT DIVISION">Financial & Management Division</option>
-                    <option value="COMMISSION ON AUDIT">Commission on Audit</option>
-                    <option value="CONCILIATION AND MEDIATION DIVISION">Conciliation & Mediation Division</option>
-                    <option value="VOLUNTARY ARBITRATION DIVISION">Voluntary Arbitration Division</option>
-                    <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION">Workplace Relations Enhancement Division</option>
-                    <option value="OFFICE OF THE EXECUTIVE DIRECTOR">Office of the Executive Director</option>
+                    <option value="RESEARCH AND INFORMATION DIVISION" data-dept-group="INTERNAL">Research & Information Division</option>
+                    <option value="ADMINISTRATIVE DIVISION" data-dept-group="INTERNAL">Administrative Division</option>
+                    <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept-group="INTERNAL">Financial & Management Division</option>
+                    <option value="COMMISSION ON AUDIT" data-dept-group="INTERNAL">Commission on Audit</option>
+                    <option value="CONCILIATION AND MEDIATION DIVISION" data-dept-group="TECHNICAL">Conciliation & Mediation Division</option>
+                    <option value="VOLUNTARY ARBITRATION DIVISION" data-dept-group="TECHNICAL">Voluntary Arbitration Division</option>
+                    <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept-group="TECHNICAL">Workplace Relations Enhancement Division</option>
+                    <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept-group="TECHNICAL">Office of the Executive Director</option>
                 </select>
 
                 <select id="filterRole" class="ribbon-input w-120">
@@ -442,8 +462,8 @@
 
                 <select id="filterStatus" class="ribbon-input w-120">
                     <option value="">All Status</option>
-                    <option value="Active">Active Only</option>
-                    <option value="Inactive">Inactive Only</option>
+                    <option value="active">Active Only</option>
+                    <option value="inactive">Inactive Only</option>
                 </select>
             </div>
 
@@ -459,53 +479,10 @@
                         </tr>
                     </thead>
                     <tbody id="userTable">
-                        @foreach($users as $user)
-                        <tr class="tr-hover-row" data-division="{{ strtoupper($user->office ?? '') }}"
-                            data-department="{{ strtoupper($user->department ?? '') }}"
-                            data-role="{{ strtoupper($user->role ?? '') }}"
-                            data-status="{{ $user->is_active ? 'ACTIVE' : 'INACTIVE' }}">
-                            <td>
-                                <div class="name-bold">{{ $user->full_name }}</div>
-                                <div class="email-mono">{{ $user->email }}</div>
-                            </td>
-                            <td>
-                                <span class="role-pill">
-                                    {{ str_replace('_', ' ', $user->role) }}
-                                </span>
-                            </td>
-                            <td class="td-bold">
-                                {{ $user->office ?: 'No Office Assigned' }}
-                                @if($user->department)
-                                    <div class="dept-sub">
-                                        {{ $user->department }}
-                                    </div>
-                                @endif
-                            </td>
-                            <td class="td-center">
-                                <span class="status-pill {{ $user->is_active ? 'sp-active' : 'sp-inactive' }}">
-                                    {{ $user->is_active ? 'Active' : 'Inactive' }}
-                                </span>
-                            </td>
-                            <td class="td-right">
-                                <div class="action-group">
-                                    <button data-action="reset-password" data-user-id="{{ $user->id }}" class="btn-action-modern" title="Reset Password to Default">
-                                        <i class="fa-solid fa-key"></i>
-                                    </button>
-                                    <button data-action="toggle-status" data-user-id="{{ $user->id }}" class="btn-action-modern" title="Toggle Access">
-                                        <i class="fa-solid fa-power-off"></i>
-                                    </button>
-                                    <button data-action="edit-user" data-user-id="{{ $user->id }}" class="btn-action-modern" title="Edit User">
-                                        <i class="fa-solid fa-pen-to-square"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        @endforeach
+                        <tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                     </tbody>
                 </table>
-                <div class="pagination-wrap">
-                    {{ $users->links() }}
-                </div>
+                <div id="usersPagination" class="pagination-wrap"></div>
             </div>
         </div>
     </div>
@@ -517,7 +494,7 @@
         <div class="modal-header">
             <div>
                 <h4 class="modal-title">Edit System Account</h4>
-                <p style="margin: 4px 0 0; font-size: 12px; color: #64748b;">Update user information and role assignments</p>
+                <p style="margin: 3px 0 0; font-size: 12px; color: #64748b;">Update user information and role assignments</p>
             </div>
             <button type="button" class="close-btn" onclick="document.getElementById('editUserModal').style.display='none'">
                 <i class="fa-solid fa-xmark"></i>
@@ -528,96 +505,78 @@
                 <input type="hidden" name="user_id" id="editUserId">
 
                 {{-- Personnel Information Section --}}
-                <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-user" style="color: #0038A8; margin-right: 6px;"></i>Personnel Information
-                    </div>
-                    
-                    {{-- Full Name --}}
+                <div style="margin-bottom: 18px;">
+                    <div class="section-divider">Personnel Information</div>
                     <div class="form-group">
                         <label class="form-label-gov">Full Name <span style="color:#ef4444;">*</span></label>
-                        <input type="text" name="full_name" id="editFullName" class="form-input-gov" required placeholder="Enter complete name" style="font-size: 14px;">
+                        <input type="text" name="full_name" id="editFullName" class="form-input-gov" required placeholder="Enter complete name">
                     </div>
-
-                    {{-- Email --}}
-                    <div class="form-group">
+                    <div class="form-group" style="margin-bottom:0;">
                         <label class="form-label-gov">Email Address <span style="color:#ef4444;">*</span></label>
-                        <input type="email" name="email" id="editEmail" class="form-input-gov" required placeholder="e.g. name@ncmb.gov.ph" style="font-size: 14px;">
+                        <input type="email" name="email" id="editEmail" class="form-input-gov" required placeholder="e.g. name@ncmb.gov.ph">
                     </div>
                 </div>
 
                 {{-- Role & Assignment Section --}}
-                <div style="margin-bottom: 20px; padding-bottom: 16px; border-bottom: 1px solid #e2e8f0;">
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-shield-halved" style="color: #0038A8; margin-right: 6px;"></i>Role & Assignment
-                    </div>
-
-                    {{-- Role --}}
+                <div style="margin-bottom: 18px;">
+                    <div class="section-divider">Role & Assignment</div>
                     <div class="form-group">
                         <label class="form-label-gov">System Role <span style="color:#ef4444;">*</span></label>
-                        <select name="role" id="editUserRole" class="form-input-gov" required style="font-size: 14px;">
+                        <select name="role" id="editUserRole" class="form-input-gov" required>
                             <option value="user">User</option>
                             <option value="admin">Division Admin</option>
-                            <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
+                            <option value="supply_officer">Supply Officer (Administrative Div.)</option>
                             <option value="it">IT Personnel</option>
                             <option value="super_admin">Super Admin</option>
                         </select>
-                        <p class="form-help" style="margin-top: 6px;">Supply Officer role is restricted to Administrative Division only.</p>
+                        <p class="form-help">Supply Officer role is restricted to Administrative Division only.</p>
                     </div>
-
-                    {{-- Region | Branch --}}
-                    <div class="form-grid">
+                    <div class="form-grid" style="margin-bottom:0;">
                         <div>
                             <label class="form-label-gov">Region</label>
-                            <input type="text" name="region" id="editRegion" class="form-input-gov" readonly style="background: #f8fafc; font-size: 13px;">
+                            <input type="text" name="region" id="editRegion" class="form-input-gov" readonly style="background:#f8fafc; color:#94a3b8;">
                         </div>
                         <div>
                             <label class="form-label-gov">Branch</label>
-                            <input type="text" name="branch" id="editBranch" class="form-input-gov" readonly style="background: #f8fafc; font-size: 13px;">
+                            <input type="text" name="branch" id="editBranch" class="form-input-gov" readonly style="background:#f8fafc; color:#94a3b8;">
                         </div>
                     </div>
                 </div>
 
                 {{-- Department & Division Section --}}
                 <div>
-                    <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 12px; letter-spacing: 0.5px;">
-                        <i class="fa-solid fa-building" style="color: #0038A8; margin-right: 6px;"></i>Department & Division
+                    <div class="section-divider">Department & Division</div>
+                    <div class="form-group">
+                        <label class="form-label-gov">Department</label>
+                        <select name="department" id="editUserDepartment" class="form-input-gov">
+                            <option value="">None / Not Applicable</option>
+                            <option value="INTERNAL SERVICES DEPARTMENT">Internal Services Dept.</option>
+                            <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services Dept.</option>
+                        </select>
                     </div>
-
-                    {{-- Department | Division --}}
-                    <div class="form-grid">
-                        <div>
-                            <label class="form-label-gov">Department</label>
-                            <select name="department" id="editUserDepartment" class="form-input-gov" style="font-size: 14px;">
-                                <option value="">None / Not Applicable</option>
-                                <option value="INTERNAL SERVICES DEPARTMENT">Internal Services Dept.</option>
-                                <option value="TECHNICAL SERVICES DEPARTMENT">Technical Services Dept.</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
-                            <select name="office" id="editUserOffice" class="form-input-gov" required style="font-size: 14px;">
-                                <option value="">— Select Division / Office —</option>
-                                <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
-                                <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
-                                <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
-                                <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
-                                <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
-                                <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
-                                <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
-                                <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
-                            </select>
-                            <p class="form-help" style="margin-top: 6px;">Required — determines the user's scope in the system.</p>
-                        </div>
+                    <div class="form-group" style="margin-bottom:0;">
+                        <label class="form-label-gov">Division / Office <span style="color:#ef4444;">*</span></label>
+                        <select name="office" id="editUserOffice" class="form-input-gov" required>
+                            <option value="">— Select Division / Office —</option>
+                            <option value="RESEARCH AND INFORMATION DIVISION" data-dept="INTERNAL">Research & Information Div. (RID)</option>
+                            <option value="ADMINISTRATIVE DIVISION" data-dept="INTERNAL">Administrative Division (AD)</option>
+                            <option value="FINANCIAL AND MANAGEMENT DIVISION" data-dept="INTERNAL">Financial & Management Div. (FMD)</option>
+                            <option value="COMMISSION ON AUDIT" data-dept="INTERNAL">Commission on Audit (COA)</option>
+                            <option value="CONCILIATION AND MEDIATION DIVISION" data-dept="TECHNICAL">Conciliation & Mediation Div. (CMD)</option>
+                            <option value="VOLUNTARY ARBITRATION DIVISION" data-dept="TECHNICAL">Voluntary Arbitration Div. (VAD)</option>
+                            <option value="WORKPLACE RELATIONS ENHANCEMENT DIVISION" data-dept="TECHNICAL">Workplace Relations Enhancement Div. (WRED)</option>
+                            <option value="OFFICE OF THE EXECUTIVE DIRECTOR" data-dept="TECHNICAL">Office of the Exec. Director (OED)</option>
+                        </select>
+                        <p class="form-help">Required — determines the user's scope in the system.</p>
                     </div>
                 </div>
             </div>
             <div class="modal-foot">
-                <button type="button" class="btn-action-modern" onclick="document.getElementById('editUserModal').style.display='none'">
-                    <i class="fa-solid fa-xmark" style="margin-right: 4px;"></i> Discard
+                <button type="button" class="btn-action-modern btn-cancel" onclick="document.getElementById('editUserModal').style.display='none'">
+                    Discard
                 </button>
                 <button type="submit" class="btn-gov-primary btn-submit">
-                    <i class="fa-solid fa-save"></i> Update Account
+                    <i class="fa-solid fa-floppy-disk"></i> Save Changes
                 </button>
             </div>
         </form>
@@ -699,7 +658,7 @@
                 <div class="form-group-sm" style="position:relative;">
                     <label class="form-label-gov">Initial Access Password</label>
                     <div style="display:flex;align-items:center;gap:8px;">
-                        <input type="password" name="password" id="newUserPassword" class="form-input-gov" required placeholder="••••••••" style="padding-right:40px;">
+                        <input type="password" name="password" id="newUserPassword" class="form-input-gov" required placeholder="Min. 8 characters" style="padding-right:40px;">
                         <button type="button" id="toggleNewUserPassword" class="btn-action-modern" style="position:absolute;right:22px;top:32px;border:none;background:none;padding:8px;cursor:pointer;font-size:16px;color:#64748b;" tabindex="-1">
                             <i class="fa-solid fa-eye"></i>
                         </button>
@@ -720,73 +679,171 @@
 
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
-function filterUsers() {
-    const search = document.getElementById('searchUser').value.toLowerCase();
-    const department = document.getElementById('filterDepartment').value.toUpperCase();
-    const division = document.getElementById('filterDivision').value.toUpperCase();
-    const role = document.getElementById('filterRole').value.toUpperCase();
-    const status = document.getElementById('filterStatus').value.toUpperCase();
-    const rows = document.querySelectorAll('#userTable tr');
+// â”€â”€ AJAX User Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+let usersCurrentPage = 1;
+let usersLastPage    = 1;
+let usersFilterTimer = null;
+let usersAbortController = null;
+let usersIsFirstLoad = true;
+const USERS_DATA_URL = '{{ route("super_admin.users.data") }}';
 
-    function normalizeOfficeDept(officeRaw) {
-        if (!officeRaw) return "";
-        let cleanRow = officeRaw.toUpperCase().replace(/[^A-Z0-9]/g, '').trim();
-        
-        if (cleanRow === 'RID' || cleanRow === 'RIDOFFICE' || cleanRow === 'RESEARCHANDINFORMATIONDIVISION' || cleanRow === 'RESEARCHANDINFODIVISION' || cleanRow === 'RESEARCHANDINFO' || cleanRow === 'RESEARCHINFO' || cleanRow === 'RESEARCHANDINFORMATION' || cleanRow === 'ICT' || cleanRow === 'ICTOFFICE' || cleanRow === 'RESEARCH' || cleanRow === 'RESEARCHDIVISION') return 'RESEARCHANDINFORMATIONDIVISION';
-        if (cleanRow === 'AD' || cleanRow === 'ADMIN' || cleanRow === 'ADMINOFFICE' || cleanRow === 'ADMINISTRATIVEDIVISION' || cleanRow === 'ADMINISTRATIVE') return 'ADMINISTRATIVEDIVISION';
-        if (cleanRow === 'CMD' || cleanRow === 'CMDOFFICE' || cleanRow === 'CONCILIATIONANDMEDIATIONDIVISION' || cleanRow === 'CONCILIATIONANDMEDIATION' || cleanRow === 'CONCILIATIONMEDIATION' || cleanRow === 'CONCILIATION' || cleanRow === 'CONCILIATIONDIVISION') return 'CONCILIATIONANDMEDIATIONDIVISION';
-        if (cleanRow === 'OED' || cleanRow === 'OEDOFFICE' || cleanRow === 'OFFICEOFTHEEXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOR' || cleanRow === 'EXECUTIVEDIRECTOROFFICE') return 'OFFICEOFTHEEXECUTIVEDIRECTOR';
-        if (cleanRow === 'COA' || cleanRow === 'COAOFFICE' || cleanRow === 'COMMISSIONONAUDIT' || cleanRow === 'AUDIT') return 'COMMISSIONONAUDIT';
-        if (cleanRow === 'TSD' || cleanRow === 'TSDOFFICE' || cleanRow === 'TECHNICALSERVICESDIVISION' || cleanRow === 'TECHNICALSERVICES' || cleanRow === 'TECHNICALSERVICESDEPARTMENT' || cleanRow === 'TECHNICALSERVICESDIV' || cleanRow === 'TECHNICAL' || cleanRow === 'TECHNICALSERVICESDEPT' || cleanRow === 'TECHNICALDEPT') return 'TECHNICALSERVICESDEPARTMENT';
-        if (cleanRow === 'ISD' || cleanRow === 'ISDOFFICE' || cleanRow === 'INTERNALSERVICESDIVISION' || cleanRow === 'INTERNALSERVICES' || cleanRow === 'INTERNALSERVICESDEPARTMENT' || cleanRow === 'INTERNALSERVICESDIV' || cleanRow === 'INTERNAL' || cleanRow === 'INTERNALSERVICESDEPT' || cleanRow === 'INTERNALDEPT') return 'INTERNALSERVICESDEPARTMENT';
-        if (cleanRow === 'FMD' || cleanRow === 'FMDOFFICE' || cleanRow === 'FINANCIALANDMANAGEMENTDIVISION' || cleanRow === 'FINANCIALANDMANAGEMENT' || cleanRow === 'FINANCIALMANAGEMENT' || cleanRow === 'FINANCIAL' || cleanRow === 'FINANCE' || cleanRow === 'FINANCEDIVISION' || cleanRow === 'FINANCIALDIVISION' || cleanRow === 'FINANCEMODULE') return 'FINANCIALANDMANAGEMENTDIVISION';
-        if (cleanRow === 'VAD' || cleanRow === 'VADOFFICE' || cleanRow === 'VOLUNTARYARBITRATIONDIVISION' || cleanRow === 'VOLUNTARYARBITRATION' || cleanRow === 'VOLUNTARY') return 'VOLUNTARYARBITRATIONDIVISION';
-        if (cleanRow === 'WRED' || cleanRow === 'WREDOFFICE' || cleanRow === 'WORKPLACERELATIONSENHANCEMENTDIVISION' || cleanRow === 'WORKPLACERELATIONSENHANCEMENT' || cleanRow === 'WORKPLACERELATIONS' || cleanRow === 'WORKPLACE') return 'WORKPLACERELATIONSENHANCEMENTDIVISION';
-        
-        return cleanRow;
+async function loadUsers(page) {
+    page = page || 1;
+    const params = new URLSearchParams();
+    const search     = document.getElementById('searchUser').value;
+    const department = document.getElementById('filterDepartment').value;
+    const division   = document.getElementById('filterDivision').value;
+    const role       = document.getElementById('filterRole').value;
+    const status     = document.getElementById('filterStatus').value;
+
+    if (search)     params.set('search', search);
+    if (department) params.set('department', department);
+    if (division)   params.set('division', division);
+    if (role)       params.set('role', role);
+    if (status)     params.set('status', status);
+    params.set('page', page);
+    params.set('per_page', 20);
+
+    // Cancel any in-flight request
+    if (usersAbortController) usersAbortController.abort();
+    usersAbortController = new AbortController();
+
+    const tbody = document.getElementById('userTable');
+    if (usersIsFirstLoad) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    } else {
+        tbody.classList.add('fading');
     }
 
-    rows.forEach(row => {
-        if (row.dataset.division === undefined) return;
+    try {
+        const response = await fetch(USERS_DATA_URL + '?' + params.toString(), {
+            credentials: 'include',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            signal: usersAbortController.signal
+        });
+        const result = await response.json();
 
-        const text = row.textContent.toLowerCase();
-        const rowDivision = row.dataset.division || '';
-        const rowDepartment = row.dataset.department || '';
-        const rowRole = row.dataset.role;
-        const rowStatus = row.dataset.status;
-
-        const matchesSearch = text.includes(search);
-        const normDivision = normalizeOfficeDept(rowDivision);
-        const normDepartment = normalizeOfficeDept(rowDepartment);
-
-        const internalOffices = ['ADMINISTRATIVEDIVISION', 'INTERNALSERVICESDEPARTMENT', 'COMMISSIONONAUDIT', 'FINANCIALANDMANAGEMENTDIVISION', 'RESEARCHANDINFORMATIONDIVISION'];
-        const technicalOffices = ['CONCILIATIONANDMEDIATIONDIVISION', 'TECHNICALSERVICESDEPARTMENT', 'OFFICEOFTHEEXECUTIVEDIRECTOR', 'VOLUNTARYARBITRATIONDIVISION', 'WORKPLACERELATIONSENHANCEMENTDIVISION'];
-
-        let matchesDept = department === "";
-        if (!matchesDept) {
-            const cleanSearch = department.replace(/[^A-Z0-9]/g, '').trim();
-            if (cleanSearch === 'INTERNALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'INTERNALSERVICESDEPARTMENT') || internalOffices.includes(normDivision);
-            } else if (cleanSearch === 'TECHNICALSERVICESDEPARTMENT') {
-                matchesDept = (normDepartment === 'TECHNICALSERVICESDEPARTMENT') || technicalOffices.includes(normDivision);
-            } else {
-                matchesDept = (normDepartment === cleanSearch) || normDepartment.includes(cleanSearch);
-            }
+        if (result.success) {
+            usersCurrentPage = result.current_page;
+            usersLastPage    = result.last_page;
+            usersIsFirstLoad = false;
+            renderUsersTable(result.users);
+            renderUsersPagination(result.total);
+            updateUserStats(result.stats, result.filtered_stats, result.total);
+        } else {
+            tbody.classList.remove('fading');
+            tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Failed to load users.</td></tr>';
         }
-
-        let matchesDiv = division === "";
-        if (!matchesDiv) {
-            const cleanSearch = division.replace(/[^A-Z0-9]/g, '').trim();
-            matchesDiv = (normDivision === cleanSearch) || normDivision.includes(cleanSearch);
-        }
-
-        const matchesRole = role === "" || rowRole === role;
-        const matchesStatus = status === "" || (status === "ACTIVE ONLY" && rowStatus === "ACTIVE") || (status === "INACTIVE ONLY" && rowStatus === "INACTIVE") || rowStatus === status;
-
-        row.style.display = (matchesSearch && matchesDiv && matchesDept && matchesRole && matchesStatus) ? "" : "none";
-    });
+    } catch (e) {
+        if (e.name === 'AbortError') return;
+        tbody.classList.remove('fading');
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:24px;color:#ef4444;">Error loading users.</td></tr>';
+    }
 }
 
+function renderUsersTable(users) {
+    const tbody = document.getElementById('userTable');
+    if (!users.length) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;padding:30px;color:#94a3b8;">No users found.</td></tr>';
+        tbody.classList.remove('fading');
+        return;
+    }
+
+    const roleLabels = {
+        user: 'User', admin: 'Division Admin', supply_officer: 'Supply Officer',
+        it: 'IT Personnel', super_admin: 'Super Admin'
+    };
+
+    tbody.innerHTML = users.map(u => {
+        const roleLabel = roleLabels[u.role] || u.role.replace(/_/g, ' ');
+        const statusPill = u.is_active
+            ? '<span class="status-pill sp-active">Active</span>'
+            : '<span class="status-pill sp-inactive">Inactive</span>';
+        const dept = u.department ? `<div class="dept-sub">${u.department}</div>` : '';
+
+        return `<tr class="tr-hover-row">
+            <td>
+                <div class="name-bold">${u.full_name}</div>
+                <div class="email-mono">${u.email}</div>
+            </td>
+            <td><span class="role-pill">${roleLabel}</span></td>
+            <td class="td-bold">${u.office || 'No Office Assigned'}${dept}</td>
+            <td class="td-center">${statusPill}</td>
+            <td class="td-right">
+                <div class="action-group">
+                    <button onclick="resetPassword(${u.id})" class="btn-action-modern" title="Reset Password">
+                        <i class="fa-solid fa-key"></i>
+                    </button>
+                    <button onclick="toggleUserStatus(${u.id})" class="btn-action-modern" title="Toggle Access">
+                        <i class="fa-solid fa-power-off"></i>
+                    </button>
+                    <button onclick="editUser(${u.id})" class="btn-action-modern" title="Edit User">
+                        <i class="fa-solid fa-pen-to-square"></i>
+                    </button>
+                </div>
+            </td>
+        </tr>`;
+    }).join('');
+    tbody.classList.remove('fading');
+}
+
+function renderUsersPagination(total) {
+    const container = document.getElementById('usersPagination');
+    if (!container) return;
+
+    const totalPages = usersLastPage;
+    if (totalPages <= 1) { container.innerHTML = ''; return; }
+
+    const btnStyle = (active, disabled) =>
+        `padding:5px 10px;border:1px solid ${active ? '#0038A8' : '#cbd5e1'};border-radius:4px;` +
+        `background:${active ? '#0038A8' : disabled ? '#f1f5f9' : 'white'};` +
+        `color:${active ? 'white' : disabled ? '#94a3b8' : '#1e293b'};` +
+        `cursor:${disabled ? 'default' : 'pointer'};font-size:12px;font-weight:700;`;
+
+    let html = `<div style="display:flex;align-items:center;justify-content:space-between;margin-top:16px;">`;
+    html += `<span style="font-size:12px;color:#64748b;">${total} user${total !== 1 ? 's' : ''} found</span>`;
+    html += `<div style="display:flex;gap:4px;">`;
+
+    html += `<button onclick="loadUsers(${usersCurrentPage - 1})" style="${btnStyle(false, usersCurrentPage <= 1)}" ${usersCurrentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
+
+    let start = Math.max(1, usersCurrentPage - 2);
+    let end   = Math.min(totalPages, usersCurrentPage + 2);
+    if (start > 1) {
+        html += `<button onclick="loadUsers(1)" style="${btnStyle(false, false)}">1</button>`;
+        if (start > 2) html += `<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>`;
+    }
+    for (let i = start; i <= end; i++) {
+        html += `<button onclick="loadUsers(${i})" style="${btnStyle(i === usersCurrentPage, false)}">${i}</button>`;
+    }
+    if (end < totalPages) {
+        if (end < totalPages - 1) html += `<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>`;
+        html += `<button onclick="loadUsers(${totalPages})" style="${btnStyle(false, false)}">${totalPages}</button>`;
+    }
+
+    html += `<button onclick="loadUsers(${usersCurrentPage + 1})" style="${btnStyle(false, usersCurrentPage >= totalPages)}" ${usersCurrentPage >= totalPages ? 'disabled' : ''}>Next &rsaquo;</button>`;
+    html += `</div></div>`;
+    container.innerHTML = html;
+}
+
+function updateUserStats(stats, filteredStats, total) {
+    const isFiltered = document.getElementById('searchUser').value ||
+        document.getElementById('filterDepartment').value ||
+        document.getElementById('filterDivision').value ||
+        document.getElementById('filterRole').value ||
+        document.getElementById('filterStatus').value;
+
+    const s = isFiltered ? filteredStats : stats;
+    document.getElementById('statTotal').textContent    = s ? s.total    : (total || 0);
+    document.getElementById('statActive').textContent   = s ? s.active   : '--';
+    document.getElementById('statInactive').textContent = s ? s.inactive : '--';
+}
+
+function onUserFilterChange() {
+    clearTimeout(usersFilterTimer);
+    usersFilterTimer = setTimeout(() => loadUsers(1), 300);
+}
+
+// â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openAddUserModal() {
     document.getElementById('addUserModal').style.display = 'flex';
 }
@@ -815,38 +872,13 @@ document.getElementById('addUserForm').addEventListener('submit', async function
         const result = await response.json();
 
         if (result.success) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: result.message,
-                confirmButtonColor: '#0038A8',
-                timer: 2000,
-                showConfirmButton: false
-            });
-            location.reload();
+            await Swal.fire({ icon: 'success', title: 'Success!', text: result.message, confirmButtonColor: '#0038A8', timer: 2000, showConfirmButton: false });
+            closeAddUserModal();
+            loadUsers(1);
         } else if (result.errors) {
-            // Validation errors from server
-            const errorMessages = Object.values(result.errors).flat().join('<br>');
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                html: errorMessages,
-                confirmButtonColor: '#0038A8'
-            });
-        } else if (result.message) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: result.message,
-                confirmButtonColor: '#0038A8'
-            });
+            Swal.fire({ icon: 'error', title: 'Validation Error', html: Object.values(result.errors).flat().join('<br>'), confirmButtonColor: '#0038A8' });
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'An unexpected error occurred. Please check the password requirements: at least 8 characters, 1 uppercase letter, and 1 number.',
-                confirmButtonColor: '#0038A8'
-            });
+            Swal.fire({ icon: 'error', title: 'Error!', text: result.message || 'An unexpected error occurred.', confirmButtonColor: '#0038A8' });
         }
     } catch (error) {
         Swal.fire('Error!', 'An unexpected error occurred.', 'error');
@@ -855,95 +887,69 @@ document.getElementById('addUserForm').addEventListener('submit', async function
 
 async function toggleUserStatus(id) {
     const confirmResult = await Swal.fire({
-        title: 'Are you sure?',
-        text: "You are about to toggle this account's status.",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#0038A8',
-        cancelButtonColor: '#d33',
-        confirmButtonText: 'Yes, toggle it!'
+        title: 'Are you sure?', text: "You are about to toggle this account's status.", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#0038A8', cancelButtonColor: '#d33', confirmButtonText: 'Yes, toggle it!'
     });
-
     if (!confirmResult.isConfirmed) return;
 
     try {
         const response = await fetch("{{ route('super_admin.users.toggle', ':id') }}".replace(':id', id), {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            method: 'POST', credentials: 'include',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
         });
-
         const result = await response.json();
-        if (result.success) {
-            location.reload();
-        } else {
-            Swal.fire('Error!', result.message, 'error');
-        }
-    } catch (error) {
-        Swal.fire('Error!', 'An error occurred while toggling status.', 'error');
-    }
+        if (result.success) { loadUsers(usersCurrentPage); }
+        else { Swal.fire('Error!', result.message, 'error'); }
+    } catch (error) { Swal.fire('Error!', 'An error occurred while toggling status.', 'error'); }
 }
 
 async function resetPassword(id) {
     const confirmResult = await Swal.fire({
-        title: 'Reset Password?',
-        text: "Are you sure you want to reset this user's password to the system default?",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#0038A8',
-        cancelButtonColor: '#6c757d',
-        confirmButtonText: 'Yes, reset it!'
+        title: 'Reset Password?', text: "Are you sure you want to reset this user's password?", icon: 'warning',
+        showCancelButton: true, confirmButtonColor: '#0038A8', cancelButtonColor: '#6c757d', confirmButtonText: 'Yes, reset it!'
     });
-
     if (!confirmResult.isConfirmed) return;
 
     try {
         const response = await fetch("{{ route('super_admin.users.reset_password', ':id') }}".replace(':id', id), {
-            method: 'POST',
-            credentials: 'include',
-            headers: {
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            }
+            method: 'POST', credentials: 'include',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' }
         });
-
         const result = await response.json();
-        if (result.success) {
-            Swal.fire('Password Reset!', result.message, 'success');
-        } else {
-            Swal.fire('Error!', result.message, 'error');
-        }
-    } catch (error) {
-        Swal.fire('Error!', 'An error occurred while resetting the password.', 'error');
-    }
+        if (result.success) { Swal.fire('Password Reset!', result.message, 'success'); }
+        else { Swal.fire('Error!', result.message, 'error'); }
+    } catch (error) { Swal.fire('Error!', 'An error occurred while resetting the password.', 'error'); }
 }
 
-// Close modal on outside click
 window.onclick = function(event) {
-    if (event.target.classList.contains('modal-overlay')) {
-        event.target.style.display = 'none';
-    }
+    if (event.target.classList.contains('modal-overlay')) event.target.style.display = 'none';
+}
+
+// â”€â”€ Edit modal â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+function filterEditDivisionByDept(dept) {
+    const officeSelect = document.getElementById('editUserOffice');
+    officeSelect.querySelectorAll('option').forEach(opt => {
+        if (!opt.value) return;
+        const d = opt.getAttribute('data-dept');
+        opt.style.display = (!dept || !d || (dept === 'INTERNAL SERVICES DEPARTMENT' && d === 'INTERNAL') || (dept === 'TECHNICAL SERVICES DEPARTMENT' && d === 'TECHNICAL')) ? '' : 'none';
+    });
 }
 
 async function editUser(id) {
     try {
         const response = await fetch("{{ route('super_admin.users') }}?get_user=" + id);
         const result = await response.json();
-        
         if (result.success) {
-            const user = result.user;
-            document.getElementById('editUserId').value = user.id;
-            document.getElementById('editFullName').value = user.full_name;
-            document.getElementById('editEmail').value = user.email;
-            document.getElementById('editUserRole').value = user.role;
-            document.getElementById('editRegion').value = user.region || '';
-            document.getElementById('editBranch').value = user.branch || '';
-            document.getElementById('editUserDepartment').value = user.department || '';
-            document.getElementById('editUserOffice').value = user.office || '';
-            
+            const u = result.user;
+            document.getElementById('editUserId').value = u.id;
+            document.getElementById('editFullName').value = u.full_name;
+            document.getElementById('editEmail').value = u.email;
+            document.getElementById('editUserRole').value = u.role;
+            document.getElementById('editRegion').value = u.region || '';
+            document.getElementById('editBranch').value = u.branch || '';
+            document.getElementById('editUserDepartment').value = u.department || '';
+            filterEditDivisionByDept(u.department || '');
+            document.getElementById('editUserOffice').value = u.office || '';
             document.getElementById('editUserModal').style.display = 'flex';
         } else {
             Swal.fire('Error!', result.message || 'Failed to load user data', 'error');
@@ -961,106 +967,79 @@ document.getElementById('editUserForm').addEventListener('submit', async functio
 
     try {
         const response = await fetch("{{ route('super_admin.users.update', ':id') }}".replace(':id', userId), {
-            method: 'PUT',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'X-Requested-With': 'XMLHttpRequest'
-            },
+            method: 'PUT', credentials: 'include',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}', 'X-Requested-With': 'XMLHttpRequest' },
             body: JSON.stringify(payload)
         });
-
         const result = await response.json();
-
         if (result.success) {
-            await Swal.fire({
-                icon: 'success',
-                title: 'Success!',
-                text: result.message,
-                confirmButtonColor: '#0038A8',
-                timer: 2000,
-                showConfirmButton: false
-            });
+            await Swal.fire({ icon: 'success', title: 'Success!', text: result.message, confirmButtonColor: '#0038A8', timer: 2000, showConfirmButton: false });
             document.getElementById('editUserModal').style.display = 'none';
-            location.reload();
+            loadUsers(usersCurrentPage);
         } else if (result.errors) {
-            const errorMessages = Object.values(result.errors).flat().join('<br>');
-            Swal.fire({
-                icon: 'error',
-                title: 'Validation Error',
-                html: errorMessages,
-                confirmButtonColor: '#0038A8'
-            });
-        } else if (result.message) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: result.message,
-                confirmButtonColor: '#0038A8'
-            });
+            Swal.fire({ icon: 'error', title: 'Validation Error', html: Object.values(result.errors).flat().join('<br>'), confirmButtonColor: '#0038A8' });
         } else {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error!',
-                text: 'An unexpected error occurred.',
-                confirmButtonColor: '#0038A8'
-            });
+            Swal.fire({ icon: 'error', title: 'Error!', text: result.message || 'An unexpected error occurred.', confirmButtonColor: '#0038A8' });
         }
     } catch (error) {
         Swal.fire('Error!', 'An unexpected error occurred.', 'error');
     }
 });
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('searchUser').addEventListener('keyup', filterUsers);
-    document.getElementById('filterDepartment').addEventListener('change', function() {
-        updateDepartmentDropdown('filterDepartment', 'filterDivision');
-        filterUsers();
-    });
-    document.getElementById('filterDivision').addEventListener('change', filterUsers);
-    document.getElementById('filterRole').addEventListener('change', filterUsers);
-    document.getElementById('filterStatus').addEventListener('change', filterUsers);
-    document.getElementById('addUserBtn').addEventListener('click', openAddUserModal);
-    document.querySelectorAll('.close-modal-btn').forEach(function(el) {
-        el.addEventListener('click', closeAddUserModal);
-    });
 
-    // Password toggle show/hide
+// â”€â”€ DOMContentLoaded â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+document.addEventListener('DOMContentLoaded', function() {
+    // Load users on page init
+    loadUsers(1);
+
+    // Filter listeners
+    document.getElementById('searchUser').addEventListener('keyup', onUserFilterChange);
+    document.getElementById('filterDepartment').addEventListener('change', function() {
+        // Cascade division dropdown
+        const dept = this.value;
+        const divSelect = document.getElementById('filterDivision');
+        divSelect.querySelectorAll('option').forEach(opt => {
+            if (!opt.value) return;
+            const d = opt.getAttribute('data-dept-group');
+            opt.style.display = (!dept || !d || (dept === 'INTERNAL SERVICES DEPARTMENT' && d === 'INTERNAL') || (dept === 'TECHNICAL SERVICES DEPARTMENT' && d === 'TECHNICAL')) ? '' : 'none';
+        });
+        divSelect.value = '';
+        loadUsers(1);
+    });
+    document.getElementById('filterDivision').addEventListener('change', () => loadUsers(1));
+    document.getElementById('filterRole').addEventListener('change', () => loadUsers(1));
+    document.getElementById('filterStatus').addEventListener('change', () => loadUsers(1));
+
+    document.getElementById('addUserBtn').addEventListener('click', openAddUserModal);
+    document.querySelectorAll('.close-modal-btn').forEach(el => el.addEventListener('click', closeAddUserModal));
+
+    // Password toggle
     document.getElementById('toggleNewUserPassword').addEventListener('click', function() {
         const pwInput = document.getElementById('newUserPassword');
         const icon = this.querySelector('i');
-        if (pwInput.type === 'password') {
-            pwInput.type = 'text';
-            icon.className = 'fa-solid fa-eye-slash';
-        } else {
-            pwInput.type = 'password';
-            icon.className = 'fa-solid fa-eye';
-        }
+        pwInput.type = pwInput.type === 'password' ? 'text' : 'password';
+        icon.className = pwInput.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
     });
 
-    // Filter division options based on selected department
+    // Edit modal — department â†’ division filter
+    document.getElementById('editUserDepartment').addEventListener('change', function() {
+        const currentOffice = document.getElementById('editUserOffice').value;
+        filterEditDivisionByDept(this.value);
+        const opt = document.getElementById('editUserOffice').querySelector(`option[value="${currentOffice}"]`);
+        document.getElementById('editUserOffice').value = (opt && opt.style.display !== 'none') ? currentOffice : '';
+    });
+
+    // Add modal — department â†’ division filter
     document.getElementById('newUserDepartment').addEventListener('change', function() {
         const dept = this.value;
         const officeSelect = document.getElementById('newUserOffice');
-        const options = officeSelect.querySelectorAll('option');
-        
-        options.forEach(opt => {
-            if (!opt.value) return; // Skip placeholder
-            const dataDept = opt.getAttribute('data-dept');
-            if (!dept || !dataDept) {
-                opt.style.display = '';
-            } else if (dept === 'INTERNAL SERVICES DEPARTMENT' && dataDept === 'INTERNAL') {
-                opt.style.display = '';
-            } else if (dept === 'TECHNICAL SERVICES DEPARTMENT' && dataDept === 'TECHNICAL') {
-                opt.style.display = '';
-            } else {
-                opt.style.display = 'none';
-            }
+        officeSelect.querySelectorAll('option').forEach(opt => {
+            if (!opt.value) return;
+            const d = opt.getAttribute('data-dept');
+            opt.style.display = (!dept || !d || (dept === 'INTERNAL SERVICES DEPARTMENT' && d === 'INTERNAL') || (dept === 'TECHNICAL SERVICES DEPARTMENT' && d === 'TECHNICAL')) ? '' : 'none';
         });
         officeSelect.value = '';
     });
 
-    // Auto-set department when office is selected
     document.getElementById('newUserOffice').addEventListener('change', function() {
         const deptMap = {
             'RESEARCH AND INFORMATION DIVISION': 'INTERNAL SERVICES DEPARTMENT',
@@ -1072,21 +1051,8 @@ document.addEventListener('DOMContentLoaded', function() {
             'WORKPLACE RELATIONS ENHANCEMENT DIVISION': 'TECHNICAL SERVICES DEPARTMENT',
             'OFFICE OF THE EXECUTIVE DIRECTOR': 'TECHNICAL SERVICES DEPARTMENT',
         };
-        const deptSelect = document.getElementById('newUserDepartment');
-        deptSelect.value = deptMap[this.value] || '';
-    });
-    document.querySelectorAll('[data-action]').forEach(function(el) {
-        el.addEventListener('click', function() {
-            var id = this.dataset.userId;
-            switch (this.dataset.action) {
-                case 'reset-password': resetPassword(id); break;
-                case 'toggle-status': toggleUserStatus(id); break;
-                case 'edit-user': editUser(id); break;
-            }
-        });
+        document.getElementById('newUserDepartment').value = deptMap[this.value] || '';
     });
 });
 </script>
 @endsection
-
-

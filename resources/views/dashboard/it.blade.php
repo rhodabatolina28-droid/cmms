@@ -79,10 +79,6 @@
             width: 4px;
             height: 100%;
         }
-        .stat-assigned::before { background: #0038A8; }
-        .stat-pending::before { background: #f59e0b; }
-        .stat-card-scheduled { border-left: 4px solid #f59e0b; }
-        .stat-ongoing::before { background: #2563eb; }
         .stat-label {
             display: block;
             font-size: clamp(10px, 0.8vw, 11px);
@@ -317,7 +313,7 @@
         <div class="stat-card-premium stat-ongoing">
             <i class="fa-solid fa-spinner stat-bg-icon"></i>
             <span class="stat-label">In Progress</span>
-            <div class="stat-value stat-value-blue">{{ $stats['ongoing'] }}</div>
+            <div class="stat-value">{{ $stats['ongoing'] }}</div>
         </div>
     </div>
 

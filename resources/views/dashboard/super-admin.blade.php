@@ -318,17 +318,17 @@
         <div class="stat-card-premium stat-pending">
             <i class="fa-regular fa-hourglass-half stat-bg-icon"></i>
             <span class="stat-label">Pending</span>
-            <div class="stat-value stat-value-warn">{{ $stats['pending'] }}</div>
+            <div class="stat-value">{{ $stats['pending'] }}</div>
         </div>
         <div class="stat-card-premium stat-ongoing">
             <i class="fa-solid fa-spinner stat-bg-icon"></i>
             <span class="stat-label">Ongoing</span>
-            <div class="stat-value stat-value-blue">{{ $stats['ongoing'] }}</div>
+            <div class="stat-value">{{ $stats['ongoing'] }}</div>
         </div>
         <div class="stat-card-premium stat-completed">
             <i class="fa-solid fa-check-double stat-bg-icon"></i>
             <span class="stat-label">Completed</span>
-            <div class="stat-value stat-value-green">{{ $stats['completed'] }}</div>
+            <div class="stat-value">{{ $stats['completed'] }}</div>
         </div>
     </div>
 

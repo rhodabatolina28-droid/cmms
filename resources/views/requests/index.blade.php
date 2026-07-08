@@ -97,6 +97,7 @@
         .sp-ongoing { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; box-shadow: 0 2px 4px rgba(29, 78, 216, 0.15); }
         .sp-completed { background: #ecfdf5; color: #047857; border: 1px solid #d1fae5; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); }
         .sp-rejected { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
+        .sp-approved { background: #f0fdf4; color: #166534; border: 1px solid #bbf7d0; box-shadow: 0 2px 4px rgba(22, 101, 52, 0.1); }
 
         .btn-view-modern {
             padding: 6px 16px;
@@ -161,7 +162,7 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="req-header-title">My Request Repository</h3>
-                <p class="req-header-sub">Comprehensive history of all ICT and Maintenance requests submitted by your account.</p>
+                <p class="req-header-sub">Track and manage all ICT support requests submitted by your account.</p>
             </div>
             @if(Auth::user()->role === 'user')
             <div class="req-header-actions">
@@ -178,17 +179,11 @@
             <div class="filter-ribbon">
                 <div class="search-wrap">
                     <i class="fa-solid fa-magnifying-glass search-icon"></i>
-                    <input type="text" id="searchRequest" placeholder="Track by ID, Type, or description..." class="ribbon-input search-input">
+                    <input type="text" id="searchRequest" placeholder="Search by request ID or description..." class="ribbon-input search-input">
                 </div>
-                <select id="filterType" class="ribbon-input filter-select">
-                    <option value="">All Service Types</option>
-                    <option value="ICT Request">ICT Request</option>
-                    <option value="Preventive Maint.">Preventive Maintenance</option>
-                </select>
                 <select id="filterStatus" class="ribbon-input filter-select">
-                    <option value="">All Status Levels</option>
+                    <option value="">All Status</option>
                     <option value="Pending">Pending</option>
-                    <option value="Approved">Approved</option>
                     <option value="Ongoing">Ongoing</option>
                     <option value="Completed">Completed</option>
                     <option value="Rejected">Rejected</option>
@@ -200,7 +195,6 @@
                     <thead>
                         <tr>
                             <th>Request ID</th>
-                            <th>Service Type</th>
                             <th>Description</th>
                             <th>Submission Date</th>
                             <th class="th-status">Current Status</th>
@@ -212,11 +206,6 @@
                         @forelse($requests as $req)
                         <tr class="tr-hover-row">
                             <td class="td-id">{{ $req->display_number ?? $req->request_number }}</td>
-                            <td>
-                                <div class="td-type">
-                                    {{ $req->type === 'ICT' ? 'ICT Request' : 'Preventive Maint.' }}
-                                </div>
-                            </td>
                             <td class="td-desc" title="{{ $req->description }}">
                                 {{ $req->description ?: 'N/A' }}
                             </td>
@@ -239,7 +228,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="empty-row">
+                            <td colspan="6" class="empty-row">
                                 <i class="fa-solid fa-clipboard-question empty-icon-big"></i>
                                 No requests found in your repository.
                                 @if(Auth::user()->role === 'user')
@@ -266,28 +255,24 @@
 <script nonce="{{ $cspNonce }}">
 function filterRequests() {
     const searchInput = document.getElementById('searchRequest').value.toLowerCase();
-    const typeFilter = document.getElementById('filterType').value;
     const statusFilter = document.getElementById('filterStatus').value;
     const tableRows = document.querySelectorAll('tbody tr');
 
     tableRows.forEach(row => {
-        if (row.cells.length < 5) return;
+        if (row.cells.length < 4) return;
 
         const requestId = row.cells[0].textContent.toLowerCase();
-        const type = row.cells[1].textContent.trim();
-        const description = row.cells[2].textContent.toLowerCase();
-        const status = row.cells[4].textContent.trim();
+        const description = row.cells[1].textContent.toLowerCase();
+        const status = row.cells[3].textContent.trim();
 
-        const matchesSearch = requestId.includes(searchInput) || description.includes(searchInput) || type.toLowerCase().includes(searchInput);
-        const matchesType = typeFilter === "" || type === typeFilter;
+        const matchesSearch = requestId.includes(searchInput) || description.includes(searchInput);
         const matchesStatus = statusFilter === "" || status === statusFilter;
 
-        row.style.display = (matchesSearch && matchesType && matchesStatus) ? "" : "none";
+        row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchRequest').addEventListener('keyup', filterRequests);
-    document.getElementById('filterType').addEventListener('change', filterRequests);
     document.getElementById('filterStatus').addEventListener('change', filterRequests);
 });
 </script>

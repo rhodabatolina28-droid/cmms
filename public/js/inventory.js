@@ -227,12 +227,17 @@ function exportFilteredInventory() {
 function updateInventorySummary(total, stats) {
     if (!document.getElementById("statTotal")) return;
 
-    // Check if a specific status filter is active
+    // Check if any filter is active
     const statusFilter = document.getElementById("filterAssetStatus");
+    const categoryFilter = document.getElementById("filterAssetCategory");
+    const searchInput = document.getElementById("searchInventoryInput");
     const selectedStatus = statusFilter ? statusFilter.value : '';
-    
-    if (selectedStatus) {
-        // Filter is active: show counts from filtered results only
+    const selectedCategory = categoryFilter ? categoryFilter.value : '';
+    const searchVal = searchInput ? searchInput.value.trim() : '';
+    const isFiltered = selectedStatus || selectedCategory || searchVal;
+
+    if (isFiltered) {
+        // Any filter active: show counts from filtered results only
         document.getElementById("statTotal").textContent = total || 0;
         document.getElementById("statActive").textContent = allAssets.filter(a => a.status === 'Active').length;
         document.getElementById("statSpare").textContent = allAssets.filter(a => a.status === 'Spare').length;
@@ -247,7 +252,6 @@ function updateInventorySummary(total, stats) {
             document.getElementById("statRepair").textContent = stats.repair || 0;
             document.getElementById("statDisposal").textContent = stats.disposal || 0;
         } else {
-            // Fallback: calculate from current page's assets
             document.getElementById("statTotal").textContent = total || 0;
             document.getElementById("statActive").textContent = allAssets.filter(a => a.status === 'Active').length;
             document.getElementById("statSpare").textContent = allAssets.filter(a => a.status === 'Spare').length;

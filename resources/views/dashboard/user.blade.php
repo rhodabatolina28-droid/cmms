@@ -84,11 +84,6 @@
             height: 100%;
         }
 
-        .stat-pending::before { background: #f59e0b; }
-        .stat-ongoing::before { background: #3b82f6; }
-        .stat-completed::before { background: #10b981; }
-        .stat-total::before { background: #0038A8; }
-
         .stat-label {
             font-size: clamp(10px, 0.8vw, 12px);
             font-weight: 700;
@@ -169,10 +164,8 @@
         .hero-name { font-size: 32px; font-weight: 800; margin: 0; }
         .hero-desc { margin: 8px 0 0; opacity: 0.8; font-size: 15px; }
         .hero-status-box { display: flex; flex-direction: column; align-items: flex-end; }
-        .hero-status-label { font-size: 12px; opacity: 0.7; font-weight: 700; text-transform: uppercase; }        .hero-status-value { font-size: 14px; font-weight: 800; color: #fbbf24; }
-        .stat-value-warn { color: #f59e0b; }
-        .stat-value-blue { color: #3b82f6; }
-        .stat-value-green { color: #10b981; }
+        .hero-status-label { font-size: 12px; opacity: 0.7; font-weight: 700; text-transform: uppercase; }
+        .hero-status-value { font-size: 14px; font-weight: 800; color: #1e293b; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 56, 168, 0.2); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.3s ease-out; }
         .modal-box { background: white; border-radius: 20px; padding: 40px; text-align: center; max-width: 450px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.9); animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .modal-icon-circle { background: #ecfdf5; color: #10b981; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2); }
@@ -294,17 +287,17 @@
         <div class="stat-card-premium stat-pending">
             <i class="fa-regular fa-hourglass-half stat-bg-icon"></i>
             <span class="stat-label">Pending</span>
-            <div class="stat-value stat-value-warn">{{ $stats['pending'] }}</div>
+            <div class="stat-value">{{ $stats['pending'] }}</div>
         </div>
         <div class="stat-card-premium stat-ongoing">
             <i class="fa-solid fa-spinner stat-bg-icon"></i>
             <span class="stat-label">Ongoing</span>
-            <div class="stat-value stat-value-blue">{{ $stats['ongoing'] }}</div>
+            <div class="stat-value">{{ $stats['ongoing'] }}</div>
         </div>
         <div class="stat-card-premium stat-completed">
             <i class="fa-solid fa-check-double stat-bg-icon"></i>
             <span class="stat-label">Completed</span>
-            <div class="stat-value stat-value-green">{{ $stats['completed'] }}</div>
+            <div class="stat-value">{{ $stats['completed'] }}</div>
         </div>
     </div>
 
@@ -321,7 +314,6 @@
                     <thead>
                         <tr class="table-row-header">
                             <th class="table-header">Ticket #</th>
-                            <th class="table-header">Service</th>
                             <th class="table-header center">Status</th>
                             <th class="table-header right">Action</th>
                         </tr>
@@ -330,7 +322,6 @@
                         @forelse($requests as $req)
                             <tr class="tr-hover-row table-row-border">
                                 <td class="table-cell-bold">{{ $req->display_number ?? $req->request_number }}</td>
-                                <td class="table-cell-dept">{{ $req->type }}</td>
                                 <td class="table-cell-center">
                                     <span class="status-pill status-{{ strtolower($req->status) }}">{{ $req->status }}</span>
                                 </td>
@@ -342,7 +333,7 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="empty-cell" style="padding: 40px 20px;">
+                            <tr><td colspan="3" class="empty-cell" style="padding: 40px 20px;">
                                 <i class="fa-solid fa-folder-open" style="font-size: 45px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
                                 <div style="font-weight: 800; color: #64748b; font-size: 15px;">No Recent Requests</div>
                                 <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">You don't have any active or recent requests at the moment.</div>
@@ -400,8 +391,11 @@
 
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
-document.getElementById('thankYouDoneBtn').addEventListener('click', function() {
-    document.getElementById('thankYouModal').remove();
-});
+const thankYouBtn = document.getElementById('thankYouDoneBtn');
+if (thankYouBtn) {
+    thankYouBtn.addEventListener('click', function() {
+        document.getElementById('thankYouModal').remove();
+    });
+}
 </script>
 @endsection
