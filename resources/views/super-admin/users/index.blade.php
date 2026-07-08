@@ -85,7 +85,7 @@
         /* Summary Stats Ribbon — inside card body */
         .stats-ribbon {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
+            grid-template-columns: repeat(3, 1fr);
             gap: 12px;
             margin-bottom: 20px;
         }
@@ -94,10 +94,7 @@
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 10px;
-            padding: 14px 16px;
-            display: flex;
-            align-items: center;
-            gap: 14px;
+            padding: 16px 20px;
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -390,39 +387,21 @@
             <!-- STATS RIBBON -->
             <div class="stats-ribbon">
                 <div class="stat-item-premium">
-                    <div class="stat-icon sa-stat-icon-bg-blue">
-                        <i class="fa-solid fa-users"></i>
-                    </div>
                     <div class="stat-info">
                         <p>Total Users</p>
                         <h4>{{ $users->total() }}</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
-                    <div class="stat-icon sa-stat-icon-bg-green">
-                        <i class="fa-solid fa-user-check"></i>
-                    </div>
                     <div class="stat-info">
                         <p>Active</p>
-                        <h4>{{ $users->where('is_active', true)->count() }}</h4>
+                        <h4>{{ \App\Models\User::where('branch', auth()->user()->branch)->where('is_active', true)->count() }}</h4>
                     </div>
                 </div>
                 <div class="stat-item-premium">
-                    <div class="stat-icon" style="background: #fef2f2; color: #b91c1c;">
-                        <i class="fa-solid fa-user-xmark"></i>
-                    </div>
                     <div class="stat-info">
                         <p>Inactive</p>
-                        <h4>{{ $users->where('is_active', false)->count() }}</h4>
-                    </div>
-                </div>
-                <div class="stat-item-premium sa-stat-card-accent">
-                    <div class="stat-icon sa-stat-icon-bg-orange">
-                        <i class="fa-solid fa-user-shield"></i>
-                    </div>
-                    <div class="stat-info">
-                        <p>Super Admin</p>
-                        <h4>{{ $users->where('role', 'super_admin')->count() }}</h4>
+                        <h4>{{ \App\Models\User::where('branch', auth()->user()->branch)->where('is_active', false)->count() }}</h4>
                     </div>
                 </div>
             </div>
