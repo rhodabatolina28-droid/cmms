@@ -109,11 +109,10 @@
         </form>
 
         @if($errors->any())
-            <div style="text-align:center; margin-top:16px; padding:12px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
-                <small style="color:#64748b; font-size:12px;">
-                    <i class="fa-solid fa-circle-info" style="color:#0038A8; margin-right:4px;"></i>
-                    Need help signing in? Please contact the <strong>ICT Unit</strong>.
-                </small>
+            <div style="text-align:center; margin-top:20px;">
+                <span style="color:#94a3b8; font-size:12px;">
+                    Need help signing in? Please contact <strong style="color:#0038A8;">ICT Unit</strong>.
+                </span>
             </div>
         @endif
     </div>
