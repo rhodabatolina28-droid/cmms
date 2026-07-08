@@ -187,19 +187,19 @@
 
         <div class="stats-grid-custom">
             <div class="schedule-card stat-card">
-                <div class="stat-count">{{ $statTotalSchedules }}</div>
+                <div class="stat-count" style="color:#1e293b;">{{ $statTotalSchedules }}</div>
                 <div class="stat-label">Total PM Schedules</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count" style="color:#059669;">{{ $statActiveSchedules }}</div>
+                <div class="stat-count" style="color:#1e293b;">{{ $statActiveSchedules }}</div>
                 <div class="stat-label">Active Schedules</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count" style="color:#d97706;">{{ $statActiveWorkOrders }}</div>
+                <div class="stat-count" style="color:#1e293b;">{{ $statActiveWorkOrders }}</div>
                 <div class="stat-label">Active Work Orders</div>
             </div>
             <div class="schedule-card stat-card">
-                <div class="stat-count" style="color:#0038A8;">{{ $statCompletedThisMonth }}</div>
+                <div class="stat-count" style="color:#1e293b;">{{ $statCompletedThisMonth }}</div>
                 <div class="stat-label">Completed WOs (This Month)</div>
             </div>
         </div>
