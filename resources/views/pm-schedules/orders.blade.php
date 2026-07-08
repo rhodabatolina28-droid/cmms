@@ -24,7 +24,6 @@
     .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; }
     .pill-scheduled { background:#fef3c7; color:#92400e; }
     .pill-ongoing { background:#dbeafe; color:#1e40af; }
-    .pill-awaiting { background:#e0e7ff; color:#3730a3; }
     .pill-completed { background:#dcfce7; color:#166534; }
     .pill-default { background:#f1f5f9; color:#64748b; }
     .empty-state { text-align:center; padding:40px; color:#94a3b8; }
@@ -56,8 +55,7 @@
         <div class="filter-bar">
             <a href="{{ route('pm-schedules.orders') }}" class="filter-btn {{ $status === 'all' ? 'active' : '' }}">All</a>
             <a href="{{ route('pm-schedules.orders', ['status' => 'Scheduled']) }}" class="filter-btn {{ $status === 'Scheduled' ? 'active' : '' }}">To Do</a>
-            <a href="{{ route('pm-schedules.orders', ['status' => 'Ongoing']) }}" class="filter-btn {{ $status === 'Ongoing' ? 'active' : '' }}">In Progress</a>
-            <a href="{{ route('pm-schedules.orders', ['status' => 'Awaiting Signature']) }}" class="filter-btn {{ $status === 'Awaiting Signature' ? 'active' : '' }}">Awaiting Signature</a>
+            <a href="{{ route('pm-schedules.orders', ['status' => 'Ongoing']) }}" class="filter-btn {{ $status === 'Ongoing' ? 'active' : '' }}">Ongoing</a>
             <a href="{{ route('pm-schedules.orders', ['status' => 'Completed']) }}" class="filter-btn {{ $status === 'Completed' ? 'active' : '' }}">Completed</a>
         </div>
 
@@ -88,7 +86,13 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @foreach($orders as $order)
+                        @php
+                            $sortedOrders = $orders->sortBy(function($order) {
+                                $orderMap = ['Scheduled' => 0, 'Ongoing' => 1, 'Awaiting Signature' => 2, 'Completed' => 3];
+                                return $orderMap[$order->status] ?? 99;
+                            });
+                        @endphp
+                        @foreach($sortedOrders as $order)
                         <tr class="tr">
                             <td class="td td-num">
                                 <a href="{{ route('maintenance.edit', $order->id) }}">{{ $order->request_number }}</a>
@@ -102,13 +106,13 @@
                                     $pillClass = match($order->status) {
                                         'Scheduled'         => 'pill-scheduled',
                                         'Ongoing'           => 'pill-ongoing',
-                                        'Awaiting Signature'=> 'pill-awaiting',
                                         'Completed'         => 'pill-completed',
                                         default             => 'pill-default',
                                     };
                                     $pillLabel = match($order->status) {
                                         'Scheduled' => 'To Do',
-                                        'Ongoing'   => 'In Progress',
+                                        'Ongoing'   => 'Ongoing',
+                                        'Awaiting Signature' => 'Awaiting Signature',
                                         default     => $order->status,
                                     };
                                 @endphp
