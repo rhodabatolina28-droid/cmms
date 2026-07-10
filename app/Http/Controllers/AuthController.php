@@ -139,7 +139,8 @@ class AuthController extends Controller
 
         return redirect()->route('logged-out');
     }
-}
+
+    private function validateRedirect($redirect)
     {
         if (!$redirect) return null;
         $base = url('/');
