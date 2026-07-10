@@ -120,6 +120,13 @@ body {
     white-space: nowrap;
 }
 
+/* Reserve space for FA icons before font loads — prevents CLS */
+.nav-link i {
+    width: 16px;
+    text-align: center;
+    flex-shrink: 0;
+}
+
 .nav-link:hover {
     background: rgba(255, 255, 255, 0.1);
     color: white;
@@ -393,6 +400,7 @@ thead th {
     border-bottom: 2px solid #E5E7EB;
     font-size: clamp(11px, 0.8vw, 13px);
     text-transform: uppercase;
+    height: 44px;
 }
 
 tbody td {
