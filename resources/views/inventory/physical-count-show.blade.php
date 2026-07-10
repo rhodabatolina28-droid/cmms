@@ -296,6 +296,9 @@
                     </tbody>
                 </table>
             </div>
+            <div style="margin-top:16px;">
+                {{ $allAssets->links() }}
+            </div>
         </div>
     </div>
 </div>

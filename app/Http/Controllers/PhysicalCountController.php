@@ -61,7 +61,7 @@ class PhysicalCountController extends Controller
             ->with('success', 'Physical count session started.');
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
         $user = Auth::user();
         if (!$user->canProcessSupply()) {
@@ -78,14 +78,21 @@ class PhysicalCountController extends Controller
             abort(403);
         }
 
+        // Get total count for summary (unpaginated)
+        $totalAssetsQuery = InventoryAsset::query();
+        app(InventoryController::class)->scopeAssetsToActor($totalAssetsQuery, $user);
+        $totalCount = $totalAssetsQuery->count();
+
+        // Paginated assets for table display
         $allAssets = InventoryAsset::with('assignedUser');
         app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
-        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')->get();
+        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')
+            ->paginate(50);
 
         $countedIds = $session->counts->pluck('asset_id')->toArray();
 
         $summary = [
-            'total'   => $allAssets->count(),
+            'total'   => $totalCount,
             'counted' => $session->counts->count(),
             'present' => $session->counts->where('status', 'Present')->count(),
             'missing' => $session->counts->where('status', 'Missing')->count(),
