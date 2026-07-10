@@ -21,8 +21,8 @@ class PMNotificationService
             $request = RequestModel::where('request_number', $requestNumber)->first();
             $branch = $request?->branch;
 
-            // Build query for IT staff and super admins
-            $query = User::whereIn('role', ['super_admin', 'it'])
+            // Build query for IT staff, super admins, and supply officers
+            $query = User::whereIn('role', ['super_admin', 'it', 'supply_officer'])
                 ->whereNotNull('email');
 
             // Filter by branch to avoid cross-location notifications
@@ -102,7 +102,7 @@ class PMNotificationService
     public static function notifyITStaffOfBatch(string $division, int $count, string $branch = null)
     {
         try {
-            $query = User::whereIn('role', ['super_admin', 'it'])
+            $query = User::whereIn('role', ['super_admin', 'it', 'supply_officer'])
                 ->whereNotNull('email');
 
             if ($branch) {
