@@ -120,9 +120,9 @@ class User extends Authenticatable
     public function canProcessSupply(): bool
     {
         // Supply admin must be:
-        // 1. Admin or supply_officer role
-        // 2. Has can_supply flag
-        return ($this->isAdmin() || $this->isSupplyOfficer()) && $this->can_supply;
+        // 1. supply_officer role (automatic - they handle supply)
+        // 2. OR admin role with can_supply flag
+        return $this->isSupplyOfficer() || ($this->isAdmin() && $this->can_supply);
     }
 
     /** Named route for role dashboard (e.g. dashboard.admin). */
