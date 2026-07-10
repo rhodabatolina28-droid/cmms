@@ -42,8 +42,8 @@ class SuperAdminController extends Controller
         ];
 
         // ── 2) Filtered + paginated query ──
-        $query = \App\Models\Request::with(['assignedTo:id,full_name'])
-            ->where('type', 'ICT')
+        // Build base query WITHOUT with() to avoid N+1 on cloned stats queries
+        $baseFiltered = \App\Models\Request::where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
             ->whereHas('user', function ($q) use ($actor) {
                 if ($actor->branch) {
@@ -54,7 +54,7 @@ class SuperAdminController extends Controller
         // Search
         if ($search = $request->input('search')) {
             $search = strtolower($search);
-            $query->where(function ($q) use ($search) {
+            $baseFiltered->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(request_number) LIKE ?', ["%{$search}%"])
                   ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"])
                   ->orWhereRaw('LOWER(requestor_name) LIKE ?', ["%{$search}%"])
@@ -64,29 +64,32 @@ class SuperAdminController extends Controller
 
         // Department filter
         if ($department = $request->input('department')) {
-            $query->whereHas('user', fn ($q) => $q->where('department', $department));
+            $baseFiltered->whereHas('user', fn ($q) => $q->where('department', $department));
         }
 
         // Division/Office filter
         if ($division = $request->input('division')) {
-            $query->where('office', $division);
+            $baseFiltered->where('office', $division);
         }
 
         // Status filter
         if ($status = $request->input('status')) {
-            $query->where('status', $status);
+            $baseFiltered->where('status', $status);
         }
 
         // My Assigned filter
         $myAssigned = $request->boolean('my_assigned');
         if ($myAssigned) {
-            $query->where('assigned_to', $actor->id);
+            $baseFiltered->where('assigned_to', $actor->id);
         }
 
         $perPage = min((int) $request->input('per_page', 20), 100);
         $page    = max((int) $request->input('page', 1), 1);
 
-        $requests = $query->orderBy('created_at', 'desc')
+        // Apply with() ONLY to the paginated data query, not to stats clones
+        $requests = (clone $baseFiltered)->with(['assignedTo:id,full_name'])
+            ->orderBy('created_at', 'desc')
+            ->select(['id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at'])
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Check if any filter is active
@@ -94,12 +97,12 @@ class SuperAdminController extends Controller
                       $request->filled('division') || $request->filled('status') ||
                       $myAssigned;
 
-        // When filters are active, compute filtered stats from the same query builder
+        // When filters are active, compute filtered stats from baseFiltered (NO with() = no N+1)
         $filteredStats = $hasFilters ? [
             'total'     => $requests->total(),
-            'pending'   => (clone $query)->where('status', 'Pending')->count(),
-            'ongoing'   => (clone $query)->where('status', 'Ongoing')->count(),
-            'completed' => (clone $query)->where('status', 'Completed')->count(),
+            'pending'   => (clone $baseFiltered)->where('status', 'Pending')->count(),
+            'ongoing'   => (clone $baseFiltered)->where('status', 'Ongoing')->count(),
+            'completed' => (clone $baseFiltered)->where('status', 'Completed')->count(),
         ] : $stats;
 
         return response()->json([
@@ -133,12 +136,13 @@ class SuperAdminController extends Controller
         ];
 
         // ── 2) Filtered + paginated query ──
-        $query = AuditLog::with('user');
+        // Build base query WITHOUT with() to avoid N+1 on cloned stats queries
+        $baseFiltered = AuditLog::query();
 
         // Search
         if ($search = $request->input('search')) {
             $search = strtolower($search);
-            $query->where(function ($q) use ($search) {
+            $baseFiltered->where(function ($q) use ($search) {
                 $q->whereRaw('LOWER(action) LIKE ?', ["%{$search}%"])
                   ->orWhereRaw('LOWER(module) LIKE ?', ["%{$search}%"])
                   ->orWhereRaw('LOWER(details) LIKE ?', ["%{$search}%"])
@@ -148,24 +152,27 @@ class SuperAdminController extends Controller
 
         // Module filter
         if ($module = $request->input('module')) {
-            $query->where('module', $module);
+            $baseFiltered->where('module', $module);
         }
 
         $perPage = min((int) $request->input('per_page', 50), 100);
         $page    = max((int) $request->input('page', 1), 1);
 
-        $logs = $query->orderBy('created_at', 'desc')
+        // Apply with() ONLY to the paginated data query
+        $logs = (clone $baseFiltered)->with('user')
+            ->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Check if filters are active
         $hasFilters = $request->filled('search') || $request->filled('module');
 
+        // Use baseFiltered (NO with()) for stats queries to avoid N+1
         $filteredStats = $hasFilters ? [
             'total'    => $logs->total(),
-            'auth'     => (clone $query)->where('module', 'Auth')->count(),
-            'inventory' => (clone $query)->where('module', 'Inventory')->count(),
-            'requests' => (clone $query)->where('module', 'Requests')->count(),
-            'users'    => (clone $query)->where('module', 'User Management')->count(),
+            'auth'     => (clone $baseFiltered)->where('module', 'Auth')->count(),
+            'inventory' => (clone $baseFiltered)->where('module', 'Inventory')->count(),
+            'requests' => (clone $baseFiltered)->where('module', 'Requests')->count(),
+            'users'    => (clone $baseFiltered)->where('module', 'User Management')->count(),
         ] : $stats;
 
         return response()->json([
@@ -261,6 +268,7 @@ class SuperAdminController extends Controller
         $page    = max((int) $request->input('page', 1), 1);
 
         $users = $query->orderBy('full_name', 'asc')
+            ->select(['id', 'full_name', 'email', 'role', 'office', 'department', 'is_active'])
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Check if any filter is active
