@@ -8,7 +8,7 @@
         .master-container {
             width: 100%;
             margin-top: -10px;
-            animation: fadeInSlide 0.4s ease-out;
+            /* animation removed to prevent flash on page navigation */
         }
 
         .polish-card {
