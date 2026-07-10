@@ -9,7 +9,9 @@ class QrCodeService
 {
     public static function generateForAsset(InventoryAsset $asset): string
     {
-        $baseUrl = rtrim(env('APP_URL'), '/');
+        // Use config() instead of env() so it works after config:cache
+        // env() returns null when config is cached, config() always works
+        $baseUrl = rtrim(config('app.url'), '/');
         $data = $baseUrl . '/r/' . $asset->asset_id;
 
         $svg = QrCode::format('svg')
