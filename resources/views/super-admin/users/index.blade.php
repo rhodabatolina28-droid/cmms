@@ -272,8 +272,8 @@
         .w-220 { width: 220px; }
         .w-120 { width: 120px; }
         .table-wrap { overflow-x: auto; }
-        .gov-table-premium tbody { transition: opacity 0.15s ease; }
-        .gov-table-premium tbody.fading { opacity: 0.3; }
+        .gov-table-premium tbody { transition: none; }
+        .gov-table-premium tbody.fading { opacity: 1; }
         .th-center { text-align: center !important; }
         .th-right { text-align: center !important; }
         .name-bold { font-weight: 800; color: #1e293b; }

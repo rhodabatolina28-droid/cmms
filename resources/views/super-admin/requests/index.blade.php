@@ -182,7 +182,7 @@
         .sa-my-assigned-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #475569; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
         .sa-table-wrap { overflow-x: auto; }
         .gov-table-premium tbody { transition: opacity 0.15s ease; }
-        .gov-table-premium tbody.fading { opacity: 0.3; }
+        .gov-table-premium tbody.fading { opacity: 1; }
         .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
         .sa-td-desc { font-size: 11px; color: #64748b; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sa-td-office { font-weight: 700; color: #475569; }
