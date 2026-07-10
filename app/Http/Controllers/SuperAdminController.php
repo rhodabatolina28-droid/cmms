@@ -25,6 +25,23 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
+        // ── 1) Unfiltered stats ──
+        $baseQuery = \App\Models\Request::where('type', 'ICT')
+            ->where('division_admin_review_status', 'Approved')
+            ->whereHas('user', function ($q) use ($actor) {
+                if ($actor->branch) {
+                    $q->where('branch', $actor->branch);
+                }
+            });
+
+        $stats = [
+            'total'     => (clone $baseQuery)->count(),
+            'pending'   => (clone $baseQuery)->where('status', 'Pending')->count(),
+            'ongoing'   => (clone $baseQuery)->where('status', 'Ongoing')->count(),
+            'completed' => (clone $baseQuery)->where('status', 'Completed')->count(),
+        ];
+
+        // ── 2) Filtered + paginated query ──
         $query = \App\Models\Request::with(['assignedTo:id,full_name'])
             ->where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
@@ -72,44 +89,18 @@ class SuperAdminController extends Controller
         $requests = $query->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Unfiltered stats
-        $baseQuery = \App\Models\Request::where('type', 'ICT')
-            ->where('division_admin_review_status', 'Approved')
-            ->whereHas('user', function ($q) use ($actor) {
-                if ($actor->branch) {
-                    $q->where('branch', $actor->branch);
-                }
-            });
+        // Check if any filter is active
+        $hasFilters = $request->filled('search') || $request->filled('department') ||
+                      $request->filled('division') || $request->filled('status') ||
+                      $myAssigned;
 
-        // Filtered stats
-        $filteredBase = \App\Models\Request::where('type', 'ICT')
-            ->where('division_admin_review_status', 'Approved')
-            ->whereHas('user', function ($q) use ($actor) {
-                if ($actor->branch) {
-                    $q->where('branch', $actor->branch);
-                }
-            });
-        if ($search = $request->input('search')) {
-            $s = strtolower($search);
-            $filteredBase->where(function ($q) use ($s) {
-                $q->whereRaw('LOWER(request_number) LIKE ?', ["%{$s}%"])
-                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$s}%"])
-                  ->orWhereRaw('LOWER(requestor_name) LIKE ?', ["%{$s}%"])
-                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"]));
-            });
-        }
-        if ($department = $request->input('department')) {
-            $filteredBase->whereHas('user', fn ($q) => $q->where('department', $department));
-        }
-        if ($division = $request->input('division')) {
-            $filteredBase->where('office', $division);
-        }
-        if ($status = $request->input('status')) {
-            $filteredBase->where('status', $status);
-        }
-        if ($myAssigned) {
-            $filteredBase->where('assigned_to', $actor->id);
-        }
+        // When filters are active, compute filtered stats from the same query builder
+        $filteredStats = $hasFilters ? [
+            'total'     => $requests->total(),
+            'pending'   => (clone $query)->where('status', 'Pending')->count(),
+            'ongoing'   => (clone $query)->where('status', 'Ongoing')->count(),
+            'completed' => (clone $query)->where('status', 'Completed')->count(),
+        ] : $stats;
 
         return response()->json([
             'success'      => true,
@@ -118,18 +109,8 @@ class SuperAdminController extends Controller
             'per_page'     => $requests->perPage(),
             'current_page' => $requests->currentPage(),
             'last_page'    => $requests->lastPage(),
-            'stats'        => [
-                'total'     => (clone $baseQuery)->count(),
-                'pending'   => (clone $baseQuery)->where('status', 'Pending')->count(),
-                'ongoing'   => (clone $baseQuery)->where('status', 'Ongoing')->count(),
-                'completed' => (clone $baseQuery)->where('status', 'Completed')->count(),
-            ],
-            'filtered_stats' => [
-                'total'     => $requests->total(),
-                'pending'   => (clone $filteredBase)->where('status', 'Pending')->count(),
-                'ongoing'   => (clone $filteredBase)->where('status', 'Ongoing')->count(),
-                'completed' => (clone $filteredBase)->where('status', 'Completed')->count(),
-            ],
+            'stats'        => $stats,
+            'filtered_stats' => $filteredStats,
         ]);
     }
 
@@ -140,6 +121,18 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
+        // ── 1) Unfiltered stats ──
+        $baseQuery = AuditLog::query();
+
+        $stats = [
+            'total'    => (clone $baseQuery)->count(),
+            'auth'     => (clone $baseQuery)->where('module', 'Auth')->count(),
+            'inventory' => (clone $baseQuery)->where('module', 'Inventory')->count(),
+            'requests' => (clone $baseQuery)->where('module', 'Requests')->count(),
+            'users'    => (clone $baseQuery)->where('module', 'User Management')->count(),
+        ];
+
+        // ── 2) Filtered + paginated query ──
         $query = AuditLog::with('user');
 
         // Search
@@ -164,23 +157,16 @@ class SuperAdminController extends Controller
         $logs = $query->orderBy('created_at', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Unfiltered stats
-        $baseQuery = AuditLog::query();
+        // Check if filters are active
+        $hasFilters = $request->filled('search') || $request->filled('module');
 
-        // Filtered stats
-        $filteredBase = AuditLog::query();
-        if ($search = $request->input('search')) {
-            $s = strtolower($search);
-            $filteredBase->where(function ($q) use ($s) {
-                $q->whereRaw('LOWER(action) LIKE ?', ["%{$s}%"])
-                  ->orWhereRaw('LOWER(module) LIKE ?', ["%{$s}%"])
-                  ->orWhereRaw('LOWER(details) LIKE ?', ["%{$s}%"])
-                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"]));
-            });
-        }
-        if ($module = $request->input('module')) {
-            $filteredBase->where('module', $module);
-        }
+        $filteredStats = $hasFilters ? [
+            'total'    => $logs->total(),
+            'auth'     => (clone $query)->where('module', 'Auth')->count(),
+            'inventory' => (clone $query)->where('module', 'Inventory')->count(),
+            'requests' => (clone $query)->where('module', 'Requests')->count(),
+            'users'    => (clone $query)->where('module', 'User Management')->count(),
+        ] : $stats;
 
         return response()->json([
             'success'      => true,
@@ -189,20 +175,8 @@ class SuperAdminController extends Controller
             'per_page'     => $logs->perPage(),
             'current_page' => $logs->currentPage(),
             'last_page'    => $logs->lastPage(),
-            'stats'        => [
-                'total'    => (clone $baseQuery)->count(),
-                'auth'     => (clone $baseQuery)->where('module', 'Auth')->count(),
-                'inventory' => (clone $baseQuery)->where('module', 'Inventory')->count(),
-                'requests' => (clone $baseQuery)->where('module', 'Requests')->count(),
-                'users'    => (clone $baseQuery)->where('module', 'User Management')->count(),
-            ],
-            'filtered_stats' => [
-                'total'    => $logs->total(),
-                'auth'     => (clone $filteredBase)->where('module', 'Auth')->count(),
-                'inventory' => (clone $filteredBase)->where('module', 'Inventory')->count(),
-                'requests' => (clone $filteredBase)->where('module', 'Requests')->count(),
-                'users'    => (clone $filteredBase)->where('module', 'User Management')->count(),
-            ],
+            'stats'        => $stats,
+            'filtered_stats' => $filteredStats,
         ]);
     }
 
@@ -240,6 +214,17 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
+        // ── 1) Unfiltered stats (single query with conditional counts) ──
+        $baseQuery = User::query()
+            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
+
+        $stats = [
+            'total'    => (clone $baseQuery)->count(),
+            'active'   => (clone $baseQuery)->where('is_active', 1)->count(),
+            'inactive' => (clone $baseQuery)->where('is_active', 0)->count(),
+        ];
+
+        // ── 2) Filtered + paginated query ──
         $query = User::query()
             ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
 
@@ -278,24 +263,18 @@ class SuperAdminController extends Controller
         $users = $query->orderBy('full_name', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Unfiltered stats for the branch
-        $baseQuery = User::query()
-            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
+        // Check if any filter is active
+        $hasFilters = $request->filled('search') || $request->filled('department') ||
+                      $request->filled('division') || $request->filled('role') ||
+                      $request->filled('status');
 
-        // Filtered stats (same filters as main query, without pagination)
-        $filteredBase = User::query()
-            ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
-        if ($search = $request->input('search')) {
-            $s = strtolower($search);
-            $filteredBase->where(function ($q) use ($s) {
-                $q->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"])
-                  ->orWhereRaw('LOWER(email) LIKE ?', ["%{$s}%"]);
-            });
-        }
-        if ($department = $request->input('department')) $filteredBase->where('department', $department);
-        if ($division   = $request->input('division'))   $filteredBase->where('office', $division);
-        if ($role       = $request->input('role'))       $filteredBase->where('role', $role);
-        if ($status     = $request->input('status'))     $filteredBase->where('is_active', $status === 'active' ? 1 : 0);
+        // When filters are active, use paginator's total for filtered stats
+        // (already counted by paginate)
+        $filteredStats = $hasFilters ? [
+            'total'    => $users->total(),
+            'active'   => (clone $query)->where('is_active', 1)->count(),
+            'inactive' => (clone $query)->where('is_active', 0)->count(),
+        ] : $stats;
 
         return response()->json([
             'success'      => true,
@@ -304,16 +283,8 @@ class SuperAdminController extends Controller
             'per_page'     => $users->perPage(),
             'current_page' => $users->currentPage(),
             'last_page'    => $users->lastPage(),
-            'stats'        => [
-                'total'    => (clone $baseQuery)->count(),
-                'active'   => (clone $baseQuery)->where('is_active', 1)->count(),
-                'inactive' => (clone $baseQuery)->where('is_active', 0)->count(),
-            ],
-            'filtered_stats' => [
-                'total'    => $users->total(),
-                'active'   => (clone $filteredBase)->where('is_active', 1)->count(),
-                'inactive' => (clone $filteredBase)->where('is_active', 0)->count(),
-            ],
+            'stats'        => $stats,
+            'filtered_stats' => $filteredStats,
         ]);
     }
 
