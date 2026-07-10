@@ -52,14 +52,19 @@ class PersonnelController extends Controller
             return response()->json(['error' => 'Unauthorized - outside division'], 403);
         }
 
-        $assets = InventoryAsset::with('assignedUser')->where('assigned_to_user', $user->id)->limit(50)->get();
-        $requests = RequestModel::with('user')->where('user_id', $user->id)
+        // Paginate assets and requests instead of limit(50) for better performance with large data
+        $assets = InventoryAsset::with('assignedUser')
+            ->where('assigned_to_user', $user->id)
             ->orderBy('created_at', 'desc')
-            ->limit(50)
-            ->get();
+            ->paginate(20, ['*'], 'assets_page');
+
+        $requests = RequestModel::with('user')
+            ->where('user_id', $user->id)
+            ->orderBy('created_at', 'desc')
+            ->paginate(20, ['*'], 'requests_page');
 
         $stats = [
-            'total' => $requests->count(),
+            'total' => $requests->total(),
             'completed' => $requests->where('status', 'Completed')->count(),
             'pending' => $requests->where('status', 'Pending')->count(),
             'rejected' => $requests->where('status', 'Rejected')->count(),
