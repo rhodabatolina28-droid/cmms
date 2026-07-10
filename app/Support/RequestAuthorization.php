@@ -739,15 +739,17 @@ class RequestAuthorization
         }
 
         // Use whereExists with a raw subquery for better performance vs whereHas
-        // Super admin requesters are always visible; regular users must match branch
+        // Super admin requesters are always visible; regular users must match branch + office
         return $query->whereExists(function ($sub) use ($supply) {
             $sub->select(\Illuminate\Support\Facades\DB::raw(1))
                 ->from('users')
                 ->whereColumn('users.id', 'requisitions.requested_by')
                 ->where(function ($q) use ($supply) {
                     if ($supply->branch) {
-                        $q->where('users.branch', $supply->branch)
-                          ->orWhere('users.role', 'super_admin');
+                        $q->where('users.branch', $supply->branch);
+                    }
+                    if ($supply->office) {
+                        $q->where('users.office', $supply->office);
                     }
                 });
         });
@@ -768,7 +770,7 @@ class RequestAuthorization
             ->whereExists(function ($sub) use ($supply) {
                 $sub->select(\Illuminate\Support\Facades\DB::raw(1))
                     ->from('users')
-                    ->whereColumn('users.id', 'requests.user_id')
+                    ->whereColumn('users.id', 'requests.assigned_to')
                     ->where(function ($q) use ($supply) {
                         if ($supply->branch) {
                             $q->where('users.branch', $supply->branch);
