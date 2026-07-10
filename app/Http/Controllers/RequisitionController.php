@@ -285,17 +285,7 @@ class RequisitionController extends Controller
             }
 
             if ($requisition->requested_by && $ticket) {
-                $msg = match ($action) {
-                    'approve' => "Supply approved your parts request for {$ticket->request_number}. They will issue parts when ready.",
-                    'reject' => "Supply rejected your parts request for {$ticket->request_number}.",
-                    'issue' => "Parts were issued for {$ticket->request_number}. You may continue repair work.",
-                };
-                \App\Models\Notification::send(
-                    $requisition->requested_by,
-                    $ticket->id,
-                    'Parts request — ' . ucfirst($newStatus),
-                    $msg
-                );
+                RequestNotificationService::notifyItOfRequisitionAction($requisition, $action);
             }
 
             AuditLog::log(

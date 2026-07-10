@@ -234,6 +234,57 @@ class RequestNotificationService
                 'Parts Requisition',
                 $message
             );
+
+            // Send email notification to supply officer
+            if ($recipient->email) {
+                \Illuminate\Support\Facades\Mail::to($recipient->email)->queue(
+                    new \App\Mail\SystemNotificationMail(
+                        $recipient->full_name,
+                        'Parts Requisition',
+                        $message,
+                        $ticket->request_number,
+                        route('requisitions.show', $requisition->id)
+                    )
+                );
+            }
+        }
+    }
+
+    public static function notifyItOfRequisitionAction(Requisition $requisition, string $action): void
+    {
+        $ticket = $requisition->ticket;
+        $itUser = $requisition->requested_by ? \App\Models\User::find($requisition->requested_by) : null;
+        
+        if (!$ticket || !$itUser) {
+            return;
+        }
+
+        $message = match ($action) {
+            'approved' => "Supply approved your parts request for {$ticket->request_number}. They will issue parts when ready.",
+            'rejected' => "Supply rejected your parts request for {$ticket->request_number}.",
+            'issued' => "Parts were issued for {$ticket->request_number}. You may continue repair work.",
+            default => "Requisition #{$requisition->id} for {$ticket->request_number} was {$action}.",
+        };
+
+        // Send in-app notification
+        \App\Models\Notification::send(
+            $itUser->id,
+            $ticket->id,
+            'Parts Request — ' . ucfirst($action),
+            $message
+        );
+
+        // Send email notification to IT
+        if ($itUser->email) {
+            \Illuminate\Support\Facades\Mail::to($itUser->email)->queue(
+                new \App\Mail\SystemNotificationMail(
+                    $itUser->full_name,
+                    'Parts Request — ' . ucfirst($action),
+                    $message,
+                    $ticket->request_number,
+                    route('requisitions.show', $requisition->id)
+                )
+            );
         }
     }
 
