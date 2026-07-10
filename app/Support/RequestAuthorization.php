@@ -296,8 +296,8 @@ class RequestAuthorization
                 || self::wasEverAssignedToIt($user, $ticket);
         }
 
-        if ($user->role === 'admin') {
-            // Division admin can view tickets in their own division scope
+        if ($user->isDivisionAdmin()) {
+            // Division admin (admin or supply_officer) can view tickets in their own division scope
             if (self::ticketInAdminScope($user, $ticket)) {
                 return true;
             }
@@ -476,8 +476,11 @@ class RequestAuthorization
         bool $forceView = false,
         ?RepairRequest $repair = null
     ): array {
+        // Regular admin: view only (cannot edit technician sections)
+        // Supply officer: can view and review (forward to Super Admin)
+        $isRegularAdmin = $user->role === 'admin' && !$user->canProcessSupply();
         $viewOnly = $forceView
-            || $user->role === 'admin'
+            || $isRegularAdmin
             || ($ticket && $ticket->status === RequestModel::STATUS_COMPLETED);
 
         $canEditTechnician = !$viewOnly && self::canEditIctTechnicianSections($user, $ticket);
@@ -562,9 +565,18 @@ class RequestAuthorization
                 return false;
             }
 
-            // Division admin: must match office (division)
-            if ($admin->office && $ticketUser->office !== $admin->office) {
-                return false;
+            // Supply Officer (Administrative) can see tickets from their own office
+            // Regular Admin: must match office (division)
+            if ($admin->canProcessSupply()) {
+                // Supply Officer: check if ticket user is in their office (Administrative)
+                if ($admin->office && $ticketUser->office !== $admin->office) {
+                    return false;
+                }
+            } else {
+                // Regular Admin: must match office (division)
+                if ($admin->office && $ticketUser->office !== $admin->office) {
+                    return false;
+                }
             }
 
             return true;
@@ -576,7 +588,7 @@ class RequestAuthorization
     /** Admin quick status from Department Request list (not a substitute for IT form work). */
     public static function canAdminQuickUpdateStatus(User $admin, RequestModel $ticket, string $newStatus): bool
     {
-        if ($admin->role !== 'admin') {
+        if (!$admin->isDivisionAdmin()) {
             return false;
         }
 
