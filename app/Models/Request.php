@@ -191,23 +191,29 @@ class Request extends Model
                 $newStatus = $request->status;
                 
                 if (in_array($newStatus, [self::STATUS_CANCELLED, self::STATUS_REJECTED], true)) {
-                    // Auto-reject all pending requisitions for this ticket
-                    $pendingRequisitions = \App\Models\Requisition::where('request_id', $request->id)
+                    // Auto-reject all pending requisitions for this ticket (batch update)
+                    $pendingRequisitionIds = \App\Models\Requisition::where('request_id', $request->id)
                         ->where('status', \App\Models\Requisition::STATUS_PENDING)
-                        ->get();
+                        ->pluck('id');
                     
-                    foreach ($pendingRequisitions as $requisition) {
-                        $requisition->update([
+                    if ($pendingRequisitionIds->isNotEmpty()) {
+                        \App\Models\Requisition::whereIn('id', $pendingRequisitionIds)->update([
                             'status' => \App\Models\Requisition::STATUS_REJECTED,
                             'reviewed_by' => \Illuminate\Support\Facades\Auth::id(),
                             'reviewed_at' => now(),
                             'remarks' => "Auto-rejected: Parent ticket {$request->request_number} was {$newStatus}",
                         ]);
                         
-                        // Notify IT personnel
-                        if ($requisition->requested_by) {
+                        // Batch notify IT personnel
+                        $requestedByUsers = \App\Models\Requisition::whereIn('id', $pendingRequisitionIds)
+                            ->whereNotNull('requested_by')
+                            ->pluck('requested_by')
+                            ->unique()
+                            ->filter();
+                        
+                        foreach ($requestedByUsers as $userId) {
                             \App\Models\Notification::send(
-                                $requisition->requested_by,
+                                $userId,
                                 $request->id,
                                 'Parts Request Rejected',
                                 "Your parts request for {$request->request_number} was auto-rejected because the ticket was {$newStatus}."
