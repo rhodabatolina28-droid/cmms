@@ -234,19 +234,7 @@ class RequestNotificationService
                 'Parts Requisition',
                 $message
             );
-
-            // Send email notification to supply officer
-            if ($recipient->email) {
-                \Illuminate\Support\Facades\Mail::to($recipient->email)->queue(
-                    new \App\Mail\SystemNotificationMail(
-                        $recipient->full_name,
-                        'Parts Requisition',
-                        $message,
-                        $ticket->request_number,
-                        route('requisitions.show', $requisition->id)
-                    )
-                );
-            }
+            // Email is sent automatically via Notification::booted() hook
         }
     }
 
@@ -266,26 +254,13 @@ class RequestNotificationService
             default => "Requisition #{$requisition->id} for {$ticket->request_number} was {$action}.",
         };
 
-        // Send in-app notification
+        // Send in-app notification (email is sent automatically via Notification::booted() hook)
         \App\Models\Notification::send(
             $itUser->id,
             $ticket->id,
             'Parts Request — ' . ucfirst($action),
             $message
         );
-
-        // Send email notification to IT
-        if ($itUser->email) {
-            \Illuminate\Support\Facades\Mail::to($itUser->email)->queue(
-                new \App\Mail\SystemNotificationMail(
-                    $itUser->full_name,
-                    'Parts Request — ' . ucfirst($action),
-                    $message,
-                    $ticket->request_number,
-                    route('requisitions.show', $requisition->id)
-                )
-            );
-        }
     }
 
     /**
