@@ -246,40 +246,37 @@ class RequestNotificationService
         $userOffice = $requestor->office ?? null;
         $userDepartment = $requestor->department ?? null;
 
-        $allAdmins = collect();
+        $allOfficers = collect();
 
         // Additive: notify ALL matching levels
         if ($userBranch && $userDepartment && $userOffice) {
-            $specific = User::where('role', 'admin')
-                ->where('can_supply', 1)
+            $specific = User::where('role', 'supply_officer')
                 ->where('branch', $userBranch)
                 ->where('department', $userDepartment)
                 ->where('office', $userOffice)
                 ->where('is_active', true)
                 ->get();
-            $allAdmins = $allAdmins->concat($specific);
+            $allOfficers = $allOfficers->concat($specific);
         }
 
         if ($userDepartment && $userOffice) {
-            $broader = User::where('role', 'admin')
-                ->where('can_supply', 1)
+            $broader = User::where('role', 'supply_officer')
                 ->where('department', $userDepartment)
                 ->where('office', $userOffice)
                 ->where('is_active', true)
                 ->get();
-            $allAdmins = $allAdmins->concat($broader);
+            $allOfficers = $allOfficers->concat($broader);
         }
 
         if ($userOffice) {
-            $broadest = User::where('role', 'admin')
-                ->where('can_supply', 1)
+            $broadest = User::where('role', 'supply_officer')
                 ->where('office', $userOffice)
                 ->where('is_active', true)
                 ->get();
-            $allAdmins = $allAdmins->concat($broadest);
+            $allOfficers = $allOfficers->concat($broadest);
         }
 
-        return $allAdmins->unique('id');
+        return $allOfficers->unique('id');
     }
 
     public static function logLocalEmailPreview(string $to, string $type, string $message, string $requestNumber): void
