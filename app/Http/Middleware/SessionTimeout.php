@@ -22,7 +22,8 @@ class SessionTimeout
 
             if (time() - $lastActivity > ($inactiveTime * 60)) {
                 auth()->logout();
-                session()->flush();
+                $request->session()->invalidate();
+                $request->session()->regenerateToken();
                 return redirect('/login')->with('error', 'Your session has expired. Please login again.');
             }
 

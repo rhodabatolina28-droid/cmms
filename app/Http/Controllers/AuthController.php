@@ -139,65 +139,7 @@ class AuthController extends Controller
 
         return redirect()->route('logged-out');
     }
-
-    public function apiLogin(Request $request)
-    {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
-        $throttleKey = mb_strtolower($request->input('email')) . '|' . $request->ip();
-        
-        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
-            $seconds = RateLimiter::availableIn($throttleKey);
-            return response()->json([
-                'success' => false,
-                'message' => "Too many login attempts. Please try again in {$seconds} seconds."
-            ], 429);
-        }
-
-        if (Auth::attempt($credentials)) {
-            RateLimiter::clear($throttleKey);
-            $user = Auth::user();
-
-            if (!$user->is_active) {
-                Auth::logout();
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Your account has been deactivated. Please contact your administrator.'
-                ], 403);
-            }
-
-            return response()->json([
-                'success' => true,
-                'role' => $user->role,
-                'message' => 'Login successful',
-                'user' => $user->only(['id', 'full_name', 'email', 'role', 'office', 'branch', 'department'])
-            ]);
-        }
-
-        RateLimiter::hit($throttleKey, 60);
-
-        return response()->json([
-            'success' => false,
-            'message' => 'Invalid credentials'
-        ], 401);
-    }
-
-    public function apiLogout(Request $request)
-    {
-        Auth::logout();
-        $request->session()->invalidate();
-        $request->session()->regenerateToken();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Logged out successfully'
-        ]);
-    }
-
-    private function validateRedirect($redirect)
+}
     {
         if (!$redirect) return null;
         $base = url('/');

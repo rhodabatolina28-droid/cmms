@@ -28,11 +28,7 @@ class SuperAdminController extends Controller
         // ── 1) Unfiltered stats ──
         $baseQuery = \App\Models\Request::where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
-            ->whereHas('user', function ($q) use ($actor) {
-                if ($actor->branch) {
-                    $q->where('branch', $actor->branch);
-                }
-            });
+            ->when($actor->branch, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch)));
 
         $stats = [
             'total'     => (clone $baseQuery)->count(),
@@ -43,12 +39,11 @@ class SuperAdminController extends Controller
 
         // ── 2) Filtered + paginated query ──
         // Build base query WITHOUT with() to avoid N+1 on cloned stats queries
-        $baseFiltered = \App\Models\Request::where('type', 'ICT')
+        $query = \App\Models\Request::with(['assignedTo:id,full_name'])
+            ->where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
-            ->whereHas('user', function ($q) use ($actor) {
-                if ($actor->branch) {
-                    $q->where('branch', $actor->branch);
-                }
+            ->when($actor->branch, function ($q) use ($actor) {
+                $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch));
             });
 
         // Search
