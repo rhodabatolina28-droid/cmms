@@ -249,15 +249,15 @@ class Request extends Model
                         if ($itMarkedForDisposal) {
                             // Asset is already For Disposal — do NOT downgrade to Defective.
                             // Fire the supply notification now that the ticket is fully completed.
-                            $supplyAdminIds = \App\Models\User::where('role', 'admin')
-                                ->where('can_supply', true)
+                            // Notify supply_officer role (Administrative Division handles supply)
+                            $supplyOfficerIds = \App\Models\User::where('role', 'supply_officer')
                                 ->where('is_active', true)
                                 ->when($asset->branch, fn($q) => $q->where('branch', $asset->branch))
                                 ->pluck('id');
 
-                            foreach ($supplyAdminIds as $adminId) {
+                            foreach ($supplyOfficerIds as $officerId) {
                                 \App\Models\Notification::send(
-                                    $adminId,
+                                    $officerId,
                                     $request->id,
                                     'Asset Tagged for Disposal',
                                     "Ticket {$request->request_number} is completed. Asset [{$asset->item_name} | SN: {$asset->serial_number}] has been tagged for disposal by IT. Please process and update the asset status when physical disposal is done."
