@@ -768,29 +768,35 @@ class RequestAuthorization
     }
 
     /**
-     * ICT tickets assigned to IT personnel within the Administrative supply admin's office scope.
+     * ICT tickets that have requisitions in the Supply Officer's scope.
+     * Only shows tickets where IT (assigned_to) requested parts and the requisition is in their branch/office.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Request>  $query
      */
     public static function scopeIctTicketsForSupplyAdmin(User $supply, $query)
     {
         if ($supply->role === 'super_admin') {
-            return $query->where('type', 'ICT');
+            // Super admin: show all ICT tickets that have requisitions
+            return $query->where('type', 'ICT')
+                ->whereHas('requisitions');
         }
 
+        // Supply Officer: show ICT tickets that have requisitions in their scope
         return $query->where('type', 'ICT')
-            ->whereExists(function ($sub) use ($supply) {
-                $sub->select(\Illuminate\Support\Facades\DB::raw(1))
-                    ->from('users')
-                    ->whereColumn('users.id', 'requests.assigned_to')
-                    ->where(function ($q) use ($supply) {
-                        if ($supply->branch) {
-                            $q->where('users.branch', $supply->branch);
-                        }
-                        if ($supply->office) {
-                            $q->where('users.office', $supply->office);
-                        }
-                    });
+            ->whereHas('requisitions', function ($q) use ($supply) {
+                $q->whereExists(function ($sub) use ($supply) {
+                    $sub->select(\Illuminate\Support\Facades\DB::raw(1))
+                        ->from('users')
+                        ->whereColumn('users.id', 'requisitions.requested_by')
+                        ->where(function ($uq) use ($supply) {
+                            if ($supply->branch) {
+                                $uq->where('users.branch', $supply->branch);
+                            }
+                            if ($supply->office) {
+                                $uq->where('users.office', $supply->office);
+                            }
+                        });
+                });
             });
     }
     /** Field whitelist for IT personnel update (Sections 2–5, no acceptance). */
