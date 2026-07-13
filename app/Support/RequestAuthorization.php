@@ -750,8 +750,8 @@ class RequestAuthorization
             return $query;
         }
 
-        // Use whereExists with a raw subquery for better performance vs whereHas
-        // Super admin requesters are always visible; regular users must match branch + office
+        // Supply Officers are in Administrative office but handle supply for the entire branch
+        // So we only filter by branch, not office
         return $query->whereExists(function ($sub) use ($supply) {
             $sub->select(\Illuminate\Support\Facades\DB::raw(1))
                 ->from('users')
@@ -760,16 +760,14 @@ class RequestAuthorization
                     if ($supply->branch) {
                         $q->where('users.branch', $supply->branch);
                     }
-                    if ($supply->office) {
-                        $q->where('users.office', $supply->office);
-                    }
                 });
         });
     }
 
     /**
      * ICT tickets that have requisitions in the Supply Officer's scope.
-     * Only shows tickets where IT (assigned_to) requested parts and the requisition is in their branch/office.
+     * Only shows tickets where IT (assigned_to) requested parts and the requisition is in their branch.
+     * Supply Officers are in Administrative office but handle supply for the entire branch.
      *
      * @param  \Illuminate\Database\Eloquent\Builder<\App\Models\Request>  $query
      */
@@ -781,7 +779,8 @@ class RequestAuthorization
                 ->whereHas('requisitions');
         }
 
-        // Supply Officer: show ICT tickets that have requisitions in their scope
+        // Supply Officer: show ICT tickets that have requisitions in their branch
+        // (Supply Officers are in Administrative office but handle supply for the entire branch)
         return $query->where('type', 'ICT')
             ->whereHas('requisitions', function ($q) use ($supply) {
                 $q->whereExists(function ($sub) use ($supply) {
@@ -789,11 +788,9 @@ class RequestAuthorization
                         ->from('users')
                         ->whereColumn('users.id', 'requisitions.requested_by')
                         ->where(function ($uq) use ($supply) {
+                            // Only filter by branch - Supply Officers handle supply for the entire branch
                             if ($supply->branch) {
                                 $uq->where('users.branch', $supply->branch);
-                            }
-                            if ($supply->office) {
-                                $uq->where('users.office', $supply->office);
                             }
                         });
                 });

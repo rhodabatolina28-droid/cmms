@@ -269,37 +269,25 @@ class RequestNotificationService
     public static function cascadeSupplyOfficersForUser(User $requestor): Collection
     {
         $userBranch = $requestor->branch ?? null;
-        $userOffice = $requestor->office ?? null;
-        $userDepartment = $requestor->department ?? null;
 
         $allOfficers = collect();
 
-        // Additive: notify ALL matching levels
-        if ($userBranch && $userDepartment && $userOffice) {
-            $specific = User::where('role', 'supply_officer')
+        // Supply Officers are in the Administrative office but handle supply for the entire branch
+        // So we only filter by branch, not office
+        if ($userBranch) {
+            $officers = User::where('role', 'supply_officer')
                 ->where('branch', $userBranch)
-                ->where('department', $userDepartment)
-                ->where('office', $userOffice)
                 ->where('is_active', true)
                 ->get();
-            $allOfficers = $allOfficers->concat($specific);
+            $allOfficers = $allOfficers->concat($officers);
         }
 
-        if ($userDepartment && $userOffice) {
-            $broader = User::where('role', 'supply_officer')
-                ->where('department', $userDepartment)
-                ->where('office', $userOffice)
+        // If no branch, get all active supply officers
+        if (!$userBranch) {
+            $officers = User::where('role', 'supply_officer')
                 ->where('is_active', true)
                 ->get();
-            $allOfficers = $allOfficers->concat($broader);
-        }
-
-        if ($userOffice) {
-            $broadest = User::where('role', 'supply_officer')
-                ->where('office', $userOffice)
-                ->where('is_active', true)
-                ->get();
-            $allOfficers = $allOfficers->concat($broadest);
+            $allOfficers = $allOfficers->concat($officers);
         }
 
         return $allOfficers->unique('id');
