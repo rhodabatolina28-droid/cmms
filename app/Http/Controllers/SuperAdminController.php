@@ -25,36 +25,36 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
+        // Base scope — always applied
+        $baseScope = function ($q) use ($actor) {
+            $q->where('type', 'ICT')
+              ->where('division_admin_review_status', 'Approved');
+            if ($actor->branch) {
+                $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch));
+            }
+        };
+
         // ── 1) Unfiltered stats ──
-        $baseQuery = \App\Models\Request::where('type', 'ICT')
+        $stats = [
+            'total'     => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'pending'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Pending')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'ongoing'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Ongoing')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'completed' => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Completed')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+        ];
+
+        // ── 2) Filtered query builder ──
+        $query = \App\Models\Request::where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
             ->when($actor->branch, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch)));
 
-        $stats = [
-            'total'     => (clone $baseQuery)->count(),
-            'pending'   => (clone $baseQuery)->where('status', 'Pending')->count(),
-            'ongoing'   => (clone $baseQuery)->where('status', 'Ongoing')->count(),
-            'completed' => (clone $baseQuery)->where('status', 'Completed')->count(),
-        ];
-
-        // ── 2) Filtered + paginated query ──
-        $query = \App\Models\Request::with(['assignedTo:id,full_name'])
-            ->where('type', 'ICT')
-            ->where('division_admin_review_status', 'Approved')
-            ->whereHas('user', function ($q) use ($actor) {
-                if ($actor->branch) {
-                    $q->where('branch', $actor->branch);
-                }
-            });
-
         // Search
         if ($search = $request->input('search')) {
-            $search = strtolower($search);
-            $query->where(function ($q) use ($search) {
-                $q->whereRaw('LOWER(request_number) LIKE ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$search}%"])
-                  ->orWhereRaw('LOWER(requestor_name) LIKE ?', ["%{$search}%"])
-                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$search}%"]));
+            $s = strtolower($search);
+            $query->where(function ($q) use ($s) {
+                $q->whereRaw('LOWER(request_number) LIKE ?', ["%{$s}%"])
+                  ->orWhereRaw('LOWER(description) LIKE ?', ["%{$s}%"])
+                  ->orWhereRaw('LOWER(requestor_name) LIKE ?', ["%{$s}%"])
+                  ->orWhereHas('user', fn ($uq) => $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$s}%"]));
             });
         }
 
@@ -82,30 +82,33 @@ class SuperAdminController extends Controller
         $perPage = min((int) $request->input('per_page', 20), 100);
         $page    = max((int) $request->input('page', 1), 1);
 
-        $requests = $query->orderBy('created_at', 'desc')
+        // Clone before paginate so we can still do count queries
+        $countQuery = clone $query;
+
+        $requests = $query->with(['assignedTo:id,full_name'])
+            ->orderBy('created_at', 'desc')
+            ->select(['id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at'])
             ->paginate($perPage, ['*'], 'page', $page);
 
-        // Check if any filter is active
         $hasFilters = $request->filled('search') || $request->filled('department') ||
                       $request->filled('division') || $request->filled('status') ||
                       $myAssigned;
 
-        // When filters are active, compute filtered stats from the same query builder
         $filteredStats = $hasFilters ? [
             'total'     => $requests->total(),
-            'pending'   => (clone $query)->where('status', 'Pending')->count(),
-            'ongoing'   => (clone $query)->where('status', 'Ongoing')->count(),
-            'completed' => (clone $query)->where('status', 'Completed')->count(),
+            'pending'   => (clone $countQuery)->where('status', 'Pending')->count(),
+            'ongoing'   => (clone $countQuery)->where('status', 'Ongoing')->count(),
+            'completed' => (clone $countQuery)->where('status', 'Completed')->count(),
         ] : $stats;
 
         return response()->json([
-            'success'      => true,
-            'requests'     => $requests->items(),
-            'total'        => $requests->total(),
-            'per_page'     => $requests->perPage(),
-            'current_page' => $requests->currentPage(),
-            'last_page'    => $requests->lastPage(),
-            'stats'        => $stats,
+            'success'        => true,
+            'requests'       => $requests->items(),
+            'total'          => $requests->total(),
+            'per_page'       => $requests->perPage(),
+            'current_page'   => $requests->currentPage(),
+            'last_page'      => $requests->lastPage(),
+            'stats'          => $stats,
             'filtered_stats' => $filteredStats,
         ]);
     }
@@ -311,8 +314,9 @@ class SuperAdminController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;
         
-        // Auto-set can_supply=1 for supply_officer role
+        // Convert supply_officer to admin with can_supply=1 (one role per user in government setup)
         if ($validated['role'] === 'supply_officer') {
+            $validated['role'] = 'admin';
             $validated['can_supply'] = true;
         } else {
             $validated['can_supply'] = $request->boolean('can_supply');
@@ -354,7 +358,7 @@ class SuperAdminController extends Controller
             'can_supply' => 'nullable|boolean',
         ]);
 
-        // Supply Officer validation: must be in Administrative Division/Department
+        // Convert supply_officer to admin with can_supply=1 (one role per user in government setup)
         if ($validated['role'] === 'supply_officer') {
             $dept = strtoupper($validated['department'] ?? '');
             $office = strtoupper($validated['office'] ?? '');
@@ -366,6 +370,7 @@ class SuperAdminController extends Controller
                     'message' => 'Supply Officer role can only be assigned to users in the Administrative Division/Department.',
                 ], 422);
             }
+            $validated['role'] = 'admin';
             $validated['can_supply'] = true;
         } else {
             $validated['can_supply'] = $request->boolean('can_supply');

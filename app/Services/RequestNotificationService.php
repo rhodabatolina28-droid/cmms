@@ -158,7 +158,7 @@ class RequestNotificationService
 
         // Additive: notify ALL matching levels, not just the most specific
         if ($userBranch && $userDepartment && $userOffice) {
-            $specific = User::where('role', 'admin')
+            $specific = User::whereIn('role', ['admin', 'supply_officer'])
                 ->where('branch', $userBranch)
                 ->where('department', $userDepartment)
                 ->where('office', $userOffice)
@@ -168,7 +168,7 @@ class RequestNotificationService
         }
 
         if ($userDepartment && $userOffice) {
-            $broader = User::where('role', 'admin')
+            $broader = User::whereIn('role', ['admin', 'supply_officer'])
                 ->where('department', $userDepartment)
                 ->where('office', $userOffice)
                 ->where('is_active', true)
@@ -177,7 +177,7 @@ class RequestNotificationService
         }
 
         if ($userOffice) {
-            $broadest = User::where('role', 'admin')
+            $broadest = User::whereIn('role', ['admin', 'supply_officer'])
                 ->where('office', $userOffice)
                 ->where('is_active', true)
                 ->get();
@@ -274,8 +274,14 @@ class RequestNotificationService
 
         // Supply Officers are in the Administrative office but handle supply for the entire branch
         // So we only filter by branch, not office
+        // Include both supply_officer role AND admin with can_supply=1
         if ($userBranch) {
-            $officers = User::where('role', 'supply_officer')
+            $officers = User::where(function($q) {
+                    $q->where('role', 'supply_officer')
+                      ->orWhere(function($sub) {
+                          $sub->where('role', 'admin')->where('can_supply', 1);
+                      });
+                })
                 ->where('branch', $userBranch)
                 ->where('is_active', true)
                 ->get();
@@ -284,7 +290,12 @@ class RequestNotificationService
 
         // If no branch, get all active supply officers
         if (!$userBranch) {
-            $officers = User::where('role', 'supply_officer')
+            $officers = User::where(function($q) {
+                    $q->where('role', 'supply_officer')
+                      ->orWhere(function($sub) {
+                          $sub->where('role', 'admin')->where('can_supply', 1);
+                      });
+                })
                 ->where('is_active', true)
                 ->get();
             $allOfficers = $allOfficers->concat($officers);

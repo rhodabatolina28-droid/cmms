@@ -411,12 +411,33 @@ async function markAsset(assetId, status, btn) {
 const scanner = new AssetScanner({
     onScan: async (assetId, rawContent) => {
         closeScanner();
+        // Fetch asset profile
         const res = await fetch(API_PROFILE_URL.replace('_ID_', assetId), {
             headers: { 'Accept': 'application/json' }
         });
         const data = await res.json();
         if (data.success) {
-            showScanResult(data.data);
+            // Also fetch user assets via search endpoint
+            let userAssets = [];
+            try {
+                const formData = new FormData();
+                formData.set('asset_id', assetId);
+                const searchRes = await fetch(SEARCH_URL, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                    },
+                    body: formData,
+                });
+                const searchData = await searchRes.json();
+                if (searchData.success && searchData.user_assets) {
+                    userAssets = searchData.user_assets;
+                }
+            } catch (e) {
+                console.error('Failed to fetch user assets:', e);
+            }
+            showScanResult(data.data, userAssets);
         } else {
             Swal.fire({ icon: 'warning', title: 'Asset Not Found', text: 'This QR code does not match any asset in scope.', confirmButtonColor: '#0038A8' });
         }
@@ -442,12 +463,12 @@ function closeScanner() {
     document.getElementById('scannerModalOverlay').style.display = 'none';
 }
 
-function showScanResult(data) {
+function showScanResult(data, userAssets) {
     const card = document.getElementById('scanResultCard');
     const asset = data.asset;
     const isCounted = COUNTED_IDS.includes(asset.asset_id);
 
-    card.innerHTML = `
+    let html = `
         <div class="profile-card-inner">
             <div class="profile-header">
                 <div class="profile-icon">
@@ -477,6 +498,35 @@ function showScanResult(data) {
             }
         </div>
     `;
+
+    // Show other assets of the same user
+    if (userAssets && userAssets.length > 0) {
+        html += `<div class="profile-card-inner" style="border-top:2px solid #e2e8f0;margin-top:12px;padding-top:16px;">
+            <div style="font-size:13px;font-weight:800;color:#0038A8;text-transform:uppercase;margin-bottom:10px;">
+                <i class="fa-solid fa-layer-group"></i> Other Assets of ${asset.assigned_user ? asset.assigned_user.full_name : 'User'}
+            </div>`;
+        userAssets.forEach(ua => {
+            const uaCounted = COUNTED_IDS.includes(ua.asset_id);
+            html += `<div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #f1f5f9;">
+                <div>
+                    <strong>${ua.item_name}</strong>
+                    <div style="font-size:11px;color:#64748b;">${ua.serial_number || 'N/A'} &middot; ${ua.category || ''}</div>
+                </div>
+                <div>
+                    ${uaCounted ?
+                        `<span style="color:#16a34a;font-size:12px;font-weight:700;"><i class="fa-solid fa-check"></i> Counted</span>` :
+                        `<div style="display:flex;gap:4px;">
+                            <button data-action="mark-asset" data-asset-id="${ua.asset_id}" data-status="Present" class="mark-btn mark-operational" style="padding:6px 10px;font-size:11px;">✅ Ops</button>
+                            <button data-action="mark-asset" data-asset-id="${ua.asset_id}" data-status="Missing" class="mark-btn mark-non-ops" style="padding:6px 10px;font-size:11px;">❌ Non-Ops</button>
+                        </div>`
+                    }
+                </div>
+            </div>`;
+        });
+        html += `</div>`;
+    }
+
+    card.innerHTML = html;
     card.style.display = 'block';
     card.scrollIntoView({ behavior: 'smooth' });
 }

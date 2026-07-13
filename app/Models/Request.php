@@ -249,8 +249,13 @@ class Request extends Model
                         if ($itMarkedForDisposal) {
                             // Asset is already For Disposal — do NOT downgrade to Defective.
                             // Fire the supply notification now that the ticket is fully completed.
-                            // Notify supply_officer role (Administrative Division handles supply)
-                            $supplyOfficerIds = \App\Models\User::where('role', 'supply_officer')
+                            // Notify supply_officer OR admin with can_supply=1 (Administrative Division handles supply)
+                            $supplyOfficerIds = \App\Models\User::where(function($q) {
+                                    $q->where('role', 'supply_officer')
+                                      ->orWhere(function($sub) {
+                                          $sub->where('role', 'admin')->where('can_supply', 1);
+                                      });
+                                })
                                 ->where('is_active', true)
                                 ->when($asset->branch, fn($q) => $q->where('branch', $asset->branch))
                                 ->pluck('id');

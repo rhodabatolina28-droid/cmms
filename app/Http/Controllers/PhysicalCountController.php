@@ -151,10 +151,29 @@ class PhysicalCountController extends Controller
             ->pluck('asset_id')
             ->toArray();
 
+        // Get other assets of the same user if an asset was scanned
+        $userAssets = collect();
+        $scannedUserId = null;
+        if ($assetId) {
+            $scannedAsset = InventoryAsset::find($assetId);
+            if ($scannedAsset && $scannedAsset->assigned_to_user) {
+                $scannedUserId = $scannedAsset->assigned_to_user;
+                $userAssets = InventoryAsset::with('assignedUser')
+                    ->where('assigned_to_user', $scannedUserId)
+                    ->where('asset_id', '!=', $assetId)
+                    ->whereNotIn('status', ['For Disposal', 'Scrapped'])
+                    ->orderBy('category')
+                    ->orderBy('item_name')
+                    ->get();
+            }
+        }
+
         return response()->json([
             'success'    => true,
             'assets'     => $assets,
             'counted_ids' => $countedIds,
+            'user_assets' => $userAssets,
+            'scanned_user_id' => $scannedUserId,
         ]);
     }
 

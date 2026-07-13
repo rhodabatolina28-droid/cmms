@@ -21,6 +21,18 @@ class ScanController extends Controller
 
         $asset = InventoryAsset::with('assignedUser')->findOrFail($id);
 
+        // Get all other assets of the same user
+        $userAssets = collect();
+        if ($asset->assigned_to_user) {
+            $userAssets = InventoryAsset::with('assignedUser')
+                ->where('assigned_to_user', $asset->assigned_to_user)
+                ->where('asset_id', '!=', $id)
+                ->whereNotIn('status', ['For Disposal', 'Scrapped'])
+                ->orderBy('category')
+                ->orderBy('item_name')
+                ->get();
+        }
+
         $user = Auth::user();
 
         // USER role
@@ -132,12 +144,24 @@ class ScanController extends Controller
                 'focusDivision'  => $focusDivision,
                 'showPmActions'  => $showPmActions ?? false,
                 'ictTicket'      => $ictTicket ?? null,
+                'userAssets'     => $userAssets,
             ]);
         }
 
-        // Supply/Admin → inventory detail
+        // Supply/Admin → show scan info page too (with other assets of user)
         if ($user->canProcessSupply()) {
-            return redirect()->route('inventory.detail', $id);
+            return view('scan.asset-info', [
+                'asset'          => $asset,
+                'history'        => collect(),
+                'user'           => $user,
+                'upcomingPM'     => null,
+                'lastPM'         => null,
+                'assetUser'      => $asset->assignedUser,
+                'focusDivision'  => null,
+                'showPmActions'  => false,
+                'ictTicket'      => null,
+                'userAssets'     => $userAssets,
+            ]);
         }
 
         // Fallback (admin without supply, etc.)

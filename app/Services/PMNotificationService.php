@@ -61,7 +61,7 @@ class PMNotificationService
     {
         try {
             // Find the division admin (user with role 'admin' in the same division)
-            $query = User::where('role', 'admin')
+            $query = User::whereIn('role', ['admin', 'supply_officer'])
                 ->whereNotNull('email')
                 ->where(function ($q) use ($division) {
                     $q->where('office', 'LIKE', "%{$division}%")
@@ -87,6 +87,14 @@ class PMNotificationService
                         "PM tickets have been generated for {$division} Division ({$count} users). Please inform your personnel to coordinate with ICT for their schedule.",
                         "{$division} PM Batch"
                     )
+                );
+
+                // In-app notification for division admin
+                \App\Models\Notification::send(
+                    $admin->id,
+                    null,
+                    'PM Batch Generated',
+                    "PM tickets have been generated for {$division} Division ({$count} users). Please inform your personnel."
                 );
             }
 
@@ -123,6 +131,14 @@ class PMNotificationService
                         "New PM tickets generated for {$division} Division ({$count} users). Please conduct the PMs at your earliest convenience.",
                         "{$division} PM Batch"
                     )
+                );
+
+                // In-app notification for IT staff
+                \App\Models\Notification::send(
+                    $user->id,
+                    null,
+                    'PM Batch Generated',
+                    "New PM tickets generated for {$division} Division ({$count} users). Please conduct the PMs."
                 );
             }
 

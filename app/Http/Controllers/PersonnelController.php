@@ -153,6 +153,12 @@ class PersonnelController extends Controller
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;
 
+        // Convert supply_officer to admin with can_supply=1 (one role per user in government setup)
+        if ($validated['role'] === 'supply_officer') {
+            $validated['role'] = 'admin';
+            $validated['can_supply'] = true;
+        }
+
         // Admin can ONLY create users in their own division (common sense)
         if ($actor->role === 'admin' || $actor->role === 'supply_officer') {
             $validated['region'] = $actor->region;

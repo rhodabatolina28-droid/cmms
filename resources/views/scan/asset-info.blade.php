@@ -129,7 +129,7 @@
 </head>
 <body>
     <div class="back-link">
-        <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : 'dashboard.it') }}"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
     </div>
 
     <div class="card">
@@ -284,6 +284,23 @@
             </div>
             @endif
 
+            {{-- Other Assets of User --}}
+            @if($userAssets && $userAssets->count() > 0)
+            <div class="section-title">
+                <i class="fa-solid fa-layer-group"></i> Other Assets of {{ $asset->assignedUser->full_name ?? 'User' }}
+            </div>
+            @foreach($userAssets as $ua)
+            <div class="history-item" style="display:flex;justify-content:space-between;align-items:center;">
+                <div>
+                    <strong>{{ $ua->item_name }}</strong>
+                    <span style="font-size:11px;color:#64748b;margin-left:6px;">{{ $ua->category }}</span>
+                    <br><span style="font-size:11px;color:#64748b;">S/N: {{ $ua->serial_number ?? 'N/A' }} | PAR: {{ $ua->par_number ?? 'N/A' }}</span>
+                </div>
+                <span class="status-badge status-{{ str_replace([' ', '/'], ['\\,', '\\,'], $ua->status) }}">{{ $ua->status }}</span>
+            </div>
+            @endforeach
+            @endif
+
             {{-- Service History --}}
             <div class="section-title">
                 <i class="fa-solid fa-clock-rotate-left"></i> Recent Service History
@@ -314,7 +331,7 @@
                 <i class="fa-solid fa-eye"></i> View Full Inventory Profile
             </a>
             @endif
-            <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : 'dashboard.it') }}" class="btn btn-outline">
+            <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}" class="btn btn-outline">
                 <i class="fa-solid fa-house"></i> Back to Dashboard
             </a>
         </div>
