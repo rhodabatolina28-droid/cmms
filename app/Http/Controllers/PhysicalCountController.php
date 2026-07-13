@@ -117,15 +117,21 @@ class PhysicalCountController extends Controller
         $q = trim($request->input('q', ''));
         $assetId = $request->input('asset_id');
 
-        // Detect QR content format: ID:{number} or JSON
+        // Detect QR content format: ID:{number}, URL (/r/{number}), or JSON
         if (!$assetId && strlen($q) >= 1) {
             $idMatch = preg_match('/^ID[:\s]*(\d+)$/i', $q, $m);
             if ($idMatch) {
                 $assetId = (int) $m[1];
             } else {
-                $decoded = json_decode($q, true);
-                if (json_last_error() === JSON_ERROR_NONE && isset($decoded['id'])) {
-                    $assetId = (int) $decoded['id'];
+                // Matches /r/123 even if there are trailing slashes or parameters
+                $urlMatch = preg_match('/\/r\/(\d+)(?:\/|\?|$)/i', $q, $urlM);
+                if ($urlMatch) {
+                    $assetId = (int) $urlM[1];
+                } else {
+                    $decoded = json_decode($q, true);
+                    if (json_last_error() === JSON_ERROR_NONE && isset($decoded['id'])) {
+                        $assetId = (int) $decoded['id'];
+                    }
                 }
             }
         }

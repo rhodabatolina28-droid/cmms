@@ -17,7 +17,7 @@ class QrCodeService
         $svg = QrCode::format('svg')
             ->size(200)
             ->margin(1)
-            ->errorCorrection('M')
+            ->errorCorrection('L')
             ->generate($data);
 
         return self::sanitizeSvg($svg);

@@ -338,6 +338,23 @@
                 <td>{!! $intChk('HDD CHECK DISK:', 'desktopHddCheckDisk', 'Yes') !!}</td>
                 <td></td>
             </tr>
+            @if(!empty($pm->monitor2_brand) || !empty($pm->monitor2_pno))
+            <tr>
+                <td class="no" rowspan="2"></td>
+                <td class="eq">MON-2</td>
+                <td>SCREEN CLEAN-UP</td>
+                <td><span class="cb {{ $check('monitor2ScreenCleanup') }}"></span> Yes</td>
+                <td>{!! $intChk('SSD CHECK DISK:', 'desktopSsdCheckDisk', 'Yes') !!}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="eq"></td>
+                <td>CABLE / PLUG CLEAN-UP</td>
+                <td><span class="cb {{ $check('monitor2CableCleanup') }}"></span> Yes</td>
+                <td>{!! $intChk('ENDPOINT SCAN:', 'desktopEndpointScan', 'Yes') !!}</td>
+                <td></td>
+            </tr>
+            @endif
 
             {{-- 3. PRINTER --}}
             <tr>
@@ -355,6 +372,23 @@
                 <td>{!! $intChk('START-UP FILE:', 'desktopStartupFile', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
+            @if(!empty($pm->printer2_brand) || !empty($pm->printer2_pno) || !empty($pm->p2Inkjet) || !empty($pm->p2Laserjet))
+            <tr>
+                <td class="no" rowspan="2"></td>
+                <td class="eq">PRINTER-2</td>
+                <td>CASE CLEAN-UP</td>
+                <td><span class="cb {{ $check('printer2CaseCleanup') }}"></span> Yes</td>
+                <td>{!! $intChk('WINDOWS DEFENDER:', 'desktopWindowsDefender', 'ON') !!}</td>
+                <td></td>
+            </tr>
+            <tr>
+                <td class="eq"></td>
+                <td>CABLE / PLUG CLEAN-UP</td>
+                <td><span class="cb {{ $check('printer2CableCleanup') }}"></span> Yes</td>
+                <td></td>
+                <td></td>
+            </tr>
+            @endif
 
             {{-- 4. KEYBOARD --}}
             <tr>
