@@ -757,17 +757,38 @@
             });
     }
 
+    function getAssetBadge(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'active' || s === 'serviceable') return '<span class="status-pill sp-active" style="font-size:10px;">Active</span>';
+        if (s === 'spare') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#e0e7ff;color:#3730a3;">Spare</span>';
+        if (s === 'for repair' || s === 'defective') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;">For Repair</span>';
+        if (s === 'for disposal' || s === 'scrapped') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#fee2e2;color:#b91c1c;">For Disposal</span>';
+        return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#f1f5f9;color:#64748b;">' + (status || 'N/A') + '</span>';
+    }
+
+    function getRequestBadge(status) {
+        const s = (status || '').toLowerCase();
+        if (s === 'completed') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#dcfce7;color:#166534;">Completed</span>';
+        if (s === 'pending') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#fef3c7;color:#92400e;">Pending</span>';
+        if (s === 'ongoing') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#dbeafe;color:#1e40af;">Ongoing</span>';
+        if (s === 'rejected') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#fee2e2;color:#b91c1c;">Rejected</span>';
+        if (s === 'awaiting signature') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#faf5ff;color:#7e22ce;">Awaiting Signature</span>';
+        if (s === 'scheduled') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#f0fdf4;color:#065f46;">Scheduled</span>';
+        if (s === 'cancelled') return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#f3f4f6;color:#6b7280;">Cancelled</span>';
+        return '<span style="display:inline-block;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:700;background:#f1f5f9;color:#64748b;">' + (status || 'N/A') + '</span>';
+    }
+
     function renderAssets(assets) {
         const container = document.getElementById('detAssets');
         if (assets.length > 0) {
-            let html = '<table class="gov-table-premium fs-12">';
-            html += '<thead><tr><th>Asset Name</th><th>Serial No</th><th>Status</th></tr></thead><tbody>';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+            html += '<thead><tr style="border-bottom:2px solid #e2e8f0;background:#f8fafc;"><th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Asset Name</th><th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Serial No</th><th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Status</th></tr></thead><tbody>';
             assets.forEach(a => {
-                html += `<tr><td>${a.item_name}</td><td>${a.serial_number || '-'}</td><td>${a.status}</td></tr>`;
+                html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 10px;font-weight:600;color:#1e293b;">${a.item_name}</td><td style="padding:8px 10px;color:#64748b;font-size:11px;font-family:monospace;">${a.serial_number || '-'}</td><td style="padding:8px 10px;text-align:center;">${getAssetBadge(a.status)}</td></tr>`;
             });
             container.innerHTML = html + '</tbody></table>';
         } else {
-            container.innerHTML = '<p class="empty-text">No assets currently assigned to this personnel.</p>';
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fa-solid fa-box-open" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4;"></i><span style="font-size:13px;">No assets currently assigned to this personnel.</span></div>';
         }
     }
 
@@ -795,14 +816,14 @@
     function renderRequests(requests) {
         const container = document.getElementById('detRequests');
         if (requests.length > 0) {
-            let html = '<table class="gov-table-premium fs-11">';
-            html += '<tbody>';
+            let html = '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
+            html += '<thead><tr style="border-bottom:2px solid #e2e8f0;background:#f8fafc;"><th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Request #</th><th style="padding:8px 10px;text-align:left;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Type</th><th style="padding:8px 10px;text-align:center;font-weight:700;color:#475569;text-transform:uppercase;font-size:10px;">Status</th></tr></thead><tbody>';
             requests.forEach(r => {
-                html += `<tr><td class="td-request-num">${r.display_number || r.request_number}</td><td>${r.type}</td><td class="td-right">${r.status}</td></tr>`;
+                html += `<tr style="border-bottom:1px solid #f1f5f9;"><td style="padding:8px 10px;font-weight:700;color:#0038A8;font-size:11px;">${r.display_number || r.request_number}</td><td style="padding:8px 10px;color:#64748b;font-size:11px;">${r.type}</td><td style="padding:8px 10px;text-align:center;">${getRequestBadge(r.status)}</td></tr>`;
             });
             container.innerHTML = html + '</tbody></table>';
         } else {
-            container.innerHTML = '<p class="empty-text-sm">No request history found.</p>';
+            container.innerHTML = '<div style="text-align:center;padding:20px;color:#94a3b8;"><i class="fa-solid fa-inbox" style="font-size:24px;display:block;margin-bottom:8px;opacity:0.4;"></i><span style="font-size:13px;">No request history found.</span></div>';
         }
     }
 

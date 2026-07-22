@@ -221,7 +221,7 @@
                     </a>
                     @endif
                 @elseif(Auth::user()->role === 'it')
-                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') || request()->routeIs('maintenance.*') ? 'active' : '' }}" data-tooltip="My Assigned Jobs">
+                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="My Assigned Jobs">
                         <i class="fa-solid fa-screwdriver-wrench"></i> <span>My Assigned Jobs</span>
                     </a>
                     <a href="{{ route('pm.tasks') }}" class="nav-link {{ request()->routeIs('pm.tasks') ? 'active' : '' }}" data-tooltip="PM Tasks">

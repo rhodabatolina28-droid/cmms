@@ -111,7 +111,17 @@
         @endif
 
         {{-- Back to list --}}
-        <a href="{{ Auth::user()->canProcessSupply() ? route('requisitions.index') : route('ict.index') }}" class="cmms-btn-secondary tkt-btn-back">
+        @if(Auth::user()->canProcessSupply())
+            @php
+                $prevUrl = url()->previous();
+                $backRoute = str_contains($prevUrl, 'requisitions')
+                    ? route('requisitions.index', ['view' => 'tickets'])
+                    : route('ict.index');
+            @endphp
+            <a href="{{ $backRoute }}" class="cmms-btn-secondary tkt-btn-back">
+        @else
+            <a href="{{ route('ict.index') }}" class="cmms-btn-secondary tkt-btn-back">
+        @endif
             <i class="fa-solid fa-arrow-left"></i> Back to List
         </a>
 

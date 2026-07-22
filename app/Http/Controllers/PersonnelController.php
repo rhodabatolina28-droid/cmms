@@ -52,19 +52,19 @@ class PersonnelController extends Controller
             return response()->json(['error' => 'Unauthorized - outside division'], 403);
         }
 
-        // Paginate assets and requests instead of limit(50) for better performance with large data
+        // Get all assets and requests assigned to this user (no pagination needed for profile modal)
         $assets = InventoryAsset::with('assignedUser')
             ->where('assigned_to_user', $user->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(20, ['*'], 'assets_page');
+            ->get();
 
         $requests = RequestModel::with('user')
             ->where('user_id', $user->id)
             ->orderBy('created_at', 'desc')
-            ->paginate(20, ['*'], 'requests_page');
+            ->get();
 
         $stats = [
-            'total' => $requests->total(),
+            'total' => $requests->count(),
             'completed' => $requests->where('status', 'Completed')->count(),
             'pending' => $requests->where('status', 'Pending')->count(),
             'rejected' => $requests->where('status', 'Rejected')->count(),

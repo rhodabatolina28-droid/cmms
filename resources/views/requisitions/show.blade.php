@@ -183,7 +183,11 @@
                         <a href="{{ route('ict.ticket', $ticket->id) }}" class="cmms-btn-secondary">Parts register</a>
                     @endif
                 @endif
+                @if(Auth::user()->canProcessSupply())
+                <a href="{{ route('requisitions.index', ['view' => 'queue']) }}" class="cmms-btn-secondary">Return to list</a>
+                @else
                 <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary">Return to list</a>
+                @endif
             </div>
         </div>
 

@@ -92,7 +92,7 @@ class RequestAuthorization
                 return (int) $ticket->assigned_to === (int) $user->id;
             }
             
-            // If NOT assigned, NO ONE can edit (must be assigned first)
+            // If NOT assigned, NO ONE can edit (must be assigned first via the Assign IT panel)
             return false;
         }
 
@@ -370,7 +370,7 @@ class RequestAuthorization
         return true;
     }
 
-    /** PM technician / checklist sections — assigned IT only (Option 3). */
+    /** PM technician / checklist sections — assigned IT only (must be assigned first). */
     public static function canEditMaintenanceTechnician(User $user, ?RequestModel $ticket = null): bool
     {
         if ($ticket) {
@@ -379,10 +379,8 @@ class RequestAuthorization
                 return (int) $ticket->assigned_to === (int) $user->id;
             }
             
-            // If NOT assigned, Super Admin can edit (acting as IT) — must be same branch
-            if ($user->role === 'super_admin') {
-                return self::ticketInSuperAdminBranch($user, $ticket);
-            }
+            // If NOT assigned, NO ONE can edit (must be assigned first via the Assign IT panel)
+            return false;
         }
 
         return false;

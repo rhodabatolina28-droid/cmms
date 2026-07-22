@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'My Requests | NCMB ICT System')
-@section('page-title', 'ICT Repair/Maintenance Requests')
+@section('title', 'ICT Repair Requests | NCMB ICT System')
+@section('page-title', 'ICT Repair Requests')
 
 @section('styles')
     <style nonce="{{ $cspNonce }}">
@@ -221,7 +221,7 @@
                                 {{ $req->remarks ?: '---' }}
                             </td>
                             <td class="td-center">
-                                <a href="{{ route($req->type === 'ICT' ? 'ict.edit' : 'maintenance.edit', $req->id) }}" class="btn-view-modern">
+                                <a href="{{ route('ict.edit', $req->id) }}" class="btn-view-modern">
                                     <i class="fa-solid fa-folder-open"></i> Open
                                 </a>
                             </td>

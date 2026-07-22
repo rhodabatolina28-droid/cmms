@@ -270,7 +270,7 @@
                                         name="end_user_printed_name"
                                         class="printed-name-input"
                                         placeholder="Printed Name"
-                                        value="{{ $maintenance->end_user_printed_name ?? Auth::user()->full_name ?? '' }}"
+                                        value="{{ $maintenance->end_user_printed_name ?? ($endUser->full_name ?? Auth::user()->full_name ?? '') }}"
                                         {{ $endUserFieldsReadonly ? 'disabled' : '' }}>
                                     <span class="sig-caption">Signature over Printed Name</span>
                                 </div>
@@ -889,7 +889,11 @@
                 @endif
             </div>
             @if(isset($request) && $request && $request->is_auto_generated)
-            <a href="{{ route('pm-schedules.orders') }}" class="btn-back-link">← Back to PM Work Orders</a>
+                @if(Auth::user()->role === 'it')
+                <a href="{{ route('pm.tasks') }}" class="btn-back-link">← Back to PM Tasks</a>
+                @else
+                <a href="{{ route('pm-schedules.orders') }}" class="btn-back-link">← Back to PM Work Orders</a>
+                @endif
             @else
             <a href="{{ route('maintenance.index') }}" class="btn-back-link">← Back to Maintenance List</a>
             @endif

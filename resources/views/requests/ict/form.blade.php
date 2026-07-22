@@ -849,9 +849,21 @@
                     </button>
                 @endif
 
+                @if(Auth::user()->canProcessSupply())
+                    @php
+                        $prevUrl = url()->previous();
+                        $backRoute = str_contains($prevUrl, 'requisitions')
+                            ? route('requisitions.index', ['view' => 'tickets'])
+                            : route('ict.index');
+                    @endphp
+                    <a href="{{ $backRoute }}" class="btn-secondary">
+                        <i class="fa-solid fa-arrow-left"></i> Back to List
+                    </a>
+                @else
                 <a href="{{ route('ict.index') }}" class="btn-secondary">
                     <i class="fa-solid fa-arrow-left"></i> Back to List
                 </a>
+                @endif
 
                 {{-- Print PDF only when request is fully Completed --}}
                 @if($isUpdate && $request->status === 'Completed')
@@ -1107,17 +1119,15 @@
                     const itSection = document.getElementById('itPersonnelAfterRepairSection');
                     const isSelfAssigned = assignItSelect.value === currentUserId;
                     
-                    // Only IT personnel assigned to this ticket (or super_admin if UNASSIGNED) can edit
-                    const isUnassigned = !assignItSelect.value;
-                    const canEditSection = isSelfAssigned || (IS_SUPER_ADMIN && isUnassigned);
-                    
-                    if (canEditSection) {
-                        // Enable IT section only when self-assigned or super_admin with unassigned
+                    // Only the assigned IT/Admin personnel can edit Section 5
+                    // Super Admin must assign themselves first before they can edit
+                    if (isSelfAssigned) {
+                        // Enable IT section when self-assigned
                         itSection.classList.remove('disabled-section');
                         itSection.querySelectorAll('input, textarea, select').forEach(el => el.removeAttribute('disabled'));
                         itSection.querySelectorAll('.signature-controls').forEach(el => el.classList.remove('hidden'));
                     } else {
-                        // Disable IT section for all other cases
+                        // Disable IT section for all other cases (must be assigned first)
                         itSection.classList.add('disabled-section');
                         itSection.querySelectorAll('input, textarea, select').forEach(el => el.setAttribute('disabled', 'disabled'));
                         itSection.querySelectorAll('.signature-controls').forEach(el => el.classList.add('hidden'));
