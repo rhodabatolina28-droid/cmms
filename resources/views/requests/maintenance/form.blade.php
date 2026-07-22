@@ -888,7 +888,27 @@
                     </a>
                 @endif
             </div>
-            @if(isset($request) && $request && $request->is_auto_generated)
+            @php
+                $fromAssetId = request()->query('from_asset');
+                $prevUrl = (string) url()->previous();
+                $fromInventory = $fromAssetId || ($prevUrl !== '' && str_contains($prevUrl, 'inventory'));
+            @endphp
+            @if($fromAssetId)
+                @php
+                    $detailRoute = Auth::user()->canProcessSupply()
+                        ? route('inventory.detail', $fromAssetId)
+                        : route('super_admin.inventory.detail', $fromAssetId);
+                @endphp
+                <a href="{{ $detailRoute }}" class="btn-back-link">← Back to Asset Profile</a>
+            @elseif($fromInventory && isset($request) && $request && $request->linked_asset_id)
+                @php
+                    $assetId = $request->linked_asset_id;
+                    $detailRoute = Auth::user()->canProcessSupply()
+                        ? route('inventory.detail', $assetId)
+                        : route('super_admin.inventory.detail', $assetId);
+                @endphp
+                <a href="{{ $detailRoute }}" class="btn-back-link">← Back to Asset Profile</a>
+            @elseif(isset($request) && $request && $request->is_auto_generated)
                 @if(Auth::user()->role === 'it')
                 <a href="{{ route('pm.tasks') }}" class="btn-back-link">← Back to PM Tasks</a>
                 @else

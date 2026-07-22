@@ -436,7 +436,18 @@ class RequestAuthorization
         }
 
         if ($user->role === 'admin') {
-            return false; // Division Admin should not see PM tickets
+            // Admin/Supply Officer can view PM tickets linked to assets in their branch scope
+            if ($ticket->linked_asset_id) {
+                $asset = \App\Models\InventoryAsset::find($ticket->linked_asset_id);
+                if ($asset && (!$user->branch || $asset->branch === $user->branch)) {
+                    return true;
+                }
+            }
+            // Allow viewing if the ticket's user is in the admin's scope
+            if ($ticket->user && $user->office && $ticket->user->office === $user->office) {
+                return true;
+            }
+            return false;
         }
 
         return false;

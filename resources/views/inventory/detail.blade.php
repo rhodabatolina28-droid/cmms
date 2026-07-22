@@ -568,9 +568,18 @@
                             <div class="repair-action"><i class="fa-solid fa-check"></i> <strong>Action Taken:</strong> {{ $action }}</div>
                         @endif
                         <div class="tl-footer">
-                            <a href="{{ route('ict.edit', $req->id) }}" class="tl-link">
-                                View Full Report <i class="fa-solid fa-arrow-right"></i>
-                            </a>
+                                @php
+                                    if ($req->type === 'ICT') {
+                                        $reportRoute = route('ict.edit', $req->id);
+                                    } elseif (Auth::user()->canProcessSupply()) {
+                                        $reportRoute = route('maintenance.show', $req->id) . '?from_asset=' . $asset->asset_id;
+                                    } else {
+                                        $reportRoute = route('maintenance.edit', $req->id) . '?from_asset=' . $asset->asset_id;
+                                    }
+                                @endphp
+                                <a href="{{ $reportRoute }}" class="tl-link">
+                                    View Full Report <i class="fa-solid fa-arrow-right"></i>
+                                </a>
                         </div>
                     </div>
                 </div>
