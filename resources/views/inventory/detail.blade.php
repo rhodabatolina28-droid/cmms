@@ -46,12 +46,12 @@
 /* ===== DETAIL CARDS ===== */
 .detail-card { background: white; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; box-shadow: 0 1px 3px rgba(0,0,0,0.06); transition: all 0.2s; }
 .detail-card:hover { box-shadow: 0 4px 6px rgba(0,0,0,0.08); border-color: #cbd5e1; }
-.detail-card-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 14px 20px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 13px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 10px; }
-.detail-card-body { padding: 20px; }
-.field-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid #f1f5f9; font-size: 14px; }
+.detail-card-header { background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%); padding: 16px 24px; border-bottom: 1px solid #e2e8f0; font-weight: 800; font-size: 14px; color: #1e293b; text-transform: uppercase; letter-spacing: 0.06em; display: flex; align-items: center; gap: 10px; }
+.detail-card-body { padding: 24px; }
+.field-row { display: flex; justify-content: space-between; align-items: center; padding: 14px 0; border-bottom: 1px solid #f1f5f9; font-size: 15px; }
 .field-row:last-child { border-bottom: none; }
-.field-label { color: #64748b; font-weight: 600; font-size: 13px; }
-.field-value { color: #1e293b; font-weight: 700; text-align: right; max-width: 60%; font-size: 14px; }
+.field-label { color: #64748b; font-weight: 600; font-size: 14px; }
+.field-value { color: #1e293b; font-weight: 700; text-align: right; max-width: 60%; font-size: 15px; }
 
 /* ===== STATUS PILLS ===== */
 .status-pill { padding: 4px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; display: inline-block; }
