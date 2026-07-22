@@ -6,7 +6,7 @@
 @section('styles')
 <style nonce="{{ $cspNonce }}">
 /* ===== LAYOUT ===== */
-.detail-wrapper { max-width: 100%; margin: 0; padding: 0 30px; }
+.detail-wrapper { max-width: 100%; margin: 0; padding: 0; }
 .back-link { color: #0038A8; font-size: 14px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; transition: all 0.2s; padding: 8px 12px; border-radius: 6px; margin-top: 8px; }
 .back-link:hover { background: #f1f5f9; transform: translateX(-2px); }
 
