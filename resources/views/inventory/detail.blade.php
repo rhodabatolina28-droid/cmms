@@ -13,8 +13,8 @@
 /* ===== HERO BANNER ===== */
 .hero-banner { background: linear-gradient(135deg, #0038A8 0%, #003f87 100%); color: white; border-radius: 12px; padding: 24px; margin-bottom: 16px; margin-top: 12px; box-shadow: 0 4px 6px -1px rgba(0, 56, 168, 0.2); }
 .hero-label { font-size: 10px; color: rgba(255,255,255,0.7); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 4px; }
-.hero-title { margin: 0; font-size: 20px; font-weight: 800; color: white; line-height: 1.3; }
-.hero-subtitle { font-size: 13px; color: rgba(255,255,255,0.85); margin-top: 4px; }
+.hero-title { margin: 0; font-size: 24px; font-weight: 800; color: white; line-height: 1.3; }
+.hero-subtitle { font-size: 15px; color: rgba(255,255,255,0.85); margin-top: 4px; }
 .hero-badges { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .hero-badge { font-size: 10px; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; font-weight: 600; backdrop-filter: blur(4px); }
 .hero-badge-mono { font-size: 10px; color: rgba(255,255,255,0.9); background: rgba(255,255,255,0.15); padding: 4px 8px; border-radius: 6px; font-family: monospace; font-weight: 600; backdrop-filter: blur(4px); }
@@ -33,10 +33,10 @@
 .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 28px; }
 .stat-card { background: white; border: 1px solid #e2e8f0; border-radius: 10px; padding: 20px; text-align: center; transition: all 0.2s; box-shadow: 0 1px 2px rgba(0,0,0,0.04); }
 .stat-card:hover { transform: translateY(-2px); box-shadow: 0 4px 6px -1px rgba(0, 56, 168, 0.1); border-color: #0038A8; }
-.stat-label { font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
-.stat-value { font-size: 18px; font-weight: 800; color: #1e293b; }
-.stat-value-primary { font-size: 18px; font-weight: 800; color: #0038A8; }
-.stat-value-muted { font-size: 18px; font-weight: 800; color: #94a3b8; }
+.stat-label { font-size: 13px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 10px; }
+.stat-value { font-size: 22px; font-weight: 800; color: #1e293b; }
+.stat-value-primary { font-size: 22px; font-weight: 800; color: #0038A8; }
+.stat-value-muted { font-size: 22px; font-weight: 800; color: #94a3b8; }
 .stat-meta { font-size: 13px; color: #94a3b8; margin-top: 6px; }
 
 /* ===== MAIN CONTENT GRID ===== */
