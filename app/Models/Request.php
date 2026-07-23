@@ -256,6 +256,11 @@ class Request extends Model
                     $updated = false;
                     $remarks = "Automatically updated due to Job Order {$request->request_number} status change from {$oldStatus} to {$newStatus}";
 
+                    // Downtime tracking: start when ticket goes Ongoing
+                    if ($newStatus === self::STATUS_ONGOING && !$request->downtime_start) {
+                        $request->update(['downtime_start' => now()]);
+                    }
+
                     if (in_array($newStatus, [self::STATUS_ONGOING, self::STATUS_AWAITING_PARTS, self::STATUS_AWAITING_SIGNATURE, self::STATUS_REFERRED_EXTERNAL], true)
                         && $previousStatus !== 'For Repair') {
                         // Don't overwrite locked disposal statuses
@@ -265,6 +270,16 @@ class Request extends Model
                             $updated = true;
                         }
                     } elseif ($newStatus === self::STATUS_COMPLETED) {
+                        // Downtime tracking: end when ticket is completed
+                        if ($request->downtime_start && !$request->downtime_end) {
+                            $duration = now()->diffInMinutes($request->downtime_start);
+                            $request->update([
+                                'downtime_end' => now(),
+                                'downtime_duration' => $duration,
+                            ]);
+                            $asset->increment('total_downtime', $duration);
+                        }
+
                         // Check if IT marked the repair result as FOR DISPOSAL
                         $repairDetail = \App\Models\RepairRequest::where('id', $request->detail_id)->first();
                         $itMarkedForDisposal = $repairDetail && $repairDetail->after_repair_status === 'FOR DISPOSAL';
