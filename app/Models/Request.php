@@ -49,6 +49,9 @@ class Request extends Model
         'pm_schedule_id',
         'asset_id',
         'priority',
+        'downtime_start',
+        'downtime_end',
+        'downtime_duration',
     ];
 
     public function getRoutePrefix()
@@ -102,6 +105,26 @@ class Request extends Model
         $branch = $parts[2] ?? '';
         
         return "{$displayPrefix}-{$region}-{$branch}-{$year}-{$number}";
+    }
+
+    // Downtime accessors
+    public function getDowntimeDurationAttribute(): string
+    {
+        if (!$this->attributes['downtime_duration']) return 'N/A';
+        $minutes = $this->attributes['downtime_duration'];
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        if ($hours >= 24) {
+            $days = floor($hours / 24);
+            $hours = $hours % 24;
+            return "{$days}d {$hours}h {$mins}m";
+        }
+        return "{$hours}h {$mins}m";
+    }
+
+    public function getIsDowntimeAttribute(): bool
+    {
+        return $this->status === 'Ongoing' && $this->downtime_start !== null;
     }
 
     // Relationships

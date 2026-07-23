@@ -72,6 +72,7 @@ class InventoryAsset extends Model
         'last_pm_date',
         'next_pm_due_date',
         'pm_schedule_id',
+        'total_downtime',
     ];
 
     protected $casts = [
@@ -86,6 +87,28 @@ class InventoryAsset extends Model
         'next_pm_due_date'       => 'date',
         'pm_schedule_id'         => 'integer',
     ];
+
+    // Downtime accessors
+    public function getTotalDowntimeAttribute(): string
+    {
+        $minutes = $this->attributes['total_downtime'] ?? 0;
+        if ($minutes == 0) return '0h';
+        $hours = floor($minutes / 60);
+        $mins = $minutes % 60;
+        if ($hours >= 24) {
+            $days = floor($hours / 24);
+            $hours = $hours % 24;
+            return "{$days}d {$hours}h {$mins}m";
+        }
+        return "{$hours}h {$mins}m";
+    }
+
+    public function downtimeTickets()
+    {
+        return $this->hasMany(Request::class, 'linked_asset_id', 'asset_id')
+            ->whereNotNull('downtime_duration')
+            ->orderByDesc('created_at');
+    }
 
     // Relationships
     public function assignedUser()
