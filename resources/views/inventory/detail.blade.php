@@ -534,9 +534,12 @@
             @if($repairHistory->isEmpty())
                 <p class="text-empty">No repair or maintenance records linked to this asset.</p>
             @else
+                <div class="downtime-summary mb-4">
+                    <strong>Total Downtime: {{ $asset->total_downtime }}</strong>
+                </div>
                 @foreach($repairHistory as $req)
                 @php
-                    $detail = $req->repairRequest ?? $req->maintenanceRequest ?? null;
+                    $detail = $req->repairRequest ?? $req->maintenanceRequest;
                     $statusClass = match($req->status) { 'Completed' => 'status-completed', 'Rejected','Cancelled' => 'status-rejected', default => 'status-pending' };
                     $dotClass = match($req->status) { 'Completed' => 'green', 'Rejected','Cancelled' => 'red', default => 'yellow' };
                     $problem = $detail?->repair_description ?? $detail?->problem_description ?? null;
@@ -558,6 +561,15 @@
                             Requested by: <strong>{{ $req->user?->full_name ?? 'Unknown' }}</strong>
                             @if($req->assignedTo) · Handled by: <strong>{{ $req->assignedTo->full_name }}</strong>@endif
                         </div>
+                        @if($req->downtime_duration)
+                        <div class="downtime-badge">
+                            Downtime: {{ $req->downtime_duration }}
+                            @if($req->downtime_start)
+                                ({{ \Carbon\Carbon::parse($req->downtime_start)->format('M d, Y g:i A') }}
+                                @if($req->downtime_end) - {{ \Carbon\Carbon::parse($req->downtime_end)->format('M d, Y g:i A')}}@else - Ongoing @endif)
+                            @endif
+                        </div>
+                        @endif
                         @if($problem)
                             <div class="repair-problem"><i class="fa-solid fa-triangle-exclamation"></i> <strong>Problem:</strong> {{ $problem }}</div>
                         @endif
