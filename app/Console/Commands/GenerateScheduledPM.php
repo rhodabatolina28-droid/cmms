@@ -188,9 +188,10 @@ class GenerateScheduledPM extends Command
             $branch = $creator?->branch;
 
             // Only notify super admins in the same branch as the schedule
-            // This ensures NCR super admin doesn't get Region 3 alerts and vice versa
+            // This ensures a super admin from one region doesn't get alerts for another region
             $superAdmins = \App\Models\User::where('role', 'super_admin')
                 ->where('is_active', true)
+                ->when($creator?->region, fn($q) => $q->where('region', $creator->region))
                 ->when($branch, fn($q) => $q->where('branch', $branch))
                 ->get();
 

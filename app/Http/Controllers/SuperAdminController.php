@@ -25,10 +25,14 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
-        // Base scope — always applied
+        // Base scope — always applied. Super Admin is scoped by region (not just branch)
+        // to prevent cross-region data leaks when multiple regions are added.
         $baseScope = function ($q) use ($actor) {
             $q->where('type', 'ICT')
               ->where('division_admin_review_status', 'Approved');
+            if ($actor->region) {
+                $q->whereHas('user', fn ($uq) => $uq->where('region', $actor->region));
+            }
             if ($actor->branch) {
                 $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch));
             }
@@ -36,15 +40,16 @@ class SuperAdminController extends Controller
 
         // ── 1) Unfiltered stats ──
         $stats = [
-            'total'     => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
-            'pending'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Pending')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
-            'ongoing'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Ongoing')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
-            'completed' => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Completed')->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'total'     => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->when($actor->region, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('region', $actor->region)))->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'pending'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Pending')->when($actor->region, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('region', $actor->region)))->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'ongoing'   => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Ongoing')->when($actor->region, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('region', $actor->region)))->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
+            'completed' => \App\Models\Request::where('type', 'ICT')->where('division_admin_review_status', 'Approved')->where('status', 'Completed')->when($actor->region, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('region', $actor->region)))->when($actor->branch, fn($q) => $q->whereHas('user', fn($uq) => $uq->where('branch', $actor->branch)))->count(),
         ];
 
         // ── 2) Filtered query builder ──
         $query = \App\Models\Request::where('type', 'ICT')
             ->where('division_admin_review_status', 'Approved')
+            ->when($actor->region, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('region', $actor->region)))
             ->when($actor->branch, fn ($q) => $q->whereHas('user', fn ($uq) => $uq->where('branch', $actor->branch)));
 
         // Search
@@ -218,7 +223,9 @@ class SuperAdminController extends Controller
         $actor = Auth::user();
 
         // ── 1) Unfiltered stats (single query with conditional counts) ──
+        // Super Admin is scoped by region AND branch to prevent cross-region data leaks.
         $baseQuery = User::query()
+            ->when($actor->region, fn ($q) => $q->where('region', $actor->region))
             ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
 
         $stats = [
@@ -229,6 +236,7 @@ class SuperAdminController extends Controller
 
         // ── 2) Filtered + paginated query ──
         $query = User::query()
+            ->when($actor->region, fn ($q) => $q->where('region', $actor->region))
             ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));
 
         // Search
@@ -556,6 +564,11 @@ class SuperAdminController extends Controller
     private function abortIfOutsideOfficeScope(User $user): void
     {
         $actor = Auth::user();
+
+        // Super Admin is region-scoped (prevents cross-region data leaks)
+        if ($actor->region && $user->region !== $actor->region) {
+            abort(403, 'This user is outside your region scope.');
+        }
 
         // Super Admin is office-scoped (branch level only)
         if ($actor->branch && $user->branch !== $actor->branch) {
