@@ -37,13 +37,11 @@ class PMNotificationService
             }
 
             foreach ($admins as $admin) {
-                Mail::to($admin->email)->queue(
-                    new \App\Mail\SystemNotificationMail(
-                        $admin->full_name,
-                        $type,
-                        $message,
-                        $requestNumber
-                    )
+                \App\Models\Notification::send(
+                    $admin->id,
+                    $request->id ?? null,
+                    'PM Task Created',
+                    "A new PM request {$requestNumber} has been scheduled. Please check your dashboard."
                 );
             }
 
@@ -80,16 +78,7 @@ class PMNotificationService
             }
 
             foreach ($admins as $admin) {
-                Mail::to($admin->email)->queue(
-                    new \App\Mail\SystemNotificationMail(
-                        $admin->full_name,
-                        'PM Scheduled',
-                        "PM tickets have been generated for {$division} Division ({$count} users). Please inform your personnel to coordinate with ICT for their schedule.",
-                        "{$division} PM Batch"
-                    )
-                );
-
-                // In-app notification for division admin
+                // In-app notification for division admin (also triggers email automatically)
                 \App\Models\Notification::send(
                     $admin->id,
                     null,
@@ -124,16 +113,7 @@ class PMNotificationService
             }
 
             foreach ($staff as $user) {
-                Mail::to($user->email)->queue(
-                    new \App\Mail\SystemNotificationMail(
-                        $user->full_name,
-                        'PM Batch Generated',
-                        "New PM tickets generated for {$division} Division ({$count} users). Please conduct the PMs at your earliest convenience.",
-                        "{$division} PM Batch"
-                    )
-                );
-
-                // In-app notification for IT staff
+                // In-app notification for IT staff (also triggers email automatically)
                 \App\Models\Notification::send(
                     $user->id,
                     null,

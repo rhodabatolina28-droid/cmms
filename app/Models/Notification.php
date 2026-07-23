@@ -67,7 +67,11 @@ class Notification extends Model
                     $branch = $request->branch ?: $branch;
                     $region = $request->region ?: $region;
                     if ($request->type === 'ICT') {
-                        $ticketUrl = route('ict.ticket', $request->id);
+                        if ($user->role === 'admin' || $user->role === 'super_admin') {
+                            $ticketUrl = route('ict.show', $request->id);
+                        } else {
+                            $ticketUrl = route('ict.edit', $request->id);
+                        }
                     } else {
                         $ticketUrl = route('maintenance.edit', $request->id);
                     }
@@ -94,9 +98,10 @@ class Notification extends Model
                         $region
                     );
 
-                // log driver still "sends" (writes MIME to log) — good for Laragon local test
-                if ($mailer === 'log' || $mailer === 'array' || $isLocal) {
-                    \Illuminate\Support\Facades\Mail::to($user->email)->queue($mailable);
+                // SMTP: send directly so emails go out immediately without needing a queue worker.
+                // log/array: queue is fine since it just writes to log/memory.
+                if ($mailer === 'smtp') {
+                    \Illuminate\Support\Facades\Mail::to($user->email)->send($mailable);
                 } else {
                     \Illuminate\Support\Facades\Mail::to($user->email)->queue($mailable);
                 }

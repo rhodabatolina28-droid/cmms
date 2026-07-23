@@ -63,6 +63,9 @@ class Request extends Model
         'is_deleted' => 'boolean',
         'is_auto_generated' => 'boolean',
         'reviewed_at' => 'datetime',
+        'downtime_start' => 'datetime',
+        'downtime_end' => 'datetime',
+        'downtime_duration' => 'integer',
     ];
 
     // Get display format: PM-NCR-RCMB-2026-0001 → PM-2026-0001
@@ -108,10 +111,10 @@ class Request extends Model
     }
 
     // Downtime accessors
-    public function getDowntimeDurationAttribute(): string
+    public function getFormattedDowntimeDurationAttribute(): string
     {
         if (!$this->attributes['downtime_duration']) return 'N/A';
-        $minutes = $this->attributes['downtime_duration'];
+        $minutes = (int) $this->attributes['downtime_duration'];
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
         if ($hours >= 24) {
@@ -319,8 +322,13 @@ class Request extends Model
                     }
 
                     // Accumulate repair cost when ticket is completed
-                    if ($newStatus === self::STATUS_COMPLETED && $repairDetail && $repairDetail->cost) {
-                        $asset->increment('total_maintenance_cost', $repairDetail->cost);
+                    // Use getRawOriginal to bypass decimal cast — prevents "A non-numeric value encountered"
+                    // when cost was stored as "" (empty string) instead of NULL
+                    if ($newStatus === self::STATUS_COMPLETED && $repairDetail) {
+                        $rawCost = $repairDetail->getRawOriginal('cost') ?? ($repairDetail->getAttributes()['cost'] ?? null);
+                        if ($rawCost !== null && $rawCost !== '' && is_numeric($rawCost)) {
+                            $asset->increment('total_maintenance_cost', (float) $rawCost);
+                        }
                     }
 
                     if ($updated) {

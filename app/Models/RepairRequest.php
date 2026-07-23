@@ -69,7 +69,8 @@ class RepairRequest extends Model
         'pullout_date' => 'date',
         'technician_date' => 'date',
         'after_service_date' => 'date',
-        'cost' => 'decimal:2',
+        // 'cost' is intentionally NOT using decimal:2 cast — it has a safe accessor/mutator instead
+        // to prevent "A non-numeric value encountered" when an empty string is stored.
         'it_personnel_date' => 'date',
         'end_user_acceptance_date' => 'date',
     ];
@@ -89,5 +90,28 @@ class RepairRequest extends Model
     public function getFullTechnicianName()
     {
         return trim("{$this->technician_first_name} {$this->technician_last_name}");
+    }
+
+    /**
+     * Safe cost accessor — returns null for empty strings / non-numeric values
+     * instead of crashing with "A non-numeric value encountered".
+     */
+    public function getCostAttribute($value): ?float
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        return is_numeric($value) ? (float) $value : null;
+    }
+
+    /**
+     * Safe cost mutator — ensures only a valid float or NULL is stored,
+     * never an empty string that would break the decimal cast.
+     */
+    public function setCostAttribute($value): void
+    {
+        $this->attributes['cost'] = ($value !== null && $value !== '' && is_numeric($value))
+            ? (float) $value
+            : null;
     }
 }

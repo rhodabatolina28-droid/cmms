@@ -43,7 +43,7 @@ class InventoryAsset extends Model
     }
     protected $primaryKey = 'asset_id';
     
-    protected $appends = ['is_depreciated', 'warranty_status'];
+    protected $appends = ['is_depreciated', 'warranty_status', 'formatted_downtime'];
 
     protected $fillable = [
         'asset_id',
@@ -86,12 +86,15 @@ class InventoryAsset extends Model
         'last_pm_date'           => 'date',
         'next_pm_due_date'       => 'date',
         'pm_schedule_id'         => 'integer',
+        'total_downtime'         => 'integer',
     ];
 
-    // Downtime accessors
-    public function getTotalDowntimeAttribute(): string
+    // Downtime display accessor — returns human-readable string
+    // Named 'formatted_downtime' NOT 'total_downtime' to avoid conflicting with increment()
+    // which needs the raw integer from the cast, not a formatted string.
+    public function getFormattedDowntimeAttribute(): string
     {
-        $minutes = $this->attributes['total_downtime'] ?? 0;
+        $minutes = (int) ($this->attributes['total_downtime'] ?? 0);
         if ($minutes == 0) return '0h';
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;

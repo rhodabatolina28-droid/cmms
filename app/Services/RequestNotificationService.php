@@ -193,7 +193,7 @@ class RequestNotificationService
     public static function cascadeSuperAdminsForUser(User $user): Collection
     {
         $superAdmins = User::where('role', 'super_admin')
-            ->when($user->office, fn ($query) => $query->where('office', $user->office))
+            ->when($user->branch, fn ($query) => $query->where('branch', $user->branch))
             ->where('is_active', true)
             ->get();
 

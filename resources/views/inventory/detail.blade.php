@@ -535,7 +535,7 @@
                 <p class="text-empty">No repair or maintenance records linked to this asset.</p>
             @else
                 <div class="downtime-summary mb-4">
-                    <strong>Total Downtime: {{ $asset->total_downtime }}</strong>
+                    <strong>Total Downtime: {{ $asset->formatted_downtime }}</strong>
                 </div>
                 @foreach($repairHistory as $req)
                 @php
@@ -561,9 +561,9 @@
                             Requested by: <strong>{{ $req->user?->full_name ?? 'Unknown' }}</strong>
                             @if($req->assignedTo) · Handled by: <strong>{{ $req->assignedTo->full_name }}</strong>@endif
                         </div>
-                        @if($req->downtime_duration)
+                        @if($req->formatted_downtime_duration !== 'N/A')
                         <div class="downtime-badge">
-                            Downtime: {{ $req->downtime_duration }}
+                            Downtime: {{ $req->formatted_downtime_duration }}
                             @if($req->downtime_start)
                                 ({{ \Carbon\Carbon::parse($req->downtime_start)->format('M d, Y g:i A') }}
                                 @if($req->downtime_end) - {{ \Carbon\Carbon::parse($req->downtime_end)->format('M d, Y g:i A')}}@else - Ongoing @endif)
