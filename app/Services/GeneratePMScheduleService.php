@@ -258,6 +258,29 @@ class GeneratePMScheduleService
             return [null, false]; // No completed requests yet for this division
         }
 
+        // CRITICAL: Verify ALL eligible users (with Active assets) in this division
+        // have been processed. This prevents advancing when some users were never
+        // generated (e.g. due to division name mismatch, or other filtering issues).
+        $totalEligibleUsers = \App\Models\InventoryAsset::where('status', 'Active')
+            ->whereNotNull('assigned_to_user')
+            ->where('office', $focusDivision)
+            ->distinct('assigned_to_user')
+            ->count('assigned_to_user');
+
+        $uniqueCompletedUsers = RequestModel::where('pm_schedule_id', $schedule->id)
+            ->where('is_auto_generated', true)
+            ->where('status', 'Completed')
+            ->where('office', $focusDivision)
+            ->when($activeCycle, fn($q) => $q->where('created_at', '>=', $activeCycle->started_at))
+            ->distinct('user_id')
+            ->count('user_id');
+
+        if ($uniqueCompletedUsers < $totalEligibleUsers) {
+            Log::warning("PM division '{$focusDivision}' has {$uniqueCompletedUsers}/{$totalEligibleUsers} users completed. "
+                . "Cannot advance — not all eligible users have been processed yet.");
+            return [null, false];
+        }
+
         // --- Current division is complete ---
         // Record this division's completion date and compute its next schedule
         // Scoped to the CURRENT CYCLE — no cross-cycle contamination.

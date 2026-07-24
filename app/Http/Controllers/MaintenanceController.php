@@ -163,6 +163,7 @@ class MaintenanceController extends Controller
             'maintenance' => null,
             'myAssets'  => $myAssets,
             'linkedPmAsset' => null,
+            'endUser'   => $user,
         ], $flags));
     }
 
@@ -520,8 +521,10 @@ class MaintenanceController extends Controller
                             $trackingRequest->office
                         );
 
-                        // Notify admin/supply officer about the disposal
-                        $admins = \App\Models\User::where('role', 'admin')->get();
+                        // Notify supply officer/admin about the disposal (only those with can_supply = true)
+                        $admins = \App\Models\User::where('can_supply', true)
+                            ->where('is_active', true)
+                            ->get();
                         foreach ($admins as $admin) {
                             \App\Models\Notification::send(
                                 $admin->id,
@@ -1035,11 +1038,14 @@ class MaintenanceController extends Controller
             }
         }
 
+        $endUser = User::find($requestorId);
+
         $data = array_merge([
             'request'    => $trackingRequest,
             'maintenance' => $maintenance,
             'myAssets'   => $myAssets,
             'linkedPmAsset' => $linkedPmAsset,
+            'endUser'    => $endUser,
         ], $flags);
 
         if (!empty($flags['canAssignIt'])) {
