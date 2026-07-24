@@ -58,7 +58,8 @@
 .sp-active { background: #dcfce7; color: #166534; }
 .sp-spare { background: #dbeafe; color: #1e40af; }
 .sp-defective { background: #fee2e2; color: #991b1b; }
-.sp-repair { background: #fef9c3; color: #854d0e; }
+.sp-repair { background: #ffedd5; color: #9a3412; }
+.sp-maintenance { background: #e0e7ff; color: #3730a3; }
 
 /* ===== WARRANTY BADGES ===== */
 .warranty-badge { font-size: 12px; font-weight: 800; padding: 4px 10px; border-radius: 6px; display: inline-block; }
@@ -256,7 +257,9 @@
                 @php
                     $sc = match($asset->status) {
                         'Active' => 'sp-active', 'Spare' => 'sp-spare',
-                        'Defective', 'Scrapped' => 'sp-defective', default => 'sp-repair'
+                        'Defective', 'Scrapped', 'Disposed', 'For Disposal' => 'sp-defective', 
+                        'Under Maintenance' => 'sp-maintenance',
+                        default => 'sp-repair' 
                     };
                 @endphp
                 <span class="status-pill {{ $sc }}">{{ $asset->status }}</span>
@@ -539,12 +542,19 @@
                 </div>
                 @foreach($repairHistory as $req)
                 @php
-                    $detail = $req->repairRequest ?? $req->maintenanceRequest;
+                    $detail = $req->type === 'Preventive Maintenance' ? $req->maintenanceRequest : $req->repairRequest;
                     $statusClass = match($req->status) { 'Completed' => 'status-completed', 'Rejected','Cancelled' => 'status-rejected', default => 'status-pending' };
                     $dotClass = match($req->status) { 'Completed' => 'green', 'Rejected','Cancelled' => 'red', default => 'yellow' };
-                    $problem = $detail?->repair_description ?? $detail?->problem_description ?? null;
-                    $action = $detail?->it_remarks ?? $detail?->action_taken ?? null;
-                    $diagnosis = $detail?->initial_diagnosis ?? null;
+                    
+                    if ($req->type === 'Preventive Maintenance') {
+                        $problem = $detail?->problem_description ?? null;
+                        $diagnosis = $detail?->diagnosis ?? null;
+                        $action = null; 
+                    } else {
+                        $problem = $detail?->repair_description ?? $detail?->problem_description ?? null;
+                        $action = $detail?->it_remarks ?? $detail?->action_taken ?? null;
+                        $diagnosis = $detail?->initial_diagnosis ?? null;
+                    }
                 @endphp
                 <div class="timeline-item">
                     <div class="timeline-dot {{ $dotClass }}"></div>

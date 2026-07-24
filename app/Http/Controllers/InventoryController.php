@@ -590,6 +590,12 @@ class InventoryController extends Controller
                       $sub->where('type', 'Preventive Maintenance')
                           ->where('is_auto_generated', true)
                           ->where('user_id', $assetUserId);
+                  })
+                  ->orWhere(function ($sub) use ($assetId) {
+                      $sub->where('type', 'Preventive Maintenance')
+                          ->whereHas('maintenanceRequest', function ($pm) use ($assetId) {
+                              $pm->where('disposal_asset_id', $assetId);
+                          });
                   });
             })
             ->orderByDesc('created_at')

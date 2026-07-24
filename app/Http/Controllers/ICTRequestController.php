@@ -34,14 +34,9 @@ class ICTRequestController extends Controller
             }
             return view('requests.index', compact('requests'));
         } elseif ($user->role === 'it') {
-            // IT: ICT + PM assigned to them
-            $query->where(function ($q) use ($user) {
-                $q->where('type', 'ICT')
-                  ->orWhere(function ($sub) use ($user) {
-                      $sub->where('type', 'Preventive Maintenance')
-                          ->where('assigned_to', $user->id);
-                  });
-            });
+            // IT: ICT only, assigned to them
+            $query->where('type', 'ICT')
+                  ->where('assigned_to', $user->id);
             $requests = $query->orderBy('created_at', 'desc')->paginate(20);
             if (request()->wantsJson() || request()->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
@@ -452,6 +447,19 @@ class ICTRequestController extends Controller
 
         if ($assetError = RequestAuthorization::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
             return response()->json(['success' => false, 'message' => $assetError], 422);
+        }
+
+        // Prevent duplicate ICT requests for the same asset if there's an active/open ticket
+        $existingRequest = RequestModel::where('linked_asset_id', $request->input('linked_asset_id'))
+            ->where('type', 'ICT')
+            ->whereIn('status', ['Pending', 'Ongoing', 'Awaiting Signature', 'Referred External'])
+            ->exists();
+
+        if ($existingRequest) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This asset already has an active ICT repair request. Please wait for the current request to be completed before submitting a new one.'
+            ], 422);
         }
 
         try {
@@ -1075,7 +1083,11 @@ class ICTRequestController extends Controller
 
             // After Repair
             'after_repair_status' => $data['afterRepairStatus'] ?? $data['after_repair_status'] ?? null,
-            'cost' => $data['repairCost'] ?? $data['cost'] ?? null,
+            'cost' => (isset($data['repairCost']) && $data['repairCost'] !== '')
+                ? (float) $data['repairCost']
+                : ((isset($data['cost']) && $data['cost'] !== '')
+                    ? (float) $data['cost']
+                    : null),
             'after_service_date' => $data['afterServiceDate'] ?? $data['after_service_date'] ?? null,
             'findings_remarks' => $data['findingsRemarks'] ?? $data['findings_remarks'] ?? null,
             'it_personnel_signature' => $data['itPersonnelSignature'] ?? $data['it_personnel_signature'] ?? null,

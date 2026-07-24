@@ -126,7 +126,8 @@ class MaintenanceController extends Controller
             abort(403, 'You cannot start this PM task.');
         }
 
-        if ($trackingRequest->status === RequestModel::STATUS_SCHEDULED) {
+        // Do not auto-start if Super Admin clicks it, as they might just be viewing to assign it.
+        if ($trackingRequest->status === RequestModel::STATUS_SCHEDULED && $user->role !== 'super_admin') {
             $trackingRequest->update(['status' => RequestModel::STATUS_ONGOING]);
 
             if ($trackingRequest->assigned_to !== $user->id) {
@@ -348,7 +349,9 @@ class MaintenanceController extends Controller
 
         $previousId = $trackingRequest->assigned_to;
         $updates = ['assigned_to' => $itId];
-        if ($itId && $trackingRequest->status === RequestModel::STATUS_PENDING) {
+        
+        $oldStatus = $trackingRequest->status;
+        if ($itId && in_array($oldStatus, [RequestModel::STATUS_PENDING, RequestModel::STATUS_SCHEDULED])) {
             $updates['status'] = RequestModel::STATUS_ONGOING;
         }
         $trackingRequest->update($updates);

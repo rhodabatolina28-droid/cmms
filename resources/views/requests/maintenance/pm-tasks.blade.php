@@ -189,7 +189,7 @@
                                     <span class="badge-pm {{ $badgeClass }}">{{ $statusLabel }}</span>
                                 </td>
                                 <td class="pm-td-action">
-                                    <a href="{{ route('maintenance.edit', $task->id) }}" class="pm-btn-action {{ $task->status === 'Completed' ? 'pm-btn-view-task' : 'pm-btn-start' }}">
+                                    <a href="{{ $task->status === 'Scheduled' ? route('maintenance.start', $task->id) : route('maintenance.edit', $task->id) }}" class="pm-btn-action {{ $task->status === 'Completed' ? 'pm-btn-view-task' : 'pm-btn-start' }}">
                                         <i class="fa-solid fa-{{ $task->status === 'Completed' ? 'eye' : 'arrow-right' }}"></i>
                                         {{ $task->status === 'Scheduled' ? 'Start' : ($task->status === 'Completed' ? 'View' : 'Update') }}
                                     </a>

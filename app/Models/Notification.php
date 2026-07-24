@@ -73,7 +73,11 @@ class Notification extends Model
                             $ticketUrl = route('ict.edit', $request->id);
                         }
                     } else {
-                        $ticketUrl = route('maintenance.edit', $request->id);
+                        if (in_array($user->role, ['it', 'super_admin'])) {
+                            $ticketUrl = route('maintenance.edit', $request->id);
+                        } else {
+                            $ticketUrl = null;
+                        }
                     }
                 }
 

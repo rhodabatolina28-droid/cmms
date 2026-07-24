@@ -164,6 +164,7 @@
         .sp-spare { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); }
         .sp-defective { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
         .sp-repair { background: #fff7ed; color: #c2410c; border: 1px solid #ffedd5; box-shadow: 0 2px 4px rgba(194, 65, 12, 0.15); }
+        .sp-maintenance { background: #e0e7ff; color: #3730a3; border: 1px solid #c7d2fe; box-shadow: 0 2px 4px rgba(79, 70, 229, 0.15); }
         .sp-disposal { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
         .sp-scrapped { background: #fef2f2; color: #7f1d1d; border: 1px solid #fca5a5; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
 
@@ -658,6 +659,7 @@
                     <option value="Spare">Spare / Stock</option>
                     <option value="Defective">Defective</option>
                     <option value="For Repair">For Repair</option>
+                    <option value="Under Maintenance">Under Maintenance</option>
                     <option value="For Disposal">For Disposal</option>
                     <option value="Scrapped">Scrapped</option>
                 </select>

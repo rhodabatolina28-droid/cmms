@@ -275,6 +275,7 @@ function renderInventoryTable(assets) {
         if (asset.status === 'Spare') statusClass = 'sp-spare';
         if (asset.status === 'Defective') statusClass = 'sp-defective';
         if (asset.status === 'For Repair') statusClass = 'sp-repair';
+        if (asset.status === 'Under Maintenance') statusClass = 'sp-maintenance';
         if (asset.status === 'For Disposal') statusClass = 'sp-disposal';
         if (asset.status === 'Scrapped' || asset.status === 'Disposed') statusClass = 'sp-scrapped';
 

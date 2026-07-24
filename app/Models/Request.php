@@ -248,102 +248,166 @@ class Request extends Model
                     }
                 }
             }
-            
-            if ($request->wasChanged('status') && $request->linked_asset_id) {
-                $oldStatus = $request->getOriginal('status');
-                $newStatus = $request->status;
+                   if ($request->wasChanged('status')) {
+                $assetsToUpdate = collect();
+                
+                if ($request->linked_asset_id) {
+                    $asset = \App\Models\InventoryAsset::find($request->linked_asset_id);
+                    if ($asset && (int) $asset->assigned_to_user === (int) $request->user_id) {
+                        $assetsToUpdate->push($asset);
+                    }
+                } elseif ($request->type === 'Preventive Maintenance' && $request->is_auto_generated && $request->user_id) {
+                    $assets = \App\Models\InventoryAsset::where('assigned_to_user', $request->user_id)->get();
+                    foreach ($assets as $a) {
+                        $assetsToUpdate->push($a);
+                    }
+                }
 
-                $asset = \App\Models\InventoryAsset::find($request->linked_asset_id);
-                if ($asset && (int) $asset->assigned_to_user === (int) $request->user_id) {
-                    $previousStatus = $asset->status;
-                    $updated = false;
-                    $remarks = "Automatically updated due to Job Order {$request->request_number} status change from {$oldStatus} to {$newStatus}";
+                if ($assetsToUpdate->isNotEmpty()) {
+                    $oldStatus = $request->getOriginal('status');
+                    $newStatus = $request->status;
+                    
+                    $assignedName = 'Unassigned';
+                    if ($request->assigned_to) {
+                        $assignedUser = \App\Models\User::find($request->assigned_to);
+                        if ($assignedUser) {
+                            $assignedName = $assignedUser->full_name;
+                        }
+                    }
 
                     // Downtime tracking: start when ticket goes Ongoing
                     if ($newStatus === self::STATUS_ONGOING && !$request->downtime_start) {
                         $request->update(['downtime_start' => now()]);
                     }
 
-                    if (in_array($newStatus, [self::STATUS_ONGOING, self::STATUS_AWAITING_PARTS, self::STATUS_AWAITING_SIGNATURE, self::STATUS_REFERRED_EXTERNAL], true)
-                        && $previousStatus !== 'For Repair') {
-                        // Don't overwrite locked disposal statuses
-                        if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true)) {
-                            $asset->status = 'For Repair';
-                            $asset->save();
-                            $updated = true;
-                        }
-                    } elseif ($newStatus === self::STATUS_COMPLETED) {
-                        // Downtime tracking: end when ticket is completed
-                        if ($request->downtime_start && !$request->downtime_end) {
-                            $duration = now()->diffInMinutes($request->downtime_start);
-                            $request->update([
-                                'downtime_end' => now(),
-                                'downtime_duration' => $duration,
-                            ]);
-                            $asset->increment('total_downtime', $duration);
-                        }
+                    foreach ($assetsToUpdate as $asset) {
+                        $previousStatus = $asset->status;
+                        $updated = false;
+                        $historyAction = 'System Auto Update';
+                        $remarks = '';
 
-                        // Check if IT marked the repair result as FOR DISPOSAL
-                        $repairDetail = \App\Models\RepairRequest::where('id', $request->detail_id)->first();
-                        $itMarkedForDisposal = $repairDetail && $repairDetail->after_repair_status === 'FOR DISPOSAL';
-
-                        if ($itMarkedForDisposal) {
-                            // Asset is already For Disposal — do NOT downgrade to Defective.
-                            // Fire the supply notification now that the ticket is fully completed.
-                            // Notify supply_officer OR admin with can_supply=1 (Administrative Division handles supply)
-                            $supplyOfficerIds = \App\Models\User::where(function($q) {
-                                    $q->where('role', 'supply_officer')
-                                      ->orWhere(function($sub) {
-                                          $sub->where('role', 'admin')->where('can_supply', 1);
-                                      });
-                                })
-                                ->where('is_active', true)
-                                ->when($asset->branch, fn($q) => $q->where('branch', $asset->branch))
-                                ->pluck('id');
-
-                            foreach ($supplyOfficerIds as $officerId) {
-                                \App\Models\Notification::send(
-                                    $officerId,
-                                    $request->id,
-                                    'Asset Tagged for Disposal',
-                                    "Ticket {$request->request_number} is completed. Asset [{$asset->item_name} | SN: {$asset->serial_number}] has been tagged for disposal by IT. Please process and update the asset status when physical disposal is done."
-                                );
+                        if ($request->type === 'Preventive Maintenance') {
+                            $historyAction = 'PM Status Sync';
+                            $remarks = "Automatically updated due to Preventive Maintenance {$request->request_number} status change from {$oldStatus} to {$newStatus}. Assigned to: {$assignedName}";
+                            
+                            if ($newStatus === self::STATUS_ONGOING && $previousStatus !== 'Under Maintenance') {
+                                if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true)) {
+                                    $asset->status = 'Under Maintenance';
+                                    $asset->save();
+                                    $updated = true;
+                                }
                             }
-                            $updated = false; // No status change needed
                         } else {
-                            // Normal completion — asset is back to Active
-                            // But don't overwrite For Disposal or Scrapped
-                            if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true) && $previousStatus !== 'Active') {
-                                $asset->status = 'Active';
-                                $asset->save();
-                                $updated = true;
+                            $historyAction = 'Repair Status Sync';
+                            $remarks = "Automatically updated due to Job Order {$request->request_number} status change from {$oldStatus} to {$newStatus}. Assigned to: {$assignedName}";
+                            
+                            if (in_array($newStatus, [self::STATUS_ONGOING, self::STATUS_AWAITING_PARTS, self::STATUS_AWAITING_SIGNATURE, self::STATUS_REFERRED_EXTERNAL], true)
+                                && $previousStatus !== 'For Repair') {
+                                if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true)) {
+                                    $asset->status = 'For Repair';
+                                    $asset->save();
+                                    $updated = true;
+                                }
                             }
                         }
-                    }
+                        
+                        if ($newStatus === self::STATUS_COMPLETED) {
+                            // Downtime tracking: end when ticket is completed
+                            if ($request->downtime_start && !$request->downtime_end) {
+                                $duration = now()->diffInMinutes($request->downtime_start);
+                                $request->update([
+                                    'downtime_end' => now(),
+                                    'downtime_duration' => $duration,
+                                ]);
+                                $asset->increment('total_downtime', $duration);
+                            }
 
-                    // Accumulate repair cost when ticket is completed
-                    // Use getRawOriginal to bypass decimal cast — prevents "A non-numeric value encountered"
-                    // when cost was stored as "" (empty string) instead of NULL
-                    if ($newStatus === self::STATUS_COMPLETED && $repairDetail) {
-                        $rawCost = $repairDetail->getRawOriginal('cost') ?? ($repairDetail->getAttributes()['cost'] ?? null);
-                        if ($rawCost !== null && $rawCost !== '' && is_numeric($rawCost)) {
-                            $asset->increment('total_maintenance_cost', (float) $rawCost);
+                            $itMarkedForDisposal = false;
+                            $repairDetail = null;
+                            if ($request->type === 'Preventive Maintenance') {
+                                $pmDetail = \App\Models\PreventiveMaintenance::find($request->detail_id);
+                                if ($pmDetail && (int)$pmDetail->disposal_asset_id === (int)$asset->asset_id) {
+                                    $itMarkedForDisposal = true;
+                                }
+                            } else {
+                                $repairDetail = \App\Models\RepairRequest::find($request->detail_id);
+                                if ($repairDetail && $repairDetail->after_repair_status === 'FOR DISPOSAL') {
+                                    $itMarkedForDisposal = true;
+                                }
+                            }
+
+                            if ($itMarkedForDisposal) {
+                                $supplyOfficerIds = \App\Models\User::where(function($q) {
+                                        $q->where('role', 'supply_officer')
+                                          ->orWhere(function($sub) {
+                                              $sub->where('role', 'admin')->where('can_supply', 1);
+                                          });
+                                    })
+                                    ->where('is_active', true)
+                                    ->when($asset->branch, fn($q) => $q->where('branch', $asset->branch))
+                                    ->pluck('id');
+
+                                foreach ($supplyOfficerIds as $officerId) {
+                                    \App\Models\Notification::send(
+                                        $officerId,
+                                        $request->id,
+                                        'Asset Tagged for Disposal',
+                                        "Ticket {$request->request_number} is completed. Asset [{$asset->item_name} | SN: {$asset->serial_number}] has been tagged for disposal by IT. Please prepare to print the disposal tag."
+                                    );
+                                }
+                                
+                                // Auto unassign and set to For Disposal
+                                if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true)) {
+                                    $asset->status = \App\Enums\AssetStatus::FOR_DISPOSAL;
+                                    $asset->assigned_to_user = null;
+                                    $asset->save();
+                                    
+                                    $updated = true;
+                                    $historyAction = 'Asset Surrendered';
+                                    $remarks = "Asset automatically unassigned and marked for disposal via ticket {$request->request_number}.";
+                                }
+                            } else {
+                                // Normal completion — asset is back to Active
+                                if (!in_array($previousStatus, [\App\Enums\AssetStatus::FOR_DISPOSAL, \App\Enums\AssetStatus::SCRAPPED], true) && $previousStatus !== 'Active') {
+                                    $asset->status = 'Active';
+                                    $asset->save();
+                                    $updated = true;
+                                }
+                            }
                         }
-                    }
 
-                    if ($updated) {
-                        \App\Models\InventoryHistory::create([
-                            'asset_id' => $asset->asset_id,
-                            'action' => 'Asset Status Auto-Sync',
-                            'performed_by' => \Illuminate\Support\Facades\Auth::id(),
-                            'new_user_id' => $asset->assigned_to_user,
-                            'previous_status' => $previousStatus,
-                            'new_status' => $asset->status,
-                            'remarks' => $remarks,
-                        ]);
+                        // Accumulate repair cost when ticket is completed
+                        if ($newStatus === self::STATUS_COMPLETED && isset($repairDetail)) {
+                            $rawCost = $repairDetail->getRawOriginal('cost') ?? ($repairDetail->getAttributes()['cost'] ?? null);
+                            if ($rawCost !== null && $rawCost !== '' && is_numeric($rawCost)) {
+                                $asset->increment('total_maintenance_cost', (float) $rawCost);
+                            }
+                        }
+
+                        if ($updated) {
+                            // Check for duplicates to prevent double logging from multiple save calls or race conditions
+                            $recentLog = \App\Models\InventoryHistory::where('asset_id', $asset->asset_id)
+                                ->where('action', $historyAction)
+                                ->where('new_status', $asset->status)
+                                ->where('created_at', '>=', now()->subSeconds(10))
+                                ->first();
+
+                            if (!$recentLog) {
+                                \App\Models\InventoryHistory::create([
+                                    'asset_id' => $asset->asset_id,
+                                    'action' => $historyAction,
+                                    'performed_by' => \Illuminate\Support\Facades\Auth::id(),
+                                    'previous_user_id' => $asset->assigned_to_user, // Fix Unassigned -> User issue
+                                    'new_user_id' => $asset->assigned_to_user,
+                                    'previous_status' => $previousStatus,
+                                    'new_status' => $asset->status,
+                                    'remarks' => $remarks,
+                                ]);
+                            }
+                        }
                     }
                 }
-            }
+            }           
         });
     }
 }

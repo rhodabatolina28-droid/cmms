@@ -27,7 +27,7 @@ class InventoryAsset extends Model
             }
 
             // Never override locked statuses
-            $preservedStatuses = ['Defective', 'For Repair', 'Scrapped', 'For Disposal'];
+            $preservedStatuses = ['Defective', 'For Repair', 'Scrapped', 'For Disposal', 'Under Maintenance'];
 
             if (!in_array($asset->status, $preservedStatuses, true)) {
                 // Active without user = Spare
