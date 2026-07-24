@@ -180,7 +180,7 @@
                                 @if(!empty($pm->end_user_signature)) {!! pmSigImg($pm->end_user_signature) !!} @endif
                             </div>
                             <div class="s31">
-                                {{ $pm->end_user_printed_name ?: ($pm->end_user_name ?: ($request->requestor_name ?: ($request->user->full_name ?? ''))) }}
+                                {{ $pm->end_user_printed_name ?: ($pm->end_user_name ?: ($request->requestor_name ?: ($request->assignedTo->full_name ?? ''))) }}
                             </div>
                         </td>
                         <td class="s19">

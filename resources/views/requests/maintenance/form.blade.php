@@ -270,7 +270,7 @@
                                         name="end_user_printed_name"
                                         class="printed-name-input"
                                         placeholder="Printed Name"
-                                        value="{{ $maintenance->end_user_printed_name ?? ($endUser->full_name ?? Auth::user()->full_name ?? '') }}"
+                                        value="{{ $maintenance->end_user_printed_name ?? ($endUser->full_name ?? '') }}"
                                         {{ $endUserFieldsReadonly ? 'disabled' : '' }}>
                                     <span class="sig-caption">Signature over Printed Name</span>
                                 </div>
