@@ -1181,7 +1181,10 @@
                     .then(data => {
                         if (data.success) {
                             Swal.fire({ icon: 'success', title: 'Assigned', text: data.message, confirmButtonColor: '#0038A8' })
-                                .then(() => window.location.reload());
+                                .then(() => {
+                                    // Redirect to PM Work Orders page after assignment
+                                    window.location.href = '{{ route("pm-schedules.orders") }}';
+                                });
                         } else {
                             Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Assignment failed', confirmButtonColor: '#0038A8' });
                             assignItBtn.disabled = false;
