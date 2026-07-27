@@ -9,6 +9,8 @@ use App\Models\User;
 use App\Services\RequestNotificationService;
 use App\Support\RequestAuthorization;
 use App\Support\RequisitionSupport;
+use App\Http\Requests\StoreRequisitionRequest;
+use App\Http\Requests\ReviewRequisitionRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -135,7 +137,7 @@ class RequisitionController extends Controller
         abort(403);
     }
 
-    public function store(Request $httpRequest, $requestId)
+    public function store(StoreRequisitionRequest $httpRequest, $requestId)
     {
         $user = Auth::user();
 
@@ -150,14 +152,7 @@ class RequisitionController extends Controller
             return response()->json(['success' => false, 'message' => 'You can only request parts for ICT tickets assigned to you.'], 403);
         }
 
-        $validated = $httpRequest->validate([
-            'items' => 'required|array|min:1',
-            'items.*.description' => 'required|string|max:500',
-            'items.*.quantity' => 'required|integer|min:1',
-            'remarks' => 'nullable|string|max:2000',
-            'set_awaiting_parts' => 'nullable|boolean',
-            'submission_id' => 'nullable|string|max:64',
-        ]);
+        $validated = $httpRequest->validated();
 
         return DB::transaction(function () use ($validated, $ticket, $user) {
             Requisition::where('request_id', $ticket->id)
@@ -207,17 +202,14 @@ class RequisitionController extends Controller
         });
     }
 
-    public function review(Request $httpRequest, $id)
+    public function review(ReviewRequisitionRequest $httpRequest, $id)
     {
         $supply = Auth::user();
         if (! $supply->canProcessSupply()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
-        $validated = $httpRequest->validate([
-            'action' => 'required|in:approve,reject,issue',
-            'remarks' => 'nullable|string|max:2000',
-        ]);
+        $validated = $httpRequest->validated();
 
         return DB::transaction(function () use ($validated, $supply, $id) {
             $requisition = Requisition::with('ticket', 'requester')->lockForUpdate()->findOrFail($id);

@@ -9,6 +9,7 @@ use App\Models\InventoryHistory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use App\Http\Requests\StorePersonnelRequest;
 
 class PersonnelController extends Controller
 {
@@ -134,21 +135,11 @@ class PersonnelController extends Controller
             });
     }
 
-    public function store(Request $request)
+    public function store(StorePersonnelRequest $request)
     {
         $actor = Auth::user();
-        
-        $validated = $request->validate([
-            'full_name'  => 'required|string|max:255',
-            'email'      => 'required|email|unique:users,email',
-            'role'       => 'required|in:' . implode(',', array_diff(config('roles.list', ['user','admin','it']), ['super_admin', 'supply_officer'])),
-            'position'   => 'nullable|string',
-            'branch'     => 'nullable|string',
-            'office'     => 'nullable|string',
-            'department' => 'nullable|string',
-            'region'     => 'nullable|string',
-            'password'   => 'required|min:8|regex:/[A-Z]/|regex:/[0-9]/'
-        ]);
+
+        $validated = $request->validated();
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;

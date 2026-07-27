@@ -7,6 +7,8 @@ use App\Models\PMScheduleHistory;
 use App\Models\PMCycle;
 use App\Models\AuditLog;
 use App\Services\GeneratePMScheduleService;
+use App\Http\Requests\StorePMScheduleRequest;
+use App\Http\Requests\UpdatePMScheduleRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -169,13 +171,9 @@ class PMScheduleController extends Controller
         return view('pm-schedules.create');
     }
 
-    public function store(Request $request)
+    public function store(StorePMScheduleRequest $request)
     {
-        $validated = $request->validate([
-            'schedule_name'   => 'required|string|max:255|unique:pm_schedules',
-            'division_filter' => 'nullable|string|max:50',
-            'frequency'       => 'required|in:Monthly,Quarterly,Semi-annual,Annual',
-        ]);
+        $validated = $request->validated();
 
         // Enforce one active PM schedule per branch.
         // Government CMMS only needs one standardized schedule per branch/office.
@@ -312,13 +310,9 @@ class PMScheduleController extends Controller
         return view('pm-schedules.edit', compact('pmSchedule'));
     }
 
-    public function update(Request $request, PMSchedule $pmSchedule)
+    public function update(UpdatePMScheduleRequest $request, PMSchedule $pmSchedule)
     {
-        $validated = $request->validate([
-            'schedule_name' => 'required|string|max:255|unique:pm_schedules,schedule_name,' . $pmSchedule->id,
-            'division_filter' => 'nullable|string|max:50',
-            'frequency' => 'required|in:Monthly,Quarterly,Semi-annual,Annual',
-        ]);
+        $validated = $request->validated();
 
         $pmSchedule->update([
             'schedule_name' => $validated['schedule_name'],

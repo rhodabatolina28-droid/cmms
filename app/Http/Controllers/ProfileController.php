@@ -6,6 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
+use App\Http\Requests\UpdateProfileRequest;
 
 class ProfileController extends Controller
 {
@@ -16,16 +17,9 @@ class ProfileController extends Controller
         ]);
     }
 
-    public function update(Request $request)
+    public function update(UpdateProfileRequest $request)
     {
         $user = Auth::user();
-
-        $request->validate([
-            'full_name' => 'required|string|max:255',
-            'email'     => 'required|string|email|max:255|unique:users,email,' . $user->id,
-            'position'  => 'nullable|string|max:255',
-            'password'  => 'nullable|string|min:8|regex:/[A-Z]/|regex:/[0-9]/|confirmed',
-        ]);
 
         $user->full_name = $request->full_name;
         $user->email     = $request->email;

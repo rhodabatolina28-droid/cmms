@@ -10,6 +10,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Auth;
+use App\Http\Requests\StoreSuperAdminUserRequest;
+use App\Http\Requests\UpdateSuperAdminUserRequest;
 
 class SuperAdminController extends Controller
 {
@@ -304,20 +306,9 @@ class SuperAdminController extends Controller
      * Store a newly created user.
      * Super Admin must explicitly assign office/division — no auto-fill from actor scope.
      */
-    public function storeUser(Request $request)
+    public function storeUser(StoreSuperAdminUserRequest $request)
     {
-        $validated = $request->validate([
-            'full_name'  => 'required|string|max:255',
-            'email'      => 'required|email|unique:users,email',
-            'password'   => 'required|min:8|regex:/[A-Z]/|regex:/[0-9]/',
-            'role'       => 'required|in:' . implode(',', config('roles.list', ['user','admin','super_admin','it'])),
-            'region'     => 'nullable|string',
-            'position'   => 'nullable|string',
-            'branch'     => 'nullable|string',
-            'office'     => 'required|string|max:255',
-            'department' => 'nullable|string',
-            'can_supply' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         $validated['password'] = Hash::make($validated['password']);
         $validated['is_active'] = true;
@@ -349,22 +340,12 @@ class SuperAdminController extends Controller
     /**
      * Update an existing user.
      */
-    public function updateUser(Request $request, $id)
+    public function updateUser(UpdateSuperAdminUserRequest $request, $id)
     {
         $user = User::findOrFail($id);
         $this->abortIfOutsideOfficeScope($user);
 
-        $validated = $request->validate([
-            'full_name'  => 'required|string|max:255',
-            'email'      => 'required|email|unique:users,email,' . $user->id,
-            'role'       => 'required|in:' . implode(',', config('roles.list', ['user','admin','super_admin','it'])),
-            'region'     => 'nullable|string',
-            'position'   => 'nullable|string',
-            'branch'     => 'nullable|string',
-            'office'     => 'required|string|max:255',
-            'department' => 'nullable|string',
-            'can_supply' => 'nullable|boolean',
-        ]);
+        $validated = $request->validated();
 
         // Convert supply_officer to admin with can_supply=1 (one role per user in government setup)
         if ($validated['role'] === 'supply_officer') {

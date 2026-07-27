@@ -8,6 +8,7 @@ use App\Models\PhysicalCountSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use App\Http\Requests\MarkAssetPhysicalCountRequest;
 
 class PhysicalCountController extends Controller
 {
@@ -183,7 +184,7 @@ class PhysicalCountController extends Controller
         ]);
     }
 
-    public function markAsset(Request $request, $sessionId)
+    public function markAsset(MarkAssetPhysicalCountRequest $request, $sessionId)
     {
         $user = Auth::user();
         if (!$user->canProcessSupply()) {
@@ -195,11 +196,7 @@ class PhysicalCountController extends Controller
             return response()->json(['success' => false, 'message' => 'Session is already completed.'], 422);
         }
 
-        $validated = $request->validate([
-            'asset_id' => 'required|exists:inventory_assets,asset_id',
-            'status'   => 'required|in:Present,Missing,Damaged',
-            'remarks'  => 'nullable|string|max:500',
-        ]);
+        $validated = $request->validated();
 
         $asset = InventoryAsset::findOrFail($validated['asset_id']);
 

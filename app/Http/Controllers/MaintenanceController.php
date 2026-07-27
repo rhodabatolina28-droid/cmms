@@ -7,6 +7,9 @@ use App\Models\AuditLog;
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
 use App\Http\Requests\StoreMaintenanceRequest;
+use App\Http\Requests\StoreLinkedAssetRequest;
+use App\Http\Requests\AssignItRequest;
+use App\Http\Requests\UpdateMaintenanceRequest;
 use App\Support\RequestAuthorization;
 use App\Services\RequestNotificationService;
 use Illuminate\Http\Request;
@@ -164,112 +167,11 @@ class MaintenanceController extends Controller
         ], $flags));
     }
 
-    public function store(Request $request)
+    public function store(StoreLinkedAssetRequest $request)
     {
         $user = Auth::user();
-        if (!RequestAuthorization::canCreateMaintenanceTicket($user)) {
-            return response()->json(['success' => false, 'message' => 'PM is now managed via schedules by your ICT Unit. Contact your Super Admin.'], 403);
-        }
 
-        $request->validate([
-            'linked_asset_id' => 'required|integer|exists:inventory_assets,asset_id',
-        ]);
-
-        // Only check asset assignment for user role — IT/super_admin can create PM for any asset
-        if ($user->role === 'user') {
-            if ($assetError = RequestAuthorization::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
-                return response()->json(['success' => false, 'message' => $assetError], 422);
-            }
-        }
-
-        try {
-            DB::beginTransaction();
-            $data = $this->filterMaintenanceInput($request);
-
-            $techSigData = '';
-            $userSigData = $data['endUserSignature'] ?? $data['end_user_signature'] ?? '';
-
-            if ($user->role !== 'user') {
-                $techSigData = $data['technicianSignature'] ?? $data['technician_signature'] ?? '';
-            }
-
-            $techSig = $this->saveSignature($techSigData, 'maint_tech', $data['technician_name'] ?? $data['technicianName'] ?? 'Unknown');
-            $userSig = $this->saveSignature($userSigData, 'maint_user', $data['end_user_name'] ?? $data['endUserName'] ?? 'Unknown');
-            $savedSigFiles = array_filter([$techSig, $userSig]);
-
-            $mappedData = $this->mapLegacyData($data);
-            if ($user->role === 'user') {
-                $mappedData = $this->stripMaintenanceAdminFields($mappedData);
-            }
-
-            $tasksObj = [];
-            if ($user->role !== 'user') {
-                $checklistKeywords = ['Cleanup', 'Backup', 'Restore', 'Update', 'Temp', 'Recycle', 'Defrag', 'CheckDisk', 'Scan', 'Virus', 'Defender', 'Startup', 'Level', 'Quality', 'Toner', 'Updated', 'Charging', 'Overload'];
-                foreach ($data as $key => $value) {
-                    foreach ($checklistKeywords as $kw) {
-                        if (str_contains(strtolower($key), strtolower($kw))) {
-                            $tasksObj[$key] = $value;
-                            break;
-                        }
-                    }
-                }
-            }
-
-            $maintenance = PreventiveMaintenance::create(array_merge($mappedData, [
-                'technician_signature' => $techSig,
-                'end_user_signature' => $userSig,
-                'maintenance_tasks_json' => json_encode($tasksObj),
-            ]));
-
-            // Generate request number
-            $requestNumber = $this->generateRequestNumber('Preventive Maintenance');
-            $maintenance->update([
-                'form_no' => $requestNumber,
-                'service_request_no' => $requestNumber
-            ]);
-
-            // Create tracking request
-            $trackingRequest = RequestModel::create([
-                'user_id' => Auth::id(),
-                'request_number' => $requestNumber,
-                'type' => 'Preventive Maintenance',
-                'requestor_name' => $data['end_user_name'] ?? $data['endUserName'] ?? 'Unknown',
-                'description' => $data['problem_description'] ?? $data['problemDescription'] ?? '',
-                'region' => Auth::user()->region,
-                'branch' => Auth::user()->branch,
-                'office' => $user->office ?? $data['end_user_division'] ?? $data['endUserDivision'] ?? '',
-                'status' => RequestModel::STATUS_SCHEDULED,
-                'detail_id' => $maintenance->id,
-                'linked_asset_id' => $request->input('linked_asset_id'),
-            ]);
-
-            // Notify Super Admins directly for PMs (bypassing Division Admin review)
-            RequestNotificationService::notifySuperAdminsOfNewPmRequest($trackingRequest, $user);
-
-            AuditLog::log(
-                "Created PM Request",
-                "Requests",
-                "Created new Preventive Maintenance request {$requestNumber} for " . Auth::user()->full_name,
-                $trackingRequest->office
-            );
-
-            DB::commit();
-            return response()->json([
-                'success' => true,
-                'message' => 'Maintenance form submitted successfully',
-                'request_number' => $requestNumber,
-                'id' => $maintenance->id,
-                'redirect' => route('maintenance.index')
-            ]);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            foreach ($savedSigFiles ?? [] as $sigPath) {
-                if ($sigPath && Storage::disk('public')->exists($sigPath)) {
-                    Storage::disk('public')->delete($sigPath);
-                }
-            }
-            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
-        }
+        return (new \App\Actions\Maintenance\CreateMaintenanceTicketAction)->execute($request, $user);
     }
 
     public function show($id)
@@ -307,7 +209,7 @@ class MaintenanceController extends Controller
         ));
     }
 
-    public function assignIt(Request $request, $id)
+    public function assignIt(AssignItRequest $request, $id)
     {
         $trackingRequest = RequestModel::with('assignedTo')->findOrFail($id);
         $this->checkTicketAccess($trackingRequest);
@@ -317,9 +219,7 @@ class MaintenanceController extends Controller
             return response()->json(['success' => false, 'message' => 'You cannot assign this request.'], 403);
         }
 
-        $validated = $request->validate([
-            'assigned_to' => 'nullable|exists:users,id',
-        ]);
+        $validated = $request->validated();
 
         $itId = $validated['assigned_to'] ?? null;
 
@@ -378,7 +278,7 @@ class MaintenanceController extends Controller
         ]);
     }
 
-    public function update(Request $request, $id)
+    public function update(UpdateMaintenanceRequest $request, $id)
     {
         try {
             DB::beginTransaction();
@@ -406,26 +306,6 @@ class MaintenanceController extends Controller
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'You are not allowed to update this request.'], 403);
             }
-
-            $request->validate([
-                'technicianSignature' => 'nullable|string',
-                'technician_signature' => 'nullable|string',
-                'endUserSignature' => 'nullable|string',
-                'end_user_signature' => 'nullable|string',
-                'technician_name' => 'nullable|string|max:255',
-                'technicianName' => 'nullable|string|max:255',
-                'end_user_name' => 'nullable|string|max:255',
-                'endUserName' => 'nullable|string|max:255',
-                'technician_date' => 'nullable|date',
-                'technicianDate' => 'nullable|date',
-                'end_user_date' => 'nullable|date',
-                'endUserDate' => 'nullable|date',
-                'end_user_remarks' => 'nullable|string|max:2000',
-                'endUserRemarks' => 'nullable|string|max:2000',
-                'linked_asset_id' => 'nullable|integer|exists:inventory_assets,asset_id',
-                'disposal_asset_id' => 'nullable|integer|exists:inventory_assets,asset_id',
-                'last_updated_at' => 'nullable|string|max:50',
-            ]);
 
             $data = $this->filterMaintenanceInput($request);
 
