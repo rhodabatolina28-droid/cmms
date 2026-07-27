@@ -1552,39 +1552,6 @@
                 });
             }
 
-            // Assign IT button
-            const assignItBtn = document.getElementById('assignItBtn');
-            if (assignItBtn) {
-                assignItBtn.addEventListener('click', function() {
-                    const select = document.getElementById('assignItSelect');
-                    const assignedTo = select ? select.value : '';
-                    const url = '{{ $request ? route("maintenance.assign", $request->id) : "" }}';
-
-                    if (!url) return;
-
-                    fetch(url, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                            'Accept': 'application/json'
-                        },
-                        body: JSON.stringify({ assigned_to: assignedTo })
-                    })
-                    .then(res => res.json())
-                    .then(data => {
-                        if (data.success) {
-                            Swal.fire({ icon: 'success', title: 'Assigned!', text: data.message, confirmButtonColor: '#0038A8' })
-                                .then(() => window.location.reload());
-                        } else {
-                            Swal.fire({ icon: 'error', title: 'Error', text: data.message });
-                        }
-                    })
-                    .catch(() => {
-                        Swal.fire({ icon: 'error', title: 'Error', text: 'An unexpected error occurred.' });
-                    });
-                });
-            }
         });
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('[data-canvas]');

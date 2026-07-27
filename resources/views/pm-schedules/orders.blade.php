@@ -87,6 +87,7 @@
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
 const ORDERS_DATA_URL = '{{ route("pm-schedules.orders.data") }}';
+const CURRENT_USER_ID = {{ Auth::user()->id }};
 let ordersCurrentPage = 1;
 let ordersLastPage = 1;
 let ordersCurrentStatus = 'all';
@@ -156,9 +157,13 @@ function renderOrdersTable(orders) {
             <td class="td" style="font-size:12px;color:#64748b;">${dateStr}</td>
             <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span></td>
             <td class="td" style="text-align:center;">
-                <a href="/requests/maintenance/${order.id}/edit" class="action-btn">
-                    <i class="fa-solid fa-arrow-right"></i> ${order.status === 'Scheduled' ? 'Start' : 'View'}
-                </a>
+                ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID
+                    ? `<a href="/requests/maintenance/${order.id}/start" class="action-btn">
+                         <i class="fa-solid fa-play"></i> Start
+                       </a>`
+                    : `<a href="/requests/maintenance/${order.id}/edit" class="action-btn">
+                         <i class="fa-solid fa-arrow-right"></i> View
+                       </a>`}
             </td>
         </tr>`;
     }).join('');
