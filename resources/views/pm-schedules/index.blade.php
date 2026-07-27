@@ -306,10 +306,19 @@
                                 @endphp
                                 <span class="status-pill status-{{ $statusClass }}">{{ $statusLabel }}</span>
                             </td>
-                            <td class="td-wo-action">
-                                <a href="{{ route('maintenance.edit', $order->id) }}" class="btn-wo-action">
-                                    <i class="fa-solid fa-arrow-right"></i> {{ $order->status === 'Scheduled' ? 'Start' : 'Update' }}
-                                </a>
+                             <td class="td-wo-action">
+                                @php
+                                    $canStart = $order->status === 'Scheduled' && $order->assigned_to === Auth::id();
+                                @endphp
+                                @if($canStart)
+                                    <a href="{{ route('maintenance.start', $order->id) }}" class="btn-wo-action">
+                                        <i class="fa-solid fa-play"></i> Start
+                                    </a>
+                                @else
+                                    <a href="{{ route('maintenance.edit', $order->id) }}" class="btn-wo-action">
+                                        <i class="fa-solid fa-arrow-right"></i> {{ $order->status === 'Scheduled' ? 'View' : 'Update' }}
+                                    </a>
+                                @endif
                             </td>
                         </tr>
                         @endforeach

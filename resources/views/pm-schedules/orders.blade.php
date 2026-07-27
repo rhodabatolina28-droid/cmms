@@ -158,7 +158,7 @@ function renderOrdersTable(orders) {
             <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span></td>
             <td class="td" style="text-align:center;">
                 ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID
-                    ? `<a href="/requests/maintenance/${order.id}/start" class="action-btn">
+                    ? `<a href="/requests/maintenance/${order.id}/conduct" class="action-btn">
                          <i class="fa-solid fa-play"></i> Start
                        </a>`
                     : `<a href="/requests/maintenance/${order.id}/edit" class="action-btn">
