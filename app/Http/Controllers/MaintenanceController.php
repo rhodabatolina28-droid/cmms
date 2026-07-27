@@ -14,6 +14,7 @@ use App\Support\RequestAuthorization;
 use App\Services\RequestNotificationService;
 use App\Actions\Maintenance\UpdateMaintenanceTicketAction;
 use App\Actions\Maintenance\AssignMaintenanceTicketAction;
+use App\Actions\Maintenance\DownloadMaintenancePdfAction;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -223,29 +224,7 @@ class MaintenanceController extends Controller
 
     public function downloadPdf($id)
     {
-        $trackingRequest = RequestModel::findOrFail($id);
-
-        $this->checkTicketAccess($trackingRequest);
-
-        $maintenance = PreventiveMaintenance::findOrFail($trackingRequest->detail_id);
-        $tasks = json_decode($maintenance->maintenance_tasks_json ?? '{}', true) ?: [];
-
-        $pdf = Pdf::loadView('pdf.maintenance-form', [
-            'request' => $trackingRequest,
-            'pm' => $maintenance,
-            'tasks' => $tasks,
-        ])->setPaper('legal', 'portrait');
-
-        if (ob_get_length()) {
-            ob_end_clean();
-        }
-        return response($pdf->output(), 200, [
-            'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="PM-' . $trackingRequest->request_number . '.pdf"',
-            'Cache-Control' => 'no-cache, no-store, must-revalidate',
-            'Pragma' => 'no-cache',
-            'Expires' => '0',
-        ]);
+        return (new DownloadMaintenancePdfAction)->execute($id);
     }
 
     /**
