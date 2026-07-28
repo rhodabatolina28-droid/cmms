@@ -1,9 +1,10 @@
-@php
-    $cssFile = $cssFile ?? 'ict-form.css';
-    $title = $title ?? 'NCMB Form';
-    $bannerImage = $bannerImage ?? null;
-    $cspNonce = $cspNonce ?? null;
-@endphp
+@props([
+    'cssFile' => 'ict-form.css',
+    'title' => 'NCMB Form',
+    'bannerImage' => null,
+    'cspNonce' => null,
+    'extraHead' => null,
+])
 <!DOCTYPE html>
 <html lang="en">
 <head>
