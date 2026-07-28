@@ -3,7 +3,6 @@
     'title' => 'NCMB Form',
     'bannerImage' => null,
     'cspNonce' => null,
-    'extraHead' => null,
 ])
 <!DOCTYPE html>
 <html lang="en">

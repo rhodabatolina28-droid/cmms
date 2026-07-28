@@ -11,8 +11,10 @@
     cssFile="ict-form.css"
     bannerImage="ict-banner.png"
     cspNonce="{{ $cspNonce }}"
-    :extra-head="view('partials.ict._form-styles')->render()"
 >
+    @slot('extraHead')
+        @include('partials.ict._form-styles')
+    @endslot
 
         @php
             // Flags from RequestAuthorization::ictFormFlags() — isAdmin = can edit Sections 2–5 (admin or assigned IT)
