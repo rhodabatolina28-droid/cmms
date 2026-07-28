@@ -1,5 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
 @php
     /** Format a raw DB date/datetime to yyyy-MM-dd for HTML date inputs */
     function fmtDate($val): string {
@@ -7,25 +5,14 @@
         try { return \Carbon\Carbon::parse($val)->format('Y-m-d'); } catch (\Throwable $e) { return ''; }
     }
 @endphp
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>ICT Service Request Form | NCMB</title>
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <link rel="stylesheet" href="{{ asset('css/ict-form.css') }}?v={{ filemtime(public_path('css/ict-form.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-    @include('partials.ict._form-styles')
-</head>
 
-<body>
-    <div class="container">
-        <div class="header">
-            <div class="banner">
-                <img src="{{ asset('images/ict-banner.png') }}" class="banner-image" alt="NCMB Banner">
-            </div>
-        </div>
+<x-form-layout
+    title="ICT Service Request Form"
+    cssFile="ict-form.css"
+    bannerImage="ict-banner.png"
+    cspNonce="{{ $cspNonce }}"
+    :extra-head="view('partials.ict._form-styles')->render()"
+>
 
         @php
             // Flags from RequestAuthorization::ictFormFlags() — isAdmin = can edit Sections 2–5 (admin or assigned IT)
@@ -1323,5 +1310,4 @@
         }
     });
     </script>
-</body>
-</html>
+</x-form-layout>

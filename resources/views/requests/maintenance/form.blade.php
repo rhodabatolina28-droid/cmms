@@ -1,13 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>Preventive Maintenance Service Form | NCMB</title>
-    <link rel="stylesheet" href="{{ asset('css/maint-form.css') }}?v={{ filemtime(public_path('css/maint-form.css')) }}">
-    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<x-form-layout
+    title="Preventive Maintenance Service Form"
+    cssFile="maint-form.css"
+    cspNonce="{{ $cspNonce }}"
+>
+@slot('extraHead')
     <style nonce="{{ $cspNonce }}">
         @media (max-width: 767px) {
             #pmForm .grid-table, #pmForm table.grid-table, #pmForm .grid-table tr,
@@ -104,13 +100,13 @@
         .pdf-download-link { display: inline-flex; align-items: center; gap: 6px; padding: 13px 28px; background: #1e293b; color: #fff; border-radius: 5px; text-decoration: none; font-weight: 800; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.08em; }
     </style>
     <script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-</head>
-<body>
-    <div class="bond-paper">
-        <!-- HEADER IMAGE -->
-        <div class="form-header-img">
-            <img src="{{ asset('images/pmsf-banner.png') }}" alt="NCMB Preventive Maintenance Banner" class="banner-full">
-        </div>
+</slot>
+
+<div class="bond-paper">
+    <!-- HEADER IMAGE -->
+    <div class="form-header-img">
+        <img src="{{ asset('images/pmsf-banner.png') }}" alt="NCMB Preventive Maintenance Banner" class="banner-full">
+    </div>
 
         @if(!empty($canAssignIt) && $request && Auth::user()->role === 'super_admin' && (!$request->assigned_to || (int)$request->assigned_to !== (int)Auth::user()->id))
         <div id="assignItPanel" class="assign-panel">
@@ -1568,5 +1564,4 @@
             });
         }
     </script>
-</body>
-</html>
+</x-form-layout>
