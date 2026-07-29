@@ -4,11 +4,11 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Auth;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\DashboardController;
-use App\Http\Controllers\ICTRequestController;
-use App\Http\Controllers\MaintenanceController;
-use App\Http\Controllers\InventoryController;
-use App\Http\Controllers\SuperAdminController;
-use App\Http\Controllers\RequisitionController;
+use App\Http\Controllers\ICT\ICTRequestController;
+use App\Http\Controllers\Maintenance\MaintenanceController;
+use App\Http\Controllers\Inventory\InventoryController;
+use App\Http\Controllers\Admin\SuperAdminController;
+use App\Http\Controllers\Requisition\RequisitionController;
 use App\Http\Controllers\ScanController;
 
 Route::get('/', function () {
@@ -167,14 +167,14 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
 
     // Physical Count - Accessible by Admin (Supply) only
     Route::middleware('role:admin')->prefix('physical-count')->name('physical-count.')->group(function () {
-        Route::get('/', [\App\Http\Controllers\PhysicalCountController::class, 'index'])->name('index');
-        Route::post('/', [\App\Http\Controllers\PhysicalCountController::class, 'store'])->name('store')->middleware('throttle:30,1');
-        Route::get('/{id}', [\App\Http\Controllers\PhysicalCountController::class, 'show'])->name('show');
-        Route::post('/{sessionId}/search', [\App\Http\Controllers\PhysicalCountController::class, 'searchAsset'])->name('search')->middleware('throttle:30,1');
-        Route::post('/{sessionId}/mark', [\App\Http\Controllers\PhysicalCountController::class, 'markAsset'])->name('mark')->middleware('throttle:30,1');
-        Route::post('/{id}/complete', [\App\Http\Controllers\PhysicalCountController::class, 'complete'])->name('complete')->middleware('throttle:30,1');
-        Route::get('/{sessionId}/export', [\App\Http\Controllers\PhysicalCountController::class, 'export'])->name('export');
-        Route::get('/{sessionId}/print', [\App\Http\Controllers\PhysicalCountController::class, 'printReport'])->name('print');
+        Route::get('/', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'index'])->name('index');
+        Route::post('/', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'store'])->name('store')->middleware('throttle:30,1');
+        Route::get('/{id}', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'show'])->name('show');
+        Route::post('/{sessionId}/search', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'searchAsset'])->name('search')->middleware('throttle:30,1');
+        Route::post('/{sessionId}/mark', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'markAsset'])->name('mark')->middleware('throttle:30,1');
+        Route::post('/{id}/complete', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'complete'])->name('complete')->middleware('throttle:30,1');
+        Route::get('/{sessionId}/export', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'export'])->name('export');
+        Route::get('/{sessionId}/print', [\App\Http\Controllers\Inventory\PhysicalCountController::class, 'printReport'])->name('print');
     });
 
     // ==========================================
@@ -183,7 +183,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         ->name('admin.requests.update-status');
 
     // Inventory Reports (admin + super_admin)
-    Route::get('/inventory/reports', [\App\Http\Controllers\InventoryReportController::class, 'index'])
+    Route::get('/inventory/reports', [\App\Http\Controllers\Inventory\InventoryReportController::class, 'index'])
         ->middleware('role:admin,super_admin')
         ->name('inventory.reports');
 
@@ -191,10 +191,10 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     // ==========================================
     Route::middleware('role:admin,super_admin')->group(function () {
         // Personnel Management
-        Route::get('/personnel', [\App\Http\Controllers\PersonnelController::class, 'index'])->name('personnel.index');
-        Route::get('/personnel/{id}', [\App\Http\Controllers\PersonnelController::class, 'show'])->name('personnel.show');
-        Route::post('/personnel/{id}/toggle', [\App\Http\Controllers\PersonnelController::class, 'toggleStatus'])->name('personnel.toggle')->middleware('throttle:30,1');
-        Route::post('/personnel', [\App\Http\Controllers\PersonnelController::class, 'store'])->middleware('throttle:30,60')->name('personnel.store');
+        Route::get('/personnel', [\App\Http\Controllers\Admin\PersonnelController::class, 'index'])->name('personnel.index');
+        Route::get('/personnel/{id}', [\App\Http\Controllers\Admin\PersonnelController::class, 'show'])->name('personnel.show');
+        Route::post('/personnel/{id}/toggle', [\App\Http\Controllers\Admin\PersonnelController::class, 'toggleStatus'])->name('personnel.toggle')->middleware('throttle:30,1');
+        Route::post('/personnel', [\App\Http\Controllers\Admin\PersonnelController::class, 'store'])->middleware('throttle:30,60')->name('personnel.store');
     });
 
     // ==========================================
@@ -221,31 +221,31 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     
     // PM Schedules - Super Admin ONLY
     Route::middleware('role:super_admin')->group(function () {
-        Route::get('/pm-schedules', [\App\Http\Controllers\PMScheduleController::class, 'index'])->name('pm-schedules.index');
-        Route::get('/pm-schedules/create', [\App\Http\Controllers\PMScheduleController::class, 'create'])->name('pm-schedules.create');
-        Route::post('/pm-schedules', [\App\Http\Controllers\PMScheduleController::class, 'store'])->name('pm-schedules.store')->middleware('throttle:60,1');
-        Route::get('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\PMScheduleController::class, 'show'])->name('pm-schedules.show')->where('pm_schedule', '[0-9]+');
-        Route::get('/pm-schedules/{pm_schedule}/edit', [\App\Http\Controllers\PMScheduleController::class, 'edit'])->name('pm-schedules.edit')->where('pm_schedule', '[0-9]+');
-        Route::put('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\PMScheduleController::class, 'update'])->name('pm-schedules.update')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
-        Route::patch('/pm-schedules/{pm_schedule}/toggle', [\App\Http\Controllers\PMScheduleController::class, 'toggleStatus'])->name('pm-schedules.toggle')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
-        Route::delete('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\PMScheduleController::class, 'destroy'])->name('pm-schedules.destroy')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
-        Route::get('/pm-schedules/{pm_schedule}/preview', [\App\Http\Controllers\PMScheduleController::class, 'preview'])->name('pm-schedules.preview')->where('pm_schedule', '[0-9]+');
-        Route::post('/pm-schedules/{pm_schedule}/generate', [\App\Http\Controllers\PMScheduleController::class, 'generate'])->middleware('throttle:30,60')->name('pm-schedules.generate')->where('pm_schedule', '[0-9]+');
-        Route::get('/pm-schedules/{pm_schedule}/history', [\App\Http\Controllers\PMScheduleController::class, 'history'])->name('pm-schedules.history')->where('pm_schedule', '[0-9]+');
-        Route::get('/pm-schedules/{pm_schedule}/queue', [\App\Http\Controllers\PMScheduleController::class, 'queueStatus'])->name('pm-schedules.queue')->where('pm_schedule', '[0-9]+');
-        Route::post('/pm-schedules/repair-all', [\App\Http\Controllers\PMScheduleController::class, 'repairBrokenRecords'])->name('pm-schedules.repair');
-        Route::get('/pm-schedules/orders', [\App\Http\Controllers\PMScheduleController::class, 'orders'])->name('pm-schedules.orders');
-        Route::get('/pm-schedules/orders/data', [\App\Http\Controllers\PMScheduleController::class, 'ordersData'])->name('pm-schedules.orders.data');
-        Route::post('/pm-schedules/force-run', [\App\Http\Controllers\PMScheduleController::class, 'forceRun'])->name('pm-schedules.force-run')->middleware('throttle:10,1');
-        Route::post('/pm-schedules/{pm_schedule}/pause', [\App\Http\Controllers\PMScheduleController::class, 'pauseCycle'])->name('pm-schedules.pause')->where('pm_schedule', '[0-9]+');
-        Route::post('/pm-schedules/{pm_schedule}/resume', [\App\Http\Controllers\PMScheduleController::class, 'resumeCycle'])->name('pm-schedules.resume')->where('pm_schedule', '[0-9]+');
-        Route::post('/pm-schedules/{pm_schedule}/stop', [\App\Http\Controllers\PMScheduleController::class, 'stopCycle'])->name('pm-schedules.stop')->where('pm_schedule', '[0-9]+');
-        Route::post('/pm-schedules/advance', [\App\Http\Controllers\PMScheduleController::class, 'advanceCycle'])->name('pm-schedules.advance');
-        Route::delete('/pm-schedules', [\App\Http\Controllers\PMScheduleController::class, 'destroyAll'])->name('pm-schedules.destroy-all')->middleware('throttle:10,1');
+        Route::get('/pm-schedules', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'index'])->name('pm-schedules.index');
+        Route::get('/pm-schedules/create', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'create'])->name('pm-schedules.create');
+        Route::post('/pm-schedules', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'store'])->name('pm-schedules.store')->middleware('throttle:60,1');
+        Route::get('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'show'])->name('pm-schedules.show')->where('pm_schedule', '[0-9]+');
+        Route::get('/pm-schedules/{pm_schedule}/edit', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'edit'])->name('pm-schedules.edit')->where('pm_schedule', '[0-9]+');
+        Route::put('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'update'])->name('pm-schedules.update')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
+        Route::patch('/pm-schedules/{pm_schedule}/toggle', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'toggleStatus'])->name('pm-schedules.toggle')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
+        Route::delete('/pm-schedules/{pm_schedule}', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'destroy'])->name('pm-schedules.destroy')->middleware('throttle:30,1')->where('pm_schedule', '[0-9]+');
+        Route::get('/pm-schedules/{pm_schedule}/preview', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'preview'])->name('pm-schedules.preview')->where('pm_schedule', '[0-9]+');
+        Route::post('/pm-schedules/{pm_schedule}/generate', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'generate'])->middleware('throttle:30,60')->name('pm-schedules.generate')->where('pm_schedule', '[0-9]+');
+        Route::get('/pm-schedules/{pm_schedule}/history', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'history'])->name('pm-schedules.history')->where('pm_schedule', '[0-9]+');
+        Route::get('/pm-schedules/{pm_schedule}/queue', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'queueStatus'])->name('pm-schedules.queue')->where('pm_schedule', '[0-9]+');
+        Route::post('/pm-schedules/repair-all', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'repairBrokenRecords'])->name('pm-schedules.repair');
+        Route::get('/pm-schedules/orders', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'orders'])->name('pm-schedules.orders');
+        Route::get('/pm-schedules/orders/data', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'ordersData'])->name('pm-schedules.orders.data');
+        Route::post('/pm-schedules/force-run', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'forceRun'])->name('pm-schedules.force-run')->middleware('throttle:10,1');
+        Route::post('/pm-schedules/{pm_schedule}/pause', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'pauseCycle'])->name('pm-schedules.pause')->where('pm_schedule', '[0-9]+');
+        Route::post('/pm-schedules/{pm_schedule}/resume', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'resumeCycle'])->name('pm-schedules.resume')->where('pm_schedule', '[0-9]+');
+        Route::post('/pm-schedules/{pm_schedule}/stop', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'stopCycle'])->name('pm-schedules.stop')->where('pm_schedule', '[0-9]+');
+        Route::post('/pm-schedules/advance', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'advanceCycle'])->name('pm-schedules.advance');
+        Route::delete('/pm-schedules', [\App\Http\Controllers\Maintenance\PMScheduleController::class, 'destroyAll'])->name('pm-schedules.destroy-all')->middleware('throttle:10,1');
     });
 
     // PM Tasks - IT and Super Admin can view
-    Route::get('/maintenance/pm-tasks', [\App\Http\Controllers\MaintenanceController::class, 'pmTasks'])->name('pm.tasks')->middleware('role:it,super_admin');
+    Route::get('/maintenance/pm-tasks', [\App\Http\Controllers\Maintenance\MaintenanceController::class, 'pmTasks'])->name('pm.tasks')->middleware('role:it,super_admin');
 
     // Super Admin Specific Routes
     Route::middleware('role:super_admin')->prefix('super-admin')->group(function () {

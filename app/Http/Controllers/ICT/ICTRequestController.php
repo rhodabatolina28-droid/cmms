@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\ICT;
+
+use App\Http\Controllers\Controller;
 
 use App\Http\Requests\UpdateIctStatusRequest;
 use App\Http\Requests\AssignItRequest;

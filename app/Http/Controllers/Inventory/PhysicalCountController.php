@@ -1,6 +1,8 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Inventory;
+
+use App\Http\Controllers\Controller;
 
 use App\Http\Requests\MarkAssetPhysicalCountRequest;
 use Illuminate\Http\Request;
