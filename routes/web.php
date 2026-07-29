@@ -10,18 +10,15 @@ use App\Http\Controllers\Inventory\InventoryController;
 use App\Http\Controllers\Admin\SuperAdminController;
 use App\Http\Controllers\Requisition\RequisitionController;
 use App\Http\Controllers\ScanController;
+use App\Http\Controllers\PageController;
 
-Route::get('/', function () {
-    return view('landing');
-});
+Route::get('/', [PageController::class, 'landing']);
 
 // Authentication Routes
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth')->name('logout');
-Route::get('/logged-out', function () {
-    return view('auth.logout-success');
-})->name('logged-out');
+Route::get('/logged-out', [PageController::class, 'loggedOut'])->name('logged-out');
 
 // QR Scan Redirect — public route (handles guests and auth)
 Route::get('/r/{id}', [ScanController::class, 'redirect'])->where('id', '[0-9]+')->name('qr.redirect');
@@ -74,12 +71,8 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     // Maintenance Requests (all roles — controller handles internal role logic)
     Route::get('/requests/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index')->middleware('role:user,it,admin,super_admin');
     // PM creation is now handled by the scheduler — redirect old manual creation to PM Schedules
-    Route::get('/requests/maintenance/create', function () {
-        return redirect()->route('pm-schedules.index');
-    })->name('maintenance.create')->middleware('role:it,super_admin');
-    Route::post('/requests/maintenance', function () {
-        return redirect()->route('pm-schedules.index');
-    })->name('maintenance.store')->middleware('role:it,super_admin', 'throttle:30,1');
+    Route::get('/requests/maintenance/create', [PageController::class, 'maintenanceCreateRedirect'])->name('maintenance.create')->middleware('role:it,super_admin');
+    Route::post('/requests/maintenance', [PageController::class, 'maintenanceStoreRedirect'])->name('maintenance.store')->middleware('role:it,super_admin', 'throttle:30,1');
     Route::get('/requests/maintenance/{id}', [MaintenanceController::class, 'show'])->name('maintenance.show')->middleware('role:user,it,admin,super_admin');
     Route::get('/requests/maintenance/{id}/edit', [MaintenanceController::class, 'edit'])->name('maintenance.edit')->middleware('role:user,it,admin,super_admin');
     Route::put('/requests/maintenance/{id}', [MaintenanceController::class, 'update'])->name('maintenance.update')->middleware('role:user,it,admin,super_admin', 'throttle:30,1');
