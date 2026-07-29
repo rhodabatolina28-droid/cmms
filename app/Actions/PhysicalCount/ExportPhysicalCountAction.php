@@ -2,8 +2,8 @@
 
 namespace App\Actions\PhysicalCount;
 
-use App\Http\Controllers\InventoryController;
 use App\Models\InventoryAsset;
+use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCountSession;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,7 +33,7 @@ class ExportPhysicalCountAction
         }
 
         $allAssets = InventoryAsset::with('assignedUser');
-        app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
+        InventoryScope::scopeAssetsToActor($allAssets, $user);
         $allAssets = $allAssets->orderBy('category')->orderBy('item_name')->get();
 
         $filename = 'physical-count-' . $session->id . '-' . now()->format('Y-m-d') . '.csv';

@@ -2,8 +2,8 @@
 
 namespace App\Actions\PhysicalCount;
 
-use App\Http\Controllers\InventoryController;
 use App\Models\InventoryAsset;
+use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCountSession;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
@@ -36,11 +36,11 @@ class ShowPhysicalCountAction
         }
 
         $totalAssetsQuery = InventoryAsset::query();
-        app(InventoryController::class)->scopeAssetsToActor($totalAssetsQuery, $user);
+        InventoryScope::scopeAssetsToActor($totalAssetsQuery, $user);
         $totalCount = $totalAssetsQuery->count();
 
         $allAssets = InventoryAsset::with('assignedUser');
-        app(InventoryController::class)->scopeAssetsToActor($allAssets, $user);
+        InventoryScope::scopeAssetsToActor($allAssets, $user);
         $allAssets = $allAssets->orderBy('category')->orderBy('item_name')
             ->paginate(50);
 

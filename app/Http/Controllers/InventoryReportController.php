@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\InventoryAsset;
 use App\Models\InventoryHistory;
+use App\Models\Scopes\InventoryScope;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -17,7 +18,7 @@ class InventoryReportController extends Controller
         $assetsQuery = InventoryAsset::query();
 
         if ($user->canProcessSupply()) {
-            app(InventoryController::class)->scopeAssetsToActor($assetsQuery, $user);
+            InventoryScope::scopeAssetsToActor($assetsQuery, $user);
         } elseif ($user->role === 'super_admin') {
             $assetsQuery->where('region', $user->region);
             if ($user->branch) $assetsQuery->where('branch', $user->branch);

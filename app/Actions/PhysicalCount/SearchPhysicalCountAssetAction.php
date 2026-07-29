@@ -2,8 +2,8 @@
 
 namespace App\Actions\PhysicalCount;
 
-use App\Http\Controllers\InventoryController;
 use App\Models\InventoryAsset;
+use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCount;
 use App\Models\PhysicalCountSession;
 use Illuminate\Http\Request;
@@ -51,7 +51,7 @@ class SearchPhysicalCountAssetAction
         }
 
         $query = InventoryAsset::with('assignedUser');
-        app(InventoryController::class)->scopeAssetsToActor($query, $user);
+        InventoryScope::scopeAssetsToActor($query, $user);
 
         if ($assetId) {
             $query->where('asset_id', $assetId);
