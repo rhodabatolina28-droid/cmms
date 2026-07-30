@@ -25,12 +25,12 @@ class AppServiceProvider extends ServiceProvider
         View::composer('*', function ($view) {
             $nonce = request()->attributes->get('csp_nonce', '');
             $view->with('cspNonce', $nonce);
-        });
 
-        // Enable Vite to automatically add the CSP nonce to script/style tags
-        if ($nonce = request()->attributes->get('csp_nonce')) {
-            Vite::useNonce($nonce);
-        }
+            // Enable Vite to automatically add the CSP nonce to script/style tags
+            if ($nonce) {
+                Vite::useNonce($nonce);
+            }
+        });
 
         InventoryAsset::observe(InventoryAssetObserver::class);
     }
