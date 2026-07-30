@@ -1,4 +1,4 @@
-<?php
+﻿<?php
 
 namespace App\Providers;
 
@@ -28,7 +28,7 @@ class AppServiceProvider extends ServiceProvider
 
             // Enable Vite to automatically add the CSP nonce to script/style tags
             if ($nonce) {
-                Vite::useNonce($nonce);
+                Vite::useCspNonce($nonce);
             }
         });
 
