@@ -8,7 +8,7 @@ let lastPage = 1;
 const perPage = 50;
 let filterChangeTimer = null;
 
-// Division abbreviation lookup — maps full office/division names to short codes
+// Division abbreviation lookup â€” maps full office/division names to short codes
 function getDivisionAbbr(office) {
     if (!office) return '';
     const key = office.toLowerCase().trim();
@@ -282,35 +282,35 @@ function renderInventoryTable(assets) {
         let rowClass = '';
         if (asset.status === 'For Disposal') rowClass = 'row-disposal';
 
-        // ── PAR No ──
+        // â”€â”€ PAR No â”€â”€
         const parDisplay = asset.par_number
             ? `<span class="par-badge">${asset.par_number}</span>`
             : `<span class="par-badge na">N/A</span>`;
 
-        // ── Property No ──
+        // â”€â”€ Property No â”€â”€
         const propDisplay = asset.property_number
             ? `<span class="prop-no">${asset.property_number}</span>`
-            : `<span style="color:#94a3b8;">—</span>`;
+            : `<span style="color:#94a3b8;">â€”</span>`;
 
-        // ── Item Name ──
+        // â”€â”€ Item Name â”€â”€
         const brandModel = (asset.brand || asset.model)
             ? `<br><span style="font-size: 11px; color: #64748b; font-weight: 400;">${[asset.brand, asset.model].filter(Boolean).join(' ')}</span>`
             : '';
-        // ── Set badges ──
-        // Parent: show a teal badge with component count (e.g. "Set ▾ (1)")
-        // Child : show a muted indent badge ("⤷ Set component")
+        // â”€â”€ Set badges â”€â”€
+        // Parent: show a teal badge with component count (e.g. "Set â–¾ (1)")
+        // Child : show a muted indent badge ("â¤· Set component")
         let setBadge = '';
         if (asset.components_count > 0) {
-            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:1px 7px;letter-spacing:0.02em;"><i class="fa-solid fa-layer-group" style="font-size:9px;margin-right:3px;"></i>Set ▾ (${asset.components_count})</span>`;
+            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:800;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:1px 7px;letter-spacing:0.02em;"><i class="fa-solid fa-layer-group" style="font-size:9px;margin-right:3px;"></i>Set â–¾ (${asset.components_count})</span>`;
         } else if (asset.parent_asset_id) {
-            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 7px;">⤷ Set component</span>`;
+            setBadge = `<br><span style="display:inline-block;margin-top:3px;font-size:10px;font-weight:700;color:#64748b;background:#f8fafc;border:1px solid #e2e8f0;border-radius:4px;padding:1px 7px;">â¤· Set component</span>`;
         }
 
         const itemNameDisplay = asset.is_depreciated 
             ? `${asset.item_name}${brandModel}${setBadge}<br><span style="background: #fee2e2; color: #dc2626; font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 800; border: 1px solid #fca5a5;">DUE FOR REPLACEMENT</span>` 
             : `${asset.item_name}${brandModel}${setBadge}`;
 
-        // ── Assigned To ──
+        // â”€â”€ Assigned To â”€â”€
         const userName = asset.assigned_user ? asset.assigned_user.full_name : '<span style="color:#94a3b8;font-style:italic;">Unassigned (Stock)</span>';
         const divAbbr = asset.assigned_user && asset.assigned_user.office
             ? getDivisionAbbr(asset.assigned_user.office) : '';
@@ -319,7 +319,7 @@ function renderInventoryTable(assets) {
             : '';
         const custodianDisplay = asset.assigned_user ? `${userName}${divBadge}` : userName;
 
-        // ── Actions Dropdown ──
+        // â”€â”€ Actions Dropdown â”€â”€
         const assetId = asset.asset_id || asset.id;
         const isLocked = ['Scrapped', 'For Disposal'].includes(asset.status);
         const detailPrefix = window.CMMS_INVENTORY_DETAIL_PREFIX || '/inventory';
@@ -364,7 +364,7 @@ function renderInventoryTable(assets) {
                 <td>${parDisplay}</td>
                 <td>${propDisplay}</td>
                 <td style="font-weight: 700; color: #1e293b; line-height: 1.4;">${itemNameDisplay}</td>
-                <td style="font-size:12px;color:#475569;">${asset.category || '—'}</td>
+                <td style="font-size:12px;color:#475569;">${asset.category || 'â€”'}</td>
                 <td class="serial-font">${asset.serial_number || 'N/A'}</td>
                 <td style="color: #475569;">${custodianDisplay}</td>
                 <td style="text-align: center;">
@@ -375,7 +375,7 @@ function renderInventoryTable(assets) {
                 <td style="text-align: center;">
                     <div class="actions-dropdown">
                         <button class="btn-dropdown-toggle" onclick="toggleDropdown(event, this)" title="Actions">
-                            ⋯
+                            â‹¯
                         </button>
                         <div class="dropdown-menu-custom">
                             ${dropdownItems}
@@ -387,7 +387,7 @@ function renderInventoryTable(assets) {
     }).join("") + `<div class="dropdown-backdrop" id="dropdownBackdrop" onclick="closeAllDropdowns()"></div>`;
 }
 
-// ── Dropdown Toggle ──
+// â”€â”€ Dropdown Toggle â”€â”€
 function toggleDropdown(event, btn) {
     event.stopPropagation();
     closeAllDropdowns();
@@ -410,7 +410,7 @@ document.addEventListener('keydown', function(e) {
     if (e.key === 'Escape') closeAllDropdowns();
 });
 
-// ── Delete Asset ──
+// â”€â”€ Delete Asset â”€â”€
 function confirmDeleteAsset(assetId) {
     closeAllDropdowns();
     const asset = assetLookup[assetId];
@@ -477,7 +477,7 @@ function renderPagination(totalFiltered) {
     }
 
     let html = '<div style="display:flex;align-items:center;justify-content:space-between;padding:12px 0;">';
-    html += `<span style="font-size:12px;color:#64748b;">Showing ${Math.min((currentPage-1)*perPage+1, totalFiltered)}–${Math.min(currentPage*perPage, totalFiltered)} of ${totalFiltered}</span>`;
+    html += `<span style="font-size:12px;color:#64748b;">Showing ${Math.min((currentPage-1)*perPage+1, totalFiltered)}â€“${Math.min(currentPage*perPage, totalFiltered)} of ${totalFiltered}</span>`;
     html += '<div style="display:flex;gap:4px;">';
 
     html += `<button onclick="goToPage(${currentPage - 1})" style="padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage <= 1 ? '#f1f5f9' : 'white'};color:${currentPage <= 1 ? '#94a3b8' : '#1e293b'};cursor:${currentPage <= 1 ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
@@ -546,7 +546,7 @@ function itPartTypeChange() {
     const spec = document.getElementById("itPartSpec")?.value?.trim();
     const textarea = document.getElementById("generalSpecifications");
     if (!textarea || !type) return;
-    const combined = spec ? `${type} — ${spec}` : type;
+    const combined = spec ? `${type} â€” ${spec}` : type;
     textarea.value = combined;
 }
 
@@ -616,7 +616,7 @@ async function editAsset(id) {
         return;
     }
 
-    // Scrapped assets are fully locked — do not open edit modal
+    // Scrapped assets are fully locked â€” do not open edit modal
     if (asset.status === 'Scrapped') {
         Swal.fire({
             icon: 'warning',
@@ -899,7 +899,7 @@ async function viewAssetHistory(assetId) {
                 }
 
                 const receiptPrefix = window.CMMS_RECEIPT_PREFIX || '/inventory';
-                const receiptBtn = ''; // PTR process is physical — no system-generated receipt
+                const receiptBtn = ''; // PTR process is physical â€” no system-generated receipt
 
                 return `
                     <div style="margin-bottom: 15px; padding-bottom: 15px; border-bottom: 1px solid #f3f4f6;">
@@ -1017,12 +1017,12 @@ async function saveTransfer(event) {
         return;
     }
 
-    // Build update payload — only change custodian + status, preserve all other fields
+    // Build update payload â€” only change custodian + status, preserve all other fields
     // Status logic: Active when assigned, Spare when unassigned
-    // BUT preserve Defective/Scrapped/For Repair — only change Active↔Spare
+    // BUT preserve Defective/Scrapped/For Repair â€” only change Activeâ†”Spare
     const preservedStatuses = ['Defective', 'Scrapped', 'For Repair'];
     const newStatus = preservedStatuses.includes(asset.status)
-        ? asset.status  // keep the problematic status — don't auto-set to Active
+        ? asset.status  // keep the problematic status â€” don't auto-set to Active
         : (assignedUser ? 'Active' : 'Spare');
     const payload = {
         item_name: asset.item_name,
@@ -1130,13 +1130,13 @@ document.addEventListener("DOMContentLoaded", function () {
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Needs Review</span><br><strong style="font-size:16px;color:#d97706;">${s.needs_review_rows}</strong></div>
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Matched Custodians</span><br><strong style="font-size:16px;">${s.matched_custodians}</strong></div>
                         <div><span style="color:#64748b;font-size:11px;font-weight:700;text-transform:uppercase;">Unmatched</span><br><strong style="font-size:16px;">${s.unmatched_custodians}</strong></div>
-                        ${s.set_rows > 0 ? `<div style="grid-column:span 2;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;"><span style="font-size:11px;font-weight:700;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:2px 8px;"><i class="fa-solid fa-layer-group" style="font-size:10px;margin-right:4px;"></i>${s.set_rows} Complete Set row(s) → ${s.set_rows + s.component_rows} asset records (${s.component_rows} component(s) split out)</span></div>` : ''}
+                        ${s.set_rows > 0 ? `<div style="grid-column:span 2;border-top:1px solid #e2e8f0;padding-top:8px;margin-top:4px;"><span style="font-size:11px;font-weight:700;color:#0e7490;background:#ecfeff;border:1px solid #a5f3fc;border-radius:4px;padding:2px 8px;"><i class="fa-solid fa-layer-group" style="font-size:10px;margin-right:4px;"></i>${s.set_rows} Complete Set row(s) â†’ ${s.set_rows + s.component_rows} asset records (${s.component_rows} component(s) split out)</span></div>` : ''}
                     </div>`;
 
                 if (data.items && data.items.length > 0) {
                     html += `<p style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;margin-bottom:6px;">Preview (first ${data.preview_limit} rows):</p>`;
                     data.items.forEach(item => {
-                        const badge = item.status === "valid" ? "✅" : item.status === "needs_review" ? "⚠️" : "❌";
+                        const badge = item.status === "valid" ? "âœ…" : item.status === "needs_review" ? "âš ï¸" : "âŒ";
                         const errs = item.errors.length ? `<br><span style="color:#dc2626;font-size:11px;">${item.errors.join("; ")}</span>` : "";
                         const warns = item.warnings.length ? `<br><span style="color:#d97706;font-size:11px;">${item.warnings.join("; ")}</span>` : "";
                         // Use records[0] for item name (new format after service refactor)
@@ -1217,7 +1217,7 @@ function commitImport() {
     });
 }
 
-// Global modal close — click outside overlay to dismiss
+// Global modal close â€” click outside overlay to dismiss
 document.addEventListener("click", function(event) {
     const assetModal = document.getElementById("assetModal");
     const historyModal = document.getElementById("assetHistoryModal");
@@ -1226,3 +1226,32 @@ document.addEventListener("click", function(event) {
     if (event.target === historyModal) closeHistoryModal();
     if (event.target === transferModal) closeTransferModal();
 });
+
+// ── Expose to global scope for Vite ES module compatibility ──
+window.getDivisionAbbr = getDivisionAbbr;
+window.exportFilteredInventory = exportFilteredInventory;
+window.updateInventorySummary = updateInventorySummary;
+window.renderInventoryTable = renderInventoryTable;
+window.toggleDropdown = toggleDropdown;
+window.closeAllDropdowns = closeAllDropdowns;
+window.confirmDeleteAsset = confirmDeleteAsset;
+window.filterInventory = filterInventory;
+window.onFilterChange = onFilterChange;
+window.renderPagination = renderPagination;
+window.goToPage = goToPage;
+window.toggleSpecsForm = toggleSpecsForm;
+window.itPartTypeChange = itPartTypeChange;
+window.toggleNetworkDeviceSpecs = toggleNetworkDeviceSpecs;
+window.setInputVal = setInputVal;
+window.openAddAssetModal = openAddAssetModal;
+window.closeAssetModal = closeAssetModal;
+window.closeHistoryModal = closeHistoryModal;
+window.openDisposalFromList = openDisposalFromList;
+window.openTransferModal = openTransferModal;
+window.closeTransferModal = closeTransferModal;
+window.commitImport = commitImport;
+window.saveAsset = saveAsset;
+window.loadInventory = loadInventory;
+window.editAsset = editAsset;
+window.viewAssetHistory = viewAssetHistory;
+window.updateModalBranchDropdown = updateModalBranchDropdown;
