@@ -11,8 +11,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{{ $title }} | NCMB</title>
-    <link rel="stylesheet" href="{{ asset('css/' . $cssFile) }}?v={{ filemtime(public_path('css/' . $cssFile)) }}">
-    <link rel="stylesheet" href="{{ asset('css/mobile-responsive.css') }}">
+    @vite(['resources/css/' . $cssFile, 'resources/css/mobile-responsive.css'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     @if($cspNonce)
         <script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>

@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\Vite;
 use App\Models\InventoryAsset;
 use App\Observers\InventoryAssetObserver;
 
@@ -25,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
             $nonce = request()->attributes->get('csp_nonce', '');
             $view->with('cspNonce', $nonce);
         });
+
+        // Enable Vite to automatically add the CSP nonce to script/style tags
+        if ($nonce = request()->attributes->get('csp_nonce')) {
+            Vite::useNonce($nonce);
+        }
 
         InventoryAsset::observe(InventoryAssetObserver::class);
     }

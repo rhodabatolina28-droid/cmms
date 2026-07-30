@@ -8,7 +8,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <link href="{{ asset('css/landing.css') }}" rel="stylesheet">
+    @vite(['resources/css/landing.css'])
     <style>
         /* Page transition fade-out - fast & smooth */
         body.fade-out { opacity: 0; transition: opacity 0.12s ease; }

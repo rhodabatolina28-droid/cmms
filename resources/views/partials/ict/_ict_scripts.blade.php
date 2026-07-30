@@ -413,7 +413,7 @@
 
     {{-- ── QR Scanner libraries & logic ──────────────────────────────────── --}}
     <script nonce="{{ $cspNonce }}" src="{{ asset('js/html5-qrcode.min.js') }}"></script>
-    <script nonce="{{ $cspNonce }}" src="{{ asset('js/qr-scanner.js') }}?v={{ time() }}"></script>
+    @vite(['resources/js/qr-scanner.js'])
     <script nonce="{{ $cspNonce }}">
     (function() {
         // ── URL param auto-select ────────────────────────────────────────
