@@ -702,7 +702,7 @@
 @endsection
 
 @section('scripts')
-@vite(['resources/js/inventory.js'])
+<script nonce="{{ $cspNonce }}" src="{{ asset('js/inventory.js') }}?v={{ filemtime(public_path('js/inventory.js')) }}"></script>
 <script nonce="{{ $cspNonce }}">
     window.CMMS_INVENTORY_CAN_WRITE = @json($canWriteInventory);
     window.CMMS_IS_SUPPLY_ADMIN = @json(empty($isSuperAdminView) && $canWriteInventory); // Skip division/dept filtering for supply admin

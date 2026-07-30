@@ -1,4 +1,4 @@
-﻿@php
+@php
     /** Format a raw DB date/datetime to yyyy-MM-dd for HTML date inputs */
     function fmtDate($val): string {
         if (empty($val)) return '';
@@ -17,7 +17,7 @@
     @endslot
 
         @php
-            // Flags from RequestAuthorization::ictFormFlags() â€” isAdmin = can edit Sections 2â€“5 (admin or assigned IT)
+            // Flags from RequestAuthorization::ictFormFlags() — isAdmin = can edit Sections 2–5 (admin or assigned IT)
             $isView = !empty($viewMode);
             $user = Auth::user();
             $isSuperAdmin = $user->role === 'super_admin';
@@ -89,7 +89,7 @@
                         Super Admin: Select IT staff to perform technical work on this ticket.
                     </p>
                     <select id="assignItSelect" class="minimal-input ict-assign-select">
-                        <option value="">â€” Unassigned â€”</option>
+                        <option value="">— Unassigned —</option>
                         @foreach($itPersonnel ?? [] as $it)
                             <option value="{{ $it->id }}" {{ (int) $request->assigned_to === (int) $it->id ? 'selected' : '' }}>
                                 {{ $it->full_name }}@if($it->office) ({{ $it->office }})@endif
@@ -284,7 +284,7 @@
                         <div class="ict-asset-row">
                             <div class="ict-asset-select-wrap">
                                 <select id="linked_asset_id" name="linked_asset_id" required class="ict-asset-select">
-                                    <option value="">â€” Select your asset â€”</option>
+                                    <option value="">— Select your asset —</option>
                                     @foreach($myAssets as $asset)
                                         <option value="{{ $asset->asset_id }}" {{ ($request->linked_asset_id ?? '') == $asset->asset_id ? 'selected' : '' }}>
                                             {{ $asset->item_name }} (SN: {{ $asset->serial_number ?: 'N/A' }})

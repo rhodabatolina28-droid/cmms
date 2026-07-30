@@ -14,7 +14,8 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <!-- Core CSS -->
-    @vite(['resources/css/admin.css', 'resources/css/mobile-responsive.css'])
+    <link href="{{ asset('css/admin.css') }}?v={{ filemtime(public_path('css/admin.css')) }}" rel="stylesheet">
+    <link href="{{ asset('css/mobile-responsive.css') }}?v={{ filemtime(public_path('css/mobile-responsive.css')) }}" rel="stylesheet">
     
     <!-- CSS for Pagination Fix (Final Clean) -->
     <style nonce="{{ $cspNonce }}">

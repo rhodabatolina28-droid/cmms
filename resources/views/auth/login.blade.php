@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -7,7 +7,7 @@
     <title>Login - CMMS</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    @vite(['resources/css/login.css'])
+    <link href="{{ asset('css/login.css') }}" rel="stylesheet">
     <style nonce="{{ $cspNonce }}">
         /* Page transition fade-out - fast & smooth */
         body.fade-out { opacity: 0; transition: opacity 0.12s ease; }
@@ -118,7 +118,7 @@
         @endif
     </div>
 
-    @vite(['resources/js/login.js'])
+    <script nonce="{{ $cspNonce }}" src="{{ asset('js/login.js') }}"></script>
     <script nonce="{{ $cspNonce }}">
         (function() {
             const toggleBtn = document.getElementById('togglePassword');
