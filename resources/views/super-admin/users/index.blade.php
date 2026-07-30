@@ -82,7 +82,7 @@
         .gov-table-premium tr.tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .gov-table-premium tr.tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
 
-        /* Summary Stats Ribbon — inside card body */
+        /* Summary Stats Ribbon â€” inside card body */
         .stats-ribbon {
             display: grid;
             grid-template-columns: repeat(3, 1fr);

@@ -1,4 +1,4 @@
-﻿<script nonce="{{ $cspNonce }}">
+<script nonce="{{ $cspNonce }}">
 const ASSET_ID = {{ $asset->asset_id }};
 const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]').content;
 const ATTACH_UPLOAD_URL = '{{ route("inventory.attachments.upload", $asset->asset_id) }}';
@@ -218,3 +218,9 @@ if (confirmScrappedBtn) {
     confirmScrappedBtn.addEventListener('click', confirmAssetScrapped);
 }
 </script>
+
+// ── Expose to global scope for Vite ES module compatibility ──
+window.closeModal = closeModal;
+window.openModal = openModal;
+window.deleteAttachment = deleteAttachment;
+window.confirmAssetScrapped = confirmAssetScrapped;
