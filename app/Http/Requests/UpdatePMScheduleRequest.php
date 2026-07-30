@@ -16,7 +16,7 @@ class UpdatePMScheduleRequest extends FormRequest
     {
         // Extracted verbatim from PMScheduleController::update() lines 317-321.
         // The unique ignore uses route-model binding to replicate the exact inline behavior.
-        $pmSchedule = $this->route('pmSchedule');
+        $pmSchedule = $this->route('pm_schedule');
 
         return [
             'schedule_name'   => 'required|string|max:255|unique:pm_schedules,schedule_name,' . $pmSchedule->id,
