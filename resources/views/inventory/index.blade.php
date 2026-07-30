@@ -411,7 +411,7 @@
             box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
         }
 
-        /* Ã¢â€â‚¬Ã¢â€â‚¬ Utility classes (migrated from inline styles) Ã¢â€â‚¬Ã¢â€â‚¬ */
+        /* ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ Utility classes (migrated from inline styles) ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ÃƒÂ¢Ã¢â‚¬ÂÃ¢â€šÂ¬ */
         .si-total { background: #eff6ff; color: #1d4ed8; }
         .si-active { background: #ecfdf5; color: #059669; }
         .si-spare { background: #fffbeb; color: #d97706; }
@@ -601,7 +601,7 @@
         </div>
 
         <div class="card-body-content">
-            <!-- SUMMARY RIBBON Ã¢â‚¬â€ inside card -->
+            <!-- SUMMARY RIBBON ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â inside card -->
             <div class="stats-ribbon">
                 <div class="stat-item-premium">
                     <div class="stat-info">
@@ -702,7 +702,7 @@
 @endsection
 
 @section('scripts')
-<script nonce="{{ \$cspNonce }}" src="{{ asset('js/inventory.js') }}?v={{ filemtime(public_path('js/inventory.js')) }}"></script>
+<script nonce="{{ $cspNonce }}" src="{{ asset('js/inventory.js') }}?v={{ filemtime(public_path('js/inventory.js')) }}"></script>
 <script nonce="{{ $cspNonce }}">
     window.CMMS_INVENTORY_CAN_WRITE = @json($canWriteInventory);
     window.CMMS_IS_SUPPLY_ADMIN = @json(empty($isSuperAdminView) && $canWriteInventory); // Skip division/dept filtering for supply admin
