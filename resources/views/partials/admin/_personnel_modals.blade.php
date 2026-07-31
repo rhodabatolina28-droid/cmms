@@ -1,4 +1,4 @@
-﻿<!-- Add Personnel Modal -->
+<!-- Add Personnel Modal -->
 <div class="modal-overlay" id="addPersonnelModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -169,5 +169,3 @@
         </div>
     </div>
 </div>
-
-@endsection
