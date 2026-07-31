@@ -1,6 +1,6 @@
-/* RESPONSIVE STYLES - Main Entry Point */
+/* mobile-responsive.css - Main Entry Point */
 
-@import 'base/responsive-base.css';
-@import 'components/sidebar.css';
-@import 'components/phone-portrait.css';
-@import 'components/sidebar-roles.css';
+@import 'mobile-responsive/base/responsive-base.css';
+@import 'mobile-responsive/components/sidebar.css';
+@import 'mobile-responsive/components/phone-portrait.css';
+@import 'mobile-responsive/components/sidebar-roles.css';
