@@ -1,0 +1,309 @@
+/* RESPONSIVE STYLES */
+
+/* HIDE MOBILE ONLY BUTTONS BY DEFAULT ON DESKTOP */
+.mobile-close-btn {
+    display: none !important;
+}
+
+/* Tablet (768px - 1023px) */
+@media (max-width: 1023px) {
+    .container {
+        max-width: 100%;
+        padding: 24px;
+    }
+
+    body {
+        padding: 12px;
+    }
+
+    .form-row.compact-row {
+        gap: 10px;
+    }
+
+    .banner-image {
+        width: 100%;
+    }
+}
+
+/* Mobile (320px - 767px) */
+@media (max-width: 767px) {
+    body {
+        padding: 8px;
+        font-size: 13px;
+    }
+
+    .container {
+        padding: 20px 16px;
+        border-radius: 8px;
+    }
+
+    /* Banner - Mobile */
+    .banner {
+        margin-bottom: 16px;
+    }
+
+    .banner-image {
+        width: 100%;
+        border-radius: 6px;
+    }
+
+    /* Section Headers - Mobile */
+    .section-header {
+        margin: 16px 0 12px;
+        padding: 10px 12px;
+        font-size: 12px;
+    }
+
+    .section-header h3 {
+        font-size: 12px;
+    }
+
+    .section-header::before {
+        width: 5px;
+        height: 16px;
+        margin-right: 10px;
+    }
+
+    /* Form Groups - Mobile */
+    .form-group {
+        margin-bottom: 14px;
+        padding: 6px;
+    }
+
+    .form-group.compact {
+        margin-bottom: 10px;
+        padding: 4px;
+    }
+
+    /* Labels - Mobile */
+    label {
+        font-size: 12px;
+        margin-bottom: 4px;
+    }
+
+    label.inline-label {
+        font-size: 12px;
+    }
+
+    /* Inputs - Touch Friendly */
+    input,
+    select,
+    textarea {
+        padding: 10px;
+        font-size: 14px;
+        min-height: 44px;
+        /* Touch-friendly */
+    }
+
+    textarea {
+        min-height: 80px;
+    }
+
+    input::placeholder {
+        font-size: 12px;
+    }
+
+    /* Form Rows - Stack Vertically on Mobile */
+    .form-row,
+    .form-row.compact-row {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    .form-col {
+        width: 100%;
+    }
+
+    .two-column-section {
+        flex-direction: column;
+        gap: 0;
+    }
+
+    /* Notice Box - Mobile */
+    .notice-box {
+        padding: 14px;
+        margin-bottom: 16px;
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+    .waiver-box {
+        border-width: 1px;
+    }
+
+    .notice-box strong {
+        font-size: 12px;
+        margin-bottom: 10px;
+    }
+
+    .notice-box.compact-notice {
+        padding: 12px;
+        font-size: 13px;
+    }
+
+    /* Radio & Checkbox Groups - Stack on Mobile */
+    .radio-group,
+    .radio-group.compact-radio {
+        flex-direction: column;
+        gap: 12px;
+        align-items: flex-start;
+    }
+
+    .checkbox-group,
+    .checkbox-group.compact-checkbox {
+        flex-direction: column;
+        gap: 10px;
+        align-items: flex-start;
+    }
+
+    .radio-label,
+    .checkbox-label {
+        font-size: 13px;
+        width: 100%;
+    }
+
+    .radio-label input[type="radio"],
+    .checkbox-label input[type="checkbox"] {
+        width: 15px;
+        height: 15px;
+        min-width: 15px;
+        min-height: 15px;
+        margin-right: 10px;
+    }
+
+    /* Signature Pads - Mobile Optimized */
+    .signature-wrapper {
+        padding: 8px;
+    }
+
+    .signature-pad {
+        width: 100%;
+        max-width: 100%;
+        height: 80px;
+        /* Larger for touch */
+    }
+
+    .signature-controls {
+        margin-bottom: 8px;
+    }
+
+    .btn-clear-signature {
+        padding: 8px 12px;
+        font-size: 12px;
+        min-height: 44px;
+    }
+
+    .signature-name-input {
+        font-size: 13px;
+        padding: 8px 0;
+    }
+
+    .signature-name-input::placeholder {
+        font-size: 12px;
+    }
+
+    /* Buttons - Touch Friendly (exclude SweetAlert2 buttons) */
+    button:not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny) {
+        padding: 12px 24px;
+        font-size: 13px;
+        min-height: 48px;
+        /* Touch-friendly */
+    }
+
+    .btn-primary {
+        padding: 14px 28px;
+        min-height: 50px;
+    }
+
+    .btn-group {
+        margin-top: 20px;
+        padding-top: 16px;
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .btn-group button {
+        width: 100%;
+    }
+
+    /* Footer - Mobile */
+    .footer {
+        margin-top: 28px;
+        padding: 16px 20px;
+        font-size: 12px;
+    }
+}
+
+/* Small Mobile (320px - 480px) */
+@media (max-width: 480px) {
+    body {
+        padding: 6px;
+        font-size: 12px;
+    }
+
+    .container {
+        padding: 16px 12px;
+    }
+
+    .section-header {
+        padding: 8px 10px;
+    }
+
+    .section-header h3 {
+        font-size: 11px;
+    }
+
+    .form-group,
+    .form-group.compact {
+        padding: 4px;
+    }
+
+    label {
+        font-size: 11px;
+    }
+
+    input,
+    select,
+    textarea {
+        padding: 9px;
+        font-size: 13px;
+    }
+
+    .notice-box {
+        padding: 12px;
+        font-size: 12px;
+    }
+
+    .signature-pad {
+        height: 70px;
+    }
+
+    button:not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny) {
+        padding: 11px 20px;
+        font-size: 12px;
+    }
+
+    .btn-primary {
+        padding: 13px 24px;
+    }
+}
+
+/* Landscape Mobile Optimization */
+@media (max-width: 767px) and (orientation: landscape) {
+
+    /* Keep some elements side-by-side in landscape */
+    .form-row.compact-row {
+        flex-direction: row;
+    }
+
+    .radio-group,
+    .checkbox-group {
+        flex-direction: row;
+        flex-wrap: wrap;
+    }
+
+    .signature-pad {
+        height: 60px;
+        /* Smaller in landscape */
+    }
+}

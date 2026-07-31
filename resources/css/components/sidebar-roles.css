@@ -1,0 +1,92 @@
+/* SIDEBAR MOBILE OPTIMIZATION - ALL ROLES */
+@media (max-width: 1023px) {
+    /* Sidebar nav links - larger touch targets */
+    .sidebar .nav-link {
+        padding: 14px 20px !important;
+        font-size: 14px !important;
+        min-height: 48px !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 12px !important;
+        border-left: 4px solid transparent !important;
+        transition: background 0.2s ease, color 0.2s ease, border-left-color 0.2s ease !important;
+    }
+
+    .sidebar .nav-link i {
+        font-size: 16px !important;
+        width: 20px !important;
+        text-align: center !important;
+        flex-shrink: 0 !important;
+    }
+
+    .sidebar .nav-link:hover {
+        background: rgba(255, 255, 255, 0.15) !important;
+        border-left-color: rgba(255, 255, 255, 0.3) !important;
+    }
+
+    .sidebar .nav-link.active {
+        background: rgba(255, 255, 255, 0.2) !important;
+        border-left-color: #FDC113 !important;
+    }
+
+    /* Sidebar logo section */
+    .sidebar .logo-section {
+        padding: 24px 20px !important;
+        text-align: center !important;
+    }
+
+    .sidebar .sidebar-logo-img {
+        width: 50px !important;
+        height: auto !important;
+        margin-bottom: 12px !important;
+    }
+
+    .sidebar .sidebar-title {
+        font-size: 18px !important;
+        letter-spacing: 1px !important;
+        margin-bottom: 6px !important;
+    }
+
+    .sidebar .sidebar-role {
+        font-size: 11px !important;
+        letter-spacing: 0.5px !important;
+        opacity: 0.95 !important;
+    }
+
+    /* Sidebar nav container */
+    .sidebar nav {
+        padding: 16px 0 !important;
+        flex: 1 !important;
+        min-height: 0 !important;
+        overflow-y: auto !important;
+        overflow-x: hidden !important;
+    }
+
+    /* Sidebar footer */
+    .sidebar-footer {
+        padding: 16px 20px !important;
+        font-size: 11px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    /* Mobile close button - ensure proper sizing */
+    .mobile-close-btn {
+        width: 44px !important;
+        height: 44px !important;
+        font-size: 20px !important;
+        top: 12px !important;
+        right: 12px !important;
+    }
+
+    /* Logout link */
+    .sidebar .nav-link.logout {
+        margin-top: 8px !important;
+        padding-top: 16px !important;
+        border-top: 1px solid rgba(255, 255, 255, 0.15) !important;
+    }
+
+    /* Ensure sidebar has proper z-index and shadow */
+    .sidebar.sidebar-open {
+        box-shadow: 8px 0 30px rgba(0, 0, 0, 0.4) !important;
+    }
+}
