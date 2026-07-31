@@ -1,4 +1,4 @@
-﻿    {{-- Upload Modal --}}
+    {{-- Upload Modal --}}
     @if(Auth::user()->canProcessSupply())
     @include('inventory.partials._modal_upload')
 
@@ -28,7 +28,7 @@
                 <div class="scrap-actions">
                     <button class="close-scrapped-btn btn-scrap-cancel">Cancel</button>
                     <button id="confirmScrappedBtn" class="btn-scrap-confirm">
-                        <i class="fa-solid fa-circle-check"></i> Confirm â€” Mark as Scrapped
+                        <i class="fa-solid fa-circle-check"></i> Confirm \u2014 Mark as Scrapped
                     </button>
                 </div>
             </div>

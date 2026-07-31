@@ -208,7 +208,7 @@ async function confirmAssetScrapped() {
         });
     } finally {
         btn.disabled = false;
-        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirm â€” Mark as Scrapped';
+        btn.innerHTML = '<i class="fa-solid fa-circle-check"></i> Confirm \u2014 Mark as Scrapped';
     }
 }
 

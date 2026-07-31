@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Asset Detail | ' . $asset->item_name)
 @section('page-title', 'Asset Profile')
@@ -436,7 +436,7 @@
         </div>
         @endif
 
-        {{-- Set Components Card â€” only when this asset belongs to a Complete Set --}}
+        {{-- Set Components Card \u2014 only when this asset belongs to a Complete Set --}}
         @if($asset->components->isNotEmpty() || $asset->parentAsset)
         @php
             $detailRouteName = isset($isSuperAdminView) && $isSuperAdminView
@@ -448,7 +448,7 @@
             <div class="detail-card-body">
                 @if($asset->components->isNotEmpty())
                     {{-- Parent view: list the components that share this asset's PAR. --}}
-                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Parent of a Complete Set â€” the following components share this asset's PAR number:</p>
+                    <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b;">Parent of a Complete Set \u2014 the following components share this asset's PAR number:</p>
                     @foreach($asset->components as $component)
                     <div class="field-row">
                         <span class="field-label">{{ $component->category }}</span>
