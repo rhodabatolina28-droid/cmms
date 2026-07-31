@@ -1,9 +1,5 @@
-﻿<!-- ADD/EDIT ASSET MODAL -->
-<div class="modal-overlay" id="assetModal">
-    <div class="modal-card">
-        <div class="modal-header">
-            <h4 id="assetModalTitle" class="modal-h4">Register Asset</h4>
-        </div>
+<!-- ADD/EDIT ASSET MODAL -->
+<x-modal id="assetModal" title="Register Asset" titleId="assetModalTitle" hideClose="true">
         <form id="assetForm" class="modal-form">
             <input type="hidden" id="assetId" value="">
             <div class="modal-body">
@@ -574,5 +570,4 @@
                 <button type="submit" class="btn-save">Save Asset Record</button>
             </div>
         </form>
-    </div>
-</div>
+</x-modal>

@@ -5,7 +5,6 @@ namespace App\Actions\Maintenance;
 use App\Models\AuditLog;
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -27,7 +26,7 @@ class DeleteMaintenanceRequestAction
         try {
             DB::beginTransaction();
             $trackingRequest = RequestModel::findOrFail($id);
-            if (!RequestAuthorization::ticketInSuperAdminBranch($user, $trackingRequest)) {
+            if (!\App\Support\RequestHelpers::ticketInSuperAdminBranch($user, $trackingRequest)) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Request is outside your branch scope.'], 403);
             }

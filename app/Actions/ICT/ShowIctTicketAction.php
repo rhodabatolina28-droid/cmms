@@ -4,7 +4,6 @@ namespace App\Actions\ICT;
 
 use App\Models\Requisition;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use App\Support\RequisitionSupport;
 use Illuminate\Support\Facades\Auth;
 
@@ -20,7 +19,7 @@ class ShowIctTicketAction
     {
         $trackingRequest = RequestModel::with(['assignedTo', 'user'])->findOrFail($id);
 
-        if (!RequestAuthorization::canViewIctTicket(Auth::user(), $trackingRequest)) {
+        if (!Auth::user()->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 
@@ -45,8 +44,8 @@ class ShowIctTicketAction
             'canRequestPartsOnTicket' => in_array($user->role, ['it', 'super_admin'])
                 && RequisitionSupport::canItSubmitForTicket($user, $trackingRequest)
                 && !$hasMyPendingParts,
-            'canOpenIctForm' => RequestAuthorization::canViewIctTicket($user, $trackingRequest),
-            'canEditIctForm' => RequestAuthorization::canUpdateIctTicket($user, $trackingRequest),
+            'canOpenIctForm' => $user->can('viewIct', $trackingRequest),
+            'canEditIctForm' => $user->can('updateIct', $trackingRequest),
         ]);
     }
 }

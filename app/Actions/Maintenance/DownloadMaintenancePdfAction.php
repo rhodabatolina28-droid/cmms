@@ -4,7 +4,6 @@ namespace App\Actions\Maintenance;
 
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -21,7 +20,7 @@ class DownloadMaintenancePdfAction
         $trackingRequest = RequestModel::findOrFail($id);
 
         // Inline checkTicketAccess — verify the user can view this ticket
-        if (!RequestAuthorization::canViewMaintenanceTicket(Auth::user(), $trackingRequest)) {
+        if (!Auth::user()->can('viewMaintenance', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 

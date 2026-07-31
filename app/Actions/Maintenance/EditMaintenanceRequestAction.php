@@ -4,7 +4,6 @@ namespace App\Actions\Maintenance;
 
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class EditMaintenanceRequestAction
@@ -22,8 +21,8 @@ class EditMaintenanceRequestAction
         (new CheckMaintenanceTicketAccessAction)->execute($trackingRequest);
 
         $user = Auth::user();
-        if (!RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest)
-            && !RequestAuthorization::canViewMaintenanceTicket($user, $trackingRequest)) {
+        if (!$user->can('updateMaintenance', $trackingRequest)
+            && !$user->can('viewMaintenance', $trackingRequest)) {
             abort(403, 'You cannot edit this maintenance request.');
         }
 
@@ -32,7 +31,7 @@ class EditMaintenanceRequestAction
         return view('requests.maintenance.form', (new BuildMaintenanceFormViewDataAction)->execute(
             $trackingRequest,
             $maintenance,
-            !RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest)
+            !$user->can('updateMaintenance', $trackingRequest)
         ));
     }
 }

@@ -7,7 +7,6 @@ use App\Models\User;
 use App\Models\Request as RequestModel;
 use App\Models\PreventiveMaintenance;
 use App\Models\RepairRequest;
-use App\Support\RequestAuthorization;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class AssignmentFormDisableTest extends TestCase
@@ -47,11 +46,11 @@ class AssignmentFormDisableTest extends TestCase
         PreventiveMaintenance::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditMaintenanceTechnician($this->superAdmin, $request);
+        $canEdit = $this->superAdmin->can('editMaintenanceTechnician', $request);
         $this->assertTrue($canEdit, 'Super Admin should edit unassigned PM');
 
         // Check form flags
-        $flags = RequestAuthorization::maintenanceFormFlags($this->superAdmin, $request);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($this->superAdmin, $request);
         $this->assertTrue($flags['isAdmin'], 'isAdmin flag should be true for unassigned PM');
         $this->assertTrue($flags['canEditTechnician'], 'canEditTechnician should be true');
     }
@@ -71,11 +70,11 @@ class AssignmentFormDisableTest extends TestCase
         PreventiveMaintenance::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditMaintenanceTechnician($this->superAdmin, $request);
+        $canEdit = $this->superAdmin->can('editMaintenanceTechnician', $request);
         $this->assertFalse($canEdit, 'Super Admin should NOT edit assigned PM');
 
         // Check form flags
-        $flags = RequestAuthorization::maintenanceFormFlags($this->superAdmin, $request);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($this->superAdmin, $request);
         $this->assertFalse($flags['isAdmin'], 'isAdmin flag should be false for assigned PM');
         $this->assertFalse($flags['canEditTechnician'], 'canEditTechnician should be false');
     }
@@ -95,11 +94,11 @@ class AssignmentFormDisableTest extends TestCase
         PreventiveMaintenance::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditMaintenanceTechnician($this->itUser1, $request);
+        $canEdit = $this->itUser1->can('editMaintenanceTechnician', $request);
         $this->assertTrue($canEdit, 'Assigned IT User should edit PM');
 
         // Check form flags
-        $flags = RequestAuthorization::maintenanceFormFlags($this->itUser1, $request);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($this->itUser1, $request);
         $this->assertTrue($flags['isAdmin'], 'isAdmin flag should be true for assigned IT');
         $this->assertTrue($flags['canEditTechnician'], 'canEditTechnician should be true');
     }
@@ -119,11 +118,11 @@ class AssignmentFormDisableTest extends TestCase
         PreventiveMaintenance::factory()->create(['request_id' => $request->id]);
 
         // Check authorization - IT User 2 should NOT edit
-        $canEdit = RequestAuthorization::canEditMaintenanceTechnician($this->itUser2, $request);
+        $canEdit = $this->itUser2->can('editMaintenanceTechnician', $request);
         $this->assertFalse($canEdit, 'Non-assigned IT User should NOT edit PM');
 
         // Check form flags
-        $flags = RequestAuthorization::maintenanceFormFlags($this->itUser2, $request);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($this->itUser2, $request);
         $this->assertFalse($flags['isAdmin'], 'isAdmin flag should be false for non-assigned IT');
     }
 
@@ -144,11 +143,11 @@ class AssignmentFormDisableTest extends TestCase
         RepairRequest::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditIctTechnicianSections($this->superAdmin, $request);
+        $canEdit = $this->superAdmin->can('editIctTechnician', $request);
         $this->assertTrue($canEdit, 'Super Admin should edit unassigned ICT');
 
         // Check form flags
-        $flags = RequestAuthorization::ictFormFlags($this->superAdmin, $request);
+        $flags = \App\Support\RequestHelpers::ictFormFlags($this->superAdmin, $request);
         $this->assertTrue($flags['isAdmin'], 'isAdmin flag should be true for unassigned ICT');
         $this->assertTrue($flags['canEditTechnician'], 'canEditTechnician should be true');
     }
@@ -168,11 +167,11 @@ class AssignmentFormDisableTest extends TestCase
         RepairRequest::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditIctTechnicianSections($this->superAdmin, $request);
+        $canEdit = $this->superAdmin->can('editIctTechnician', $request);
         $this->assertFalse($canEdit, 'Super Admin should NOT edit assigned ICT');
 
         // Check form flags
-        $flags = RequestAuthorization::ictFormFlags($this->superAdmin, $request);
+        $flags = \App\Support\RequestHelpers::ictFormFlags($this->superAdmin, $request);
         $this->assertFalse($flags['isAdmin'], 'isAdmin flag should be false for assigned ICT');
         $this->assertFalse($flags['canEditTechnician'], 'canEditTechnician should be false');
     }
@@ -192,11 +191,11 @@ class AssignmentFormDisableTest extends TestCase
         RepairRequest::factory()->create(['request_id' => $request->id]);
 
         // Check authorization
-        $canEdit = RequestAuthorization::canEditIctTechnicianSections($this->itUser1, $request);
+        $canEdit = $this->itUser1->can('editIctTechnician', $request);
         $this->assertTrue($canEdit, 'Assigned IT User should edit ICT');
 
         // Check form flags
-        $flags = RequestAuthorization::ictFormFlags($this->itUser1, $request);
+        $flags = \App\Support\RequestHelpers::ictFormFlags($this->itUser1, $request);
         $this->assertTrue($flags['isAdmin'], 'isAdmin flag should be true for assigned IT');
         $this->assertTrue($flags['canEditTechnician'], 'canEditTechnician should be true');
     }
@@ -221,8 +220,8 @@ class AssignmentFormDisableTest extends TestCase
         ]);
 
         // Check authorization for assignment
-        $pmCanAssign = RequestAuthorization::canAssignTicket($this->superAdmin, $pmRequest);
-        $ictCanAssign = RequestAuthorization::canAssignTicket($this->superAdmin, $ictRequest);
+        $pmCanAssign = $this->superAdmin->can('assignTicket', $pmRequest);
+        $ictCanAssign = $this->superAdmin->can('assignTicket', $ictRequest);
 
         $this->assertTrue($pmCanAssign, 'Super Admin should assign PM tickets');
         $this->assertTrue($ictCanAssign, 'Super Admin should assign ICT tickets');
@@ -240,7 +239,7 @@ class AssignmentFormDisableTest extends TestCase
         ]);
 
         // IT user should NOT be able to assign
-        $canAssign = RequestAuthorization::canAssignTicket($this->itUser1, $pmRequest);
+        $canAssign = $this->itUser1->can('assignTicket', $pmRequest);
         $this->assertFalse($canAssign, 'IT User should NOT assign tickets');
     }
 
@@ -258,15 +257,15 @@ class AssignmentFormDisableTest extends TestCase
         ]);
 
         // Super Admin should NOT update assigned PM
-        $superAdminCanUpdate = RequestAuthorization::canUpdateMaintenanceTicket($this->superAdmin, $pmRequest);
+        $superAdminCanUpdate = $this->superAdmin->can('updateMaintenance', $pmRequest);
         $this->assertFalse($superAdminCanUpdate, 'Super Admin should NOT update assigned PM');
 
         // Assigned IT should update
-        $itCanUpdate = RequestAuthorization::canUpdateMaintenanceTicket($this->itUser1, $pmRequest);
+        $itCanUpdate = $this->itUser1->can('updateMaintenance', $pmRequest);
         $this->assertTrue($itCanUpdate, 'Assigned IT should update PM');
 
         // Non-assigned IT should NOT update
-        $otherItCanUpdate = RequestAuthorization::canUpdateMaintenanceTicket($this->itUser2, $pmRequest);
+        $otherItCanUpdate = $this->itUser2->can('updateMaintenance', $pmRequest);
         $this->assertFalse($otherItCanUpdate, 'Non-assigned IT should NOT update PM');
     }
 
@@ -282,15 +281,15 @@ class AssignmentFormDisableTest extends TestCase
         ]);
 
         // Super Admin should NOT update assigned ICT
-        $superAdminCanUpdate = RequestAuthorization::canUpdateIctTicket($this->superAdmin, $ictRequest);
+        $superAdminCanUpdate = $this->superAdmin->can('updateIct', $ictRequest);
         $this->assertFalse($superAdminCanUpdate, 'Super Admin should NOT update assigned ICT');
 
         // Assigned IT should update
-        $itCanUpdate = RequestAuthorization::canUpdateIctTicket($this->itUser1, $ictRequest);
+        $itCanUpdate = $this->itUser1->can('updateIct', $ictRequest);
         $this->assertTrue($itCanUpdate, 'Assigned IT should update ICT');
 
         // Non-assigned IT should NOT update
-        $otherItCanUpdate = RequestAuthorization::canUpdateIctTicket($this->itUser2, $ictRequest);
+        $otherItCanUpdate = $this->itUser2->can('updateIct', $ictRequest);
         $this->assertFalse($otherItCanUpdate, 'Non-assigned IT should NOT update ICT');
     }
 }

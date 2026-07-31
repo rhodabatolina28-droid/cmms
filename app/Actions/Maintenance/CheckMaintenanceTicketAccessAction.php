@@ -3,7 +3,6 @@
 namespace App\Actions\Maintenance;
 
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class CheckMaintenanceTicketAccessAction
@@ -16,7 +15,7 @@ class CheckMaintenanceTicketAccessAction
      */
     public function execute(RequestModel $trackingRequest): void
     {
-        if (!RequestAuthorization::canViewMaintenanceTicket(Auth::user(), $trackingRequest)) {
+        if (!Auth::user()->can('viewMaintenance', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
     }

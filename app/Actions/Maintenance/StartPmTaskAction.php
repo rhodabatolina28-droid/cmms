@@ -3,7 +3,6 @@
 namespace App\Actions\Maintenance;
 
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class StartPmTaskAction
@@ -19,7 +18,7 @@ class StartPmTaskAction
         $trackingRequest = RequestModel::findOrFail($id);
         $user = Auth::user();
 
-        if (!RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest)) {
+        if (!$user->can('updateMaintenance', $trackingRequest)) {
             abort(403, 'You cannot start this PM task.');
         }
 

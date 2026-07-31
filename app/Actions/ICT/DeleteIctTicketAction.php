@@ -26,7 +26,7 @@ class DeleteIctTicketAction
         try {
             DB::beginTransaction();
             $trackingRequest = RequestModel::findOrFail($id);
-            if (!\App\Support\RequestAuthorization::ticketInSuperAdminBranch($user, $trackingRequest)) {
+            if (!\App\Support\RequestHelpers::ticketInSuperAdminBranch($user, $trackingRequest)) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'Request is outside your branch scope.'], 403);
             }

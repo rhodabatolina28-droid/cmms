@@ -4,7 +4,6 @@ namespace App\Actions\ICT;
 
 use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -44,7 +43,7 @@ class UpdateIctRequestAction
             $repairRequest = RepairRequest::findOrFail($trackingRequest->detail_id);
             $user = Auth::user();
 
-            if (!RequestAuthorization::canUpdateIctTicket($user, $trackingRequest)) {
+            if (!$user->can('updateIct', $trackingRequest)) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'You are not allowed to update this request.'], 403);
             }

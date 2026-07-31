@@ -5,7 +5,6 @@ namespace App\Actions\ICT;
 use App\Models\InventoryAsset;
 use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class BuildIctFormViewDataAction
@@ -21,7 +20,7 @@ class BuildIctFormViewDataAction
     public function execute(RequestModel $trackingRequest, RepairRequest $repairRequest, bool $forceView = false): array
     {
         $user = Auth::user();
-        $flags = RequestAuthorization::ictFormFlags($user, $trackingRequest, $forceView, $repairRequest);
+        $flags = \App\Support\RequestHelpers::ictFormFlags($user, $trackingRequest, $forceView, $repairRequest);
 
         $requestorId = $trackingRequest->user_id;
         $myAssets = InventoryAsset::where('assigned_to_user', $requestorId)
@@ -75,7 +74,7 @@ class BuildIctFormViewDataAction
         ], $flags);
 
         if (!empty($flags['canAssignIt'])) {
-            $data['itPersonnel'] = RequestAuthorization::itPersonnelInAdminScope($user);
+            $data['itPersonnel'] = \App\Support\RequestHelpers::itPersonnelInAdminScope($user);
             if ($user->role === 'super_admin') {
                 $data['canSelfAssign'] = true;
             }

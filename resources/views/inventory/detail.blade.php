@@ -639,7 +639,7 @@
                         @endif
                         @if($h->previous_status !== $h->new_status)
                         <div class="tr-status">
-                            Status: {{ $h->previous_status }} â†’ <strong>{{ $h->new_status }}</strong>
+                            Status: {{ $h->previous_status }} → <strong>{{ $h->new_status }}</strong>
                         </div>
                         @endif
                         @if($h->remarks)

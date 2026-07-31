@@ -122,6 +122,11 @@ if (scrappedModalBtn) {
     });
 }
 
+function printQR(assetId) {
+    const url = QR_STICKER_PATTERN.replace('_ID_', assetId);
+    window.open(url, '_blank');
+}
+
 const printStickerBtn = document.getElementById('printStickerBtn');
 if (printStickerBtn) {
     printStickerBtn.addEventListener('click', function() {
@@ -218,9 +223,3 @@ if (confirmScrappedBtn) {
     confirmScrappedBtn.addEventListener('click', confirmAssetScrapped);
 }
 </script>
-
-// ── Expose to global scope for Vite ES module compatibility ──
-window.closeModal = closeModal;
-window.openModal = openModal;
-window.deleteAttachment = deleteAttachment;
-window.confirmAssetScrapped = confirmAssetScrapped;

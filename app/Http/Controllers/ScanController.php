@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\InventoryAsset;
 use App\Models\PMSchedule;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
+use App\Support\RequestHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -37,7 +37,7 @@ class ScanController extends Controller
 
         // USER role
         if ($user->role === 'user') {
-            $error = RequestAuthorization::linkedAssetValidationError($user, $asset->asset_id);
+            $error = \App\Support\RequestHelpers::linkedAssetValidationError($user, $asset->asset_id);
             if ($error) {
                 return response("
                     <div style='font-family:Arial;text-align:center;padding:60px 20px;max-width:400px;margin:0 auto;'>

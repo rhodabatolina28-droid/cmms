@@ -1,14 +1,7 @@
 <!-- TRANSFER / REASSIGN MODAL -->
 {{-- Partial extracted from inventory/index.blade.php lines 1275-1323.
      No variables needed — all data is populated via JS (inventory.js). --}}
-<div class="modal-overlay" id="transferModal">
-    <div class="modal-card transfer-card">
-        <div class="modal-header">
-            <h4 class="modal-h4">
-                <i class="fa-solid fa-right-left color-green mr-8"></i> Transfer / Reassign Asset
-            </h4>
-            <button class="close-transfer-btn close-btn" aria-label="Close"><i class="fa-solid fa-times"></i></button>
-        </div>
+<x-modal id="transferModal" title="<i class='fa-solid fa-right-left color-green mr-8'></i> Transfer / Reassign Asset" hideClose="true" maxWidth="520px">
         <form id="transferForm" class="modal-form">
             <input type="hidden" id="transferAssetId">
             <div class="modal-body">
@@ -47,5 +40,4 @@
                 </button>
             </div>
         </form>
-    </div>
-</div>
+</x-modal>

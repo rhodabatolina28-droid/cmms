@@ -6,7 +6,6 @@ use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
 use App\Models\AuditLog;
 use App\Http\Requests\UpdateIctRequest;
-use App\Support\RequestAuthorization;
 use App\Support\RequestHelpers;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -28,9 +27,9 @@ class SignIctAcceptanceAction
         try {
             DB::beginTransaction();
 
-            if (!RequestAuthorization::canSignIctAcceptance($user, $trackingRequest, $repairRequest)) {
+            if (!$user->can('signAcceptance', [$trackingRequest, $repairRequest])) {
                 DB::rollBack();
-                $reason = RequestAuthorization::ictAcceptanceBlockReason($repairRequest)
+                $reason = \App\Support\RequestHelpers::ictAcceptanceBlockReason($repairRequest)
                     ?? 'You cannot sign acceptance until IT has completed the required sections and signatures.';
 
                 return response()->json(['success' => false, 'message' => $reason], 422);
@@ -57,7 +56,7 @@ class SignIctAcceptanceAction
                 if (!empty($repairRequest->end_user_acceptance_signature) && Storage::disk('public')->exists($repairRequest->end_user_acceptance_signature)) {
                     Storage::disk('public')->delete($repairRequest->end_user_acceptance_signature);
                 }
-                $mappedData['end_user_acceptance_signature'] = RequestHelpers::saveSignature(
+                $mappedData['end_user_acceptance_signature'] = \App\Support\RequestHelpers::saveSignature(
                     $mappedData['end_user_acceptance_signature'], 'ict_acceptance', 'Acceptance'
                 );
                 $savedSigFiles[] = $mappedData['end_user_acceptance_signature'];

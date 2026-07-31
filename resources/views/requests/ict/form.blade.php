@@ -17,7 +17,7 @@
     @endslot
 
         @php
-            // Flags from RequestAuthorization::ictFormFlags() — isAdmin = can edit Sections 2–5 (admin or assigned IT)
+            // Flags from \App\Support\RequestHelpers::ictFormFlags() — isAdmin = can edit Sections 2–5 (admin or assigned IT)
             $isView = !empty($viewMode);
             $user = Auth::user();
             $isSuperAdmin = $user->role === 'super_admin';

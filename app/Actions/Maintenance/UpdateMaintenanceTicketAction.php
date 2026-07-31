@@ -6,7 +6,6 @@ use App\Models\AuditLog;
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
 use App\Http\Requests\UpdateMaintenanceRequest;
-use App\Support\RequestAuthorization;
 use App\Services\GeneratePMScheduleService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -47,7 +46,7 @@ class UpdateMaintenanceTicketAction
 
             $user = Auth::user();
 
-            if (!RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest)) {
+            if (!$user->can('updateMaintenance', $trackingRequest)) {
                 DB::rollBack();
                 return response()->json(['success' => false, 'message' => 'You are not allowed to update this request.'], 403);
             }

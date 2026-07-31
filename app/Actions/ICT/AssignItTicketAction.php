@@ -6,7 +6,6 @@ use App\Models\User;
 use App\Models\Request as RequestModel;
 use App\Models\AuditLog;
 use App\Http\Requests\AssignItRequest;
-use App\Support\RequestAuthorization;
 use App\Services\RequestNotificationService;
 use Illuminate\Support\Facades\Auth;
 
@@ -22,7 +21,7 @@ class AssignItTicketAction
     public function execute(AssignItRequest $request, $trackingRequest)
     {
         $admin = Auth::user();
-        if (!RequestAuthorization::canAssignTicket($admin, $trackingRequest)) {
+        if (!$admin->can('assignTicket', $trackingRequest)) {
             return response()->json(['success' => false, 'message' => 'You cannot assign this request.'], 403);
         }
 
@@ -46,7 +45,7 @@ class AssignItTicketAction
                     return response()->json(['success' => false, 'message' => 'Selected user must have IT role.'], 422);
                 }
                 
-                if ($admin->role !== 'super_admin' && !RequestAuthorization::itUserInAdminScope($admin, $itUser)) {
+                if ($admin->role !== 'super_admin' && !\App\Support\RequestHelpers::itUserInAdminScope($admin, $itUser)) {
                     return response()->json(['success' => false, 'message' => 'Selected IT personnel is not in your scope.'], 422);
                 }
             }

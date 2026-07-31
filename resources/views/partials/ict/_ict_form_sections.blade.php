@@ -113,7 +113,7 @@
             @if($isUpdate)
             @php
                 $isReferredToSp = in_array('REFERRED TO SERVICE PROVIDER', $repairTypes ?? []);
-                $spSectionActive = $isReferredToSp || \App\Support\RequestAuthorization::isServiceProviderSectionInUse($repairRequest);
+                $spSectionActive = $isReferredToSp || \App\Support\RequestHelpers::isServiceProviderSectionInUse($repairRequest);
             @endphp
             <div class="section-header" id="serviceProviderSectionHeader">
                 <h3>TO BE FILLED-UP BY SERVICE PROVIDER</h3>

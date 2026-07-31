@@ -6,7 +6,6 @@ use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
 use App\Models\AuditLog;
 use App\Http\Requests\StoreLinkedAssetRequest;
-use App\Support\RequestAuthorization;
 use App\Services\RequestNotificationService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
@@ -23,11 +22,11 @@ class CreateIctTicketAction
      */
     public function execute(StoreLinkedAssetRequest $request, $user)
     {
-        if (!RequestAuthorization::canCreateIctTicket($user)) {
+        if (!$user->can('createIct', \App\Models\Request::class)) {
             return response()->json(['success' => false, 'message' => 'Only end-users can create ICT requests.'], 403);
         }
 
-        if ($assetError = RequestAuthorization::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
+        if ($assetError = \App\Support\RequestHelpers::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
             return response()->json(['success' => false, 'message' => $assetError], 422);
         }
 
@@ -149,7 +148,7 @@ class CreateIctTicketAction
         ];
 
         // IT / technician fields (reuse existing whitelist)
-        $itKeys = \App\Support\RequestAuthorization::ictTechnicianFieldKeys();
+        $itKeys = \App\Support\RequestHelpers::ictTechnicianFieldKeys();
 
         // Additional fields from mapper not covered above
         $otherKeys = [

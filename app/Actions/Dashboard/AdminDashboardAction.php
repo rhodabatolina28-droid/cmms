@@ -6,7 +6,6 @@ use App\Models\Request as RequestModel;
 use App\Models\User;
 use App\Models\InventoryAsset;
 use App\Models\Requisition;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class AdminDashboardAction
@@ -124,7 +123,7 @@ class AdminDashboardAction
             // Supply admin manages entire branch - no division filter
 
             $reqQuery = Requisition::query();
-            RequestAuthorization::scopeRequisitionsForSupplyOfficer($user, $reqQuery);
+            \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($user, $reqQuery);
 
             $assetStatsRow = (clone $assetsQuerySupply)
                 ->selectRaw("COUNT(*) as total_assets")

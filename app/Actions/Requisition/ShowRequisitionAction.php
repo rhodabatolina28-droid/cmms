@@ -4,7 +4,6 @@ namespace App\Actions\Requisition;
 
 use App\Models\Requisition;
 use App\Models\InventoryAsset;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class ShowRequisitionAction
@@ -21,12 +20,12 @@ class ShowRequisitionAction
         $requisition = Requisition::with(['ticket.user', 'ticket.assignedTo', 'ticket.linkedAsset', 'requester', 'reviewer'])
             ->findOrFail($id);
 
-        if (!RequestAuthorization::canViewRequisition($user, $requisition)) {
+        if (!$user->can('view', $requisition)) {
             abort(403);
         }
 
         $canReview = $user->canProcessSupply()
-            && RequestAuthorization::canSupplyManageRequisition($user, $requisition);
+            && $user->can('manage', $requisition);
 
         // For supply officers: check inventory availability per requested line item
         $inventoryMatches = collect();

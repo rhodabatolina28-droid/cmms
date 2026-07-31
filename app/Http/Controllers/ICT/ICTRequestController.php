@@ -53,7 +53,7 @@ class ICTRequestController extends Controller
     {
         $trackingRequest = \App\Models\Request::with('assignedTo')->findOrFail($id);
 
-        if (!\App\Support\RequestAuthorization::canViewIctTicket(\Illuminate\Support\Facades\Auth::user(), $trackingRequest)) {
+        if (!\Illuminate\Support\Facades\Auth::user()->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 
@@ -69,7 +69,7 @@ class ICTRequestController extends Controller
     {
         $trackingRequest = \App\Models\Request::findOrFail($id);
 
-        if (!\App\Support\RequestAuthorization::canViewIctTicket(\Illuminate\Support\Facades\Auth::user(), $trackingRequest)) {
+        if (!\Illuminate\Support\Facades\Auth::user()->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 
@@ -91,7 +91,7 @@ class ICTRequestController extends Controller
     {
         $trackingRequest = \App\Models\Request::with('linkedAsset')->findOrFail($id);
 
-        if (!\App\Support\RequestAuthorization::canViewIctTicket(\Illuminate\Support\Facades\Auth::user(), $trackingRequest)) {
+        if (!\Illuminate\Support\Facades\Auth::user()->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 
@@ -108,7 +108,7 @@ class ICTRequestController extends Controller
 
         $trackingRequest = \App\Models\Request::with(['linkedAsset', 'user'])->findOrFail($id);
 
-        if (!\App\Support\RequestAuthorization::canViewIctTicket($user, $trackingRequest)) {
+        if (!$user->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 

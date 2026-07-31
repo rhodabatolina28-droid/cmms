@@ -6,7 +6,6 @@ use App\Models\Requisition;
 use App\Models\Request as RequestModel;
 use App\Models\InventoryAsset;
 use App\Models\InventoryHistory;
-use App\Support\RequestAuthorization;
 use App\Support\RequisitionSupport;
 use App\Services\RequestNotificationService;
 use App\Models\AuditLog;
@@ -35,7 +34,7 @@ class ReviewRequisitionAction
         return DB::transaction(function () use ($validated, $supply, $id) {
             $requisition = Requisition::with('ticket', 'requester')->lockForUpdate()->findOrFail($id);
 
-            if (!RequestAuthorization::canSupplyManageRequisition($supply, $requisition)) {
+            if (!$supply->can('manage', $requisition)) {
                 return response()->json(['success' => false, 'message' => 'This requisition is outside your scope.'], 403);
             }
 

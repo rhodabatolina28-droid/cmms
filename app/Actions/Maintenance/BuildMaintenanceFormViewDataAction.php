@@ -6,7 +6,6 @@ use App\Models\InventoryAsset;
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
 use App\Models\User;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class BuildMaintenanceFormViewDataAction
@@ -22,7 +21,7 @@ class BuildMaintenanceFormViewDataAction
     public function execute(RequestModel $trackingRequest, PreventiveMaintenance $maintenance, bool $forceView = false): array
     {
         $user = Auth::user();
-        $flags = RequestAuthorization::maintenanceFormFlags($user, $trackingRequest, $forceView);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($user, $trackingRequest, $forceView);
 
         $requestorId = $trackingRequest->user_id;
         $myAssets = InventoryAsset::where('assigned_to_user', $requestorId)->get();
@@ -52,7 +51,7 @@ class BuildMaintenanceFormViewDataAction
         ], $flags);
 
         if (!empty($flags['canAssignIt'])) {
-            $data['itPersonnel'] = RequestAuthorization::itPersonnelInAdminScope($user);
+            $data['itPersonnel'] = \App\Support\RequestHelpers::itPersonnelInAdminScope($user);
             if ($user->role === 'super_admin') {
                 $data['canSelfAssign'] = true;
             }

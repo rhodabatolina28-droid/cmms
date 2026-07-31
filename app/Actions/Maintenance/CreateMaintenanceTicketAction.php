@@ -6,7 +6,6 @@ use App\Models\AuditLog;
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
 use App\Http\Requests\StoreLinkedAssetRequest;
-use App\Support\RequestAuthorization;
 use App\Support\RequestHelpers;
 use App\Services\RequestNotificationService;
 use Illuminate\Support\Facades\Auth;
@@ -24,13 +23,13 @@ class CreateMaintenanceTicketAction
      */
     public function execute(StoreLinkedAssetRequest $request, $user)
     {
-        if (!RequestAuthorization::canCreateMaintenanceTicket($user)) {
+        if (!$user->can('createMaintenance', \App\Models\Request::class)) {
             return response()->json(['success' => false, 'message' => 'PM is now managed via schedules by your ICT Unit. Contact your Super Admin.'], 403);
         }
 
         // Only check asset assignment for user role — IT/super_admin can create PM for any asset
         if ($user->role === 'user') {
-            if ($assetError = RequestAuthorization::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
+            if ($assetError = \App\Support\RequestHelpers::linkedAssetValidationError($user, $request->input('linked_asset_id'))) {
                 return response()->json(['success' => false, 'message' => $assetError], 422);
             }
         }
@@ -389,11 +388,11 @@ class CreateMaintenanceTicketAction
 
     private function saveSignature($base64Data, $type, $name)
     {
-        return RequestHelpers::saveSignature($base64Data, $type, $name);
+        return \App\Support\RequestHelpers::saveSignature($base64Data, $type, $name);
     }
 
     private function generateRequestNumber($type)
     {
-        return RequestHelpers::generateRequestNumber($type);
+        return \App\Support\RequestHelpers::generateRequestNumber($type);
     }
 }

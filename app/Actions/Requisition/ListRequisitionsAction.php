@@ -5,7 +5,6 @@ namespace App\Actions\Requisition;
 use App\Models\Requisition;
 use App\Models\Request as RequestModel;
 use App\Models\User;
-use App\Support\RequestAuthorization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -63,7 +62,7 @@ class ListRequisitionsAction
         if ($supplyView === 'tickets') {
             $ticketQuery = RequestModel::with(['user', 'assignedTo', 'requisitions'])
                 ->withCount('requisitions');
-            RequestAuthorization::scopeIctTicketsForSupplyAdmin($supply, $ticketQuery);
+            \App\Support\RequestHelpers::scopeIctTicketsForSupplyAdmin($supply, $ticketQuery);
 
             $ictTickets = $ticketQuery
                 ->orderByDesc('updated_at')
@@ -82,7 +81,7 @@ class ListRequisitionsAction
         }
 
         $query = Requisition::with(['ticket', 'requester', 'reviewer']);
-        RequestAuthorization::scopeRequisitionsForSupplyOfficer($supply, $query);
+        \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($supply, $query);
 
         if ($filter !== 'all') {
             $query->where('status', $filter);
@@ -148,7 +147,7 @@ class ListRequisitionsAction
     private function supplyRequisitionCount(User $supply, string $status): int
     {
         $query = Requisition::query()->where('status', $status);
-        RequestAuthorization::scopeRequisitionsForSupplyOfficer($supply, $query);
+        \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($supply, $query);
 
         return $query->count();
     }

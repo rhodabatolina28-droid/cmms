@@ -3,7 +3,6 @@
 namespace App\Actions\ICT;
 
 use App\Models\InventoryAsset;
-use App\Support\RequestAuthorization;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -18,11 +17,11 @@ class CreateIctFormAction
     public function execute(Request $request)
     {
         $user = Auth::user();
-        if (!RequestAuthorization::canCreateIctTicket($user)) {
+        if (!$user->can('createIct', \App\Models\Request::class)) {
             abort(403, 'Only end-users can create new ICT requests.');
         }
 
-        $flags = RequestAuthorization::ictFormFlags($user, null, false, null);
+        $flags = \App\Support\RequestHelpers::ictFormFlags($user, null, false, null);
 
         if (in_array($user->role, ['it', 'super_admin'], true)) {
             $myAssets = InventoryAsset::whereNotIn('status', ['For Repair', 'For Disposal', 'Scrapped'])

@@ -5,7 +5,6 @@ namespace App\Actions\ICT;
 use App\Models\Request as RequestModel;
 use App\Models\AuditLog;
 use App\Http\Requests\UpdateIctStatusRequest;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class QuickUpdateStatusAction
@@ -27,7 +26,7 @@ class QuickUpdateStatusAction
 
         $trackingRequest = RequestModel::with('assignedTo')->findOrFail($validated['id']);
 
-        if (!RequestAuthorization::canAdminQuickUpdateStatus($admin, $trackingRequest, $validated['status'])) {
+        if (!\App\Support\RequestHelpers::canAdminQuickUpdateStatus($admin, $trackingRequest, $validated['status'])) {
             $hint = empty($trackingRequest->assigned_to) && $validated['status'] === RequestModel::STATUS_ONGOING
                 ? ' Assign IT personnel first (View ticket → Assign IT).'
                 : ($validated['status'] === RequestModel::STATUS_COMPLETED

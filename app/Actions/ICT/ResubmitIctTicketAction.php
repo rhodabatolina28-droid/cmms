@@ -48,7 +48,7 @@ class ResubmitIctTicketAction
         $savedSigFiles = [];
 
         if (isset($mappedData['end_user_signature']) && str_contains($mappedData['end_user_signature'], 'data:image')) {
-            $mappedData['end_user_signature'] = RequestHelpers::saveSignature(
+            $mappedData['end_user_signature'] = \App\Support\RequestHelpers::saveSignature(
                 $mappedData['end_user_signature'], 'ict_enduser',
                 ($mappedData['end_user_first_name'] ?? 'User') . '_' . ($mappedData['end_user_last_name'] ?? 'Request')
             );

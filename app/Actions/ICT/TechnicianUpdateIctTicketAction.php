@@ -6,7 +6,6 @@ use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
 use App\Models\AuditLog;
 use App\Http\Requests\UpdateIctRequest;
-use App\Support\RequestAuthorization;
 use App\Support\RequestHelpers;
 use App\Services\RequestNotificationService;
 use Illuminate\Support\Facades\Auth;
@@ -29,7 +28,7 @@ class TechnicianUpdateIctTicketAction
         try {
             DB::beginTransaction();
 
-            $data = $request->only(RequestAuthorization::ictTechnicianFieldKeys());
+            $data = $request->only(\App\Support\RequestHelpers::ictTechnicianFieldKeys());
 
             $mappedData = $this->mapLegacyData($data);
             $oldRepairTypes = json_decode($repairRequest->repair_type ?? '[]', true) ?: [];
@@ -50,7 +49,7 @@ class TechnicianUpdateIctTicketAction
                     if (!empty($repairRequest->$field) && Storage::disk('public')->exists($repairRequest->$field)) {
                         Storage::disk('public')->delete($repairRequest->$field);
                     }
-                    $mappedData[$field] = RequestHelpers::saveSignature($mappedData[$field], $prefix, 'Update');
+                    $mappedData[$field] = \App\Support\RequestHelpers::saveSignature($mappedData[$field], $prefix, 'Update');
                     $savedSigFiles[] = $mappedData[$field];
                 }
             }

@@ -4,7 +4,6 @@ namespace App\Actions\ICT;
 
 use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class ShowIctRequestAction
@@ -19,13 +18,13 @@ class ShowIctRequestAction
     {
         $trackingRequest = RequestModel::with('assignedTo')->findOrFail($id);
 
-        if (!RequestAuthorization::canViewIctTicket(Auth::user(), $trackingRequest)) {
+        if (!Auth::user()->can('viewIct', $trackingRequest)) {
             abort(403, 'Unauthorized access to this request.');
         }
 
         $repairRequest = RepairRequest::findOrFail($trackingRequest->detail_id);
         $user = Auth::user();
-        $forceView = !RequestAuthorization::canUpdateIctTicket($user, $trackingRequest);
+        $forceView = !$user->can('updateIct', $trackingRequest);
 
         return view('requests.ict.form', (new BuildIctFormViewDataAction)->execute($trackingRequest, $repairRequest, $forceView));
     }

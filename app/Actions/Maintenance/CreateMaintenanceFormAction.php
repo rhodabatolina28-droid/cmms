@@ -3,7 +3,6 @@
 namespace App\Actions\Maintenance;
 
 use App\Models\InventoryAsset;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class CreateMaintenanceFormAction
@@ -16,11 +15,11 @@ class CreateMaintenanceFormAction
     public function execute()
     {
         $user = Auth::user();
-        if (!RequestAuthorization::canCreateMaintenanceTicket($user)) {
+        if (!$user->can('createMaintenance', \App\Models\Request::class)) {
             abort(403, 'PM is now managed via schedules by your ICT Unit. Contact your Super Admin.');
         }
 
-        $flags = RequestAuthorization::maintenanceFormFlags($user);
+        $flags = \App\Support\RequestHelpers::maintenanceFormFlags($user);
         $myAssets = InventoryAsset::whereNotIn('status', ['For Repair', 'For Disposal', 'Scrapped'])
             ->where(function ($q) use ($user) {
                 if (in_array($user->role, ['it', 'super_admin'], true)) {

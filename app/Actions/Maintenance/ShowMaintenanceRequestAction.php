@@ -4,7 +4,6 @@ namespace App\Actions\Maintenance;
 
 use App\Models\PreventiveMaintenance;
 use App\Models\Request as RequestModel;
-use App\Support\RequestAuthorization;
 use Illuminate\Support\Facades\Auth;
 
 class ShowMaintenanceRequestAction
@@ -24,7 +23,7 @@ class ShowMaintenanceRequestAction
         $maintenance = (new ResolveMaintenanceDetailAction)->execute($trackingRequest);
 
         $user = Auth::user();
-        $forceView = !RequestAuthorization::canUpdateMaintenanceTicket($user, $trackingRequest);
+        $forceView = !$user->can('updateMaintenance', $trackingRequest);
 
         return view('requests.maintenance.form', (new BuildMaintenanceFormViewDataAction)->execute($trackingRequest, $maintenance, $forceView));
     }
