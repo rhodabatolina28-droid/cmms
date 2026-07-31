@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Manage Personnel | NCMB ICT')
 @section('page-title', 'Personnel Management')
@@ -422,4 +422,6 @@
 @include('partials.admin._personnel_modals')
 @endsection
 
+@section('scripts')
 @include('partials.admin._personnel_scripts')
+@endsection

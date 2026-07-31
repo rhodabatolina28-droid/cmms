@@ -1,4 +1,3 @@
-﻿@section('scripts')
 <script nonce="{{ $cspNonce }}">
     function openAddPersonnelModal() {
         document.getElementById('addPersonnelModal').style.display = 'flex';
@@ -303,4 +302,3 @@ document.addEventListener('click', function(e) {
     if (btn) { viewPersonnel(parseInt(btn.dataset.id)); }
 });
 </script>
-@endsection
