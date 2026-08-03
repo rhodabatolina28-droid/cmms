@@ -46,7 +46,7 @@
                                             <canvas id="endUserSignatureCanvas" class="signature-canvas" width="350" height="64"></canvas>
                                             <input type="hidden" id="endUserSignature" name="endUserSignature" value="">
                                             @if(!$endUserFieldsReadonly)
-                                                <button type="button" class="btn-clear-sig-minimal" data-canvas="endUserSignatureCanvas" data-input="endUserSignature">Clear</button>
+                                                <button type="button" class="btn-clear-sig-minimal" data-canvas="endUserSignatureCanvas" data-input="endUserSignature" onclick="clearSignature('endUserSignatureCanvas', 'endUserSignature'); return false;">Clear</button>
                                             @endif
                                         @endif
                                     </div>

@@ -333,7 +333,7 @@
                                     @if(!empty($repairRequest->end_user_signature))
                                         <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature" data-action="resign">Re-sign</button>
                                     @else
-                                        <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature">Clear</button>
+                                        <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature" onclick="clearSignature('endUserSignatureCanvas', 'endUserSignature'); return false;">Clear</button>
                                     @endif
                                 </div>
 
