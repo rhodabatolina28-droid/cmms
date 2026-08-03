@@ -24,14 +24,33 @@ class ShowSuperAdminInventoryDetailAction
             ->findOrFail($assetId);
 
         $assetUserId = $asset->assigned_to_user;
+
+        // If asset is unassigned (e.g., For Disposal), find the previous user from history
+        // so PM records don't disappear from the repair history
+        if (!$assetUserId) {
+            $lastAssignment = InventoryHistory::where('asset_id', $assetId)
+                ->whereNotNull('previous_user_id')
+                ->orderByDesc('created_at')
+                ->first();
+            $assetUserId = $lastAssignment?->previous_user_id;
+        }
+
         $repairHistory = RequestModel::with(['user', 'repairRequest', 'maintenanceRequest', 'assignedTo'])
             ->where(function ($q) use ($assetId, $assetUserId) {
-                $q->where('linked_asset_id', $assetId)
-                  ->orWhere(function ($sub) use ($assetUserId) {
-                      $sub->where('type', 'Preventive Maintenance')
-                          ->where('is_auto_generated', true)
-                          ->where('user_id', $assetUserId);
-                  });
+                $q->where('linked_asset_id', $assetId);
+                if ($assetUserId) {
+                    $q->orWhere(function ($sub) use ($assetUserId) {
+                        $sub->where('type', 'Preventive Maintenance')
+                            ->where('is_auto_generated', true)
+                            ->where('user_id', $assetUserId);
+                    });
+                }
+                $q->orWhere(function ($sub) use ($assetId) {
+                    $sub->where('type', 'Preventive Maintenance')
+                        ->whereHas('maintenanceRequest', function ($pm) use ($assetId) {
+                            $pm->where('disposal_asset_id', $assetId);
+                        });
+                });
             })
             ->orderByDesc('created_at')
             ->limit(50)

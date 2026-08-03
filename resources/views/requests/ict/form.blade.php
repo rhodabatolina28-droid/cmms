@@ -319,9 +319,9 @@
                             </label>
 
                             <div class="signature-wrapper">
-                                <div class="signature-container">
+                                <div class="signature-container" id="endUserSignatureContainer">
                                     @if(!empty($repairRequest->end_user_signature))
-                                        <img src="/{{ $repairRequest->end_user_signature }}" class="signature-preview" alt="Signature">
+                                        <img src="/{{ $repairRequest->end_user_signature }}" class="signature-preview" alt="Signature" id="endUserSignatureImg">
                                         <input type="hidden" id="endUserSignature" name="endUserSignature" value="{{ $repairRequest->end_user_signature }}">
                                     @else
                                         <canvas id="endUserSignatureCanvas" class="signature-pad" width="220" height="48"></canvas>
@@ -329,10 +329,12 @@
                                     @endif
                                 </div>
 
-                                <div class="signature-controls {{ ($isView || $isUpdate || !$canEditEndUser) ? 'hidden' : '' }}">
-                                    <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature">
-                                        Clear
-                                    </button>
+                                <div class="signature-controls {{ ($isView || !$canEditEndUser) ? 'hidden' : '' }}">
+                                    @if(!empty($repairRequest->end_user_signature))
+                                        <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature" data-action="resign">Re-sign</button>
+                                    @else
+                                        <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature">Clear</button>
+                                    @endif
                                 </div>
 
                                 <div class="signature-line"></div>

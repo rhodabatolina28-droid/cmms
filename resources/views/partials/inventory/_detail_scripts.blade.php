@@ -23,7 +23,15 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
     fd.append('_token', CSRF_TOKEN);
 
     try {
-        const res = await fetch(ATTACH_UPLOAD_URL, { method: 'POST', credentials: 'include', body: fd });
+        const res = await fetch(ATTACH_UPLOAD_URL, {
+            method: 'POST',
+            credentials: 'include',
+            headers: {
+                'Accept': 'application/json',
+                'X-CSRF-TOKEN': CSRF_TOKEN
+            },
+            body: fd
+        });
         const data = await res.json();
         if (data.success) {
             document.getElementById('uploadModal').style.display = 'none';
@@ -32,6 +40,7 @@ document.getElementById('uploadForm').addEventListener('submit', async function(
             Swal.fire({ icon: 'error', title: 'Upload Failed', text: data.message || 'Upload failed. Please try again.', confirmButtonColor: '#0038A8' });
         }
     } catch(err) {
+        console.error('Upload error:', err);
         Swal.fire({ icon: 'error', title: 'Upload Error', text: 'Could not connect to server. Please try again.', confirmButtonColor: '#0038A8' });
     } finally {
         btn.disabled = false; btn.textContent = 'Upload';
