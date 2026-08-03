@@ -155,3 +155,10 @@
 .signature-pad:hover {
     border-color: #999;
 }
+
+/* Allow signature clear/re-sign buttons to be clickable inside disabled sections */
+.disabled-section .signature-controls,
+.disabled-section .btn-clear-signature {
+    pointer-events: auto !important;
+}
+

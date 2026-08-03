@@ -313,3 +313,10 @@ textarea {
     cursor: not-allowed;
     background-color: #f0f2f5;
 }
+
+/* Allow signature clear/re-sign buttons to be clickable inside disabled sections */
+.disabled-section .signature-controls,
+.disabled-section .btn-clear-sig-minimal {
+    pointer-events: auto !important;
+}
+
