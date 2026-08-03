@@ -1,6 +1,9 @@
-/* mobile-responsive.css - Main Entry Point */
+/* mobile-responsive.css — Main Entry Point
+ * All styles are split into module files inside mobile-responsive/
+ * Import order matters — do not reorder.
+ */
 
-@import 'mobile-responsive/base/responsive-base.css';
-@import 'mobile-responsive/components/sidebar.css';
-@import 'mobile-responsive/components/phone-portrait.css';
-@import 'mobile-responsive/components/sidebar-roles.css';
+@import 'mobile-responsive/_base.css';
+@import 'mobile-responsive/_sidebar.css';
+@import 'mobile-responsive/_sidebar-roles.css';
+@import 'mobile-responsive/_phone-portrait.css';
