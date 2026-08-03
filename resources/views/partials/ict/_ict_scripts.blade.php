@@ -408,6 +408,25 @@
                 });
             }
 
+            // Signature clear/re-sign click handler
+            document.addEventListener('click', function(e) {
+                var btn = e.target.closest('[data-canvas]');
+                if (btn) {
+                    if (btn.dataset.action === 'resign') {
+                        var container = btn.closest('.signature-container');
+                        var canvasId = btn.dataset.canvas;
+                        var inputId = btn.dataset.input;
+                        if (container) {
+                            container.innerHTML = '<canvas id="' + canvasId + '" class="signature-pad" width="220" height="48"></canvas><input type="hidden" id="' + inputId + '" name="' + inputId + '">';
+                            initSignaturePad(canvasId, inputId);
+                            btn.textContent = 'Clear';
+                            btn.removeAttribute('data-action');
+                        }
+                    } else {
+                        clearSignature(btn.dataset.canvas, btn.dataset.input);
+                    }
+                }
+            });
         });
     </script>
 
@@ -534,7 +553,8 @@
             if (isScanning) assetScanner.stopCamera();
         });
     })();
-    document.addEventListener('click', function(e) {
+    // OLD HANDLER - moved to DOMContentLoaded above
+        // document.addEventListener('click', function(e) {
         var btn = e.target.closest('[data-canvas]');
         if (btn) {
             if (btn.dataset.action === 'resign') {
