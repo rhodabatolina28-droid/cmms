@@ -329,7 +329,7 @@
                                     @endif
                                 </div>
 
-                                <div class="signature-controls {{ ($isView || !$canEditEndUser) ? 'hidden' : '' }}">
+                                <div class="signature-controls {{ $isView ? 'hidden' : '' }}">
                                     @if(!empty($repairRequest->end_user_signature))
                                         <button type="button" class="btn-clear-signature" data-canvas="endUserSignatureCanvas" data-input="endUserSignature" data-action="resign">Re-sign</button>
                                     @else
