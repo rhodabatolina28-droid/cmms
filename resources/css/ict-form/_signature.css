@@ -1,0 +1,157 @@
+/* ict-form/_signature.css — Signature Pad, Disabled Section, Animations */
+
+/* Signature Pad Styles */
+.signature-wrapper {
+    border: 1px solid #e0e0e0;
+    border-radius: 6px;
+    padding: 6px;
+    background: transparent;
+    position: relative;
+}
+
+.signature-container {
+    position: relative;
+    margin-bottom: 4px;
+}
+
+.signature-pad {
+    border: 1px solid #dcdcdc;
+    border-radius: 6px;
+    background: #ffffff;
+    cursor: crosshair;
+    display: block;
+    width: 100%;
+    max-width: 360px;
+    height: 56px;
+    touch-action: none;
+}
+
+.signature-controls {
+    text-align: right;
+    margin-bottom: 6px;
+}
+
+.btn-clear-signature {
+    padding: 10px 14px;
+    border: 1px solid #e6e6e6;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #fafafa;
+    color: #000000;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.btn-clear-signature:hover {
+    background: #f0f0f0;
+    border-color: #999999;
+}
+
+.signature-line {
+    border-top: 1px solid #cccccc;
+    margin: 6px 0;
+    width: 100%;
+}
+
+.signature-name-input {
+    width: 100%;
+    border: none;
+    border-bottom: 1px solid #e6e6e6;
+    padding: 6px 0;
+    font-size: 13px;
+    background: transparent;
+    text-align: center;
+    font-family: Arial, sans-serif;
+    color: #000000;
+}
+
+.signature-name-input:focus {
+    outline: none;
+    border-bottom: 2px solid #333333;
+}
+
+.signature-name-input::placeholder {
+    color: rgba(0, 0, 0, 0.45);
+    font-family: Arial, Helvetica, sans-serif;
+    font-size: 13px;
+}
+
+/* Role-based restriction styles */
+.disabled-section {
+    opacity: 0.6;
+    pointer-events: none;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    position: relative;
+    cursor: not-allowed;
+}
+
+.disabled-section::after {
+    content: "RESTRICTED";
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 10px;
+    font-weight: bold;
+    color: #999;
+    letter-spacing: 1px;
+}
+
+.disabled-section input,
+.disabled-section textarea,
+.disabled-section select,
+.disabled-section button {
+    cursor: not-allowed !important;
+}
+
+/* SMOOTH TRANSITIONS & ANIMATIONS */
+.container {
+    animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(15px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.section-header {
+    transition: all 0.2s ease;
+}
+
+.section-header:hover {
+    background: #e3ecf3;
+}
+
+.form-group:focus-within {
+    background: #f8fbfd;
+}
+
+.radio-label,
+.checkbox-label {
+    transition: none;
+}
+
+.radio-label:hover,
+.checkbox-label:hover {
+    color: #222;
+}
+
+.btn-clear-signature {
+    transition: all 0.2s ease;
+}
+
+.signature-pad {
+    transition: border-color 0.2s ease;
+}
+
+.signature-pad:hover {
+    border-color: #999;
+}

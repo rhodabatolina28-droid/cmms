@@ -1,0 +1,26 @@
+/* ict-form/_layout.css — Form Row, Columns, Two-Column Section */
+
+.form-row {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 2px;
+}
+
+.form-row.compact-row {
+    gap: 8px;
+    margin-bottom: 0;
+}
+
+.form-col {
+    flex: 1;
+}
+
+.two-column-section {
+    display: flex;
+    gap: 15px;
+    margin: 15px 0;
+}
+
+.column-section {
+    flex: 1;
+}

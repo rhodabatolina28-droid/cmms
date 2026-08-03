@@ -1,3 +1,5 @@
+/* admin/_ui.css — Topbar, Cards, Tables, Buttons, Status, Notifications, Inventory */
+
 /* =============================================
    TOPBAR (PREMIUM)
    ============================================= */
@@ -325,4 +327,3 @@ tbody td {
 .prop-no {
     font-family: monospace; font-size: 12px; color: #475569;
 }
-

@@ -1,0 +1,146 @@
+/* landing/_base.css — CSS Variables, Reset, Body, Container, Header */
+
+/* GOVERNMENT PORTAL - CLEAN & SIMPLE THEME */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+:root {
+    /* Philippine Government / Professional Palette */
+    --gov-blue: #1e40af;
+    /* Royal Blue */
+    --gov-blue-dark: #002366;
+    --gov-red: #CE1126;
+    /* Accent red if needed */
+    --gov-yellow: #FDC113;
+    /* Accent yellow */
+
+    --text-main: #1F2937;
+    --text-muted: #4B5563;
+    --text-light: #9CA3AF;
+
+    --bg-page: #FFFFFF;
+    --bg-surface: #F3F4F6;
+    --bg-highlight: #EFF6FF;
+
+    --border-light: #E5E7EB;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Inter', sans-serif;
+    background-color: var(--bg-surface);
+    color: var(--text-main);
+    line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+}
+
+/* CONTAINER */
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+
+/* HEADER - Clean & Official */
+.gov-header {
+    background-color: #fff;
+    border-bottom: 2px solid var(--gov-blue);
+    padding: 1rem 0;
+    
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.header-content {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+/* Header Logo Image */
+.header-logo {
+    width: 40px;
+    height: auto;
+    display: block;
+    flex-shrink: 0;
+}
+
+/* Logo Text Construction */
+.logo-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.logo-text strong {
+    font-size: 1.25rem;
+    font-weight: 800;
+    color: var(--gov-blue-dark);
+    letter-spacing: -0.02em;
+}
+
+.logo-text span {
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+}
+
+.header-meta {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+/* FOOTER */
+footer {
+    background-color: var(--gov-blue-dark);
+    color: white;
+    padding: 40px 0;
+    margin-top: auto;
+}
+
+.footer-content {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    text-align: center;
+}
+
+.copyright {
+    font-size: 0.9rem;
+    opacity: 0.8;
+}
+
+.social-links {
+    display: flex;
+    gap: 16px;
+}
+
+.social-links a {
+    color: white;
+    font-size: 1.25rem;
+    opacity: 0.7;
+    transition: opacity 0.2s;
+}
+
+.social-links a:hover {
+    opacity: 1;
+}

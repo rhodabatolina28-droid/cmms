@@ -1,3 +1,5 @@
+/* mobile-responsive/_sidebar.css — Sidebar/layout overrides for tablet/phone */
+
 /* LAYOUT & SIDEBAR NAVIGATION OVERRIDES FOR TABLETS/PHONES */
 @media (max-width: 1023px) {
     body {

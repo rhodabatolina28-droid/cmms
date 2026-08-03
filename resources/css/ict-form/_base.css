@@ -1,0 +1,208 @@
+/* ict-form/_base.css — Reset, Body, Container, Banner, Section Headers, Inputs */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    background-color: #f0f0f0;
+    padding: 15px;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #000000;
+}
+
+.container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #ffffff;
+    padding: 32px;
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(20, 40, 60, 0.08);
+    overflow: hidden;
+    border: 1px solid #cfd9df;
+}
+
+
+.header {
+    padding: 0;
+    margin-bottom: 20px;
+    border-bottom: none;
+    /* wag mag-frame sa banner */
+}
+
+
+/* BANNER CONTAINER – DITO ANG "PAHABA" */
+.banner {
+    width: 100%;
+    text-align: center;
+    margin-bottom: 20px;
+}
+
+.banner-image {
+    width: 100%;
+    box-sizing: border-box;
+    container: cover;
+    display: block;
+    border-radius: 8px;
+    /* para sa kaunting round sa edges */
+}
+
+
+
+
+/* TITLE */
+.header h1 {
+    font-size: 18px;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin-top: 5px;
+}
+
+
+form {
+    padding: 0;
+}
+
+.section-header {
+    margin: 20px 0 14px;
+    padding: 14px 18px;
+    background: #f3f4f6;
+    border: 1px solid #d1d5db;
+    border-left: 4px solid #000000;
+    border-radius: 8px;
+    text-align: left;
+    display: flex;
+    align-items: center;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.section-header::before {
+    content: '';
+    display: inline-block;
+    width: 5px;
+    height: 20px;
+    background: #000000;
+    margin-right: 14px;
+    border-radius: 2px;
+    flex-shrink: 0;
+}
+
+.section-header.compact-header {
+    margin: 16px 0 12px 0;
+    padding: 12px 16px;
+}
+
+.section-header h3 {
+    margin: 0;
+    font-size: 14px;
+    font-weight: 700;
+    color: #1f2937;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+    line-height: 1.4;
+    font-family: Arial, sans-serif;
+}
+
+.form-group {
+    margin-bottom: 16px;
+    /* More breathing room */
+    position: relative;
+    padding: 8px;
+    background: transparent;
+    border-radius: 4px;
+    transition: background 0.2s ease;
+}
+
+.form-group.compact {
+    margin-bottom: 12px;
+    /* Slightly more space for compact too */
+    padding: 6px;
+}
+
+label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 700;
+    color: #000000;
+    font-size: 13px;
+    letter-spacing: 0.3px;
+    line-height: 1.6;
+}
+
+label.inline-label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #444444;
+    margin-bottom: 4px;
+}
+
+.required::after {
+    content: " *";
+    color: #000000;
+    font-weight: 800;
+    font-size: 15px;
+    margin-left: 2px;
+}
+
+input,
+select,
+textarea {
+    width: 100%;
+    padding: 11px 14px;
+    border: 2px solid #cfd9df;
+    border-radius: 6px;
+    font-size: 14px;
+    background-color: #ffffff;
+    color: #333333;
+    font-family: Arial, sans-serif;
+    min-height: 44px;
+    transition: all 0.25s ease;
+    line-height: 1.6;
+}
+
+input:not([type="radio"]):not([type="checkbox"]):hover,
+select:hover,
+textarea:hover {
+    border-color: #99aab5;
+    background-color: #fafbfc;
+}
+
+input:not([type="radio"]):not([type="checkbox"]):focus,
+select:focus,
+textarea:focus {
+    border-color: #0038A8;
+    outline: none;
+    background-color: #ffffff;
+    box-shadow: 0 0 0 4px rgba(0, 56, 168, 0.1);
+    transform: translateY(-1px);
+}
+
+input:disabled, select:disabled, textarea:disabled,
+input[readonly], select[readonly], textarea[readonly] {
+    background-color: #f8fafc;
+    color: #475569;
+    cursor: not-allowed;
+    border-color: #e2e8f0;
+}
+
+input:valid:not(:placeholder-shown),
+textarea:valid:not(:placeholder-shown) {
+    border-color: #666;
+}
+
+textarea {
+    resize: vertical;
+    min-height: 80px;
+    line-height: 1.6;
+}
+
+input::placeholder,
+textarea::placeholder {
+    color: rgba(0, 0, 0, 0.4);
+    font-style: italic;
+    font-size: 13px;
+}

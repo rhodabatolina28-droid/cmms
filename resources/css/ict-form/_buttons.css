@@ -1,0 +1,80 @@
+/* ict-form/_buttons.css — Button Base, Primary, Submit, Modal Buttons */
+
+.btn-group {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 22px;
+    padding-top: 12px;
+    border-top: 1px solid #ddd;
+}
+
+button {
+    padding: 12px 36px;
+    border: 1px solid #cfd9df;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    text-transform: uppercase;
+    font-family: Arial, sans-serif;
+    letter-spacing: 0.5px;
+    background-color: #f8f8f8;
+    color: #333333;
+    min-height: 44px;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn-primary {
+    background-color: #000000;
+    color: #ffffff;
+    border-color: #000000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+    background-color: #222222;
+    border-color: #222222;
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.15);
+    transform: translateY(-2px);
+}
+
+.btn-primary:active {
+    transform: translateY(0);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-submit {
+    background-color: #000000;
+    color: #ffffff;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 6px;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: all 0.2s;
+}
+
+.btn-submit:hover {
+    background-color: #333333;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.btn-modal {
+    background: #000;
+    color: #fff;
+    border: none;
+    padding: 10px 25px;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+    transition: background 0.2s;
+    font-family: Arial, sans-serif;
+}
+
+.btn-modal:hover {
+    background: #333;
+}

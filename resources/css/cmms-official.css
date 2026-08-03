@@ -1,5 +1,8 @@
-/* cmms-official.css - Main Entry Point */
+/* cmms-official.css — Main Entry Point
+ * All styles are split into module files inside cmms-official/
+ * Import order matters — do not reorder.
+ */
 
-@import 'cmms-official/base/layout.css';
-@import 'cmms-official/components/main.css';
-@import 'cmms-official/components/responsive.css';
+@import 'cmms-official/_layout.css';
+@import 'cmms-official/_components.css';
+@import 'cmms-official/_responsive.css';

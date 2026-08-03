@@ -1,0 +1,113 @@
+/* login/_form.css — Form Groups, Inputs, Buttons, Error States, Animations */
+
+/* Form Elements */
+.form-group {
+    margin-bottom: 20px;
+}
+
+label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    color: #374151;
+    font-weight: 600;
+    letter-spacing: 0.2px;
+}
+
+input {
+    width: 100%;
+    padding: 12px 14px;
+    border: 1.5px solid #d1d5db;
+    border-radius: 8px;
+    font-size: 14px;
+    font-family: Arial, sans-serif;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+    appearance: none;
+    -webkit-appearance: none;
+    background: #fff;
+    color: #1f2937;
+}
+
+input::placeholder {
+    color: #9ca3af;
+    font-size: 13px;
+}
+
+/* Fix for Chrome/Edge Autofill Blue Background */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+    -webkit-box-shadow: 0 0 0 30px white inset !important;
+    -webkit-text-fill-color: #1f2937 !important;
+}
+
+input:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+}
+
+/* Button */
+.btn-login {
+    width: 100%;
+    padding: 13px;
+    background: linear-gradient(135deg, #1e40af 0%, #0038A8 100%);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 15px;
+    font-weight: 700;
+    cursor: pointer;
+    font-family: Arial, sans-serif;
+    transition: all 0.2s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    letter-spacing: 0.3px;
+}
+
+.btn-login:hover {
+    background: linear-gradient(135deg, #002366 0%, #002366 100%);
+    box-shadow: 0 4px 12px rgba(0, 35, 102, 0.3);
+}
+
+.btn-login:active {
+    transform: scale(0.98);
+}
+
+/* Error Box */
+.error-box {
+    margin-top: 15px;
+    padding: 10px;
+    background: #FFEBEE;
+    color: #C62828;
+    border-radius: 4px;
+    font-size: 13px;
+    display: none;
+    text-align: center;
+}
+
+.error-box--visible {
+    display: block;
+}
+
+.error {
+    color: #C62828;
+    font-size: 12px;
+    margin-top: 5px;
+}
+
+/* SMOOTH TRANSITIONS & ANIMATIONS */
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}

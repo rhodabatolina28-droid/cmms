@@ -1,0 +1,116 @@
+/* maint-form/_layout.css — Grid Tables, Device Info Grid, Specs, Task Checklist */
+
+/* ── GRID TABLES (main 2-col layout) ── */
+.grid-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid var(--rule);
+}
+
+.grid-table td {
+    border: 1.5px solid var(--rule-light);
+    vertical-align: top;
+    padding: 16px;
+}
+
+.left-col  { width: 65%; }
+.right-col { width: 35%; background: var(--bg-section); }
+
+.col-left  { width: 62%; }
+.col-right { width: 38%; }
+
+/* ── DEVICE INFO GRID ── */
+.device-info-grid {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid var(--rule);
+    border-top: none;
+}
+
+.device-info-grid td {
+    border: 1px solid var(--rule-light);
+    padding: 3px 8px;
+    font-size: 0.72rem;
+    height: 28px;
+    vertical-align: middle;
+}
+
+.device-info-grid input[type="text"],
+.device-info-grid select {
+    border: none;
+    background: transparent;
+    padding: 2px 4px;
+    font-size: 0.75rem;
+    width: 100%;
+    height: auto;
+    border-radius: 0;
+}
+
+.device-info-grid input[type="text"]:focus,
+.device-info-grid select:focus {
+    background: #f0f4fa;
+    box-shadow: none;
+    border-bottom: 1px solid var(--navy-mid);
+}
+
+.label-cell {
+    font-weight: 700;
+    color: #334155;
+    text-transform: uppercase;
+    background-color: var(--bg-section);
+    width: 130px;
+    white-space: nowrap;
+    font-size: 0.68rem;
+    letter-spacing: 0.02em;
+}
+
+.specs-header {
+    background-color: #dde8f5;
+    color: var(--navy);
+    font-weight: 800;
+    text-align: center;
+    font-size: 0.66rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 5px;
+}
+
+/* ── TASK CHECKLIST TABLE ── */
+.tasks-table {
+    width: 100%;
+    border-collapse: collapse;
+    border: 2px solid var(--rule);
+    border-top: none;
+}
+
+.tasks-table th,
+.tasks-table td {
+    border: 1px solid var(--rule-light);
+    padding: 4px 6px;
+    font-size: 0.65rem;
+    vertical-align: middle;
+}
+
+.tasks-table th {
+    background: #dde8f5;
+    font-weight: 800;
+    text-transform: uppercase;
+    color: var(--navy);
+    letter-spacing: 0.06em;
+    padding: 6px;
+}
+
+.tasks-table .no-col   { width: 28px; text-align: center; font-weight: 700; }
+.tasks-table .equip-col { width: 95px; font-weight: 700; font-size: 0.65rem; text-transform: uppercase; }
+.tasks-table .task-name { text-align: left; padding-left: 10px; font-size: 0.64rem; }
+.tasks-table .check-cell { width: 44px; text-align: center; }
+
+.sub-header {
+    background-color: #e8edf6;
+    font-weight: 800;
+    text-align: center;
+    font-size: 0.62rem;
+    text-transform: uppercase;
+    color: var(--navy);
+    letter-spacing: 0.06em;
+}

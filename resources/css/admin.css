@@ -1,4 +1,7 @@
-/* admin.css - Main Entry Point */
+/* admin.css — Main Entry Point
+ * All styles are split into module files inside admin/
+ * Import order matters — do not reorder.
+ */
 
-@import 'admin/base/layout.css';
-@import 'admin/components/ui.css';
+@import 'admin/_layout.css';
+@import 'admin/_ui.css';
