@@ -16,11 +16,14 @@ class SecurityHeaders
         $request->attributes->set('csp_nonce', $nonce);
         View::share('cspNonce', $nonce);
 
-        // Allow Vite dev server assets in development mode
-        $isLocal = config('app.env') === 'local';
-        $viteDevServer = $isLocal ? ' http://localhost:5173 http://127.0.0.1:5173' : '';
-
-        $csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com{$viteDevServer}; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com{$viteDevServer}; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com{$viteDevServer}; img-src 'self' data:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com{$viteDevServer}; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'" . ($isLocal ? '' : '; upgrade-insecure-requests');
+        // Use permissive CSP in development to allow Vite dev server
+        // (HTTP assets, WebSocket HMR, blob URIs, data URIs, inline scripts/styles)
+        // Use strict CSP in production for security
+        if (config('app.env') === 'local') {
+            $csp = "default-src * 'unsafe-inline' 'unsafe-eval' 'unsafe-hashes' data: blob:; img-src * data: blob:; font-src * data:; connect-src * ws: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'";
+        } else {
+            $csp = "default-src 'self'; script-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com https://fonts.googleapis.com; font-src 'self' https://cdnjs.cloudflare.com https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://fonts.googleapis.com https://fonts.gstatic.com; frame-ancestors 'none'; base-uri 'self'; form-action 'self'; object-src 'none'; upgrade-insecure-requests";
+        }
 
         $response = $next($request);
 
