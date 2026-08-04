@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\LoginRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -22,12 +23,9 @@ class AuthController extends Controller
         return view('auth.login', compact('redirect'));
     }
 
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $credentials = $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
+        $credentials = $request->validated();
 
         // Anti-Brute Force Protection (Rate Limiting)
         $throttleKey = mb_strtolower($request->input('email')) . '|' . $request->ip();
