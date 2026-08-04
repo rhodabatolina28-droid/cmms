@@ -19,6 +19,8 @@ export default defineConfig({
                 'resources/js/inventory.js',
                 'resources/js/login.js',
                 'resources/js/qr-scanner.js',
+                'resources/css/maintenance-calendar.css',
+                'resources/js/maintenance-calendar.js',
             ],
             refresh: true,
             fonts: [

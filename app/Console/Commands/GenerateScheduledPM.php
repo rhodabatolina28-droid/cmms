@@ -4,9 +4,11 @@ namespace App\Console\Commands;
 
 use App\Models\PMSchedule;
 use App\Models\PMDivisionSchedule;
+use App\Models\PMGenerationSchedule;
 use App\Models\AuditLog;
 use App\Services\GeneratePMScheduleService;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class GenerateScheduledPM extends Command
@@ -23,6 +25,11 @@ class GenerateScheduledPM extends Command
         foreach ($allActive as $sched) {
             $this->info('  ID:' . $sched->id . ' ' . $sched->schedule_name . ' Focus:' . ($sched->current_focus_division ?? 'null'));
         }
+
+        // PHASE 0: Process due manual PM generation queue rows (additive step).
+        $this->info('Phase 0 — Processing manual PM generation queue...');
+        $this->processManualQueue($service);
+        $this->info('');
 
         // PHASE 1: Check all active schedules for completed divisions and advance them.
         $this->info('Phase 1 — Checking for completed divisions and advancing cycles...');
@@ -178,6 +185,112 @@ class GenerateScheduledPM extends Command
      * Each branch's super admin only receives alerts for their own branch.
      * Does NOT crash the command if notification fails.
      */
+    private function processManualQueue(GeneratePMScheduleService $service): void
+    {
+        $dueQueue = PMGenerationSchedule::dueOnOrBefore(now())->get();
+
+        if ($dueQueue->isEmpty()) {
+            $this->line('  No manual PM generation queue rows due.');
+            return;
+        }
+
+        $processed = 0;
+        $generated = 0;
+        $failed = 0;
+
+        foreach ($dueQueue as $queueRow) {
+            $processed++;
+            try {
+                $locked = PMGenerationSchedule::lockForUpdate()->find($queueRow->id);
+
+                if (!$locked || !$locked->isPending()) {
+                    continue;
+                }
+
+                $locked->update(['status' => PMGenerationSchedule::STATUS_PROCESSING]);
+
+                $pmSchedule = PMSchedule::find($locked->pm_schedule_id);
+
+                if (!$pmSchedule || !$pmSchedule->is_active) {
+                    $locked->update([
+                        'status' => PMGenerationSchedule::STATUS_FAILED,
+                        'failure_message' => 'PM schedule not found or inactive',
+                    ]);
+                    $this->logQueueAudit($locked, 'Scheduled PM Generation Failed', 'PM schedule not found or inactive');
+                    $failed++;
+                    continue;
+                }
+
+                $created = $service->generate($pmSchedule);
+
+                if (isset($created['__cooldown__'])) {
+                    $locked->update([
+                        'status' => PMGenerationSchedule::STATUS_FAILED,
+                        'failure_message' => "Service cooldown active until {$created['__cooldown__']}",
+                    ]);
+                    $this->logQueueAudit($locked, 'Scheduled PM Generation Skipped', "Cooldown active until {$created['__cooldown__']}");
+                    $this->line("  Queue #{$locked->id}: cooldown until {$created['__cooldown__']}");
+                    continue;
+                }
+
+                if (empty($created)) {
+                    $locked->update([
+                        'status' => PMGenerationSchedule::STATUS_GENERATED,
+                        'generated_at' => now(),
+                        'generated_count' => 0,
+                        'generated_division' => $pmSchedule->current_focus_division,
+                        'pm_cycle_id' => $pmSchedule->current_cycle_id,
+                        'failure_message' => 'Generation produced 0 work orders (no eligible users found)',
+                    ]);
+                    $this->logQueueAudit($locked, 'Scheduled PM Generation Executed', 'Generated 0 work orders');
+                    $this->line("  Queue #{$locked->id}: 0 work orders generated");
+                    continue;
+                }
+
+                $pmSchedule->refresh();
+                $locked->update([
+                    'status' => PMGenerationSchedule::STATUS_GENERATED,
+                    'generated_at' => now(),
+                    'generated_count' => count($created),
+                    'generated_division' => $pmSchedule->current_focus_division,
+                    'pm_cycle_id' => $pmSchedule->current_cycle_id,
+                ]);
+                $this->logQueueAudit($locked, 'Scheduled PM Generation Executed', 'Generated ' . count($created) . ' work orders');
+                $generated++;
+                $this->info("  Queue #{$locked->id}: generated " . count($created) . " work orders");
+
+            } catch (\Exception $e) {
+                $queueRow->update([
+                    'status' => PMGenerationSchedule::STATUS_FAILED,
+                    'failure_message' => $e->getMessage(),
+                ]);
+                $this->logQueueAudit($queueRow, 'Scheduled PM Generation Failed', $e->getMessage());
+                $failed++;
+                $this->error("  Queue #{$queueRow->id}: failed - {$e->getMessage()}");
+                Log::error("PM generation queue #{$queueRow->id} failed: {$e->getMessage()}");
+            }
+        }
+
+        $this->info("  Manual queue: {$processed} processed, {$generated} generated, {$failed} failed.");
+    }
+
+    private function logQueueAudit(PMGenerationSchedule $queueRow, string $action, string $details): void
+    {
+        try {
+            AuditLog::create([
+                'user_id' => $queueRow->generated_by,
+                'action' => $action,
+                'module' => 'PM Schedule',
+                'details' => $details,
+                'region' => $queueRow->generator?->branch ?? 'System',
+                'ip_address' => '127.0.0.1',
+                'user_agent' => 'Console/Cron',
+            ]);
+        } catch (\Throwable $e) {
+            Log::warning("Failed to log console audit for PM generation queue #{$queueRow->id}: {$e->getMessage()}");
+        }
+    }
+
     private function notifySuperAdmins(PMSchedule $schedule, string $message): void
     {
         try {

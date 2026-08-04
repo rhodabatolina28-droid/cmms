@@ -19,6 +19,13 @@ use App\Actions\PMSchedule\RepairBrokenPMRecordsAction;
 use App\Actions\PMSchedule\GetOrdersDataAction;
 use App\Actions\PMSchedule\AdvancePMCycleAction;
 use App\Actions\PMSchedule\ManagePMCycleAction;
+use App\Actions\PMGenerationSchedule\CreatePMGenerationScheduleAction;
+use App\Actions\PMGenerationSchedule\ReschedulePMGenerationScheduleAction;
+use App\Actions\PMGenerationSchedule\CancelPMGenerationScheduleAction;
+use App\Actions\PMGenerationSchedule\GetMaintenanceCalendarDataAction;
+use App\Http\Requests\StorePMGenerationScheduleRequest;
+use App\Http\Requests\UpdatePMGenerationScheduleRequest;
+use App\Models\PMGenerationSchedule;
 
 class PMScheduleController extends Controller
 {
@@ -195,5 +202,33 @@ class PMScheduleController extends Controller
     public function advanceCycle()
     {
         return (new AdvancePMCycleAction)->execute($this->pmService);
+    }
+
+    // ── Calendar & PM Generation Schedule ──
+
+    public function calendar()
+    {
+        return view('maintenance-calendar.index');
+    }
+
+    public function calendarEvents(Request $request)
+    {
+        $data = (new GetMaintenanceCalendarDataAction)->execute($request);
+        return response()->json($data);
+    }
+
+    public function scheduleLater(StorePMGenerationScheduleRequest $request)
+    {
+        return (new CreatePMGenerationScheduleAction)->execute($request, Auth::user(), $this->pmService);
+    }
+
+    public function reschedulePMGeneration(UpdatePMGenerationScheduleRequest $request, PMGenerationSchedule $pmGenerationSchedule)
+    {
+        return (new ReschedulePMGenerationScheduleAction)->execute($request, $pmGenerationSchedule);
+    }
+
+    public function cancelPMGeneration(PMGenerationSchedule $pmGenerationSchedule)
+    {
+        return (new CancelPMGenerationScheduleAction)->execute($pmGenerationSchedule);
     }
 }

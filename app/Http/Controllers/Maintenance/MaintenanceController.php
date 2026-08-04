@@ -16,6 +16,7 @@ use App\Actions\Maintenance\CreateMaintenanceFormAction;
 use App\Actions\Maintenance\ShowMaintenanceRequestAction;
 use App\Actions\Maintenance\EditMaintenanceRequestAction;
 use App\Actions\Maintenance\DeleteMaintenanceRequestAction;
+use App\Actions\PMGenerationSchedule\GetMaintenanceCalendarDataAction;
 
 class MaintenanceController extends Controller
 {
@@ -83,5 +84,18 @@ class MaintenanceController extends Controller
     public function destroy($id)
     {
         return (new DeleteMaintenanceRequestAction)->execute($id);
+    }
+
+    // ── Calendar ──
+
+    public function calendar()
+    {
+        return view('maintenance-calendar.index');
+    }
+
+    public function calendarEvents(Request $request)
+    {
+        $data = (new GetMaintenanceCalendarDataAction)->execute($request);
+        return response()->json($data);
     }
 }

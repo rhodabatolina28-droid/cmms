@@ -17,6 +17,26 @@
     .action-group { display:flex; gap:8px; }
     .btn-edit { padding:10px 20px; background:white; color:#0038A8; border:2px solid #0038A8; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; min-height:44px; }
     .btn-edit:hover { background:#0038A8; color:white; transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,56,168,0.2); }
+    .btn-calendar { padding:10px 20px; background:#0038A8; color:white; border:2px solid #0038A8; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; min-height:44px; }
+    .btn-calendar:hover { background:#002f8e; border-color:#002f8e; transform:translateY(-1px); box-shadow:0 4px 10px rgba(0,56,168,0.2); }
+    .btn-schedule { padding:10px 20px; background:#1cc88a; color:white; border:2px solid #1cc88a; border-radius:8px; font-size:13px; font-weight:700; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; min-height:44px; cursor:pointer; }
+    .btn-schedule:hover { background:#17a673; border-color:#17a673; transform:translateY(-1px); box-shadow:0 4px 10px rgba(28,200,138,0.2); }
+    .card-actions { display:flex; gap:8px; flex-wrap:wrap; }
+    .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center; padding:20px; }
+    .modal-overlay.show { display:flex; }
+    .modal-box { background:white; border-radius:14px; padding:28px; max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
+    .modal-title { font-size:20px; font-weight:800; color:#1e293b; margin:0 0 20px; }
+    .modal-field { margin-bottom:16px; }
+    .modal-label { display:block; font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+    .modal-input { width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; box-sizing:border-box; }
+    .modal-input:focus { outline:none; border-color:#0038A8; }
+    .modal-textarea { width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; box-sizing:border-box; resize:vertical; min-height:80px; }
+    .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:24px; }
+    .modal-btn-cancel { padding:10px 20px; background:white; color:#64748b; border:2px solid #e2e8f0; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+    .modal-btn-cancel:hover { background:#f8fafc; }
+    .modal-btn-submit { padding:10px 20px; background:#1cc88a; color:white; border:2px solid #1cc88a; border-radius:8px; font-size:13px; font-weight:700; cursor:pointer; }
+    .modal-btn-submit:hover { background:#17a673; }
+    .modal-btn-submit:disabled { opacity:0.6; cursor:not-allowed; }
     .detail-header { margin-bottom:20px; }
     .detail-header > div:first-child { flex:1; }
     .detail-title { font-size:24px; font-weight:800; color:#1e293b; margin:0 0 8px; }
@@ -90,7 +110,8 @@
         .detail-header > div:first-child { margin-bottom:8px; }
         .detail-title { font-size:20px !important; }
         .detail-subtitle { font-size:12px !important; }
-        .btn-edit { width:100% !important; justify-content:center !important; min-height:44px !important; }
+        .card-actions { flex-direction:column !important; width:100% !important; }
+        .btn-edit, .btn-calendar, .btn-schedule { width:100% !important; justify-content:center !important; min-height:44px !important; }
         .info-grid { grid-template-columns:1fr !important; gap:12px !important; }
         .info-label { font-size:10px !important; }
         .info-value { font-size:14px !important; }
@@ -151,9 +172,19 @@
                 <h1 class="detail-title">{{ $pmSchedule->schedule_name }}</h1>
                 <p class="detail-subtitle">Schedule details and configuration</p>
             </div>
-            <a href="{{ route('pm-schedules.edit', $pmSchedule->id) }}" class="btn-edit">
-                <i class="fa-solid fa-pen"></i> Edit Schedule
-            </a>
+            <div class="card-actions">
+                <a href="{{ route('pm-schedules.edit', $pmSchedule->id) }}" class="btn-edit">
+                    <i class="fa-solid fa-pen"></i> Edit Schedule
+                </a>
+                <a href="{{ route('pm-schedules.calendar') }}" class="btn-calendar">
+                    <i class="fa-solid fa-calendar-alt"></i> View Calendar
+                </a>
+                @if($pmSchedule->is_active)
+                <button class="btn-schedule" id="scheduleLaterBtn">
+                    <i class="fa-solid fa-calendar-plus"></i> Schedule for Later
+                </button>
+                @endif
+            </div>
         </div>
 
         <div class="info-grid">
@@ -276,6 +307,29 @@
         @endif
     </div>
 
+    {{-- Schedule for Later Modal --}}
+    <div class="modal-overlay" id="scheduleModal">
+        <div class="modal-box">
+            <h3 class="modal-title">Schedule PM Generation for Later</h3>
+            <form id="scheduleLaterForm" action="{{ route('pm-schedules.schedule-later', $pmSchedule->id) }}" method="POST">
+                @csrf
+                <input type="hidden" name="pm_schedule_id" value="{{ $pmSchedule->id }}">
+                <div class="modal-field">
+                    <label class="modal-label" for="scheduled_date">Scheduled Date</label>
+                    <input type="date" id="scheduled_date" name="scheduled_date" class="modal-input" required min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}">
+                </div>
+                <div class="modal-field">
+                    <label class="modal-label" for="remarks">Remarks (optional)</label>
+                    <textarea id="remarks" name="remarks" class="modal-textarea" placeholder="Add a note about this scheduled generation..."></textarea>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="modal-btn-cancel" id="cancelSchedule">Cancel</button>
+                    <button type="submit" class="modal-btn-submit">Schedule</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     {{-- Generation History --}}
     <div class="premium-card history-card" style="padding: 28px;">
         <h3 class="history-title">
@@ -395,5 +449,25 @@ function loadQueueStatus() {
     });
 }
 @endif
+// Schedule for Later Modal
+document.getElementById('scheduleLaterBtn')?.addEventListener('click', function() {
+    document.getElementById('scheduleModal').classList.add('show');
+});
+document.getElementById('cancelSchedule')?.addEventListener('click', function() {
+    document.getElementById('scheduleModal').classList.remove('show');
+});
+document.getElementById('scheduleModal')?.addEventListener('click', function(e) {
+    if (e.target === this) this.classList.remove('show');
+});
+document.getElementById('scheduleLaterForm')?.addEventListener('submit', function(e) {
+    e.preventDefault();
+    const btn = this.querySelector('.modal-btn-submit');
+    btn.textContent = 'Scheduling...';
+    btn.disabled = true;
+    fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
+        .then(r => { if (r.redirected) { window.location.href = r.url; } else return r.json(); })
+        .then(data => { if (data) { alert(data.message || 'Done'); window.location.reload(); } })
+        .catch(err => { alert('Error: ' + err.message); btn.textContent = 'Schedule'; btn.disabled = false; });
+});
 </script>
 @endsection

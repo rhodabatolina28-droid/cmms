@@ -243,10 +243,21 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::post('/pm-schedules/{pm_schedule}/stop', [PMScheduleController::class, 'stopCycle'])->name('pm-schedules.stop')->where('pm_schedule', '[0-9]+');
         Route::post('/pm-schedules/advance', [PMScheduleController::class, 'advanceCycle'])->name('pm-schedules.advance');
         Route::delete('/pm-schedules', [PMScheduleController::class, 'destroyAll'])->name('pm-schedules.destroy-all')->middleware('throttle:10,1');
+
+        // Calendar & PM Generation Schedule (Super Admin)
+        Route::get('/pm-schedules/calendar', [PMScheduleController::class, 'calendar'])->name('pm-schedules.calendar');
+        Route::get('/pm-schedules/calendar/events', [PMScheduleController::class, 'calendarEvents'])->name('pm-schedules.calendar.events');
+        Route::post('/pm-schedules/{pm_schedule}/schedule-later', [PMScheduleController::class, 'scheduleLater'])->name('pm-schedules.schedule-later')->middleware('throttle:30,1');
+        Route::put('/pm-generation-schedules/{pmGenerationSchedule}', [PMScheduleController::class, 'reschedulePMGeneration'])->name('pm-generation-schedules.update')->middleware('throttle:30,1');
+        Route::post('/pm-generation-schedules/{pmGenerationSchedule}/cancel', [PMScheduleController::class, 'cancelPMGeneration'])->name('pm-generation-schedules.cancel')->middleware('throttle:30,1');
     });
 
     // PM Tasks - IT and Super Admin can view
     Route::get('/maintenance/pm-tasks', [MaintenanceController::class, 'pmTasks'])->name('pm.tasks')->middleware('role:it,super_admin');
+
+    // Maintenance Calendar - IT and Super Admin can view
+    Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendar'])->name('maintenance.calendar')->middleware('role:it,super_admin');
+    Route::get('/maintenance/calendar/events', [MaintenanceController::class, 'calendarEvents'])->name('maintenance.calendar.events')->middleware('role:it,super_admin');
 
     // Super Admin Specific Routes
     Route::middleware('role:super_admin')->prefix('super-admin')->group(function () {
