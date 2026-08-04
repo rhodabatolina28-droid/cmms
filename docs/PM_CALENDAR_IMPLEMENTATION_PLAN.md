@@ -666,3 +666,95 @@ This is the bottom card. It lists visible PM and ICT events for the next seven c
 - Pending PM queue reschedule/cancel controls remain available only for persisted Pending rows and existing authorized super-admin users. ICT entries never gain schedule-edit controls from this calendar.
 - No right-side panel may bypass the existing viewMaintenance or viewIct policy behavior.
 
+---
+
+## Implementation Status — August 4, 2026
+
+This section records the **actual implementation state** versus the original plan. The combined calendar, manual PM queue, data-source fixes, and UX redesign described below have been implemented and committed (`33cb176`).
+
+### Implemented features
+
+#### Maintenance Calendar page (`/maintenance/calendar` and `/pm-schedules/calendar`)
+
+- **Template-inspired layout** — the calendar grid occupies the left column and three stacked cards (Selected Event Detail, Day Tasks, Monthly Summary, Upcoming Next 7 Days) occupy the right column.
+- **Combined PM/ICT view** — `All Types`, `PM`, and `ICT` filter buttons drive the grid, day-task list, and upcoming list together. PM and ICT chips use distinct colors (`#0038A8` for PM, `#10b981` for ICT).
+- **Sub-nav strip** with live visibility-filtered counts for PM, ICT, Done, and Overdue.
+- **Month/Year picker** — two `<select>` dropdowns let the user jump directly to any month/year (years from current−2 to current+3), replacing slow per-month navigation. Previous/Next arrows and a Today button remain.
+- **Bigger calendar grid** — layout changed from `2fr 1fr` to `3fr 1fr`, and day-cell height increased from `100px` to `120px` for more readable event chips.
+- **Compact event chips** — chip text is capped at 22 characters with an ellipsis (`…`) and a hover tooltip shows the full title. Chip CSS uses `text-overflow: ellipsis`, `white-space: nowrap`, `overflow: hidden`, and reduced font/padding to prevent the calendar cells from breaking.
+- **Month dashboard summary card** — shows PM Tasks, ICT Tasks, Completed, and Overdue counts for the currently displayed month.
+- **Calendar data Action (`GetMaintenanceCalendarDataAction`)**:
+  - Queries **four** event sources: `pm_generation_schedules` queue rows, `pm_division_schedules` next-scheduled dates, existing PM work orders (`requests.type = Preventive Maintenance`), and existing ICT requests.
+  - Supports month/year and filter parameters sent by the frontend.
+  - Uses the existing `viewMaintenance` and `viewIct` policies so each role only receives events it can already view.
+  - Falls back from `service_schedule_date` → `maintenance_date`/`date_received` → `created_at` exactly as the original plan requires.
+- **PM Division Schedule as an event source** — after a PM cycle completes, `pm_division_schedules.next_scheduled_at` rows now appear on the calendar as scheduled PM events. The title uses the **short division code** (RID, AD, FMD, COA, CMD, VAD, WRED, OED) so the chip stays compact, while the full division name is preserved in the event's `office` field for the detail panel. The schedule name is added to `title` of the selected-day task list.
+- **Short division names** in calendar chips — added `shortDivisionName()` mapping in `GetMaintenanceCalendarDataAction` to prevent long division labels from breaking the calendar grid.
+
+#### PM manual scheduling queue (`pm_generation_schedules`)
+
+- The `PMGenerationSchedule` model, migration, form requests (`StorePMGenerationScheduleRequest`, `UpdatePMGenerationScheduleRequest`), and Actions (`CreatePMGenerationScheduleAction`, `ReschedulePMGenerationScheduleAction`, `CancelPMGenerationScheduleAction`) are present.
+- `PMScheduleController` exposes `scheduleLater`, `reschedulePMGeneration`, and `cancelPMGeneration` endpoints.
+- The daily `pm:generate-scheduled` command remains untouched and continues to process both the automatic recurring cycle and the new manual queue as an additive step.
+- **Bug fix**: `PMGenerationSchedule` previously used the `SoftDeletes` trait even though the `pm_generation_schedules` table has no `deleted_at` column. This caused a SQL error that silently broke the calendar data endpoint. Remove `SoftDeletes` from the model.
+
+#### Data-source fixes (calendar now shows existing ICT/PM data)
+
+- Removed the `created_at` month filter from the PM work-order and ICT queries. Previously, requests created in an earlier month but scheduled for the current month did not appear. The Action now fetches all matching requests and filters in PHP by the actual event date (`service_schedule_date`/`maintenance_date`/`date_received`).
+- Grouped the PM queue `orWhere('status', 'Pending')` inside a proper `where(...)` closure so the queue query no longer fetches every pending row regardless of date.
+
+#### PM Schedule detail page improvements
+
+- Buttons (`Edit Schedule`, `View Calendar`, `Schedule for Later`) are now grouped inside the card header via a `card-actions` flex container.
+- Added the modal CSS inline to `pm-schedules/show.blade.php` so the Schedule-for-Later modal is actually styled on that page (it previously depended on `maintenance-calendar.css`).
+- Improved button hover/active styling to match the system's government-blue theme.
+
+#### Topbar title fix
+
+- `resources/views/maintenance-calendar/index.blade.php` now sets `@section('page-title', 'Maintenance Calendar')`, so the topbar no longer defaults to "Dashboard".
+
+### Deviations from the original plan
+
+1. **Scope** — the original plan (above) described a PM-only first release and optional combine with ICT later. The implemented calendar is already a combined PM/ICT calendar. This is an intentional, approved expansion, not a regression.
+2. **Right-side panels** — the original plan listed three right-side cards. The implementation adds a fourth "Monthly Summary" card and a single "Add" task card used for the Schedule modal.
+3. **Manual queue UI path** — the original plan expected the "Schedule for Later" control on the PM generation page. The control was initially added there and is present in the committed `show.blade.php`, but the user requested that the redundant manual-queue entry UI be removed. A follow-up change will remove the Schedule-for-Later button/modal from the PM schedule page and make the calendar's "Add" button the single manual scheduling entry point.
+4. **Schedule modal** — the committed calendar includes a PM/ICT type-toggle scheduling modal that creates an event locally. The user requested that the modal become **PM-only** (remove the type toggle and Location field), that ICT be **view/assign-only** (assign IT IT dropdown), and that PM scheduling POST to the server instead of only creating a local event. Those changes are planned but not yet applied.
+
+### Pending / next steps
+
+The following items are the agreed next implementation slice:
+
+1. **Remove "Schedule for Later" button + modal + JS from `resources/views/pm-schedules/show.blade.php`** — redundant because the calendar's "Add" button now provides the same manual scheduling entry point.
+2. **Make the calendar Schedule modal PM-only** — remove the type toggle and the Location field. Keep Task Title, Scheduled Date, Time, Assignee, and Priority.
+3. **On modal submit, POST to the server** to create a `pm_generation_schedules` row (the PM scheduling function) instead of only adding a local event to the calendar.
+4. **ICT = view/assign only** — clicking an ICT calendar chip opens the event detail panel with:
+   - Title: requestor name + short division code (e.g., `Juan Dela Cruz — RID`)
+   - Date/time as submitted (actual request date), not a scheduled time
+   - IT personnel `<select>` dropdown (same data as the existing `assign-panel.blade.php` component)
+   - Assign button that posts to the existing assign route
+   - View Request link
+5. **Remove the redundant "Add" affordances** if they refer to generic task creation; keep the Add button in the Tasks card as the PM scheduling entry.
+6. Add automated tests for the new combined-calendar data Action and the assignment flow once the modal changes land.
+
+### Files introduced or changed in this implementation (commit `33cb176`)
+
+| File | Purpose |
+| --- | --- |
+| `app/Models/PMGenerationSchedule.php` | Manual PM queue model (no SoftDeletes) |
+| `database/migrations/2026_08_04_100000_create_pm_generation_schedules_table.php` | Queue table |
+| `app/Http/Requests/StorePMGenerationScheduleRequest.php` | Queue create validation |
+| `app/Http/Requests/UpdatePMGenerationScheduleRequest.php` | Queue reschedule validation |
+| `app/Actions/PMGenerationSchedule/CreatePMGenerationScheduleAction.php` | Create queue row |
+| `app/Actions/PMGenerationSchedule/ReschedulePMGenerationScheduleAction.php` | Reschedule pending queue |
+| `app/Actions/PMGenerationSchedule/CancelPMGenerationScheduleAction.php` | Cancel pending queue |
+| `app/Actions/PMGenerationSchedule/GetMaintenanceCalendarDataAction.php` | Combined calendar JSON data |
+| `resources/views/maintenance-calendar/index.blade.php` | Calendar page (combined PM/ICT) |
+| `resources/css/maintenance-calendar.css` | Calendar styling (compact chips, month/year selects, bigger grid) |
+| `resources/js/maintenance-calendar.js` | Calendar behavior (month/year picker, chip truncation, local schedule modal) |
+| `resources/views/pm-schedules/show.blade.php` | PM schedule detail page (grouped buttons, inline modal CSS) |
+| `app/Console/Commands/GenerateScheduledPM.php` | Additive manual-queue processing in the daily command |
+| `app/Http/Controllers/Maintenance/MaintenanceController.php` | `calendar` + `calendarEvents` endpoints |
+| `app/Http/Controllers/Maintenance/PMScheduleController.php` | `scheduleLater`, `reschedule`, `cancel` endpoints |
+| `routes/web.php` | Calendar + queue routes |
+| `vite.config.js` | Vite entry for calendar CSS/JS |
+
