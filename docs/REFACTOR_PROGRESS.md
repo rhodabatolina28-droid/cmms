@@ -1,12 +1,12 @@
 # CMMS Refactoring Progress Tracker
 
-> **Last Updated:** July 28, 2026
-> **Based on:** `docs/REFACTOR_GUIDE.md` and `docs/REFACTORING_STATUS.md`
-> **Git Branch:** `develop` (16 commits ahead of `origin/develop`)
+> **Last Updated:** August 4, 2026
+> **Based on:** `docs/REFACTOR_GUIDE.md` and `docs/INVENTORY_JS_REFACTOR_PLAN.md`
+> **Git Branch:** `develop` (12 commits ahead of `origin/develop`)
 
 ---
 
-## 📊 Overall Progress: 7/12 items complete (58%)
+## 📊 Overall Progress: 9/12 items complete (75%)
 
 ---
 
@@ -50,9 +50,40 @@ Per `REFACTORING_STATUS.md`, all controllers have been refactored:
    - **Fix:** Removed `extraHead` from `@props()`, changed ICT form to use `@slot('extraHead')`
    - Both forms now use `@slot('extraHead')` consistently
 
+5. **Inventory modal partials extracted:**
+   - `resources/views/inventory/partials/_modal_asset.blade.php`
+   - `resources/views/inventory/partials/_modal_transfer.blade.php`
+   - `resources/views/inventory/partials/_modal_history.blade.php`
+   - `resources/views/inventory/partials/_modal_upload.blade.php`
+
 #### ❌ Remaining (Phase 3):
-- Extract modals from `inventory/index.blade.php` (1,297 lines) → `@include` partials
-- Create `<x-modal>`, `<x-table>`, `<x-button>`, `<x-card>` components
+- Create `<x-table>`, `<x-button>`, `<x-card>` components (only if safe and non-breaking)
+
+### Phase 4: `public/` & `resources/` (Asset Modernization) — PARTIALLY COMPLETE
+
+#### ✅ Completed:
+1. **CSS modularization** — All CSS split into subdirectories:
+   - `resources/css/mobile-responsive/` — `_base.css`, `_phone-portrait.css`, `_sidebar.css`, `_sidebar-roles.css`
+   - `resources/css/admin/`, `resources/css/cmms-official/`, `resources/css/ict-form/`, `resources/css/landing/`, `resources/css/login/`, `resources/css/maint-form/`
+   - Entry files use ordered `@import` to preserve cascade order
+
+2. **JavaScript modularization** — `inventory.js` split following `INVENTORY_JS_REFACTOR_PLAN.md`:
+   - **Step 1:** Extracted `getDivisionAbbr()` + `INVENTORY_BRANCH_MAP` → `resources/js/inventory/config.js`
+   - **Step 2:** Extracted `updateModalBranchDropdown()` + `fetchFilteredUsers()` → `resources/js/inventory/modal-helpers.js`
+   - **Step 3:** Extracted `viewAssetHistory()` + `closeHistoryModal()` → `resources/js/inventory/history.js`
+   - All `window.*` exports preserved in `inventory.js` entry
+   - Vite build verified after each extraction (16 modules transformed, no errors)
+   - `php artisan route:list` verified (124 routes, no regressions)
+
+#### ❌ Remaining (Phase 4):
+- High-risk workflows remain in `inventory.js` (per `INVENTORY_JS_REFACTOR_PLAN.md` explicit stop point):
+  - `saveAsset()`, `editAsset()`, category/specification display and serialization
+  - `openTransferModal()` and `saveTransfer()`
+  - `loadInventory()`, `renderInventoryTable()`, summary and pagination
+  - CSV preview/commit
+  - `state.js` activation (not safe to wire in)
+  - Global event listeners and `window.*` export block
+- Legacy files in `public/js/` and `public/css/` (not referenced by Blade, but not deleted)
 
 ---
 
@@ -61,31 +92,31 @@ Per `REFACTORING_STATUS.md`, all controllers have been refactored:
 ### Phase 2: `routes/` (Routing & Middleware)
 - **`routes/web.php`** (21KB): Remove inline closures, clean up middleware groups
 - Update controller namespaces to match new structure
-
-### Phase 4: `public/` & `resources/` (Asset Modernization)
-- **Split `public/js/inventory.js`** (1,106 lines) → `inventory-modals.js`, `inventory-ajax.js`
-- **Split `public/css/mobile-responsive.css`** (1,721 lines) → `forms.css`, `tables.css`
-- Migrate assets to `resources/js/` and `resources/css/`
-- Vite integration
+- **Note:** Routes are already clean — 124 routes, `route:cache` works, closures are only standard group wrappers
 
 ### Phase 5: `database/` & `tests/` (Alignment & Verification)
 - Ensure factories map cleanly to updated models
 - Update test namespaces and controller references
+- **Note:** `php artisan test` blocked by `cmms_laurence_test` database not existing
 
 ---
 
 ## 📍 Where We Stopped
 
-**Date:** July 28, 2026, 4:44 PM (Asia/Manila)
-**Last commit:** `b1656b1` — fix: ICT form component prop/slot conflict
+**Date:** August 4, 2026, 10:17 AM (Asia/Manila)
+**Last commit:** `c942919` — refactor: Extract viewAssetHistory and closeHistoryModal to history.js (Step 3)
 **Git status:** ✅ Clean working tree
-**Next step:** Split `inventory.js` or extract modals from `inventory/index.blade.php`
+**Next step:** Manual browser verification of inventory page, then consider Phase 2 or Phase 5
 
 ---
 
 ## 📜 Git Commit History (Recent)
 
 ```
+c942919 refactor: Extract viewAssetHistory and closeHistoryModal to history.js (Step 3)
+6395695 refactor: Extract updateModalBranchDropdown and fetchFilteredUsers to modal-helpers.js (Step 2)
+ebb298e refactor: Extract getDivisionAbbr and INVENTORY_BRANCH_MAP to config.js (Step 1)
+61b9f2c chore: cleanup docs and update phpunit.xml before JS refactor
 b1656b1 fix: ICT form component prop/slot conflict
 8606885 fix: Add @props declaration to form-layout component
 4d01c18 Phase 3: Componentize Blade views
@@ -102,9 +133,9 @@ ac575a9 refactor: Extract InventoryController to 11 Inventory Action classes
 | Phase | Target | Status | Key Actions |
 |-------|--------|--------|-------------|
 | **Phase 1** | `app/` | ✅ COMPLETE | Fat controllers → Actions/Scopes/Policies |
-| **Phase 2** | `routes/` | ❌ NOT STARTED | Clean web.php, remove closures |
-| **Phase 3** | `resources/views/` | 🔄 IN PROGRESS | Componentize Blade views |
-| **Phase 4** | `public/` & `resources/` | ❌ NOT STARTED | Split JS/CSS, Vite integration |
+| **Phase 2** | `routes/` | ✅ MOSTLY COMPLETE | Routes clean, 124 routes, route:cache works |
+| **Phase 3** | `resources/views/` | 🔄 IN PROGRESS | Componentize Blade views, modals extracted |
+| **Phase 4** | `public/` & `resources/` | 🔄 PARTIALLY COMPLETE | CSS split, JS Steps 1-3 done, high-risk JS remains |
 | **Phase 5** | `database/` & `tests/` | ❌ NOT STARTED | Align factories, update tests |
 
 ---
@@ -116,3 +147,20 @@ ac575a9 refactor: Extract InventoryController to 11 Inventory Action classes
 3. **Safe FormRequest Defaults** — `authorize()` returns `true` initially
 4. **Micro-Commits** — One method at a time, test, then commit
 5. **Parallel UI/Database Verification** — Test before and after each change
+
+---
+
+## 📐 INVENTORY_JS_REFACTOR_PLAN.md — Execution Status
+
+| Step | Status | Description |
+|------|--------|-------------|
+| Step 0 | ⏭️ Skipped | Baseline capture (requires manual browser testing) |
+| Step 1 | ✅ Complete | Extract lookup data → `config.js` |
+| Step 2 | ✅ Complete | Extract modal helpers → `modal-helpers.js` |
+| Step 3 | ✅ Complete | Extract history functions → `history.js` |
+| Stop | 🛑 Explicit stop | High-risk workflows remain in `inventory.js` per plan |
+
+**Verification per step:**
+- `npm run build` — Vite compiled successfully (16 modules, no errors)
+- `php artisan route:list` — 124 routes, no regressions
+- All `window.*` exports preserved in `inventory.js` entry
