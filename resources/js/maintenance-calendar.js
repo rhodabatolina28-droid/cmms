@@ -127,6 +127,7 @@
                 if (statusLower === 'overdue') chipClass += ' cal-chip-overdue';
                 if (statusLower === 'completed') chipClass += ' cal-chip-completed';
                 if (statusLower === 'cancelled') chipClass += ' cal-chip-cancelled';
+                if (statusLower === 'ongoing' || statusLower === 'inprogress' || statusLower === 'in-progress') chipClass += ' cal-chip-ongoing';
                 chip.className = chipClass;
 
                 // Build compact chip text — always prefer display_number (short) for work orders,
@@ -195,6 +196,9 @@
         document.querySelectorAll('.cal-day.cal-selected').forEach(c => c.classList.remove('cal-selected'));
         const cell = document.querySelector('.cal-day[data-date="' + dateStr + '"]');
         if (cell) cell.classList.add('cal-selected');
+        // Hide the event detail card when switching dates
+        document.getElementById('calDetailCard')?.classList.remove('show');
+        // Always re-render tasks for the newly selected date (even if empty)
         renderTasksForDate(dateStr);
     }
 
@@ -578,10 +582,18 @@
     }
 
     // Event Listeners
+    function resetDateSelection() {
+        selectedDate = null;
+        document.querySelectorAll('.cal-day.cal-selected').forEach(c => c.classList.remove('cal-selected'));
+        document.getElementById('calDetailCard')?.classList.remove('show');
+        renderTasksForDate(null);
+    }
+
     document.getElementById('calPrevMonth')?.addEventListener('click', function() {
         currentMonth--;
         if (currentMonth < 1) { currentMonth = 12; currentYear--; }
         syncSelects();
+        resetDateSelection();
         loadEvents();
     });
 
@@ -589,18 +601,21 @@
         currentMonth++;
         if (currentMonth > 12) { currentMonth = 1; currentYear++; }
         syncSelects();
+        resetDateSelection();
         loadEvents();
     });
 
     document.getElementById('calMonthSelect')?.addEventListener('change', function() {
         currentMonth = parseInt(this.value);
         syncSelects();
+        resetDateSelection();
         loadEvents();
     });
 
     document.getElementById('calYearSelect')?.addEventListener('change', function() {
         currentYear = parseInt(this.value);
         syncSelects();
+        resetDateSelection();
         loadEvents();
     });
 
@@ -615,6 +630,7 @@
         currentMonth = new Date().getMonth() + 1;
         currentYear = new Date().getFullYear();
         syncSelects();
+        resetDateSelection();
         loadEvents();
     });
 
