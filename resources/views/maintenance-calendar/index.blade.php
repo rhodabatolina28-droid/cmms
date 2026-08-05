@@ -166,14 +166,14 @@
                     <select id="calModalDivision" class="cal-modal-input">
                         <option value="">Select Division...</option>
                         <option value="All">All Divisions</option>
-                        <option value="RID">RID — Regional Information Division</option>
-                        <option value="AD">AD — Administrative Division</option>
-                        <option value="FMD">FMD — Financial Management Division</option>
-                        <option value="COA">COA — Commission on Audit</option>
-                        <option value="CMD">CMD — Civil/Mechanical Division</option>
-                        <option value="VAD">VAD — Vehicle Acquisition Division</option>
-                        <option value="WRED">WRED — Water Resources Division</option>
-                        <option value="OED">OED — Office of the Executive Director</option>
+                        <option value="AD">Administrative Division</option>
+                        <option value="COA">Commission on Audit</option>
+                        <option value="CMD">Conciliation and Mediation Division</option>
+                        <option value="FMD">Financial and Management Division</option>
+                        <option value="OED">Office of the Executive Director</option>
+                        <option value="RID">Research and Information Division</option>
+                        <option value="VAD">Voluntary Arbitration Division</option>
+                        <option value="WRED">Workplace Relations Enhancement Division</option>
                     </select>
                     <p class="cal-modal-error" id="calModalDivisionError"></p>
                 </div>

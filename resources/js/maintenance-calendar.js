@@ -566,7 +566,8 @@
         // Use form data (not JSON) because the controller expects form-encoded data
         const formData = new FormData();
         formData.append('schedule_name', scheduleName);
-        formData.append('division_filter', division);
+        // "All" means no division filter — send null
+        formData.append('division_filter', division === 'All' ? '' : division);
         formData.append('frequency', frequency);
         formData.append('next_scheduled_date', startDate);
 
@@ -599,11 +600,19 @@
             if (data === null) return;
             // Handle validation errors
             if (data.errors) {
+                // Map field names to element IDs
+                const fieldMap = {
+                    'schedule_name': { error: 'calModalScheduleNameError', input: 'calModalScheduleName' },
+                    'division_filter': { error: 'calModalDivisionError', input: 'calModalDivision' },
+                    'frequency': { error: 'calModalFrequencyError', input: 'calModalFrequency' },
+                    'next_scheduled_date': { error: 'calModalStartDateError', input: 'calModalStartDate' },
+                };
                 Object.keys(data.errors).forEach(key => {
-                    const errorEl = document.getElementById('calModal' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, '') + 'Error');
-                    if (errorEl) {
-                        errorEl.textContent = data.errors[key][0];
-                        const inputEl = document.getElementById('calModal' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ''));
+                    const map = fieldMap[key];
+                    if (map) {
+                        const errorEl = document.getElementById(map.error);
+                        if (errorEl) errorEl.textContent = data.errors[key][0];
+                        const inputEl = document.getElementById(map.input);
                         if (inputEl) inputEl.style.borderColor = '#dc2626';
                     }
                 });

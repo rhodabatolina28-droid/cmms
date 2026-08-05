@@ -18,7 +18,7 @@ class StorePMScheduleRequest extends FormRequest
             'schedule_name'      => 'required|string|max:255|unique:pm_schedules',
             'division_filter'    => 'nullable|string|max:50',
             'frequency'          => 'required|in:Monthly,Quarterly,Semi-annual,Annual',
-            'next_scheduled_date'=> 'required|date|after:today',
+            'next_scheduled_date'=> 'required|date|after_or_equal:today',
         ];
     }
 
