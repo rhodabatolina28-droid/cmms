@@ -215,7 +215,8 @@
 .cal-chip-pm { background:#0038A8; }
 .cal-chip-ict { background:#10b981; }
 .cal-chip-overdue { background:#dc2626 !important; box-shadow:inset 0 0 0 2px #ef4444; }
-.cal-chip-completed { background:#059669 !important; }
+.cal-chip-completed-pm { background:#0d9488 !important; }
+.cal-chip-completed-ict { background:#059669 !important; }
 .cal-chip-ongoing { background:#f59e0b !important; }
 .cal-chip-cancelled { background:#94a3b8; text-decoration:line-through; }
 .cal-more { font-size:9px; color:#64748b; font-weight:600; margin-top:1px; display:block; }

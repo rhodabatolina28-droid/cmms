@@ -125,7 +125,7 @@
                 let chipClass = 'cal-chip cal-chip-' + e.event_type;
                 const statusLower = (e.status || '').toLowerCase().replace(/\s+/g, '');
                 if (statusLower === 'overdue') chipClass += ' cal-chip-overdue';
-                if (statusLower === 'completed') chipClass += ' cal-chip-completed';
+                if (statusLower === 'completed') chipClass += (e.event_type === 'pm' ? ' cal-chip-completed-pm' : ' cal-chip-completed-ict');
                 if (statusLower === 'cancelled') chipClass += ' cal-chip-cancelled';
                 if (statusLower === 'ongoing' || statusLower === 'inprogress' || statusLower === 'in-progress') chipClass += ' cal-chip-ongoing';
                 chip.className = chipClass;
