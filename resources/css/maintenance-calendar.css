@@ -213,7 +213,7 @@
 .cal-chip-pm { background:#0038A8; }
 .cal-chip-ict { background:#10b981; }
 .cal-chip-overdue { box-shadow:inset 0 0 0 2px #ef4444; }
-.cal-chip-completed { opacity:0.6; }
+.cal-chip-completed { opacity:0.75; background:#059669 !important; }
 .cal-chip-cancelled { background:#94a3b8; text-decoration:line-through; }
 .cal-more { font-size:9px; color:#64748b; font-weight:600; margin-top:1px; display:block; }
 
@@ -367,6 +367,68 @@
 .cal-event-status-pending { background:#fef3c7; color:#92400e; }
 .cal-event-status-inprogress { background:#dbeafe; color:#1e40af; }
 .cal-event-status-cancelled { background:#f1f5f9; color:#64748b; }
+
+/* Toast Notifications */
+.cal-toast {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 99999;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: white;
+    border-radius: 10px;
+    padding: 14px 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.15);
+    border-left: 4px solid #10b981;
+    min-width: 280px;
+    max-width: 400px;
+    animation: calToastIn 0.3s ease;
+    transition: opacity 0.3s, transform 0.3s;
+}
+.cal-toast-error {
+    border-left-color: #ef4444;
+}
+.cal-toast-hide {
+    opacity: 0;
+    transform: translateX(30px);
+}
+@keyframes calToastIn {
+    from { opacity: 0; transform: translateX(30px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+.cal-toast-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    background: #10b981;
+    flex-shrink: 0;
+}
+.cal-toast-error .cal-toast-icon {
+    background: #ef4444;
+}
+.cal-toast-msg {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    color: #1e293b;
+    line-height: 1.4;
+}
+.cal-toast-close {
+    background: none;
+    border: none;
+    color: #94a3b8;
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px;
+    transition: color 0.2s;
+}
+.cal-toast-close:hover { color: #1e293b; }
 
 /* Assign Panel (ICT) */
 .cal-assign-panel {

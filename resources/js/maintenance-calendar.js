@@ -283,6 +283,29 @@
         });
     }
 
+    function showToast(message, type) {
+        const existing = document.querySelector('.cal-toast');
+        if (existing) existing.remove();
+
+        const toast = document.createElement('div');
+        toast.className = 'cal-toast cal-toast-' + (type || 'success');
+        toast.innerHTML =
+            '<div class="cal-toast-icon"><i class="fa-solid ' + (type === 'error' ? 'fa-circle-xmark' : 'fa-circle-check') + '"></i></div>' +
+            '<div class="cal-toast-msg">' + message + '</div>' +
+            '<button class="cal-toast-close"><i class="fa-solid fa-xmark"></i></button>';
+        document.body.appendChild(toast);
+
+        // Auto-dismiss after 4 seconds
+        setTimeout(() => { toast.classList.add('cal-toast-hide'); }, 4000);
+        setTimeout(() => { toast.remove(); }, 4500);
+
+        // Close button
+        toast.querySelector('.cal-toast-close').addEventListener('click', function() {
+            toast.classList.add('cal-toast-hide');
+            setTimeout(() => { toast.remove(); }, 300);
+        });
+    }
+
     function showEventDetail(e) {
         const card = document.getElementById('calDetailCard');
         const title = document.getElementById('calDetailTitle');
@@ -365,15 +388,20 @@
                 })
                 .then(data => {
                     if (data === null) return;
+                    // Get the selected personnel name for the toast message
+                    const selectedPersonName = select.options[select.selectedIndex]?.text || '';
+                    const toastMsg = selectedPersonName
+                        ? 'Assigned to ' + selectedPersonName + '. ICT request successfully assigned.'
+                        : (data.message || 'ICT request assigned successfully.');
                     btn.textContent = 'Assign';
                     btn.disabled = false;
-                    alert(data.message || 'ICT request assigned successfully.');
+                    showToast(toastMsg, 'success');
                     loadEvents();
                 })
                 .catch(() => {
                     btn.textContent = 'Assign';
                     btn.disabled = false;
-                    alert('Failed to assign ICT request. Please try again.');
+                    showToast('Failed to assign ICT request. Please try again.', 'error');
                 });
             });
         }
@@ -540,12 +568,12 @@
             closeModal();
             // Reload events to reflect the newly queued PM
             loadEvents();
-            alert(data.message || 'PM scheduled successfully.');
+            showToast(data.message || 'PM scheduled successfully.', 'success');
         })
         .catch(() => {
             submitBtn.textContent = 'Save Task';
             submitBtn.disabled = false;
-            alert('Failed to schedule PM. Please try again.');
+            showToast('Failed to schedule PM. Please try again.', 'error');
         });
     }
 
