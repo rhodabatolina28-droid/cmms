@@ -180,8 +180,8 @@
                 <h1 class="page-title-text">PM Schedules</h1>
                 <p class="page-subtitle-text">Manage automated preventive maintenance schedules. Batch generation per division, oldest asset first.</p>
             </div>
-            <a href="{{ route('pm-schedules.calendar') }}" class="btn-control btn-new-schedule" style="text-decoration:none;">
-                <i class="fa-solid fa-plus"></i> New Schedule
+            <a href="{{ route('pm-schedules.calendar') }}" class="btn-control" style="text-decoration:none; background:#0038A8; color:white;">
+                <i class="fa-solid fa-calendar-days"></i> View Calendar
             </a>
         </div>
 
@@ -335,8 +335,8 @@
             <div class="empty-schedules">
                 <i class="fa-solid fa-calendar-circle-plus empty-icon"></i>
                 <h3 class="empty-title-sched">No PM Schedules Yet</h3>
-                <p class="page-subtitle-text">Create your first schedule to start automating preventive maintenance.</p>
-                <a href="{{ route('pm-schedules.calendar') }}" class="btn-create-sched">Create Schedule</a>
+                <p class="page-subtitle-text">Create your first schedule using the Maintenance Calendar.</p>
+                <a href="{{ route('pm-schedules.calendar') }}" class="btn-create-sched">Go to Calendar</a>
             </div>
         @else
             <div class="sched-grid">
