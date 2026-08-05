@@ -51,22 +51,20 @@
                     <button class="cal-nav-btn" id="calNextMonth"><i class="fa-solid fa-chevron-right"></i></button>
                 </div>
             </div>
-            <table class="cal-grid">
-                <thead>
-                    <tr>
-                        <th>Sun</th>
-                        <th>Mon</th>
-                        <th>Tue</th>
-                        <th>Wed</th>
-                        <th>Thu</th>
-                        <th>Fri</th>
-                        <th>Sat</th>
-                    </tr>
-                </thead>
-                <tbody id="calGridBody">
-                    <tr><td colspan="7" class="cal-loading"><i class="fa-solid fa-circle-notch"></i></td></tr>
-                </tbody>
-            </table>
+            <div class="cal-grid">
+                <div class="cal-grid-header">
+                    <div class="cal-grid-day-head">Sun</div>
+                    <div class="cal-grid-day-head">Mon</div>
+                    <div class="cal-grid-day-head">Tue</div>
+                    <div class="cal-grid-day-head">Wed</div>
+                    <div class="cal-grid-day-head">Thu</div>
+                    <div class="cal-grid-day-head">Fri</div>
+                    <div class="cal-grid-day-head">Sat</div>
+                </div>
+                <div class="cal-grid-body" id="calGridBody">
+                    <div class="cal-loading"><i class="fa-solid fa-circle-notch"></i></div>
+                </div>
+            </div>
             <div class="cal-legend">
                 <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-pm"></span> Preventive Maintenance</div>
                 <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-ict"></span> Information & Communications Technology</div>

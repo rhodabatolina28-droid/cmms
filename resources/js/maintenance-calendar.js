@@ -48,8 +48,8 @@
     }
 
     function loadEvents() {
-        const tbody = document.getElementById('calGridBody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="cal-loading"><i class="fa-solid fa-circle-notch"></i></td></tr>';
+        const gridBody = document.getElementById('calGridBody');
+        if (gridBody) gridBody.innerHTML = '<div class="cal-loading"><i class="fa-solid fa-circle-notch"></i></div>';
 
         const params = new URLSearchParams({ month: currentMonth, year: currentYear, filter: activeFilter });
         fetch(getEventsUrl() + '?' + params.toString(), {
@@ -66,7 +66,7 @@
         })
         .catch(err => {
             console.error('Calendar load error:', err);
-            if (tbody) tbody.innerHTML = '<tr><td colspan="7" class="cal-empty"><i class="fa-solid fa-triangle-exclamation"></i><p>Failed to load calendar events.</p></td></tr>';
+            if (gridBody) gridBody.innerHTML = '<div class="cal-empty"><i class="fa-solid fa-triangle-exclamation"></i><p>Failed to load calendar events.</p></div>';
         });
     }
 
@@ -96,18 +96,16 @@
         const monthLabel = document.getElementById('calMonthLabel');
         if (monthLabel) monthLabel.textContent = monthNames[currentMonth - 1] + ' ' + currentYear;
 
-        const tbody = document.getElementById('calGridBody');
-        if (!tbody) return;
-        tbody.innerHTML = '';
+        const gridBody = document.getElementById('calGridBody');
+        if (!gridBody) return;
+        gridBody.innerHTML = '';
 
         const firstDay = new Date(currentYear, currentMonth - 1, 1).getDay();
         const daysInMonth = new Date(currentYear, currentMonth, 0).getDate();
         const todayStr = getTodayDateStr();
 
-        let row = document.createElement('tr');
-
         for (let i = 0; i < firstDay; i++) {
-            row.appendChild(makeCell('', 'cal-other-month'));
+            gridBody.appendChild(makeCell('', 'cal-other-month'));
         }
 
         for (let d = 1; d <= daysInMonth; d++) {
@@ -150,29 +148,28 @@
             }
 
             cell.onclick = function() { selectDate(dateStr); };
-            row.appendChild(cell);
+            gridBody.appendChild(cell);
+        }
 
-            if (row.children.length === 7) {
-                tbody.appendChild(row);
-                row = document.createElement('tr');
+        // Fill remaining cells to complete the last week
+        const totalCells = gridBody.children.length;
+        const remainder = totalCells % 7;
+        if (remainder > 0) {
+            for (let i = 0; i < 7 - remainder; i++) {
+                gridBody.appendChild(makeCell('', 'cal-other-month'));
             }
         }
-
-        while (row.children.length > 0 && row.children.length < 7) {
-            row.appendChild(makeCell('', 'cal-other-month'));
-        }
-        if (row.children.length > 0) tbody.appendChild(row);
     }
 
     function makeCell(day, extraClass, dateStr) {
-        const td = document.createElement('td');
-        td.className = 'cal-day ' + extraClass;
-        if (dateStr) td.dataset.date = dateStr;
+        const div = document.createElement('div');
+        div.className = 'cal-day ' + extraClass;
+        if (dateStr) div.dataset.date = dateStr;
 
         // Fixed-height content wrapper — prevents the cell from expanding
         const content = document.createElement('div');
         content.className = 'cal-day-content';
-        td.appendChild(content);
+        div.appendChild(content);
 
         if (day) {
             const wrap = document.createElement('div');
@@ -196,7 +193,7 @@
 
             content.appendChild(wrap);
         }
-        return td;
+        return div;
     }
 
     function selectDate(dateStr) {
