@@ -304,11 +304,78 @@
         table += '<tr><td>Office</td><td>' + (e.office || 'N/A') + '</td></tr>';
         table += '</table>';
 
+        // For ICT events, show an IT assign dropdown (super_admin only)
+        let assignHtml = '';
+        if (e.event_type === 'ict' && document.getElementById('calItPersonnelJson')) {
+            let itPersonnel = [];
+            try {
+                itPersonnel = JSON.parse(document.getElementById('calItPersonnelJson').value || '[]');
+            } catch (err) { itPersonnel = []; }
+
+            if (itPersonnel.length > 0) {
+                const assignUrlBase = document.getElementById('calIctAssignUrl')?.value || '';
+                const requestId = e.source_id || '';
+                assignHtml =
+                    '<div class="cal-assign-panel">' +
+                        '<label class="cal-modal-label">Assign IT Personnel</label>' +
+                        '<div class="cal-assign-flex">' +
+                            '<select id="calAssignSelect" class="cal-modal-input">' +
+                                '<option value="">Select IT personnel...</option>' +
+                                itPersonnel.map(p => '<option value="' + p.id + '">' + p.full_name + '</option>').join('') +
+                            '</select>' +
+                            '<button class="cal-assign-btn" id="calAssignBtn" data-request-id="' + requestId + '" data-assign-url="' + assignUrlBase + '/' + requestId + '/assign-it">Assign</button>' +
+                        '</div>' +
+                    '</div>';
+            }
+        }
+
         const btnText = e.event_type === 'pm' ? 'View Work Order' : 'View ICT Request';
         const btn = '<a href="' + e.details_url + '" class="cal-detail-btn"><i class="fa-solid fa-arrow-right"></i> ' + btnText + '</a>';
 
-        body.innerHTML = badges + table + btn;
+        body.innerHTML = badges + table + assignHtml + btn;
         card.classList.add('show');
+
+        // Wire up assign button
+        const assignBtn = document.getElementById('calAssignBtn');
+        if (assignBtn) {
+            assignBtn.addEventListener('click', function() {
+                const select = document.getElementById('calAssignSelect');
+                const assignedTo = select ? select.value : '';
+                if (!assignedTo) { alert('Please select an IT personnel to assign.'); return; }
+
+                const url = this.dataset.assignUrl;
+                const btn = this;
+                btn.textContent = 'Assigning...';
+                btn.disabled = true;
+
+                fetch(url, {
+                    method: 'POST',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ assigned_to: assignedTo })
+                })
+                .then(r => {
+                    if (r.redirected) { window.location.href = r.url; return null; }
+                    return r.json();
+                })
+                .then(data => {
+                    if (data === null) return;
+                    btn.textContent = 'Assign';
+                    btn.disabled = false;
+                    alert(data.message || 'ICT request assigned successfully.');
+                    loadEvents();
+                })
+                .catch(() => {
+                    btn.textContent = 'Assign';
+                    btn.disabled = false;
+                    alert('Failed to assign ICT request. Please try again.');
+                });
+            });
+        }
     }
 
     function formatDate(d) {

@@ -207,8 +207,11 @@
 @if(auth()->user()->role === 'super_admin')
 @php
     $firstActiveScheduleId = \App\Models\PMSchedule::where('is_active', true)->value('id') ?? 0;
+    $itPersonnel = \App\Models\User::where('role', 'it')->where('is_active', true)->get(['id', 'full_name']);
 @endphp
 <input type="hidden" id="calScheduleLaterUrl" value="{{ route('pm-schedules.schedule-later', $firstActiveScheduleId) }}">
 <input type="hidden" id="calCurrentPmScheduleId" value="{{ $firstActiveScheduleId }}">
+<input type="hidden" id="calItPersonnelJson" value="{{ $itPersonnel->toJson(JSON_HEX_APOS) }}">
+<input type="hidden" id="calIctAssignUrl" value="{{ url('/requests/ict') }}">
 @endif
 @endsection

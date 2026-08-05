@@ -368,6 +368,44 @@
 .cal-event-status-inprogress { background:#dbeafe; color:#1e40af; }
 .cal-event-status-cancelled { background:#f1f5f9; color:#64748b; }
 
+/* Assign Panel (ICT) */
+.cal-assign-panel {
+    margin: 12px 0;
+    padding: 12px;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+}
+.cal-assign-flex {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+}
+.cal-assign-flex .cal-modal-input {
+    flex: 1;
+    min-width: 0;
+}
+.cal-assign-btn {
+    padding: 9px 14px;
+    background: #0038A8;
+    color: white;
+    border: none;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+.cal-assign-btn:hover {
+    background: #002f8e;
+}
+.cal-assign-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
 /* Monthly Summary Card */
 .cal-summary-card {
     background:white;
