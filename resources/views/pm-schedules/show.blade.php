@@ -179,11 +179,6 @@
                 <a href="{{ route('pm-schedules.calendar') }}" class="btn-calendar">
                     <i class="fa-solid fa-calendar-alt"></i> View Calendar
                 </a>
-                @if($pmSchedule->is_active)
-                <button class="btn-schedule" id="scheduleLaterBtn">
-                    <i class="fa-solid fa-calendar-plus"></i> Schedule for Later
-                </button>
-                @endif
             </div>
         </div>
 
@@ -307,28 +302,6 @@
         @endif
     </div>
 
-    {{-- Schedule for Later Modal --}}
-    <div class="modal-overlay" id="scheduleModal">
-        <div class="modal-box">
-            <h3 class="modal-title">Schedule PM Generation for Later</h3>
-            <form id="scheduleLaterForm" action="{{ route('pm-schedules.schedule-later', $pmSchedule->id) }}" method="POST">
-                @csrf
-                <input type="hidden" name="pm_schedule_id" value="{{ $pmSchedule->id }}">
-                <div class="modal-field">
-                    <label class="modal-label" for="scheduled_date">Scheduled Date</label>
-                    <input type="date" id="scheduled_date" name="scheduled_date" class="modal-input" required min="{{ \Carbon\Carbon::tomorrow()->format('Y-m-d') }}">
-                </div>
-                <div class="modal-field">
-                    <label class="modal-label" for="remarks">Remarks (optional)</label>
-                    <textarea id="remarks" name="remarks" class="modal-textarea" placeholder="Add a note about this scheduled generation..."></textarea>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="modal-btn-cancel" id="cancelSchedule">Cancel</button>
-                    <button type="submit" class="modal-btn-submit">Schedule</button>
-                </div>
-            </form>
-        </div>
-    </div>
 
     {{-- Generation History --}}
     <div class="premium-card history-card" style="padding: 28px;">
@@ -449,25 +422,5 @@ function loadQueueStatus() {
     });
 }
 @endif
-// Schedule for Later Modal
-document.getElementById('scheduleLaterBtn')?.addEventListener('click', function() {
-    document.getElementById('scheduleModal').classList.add('show');
-});
-document.getElementById('cancelSchedule')?.addEventListener('click', function() {
-    document.getElementById('scheduleModal').classList.remove('show');
-});
-document.getElementById('scheduleModal')?.addEventListener('click', function(e) {
-    if (e.target === this) this.classList.remove('show');
-});
-document.getElementById('scheduleLaterForm')?.addEventListener('submit', function(e) {
-    e.preventDefault();
-    const btn = this.querySelector('.modal-btn-submit');
-    btn.textContent = 'Scheduling...';
-    btn.disabled = true;
-    fetch(this.action, { method: 'POST', body: new FormData(this), headers: { 'X-Requested-With': 'XMLHttpRequest' } })
-        .then(r => { if (r.redirected) { window.location.href = r.url; } else return r.json(); })
-        .then(data => { if (data) { alert(data.message || 'Done'); window.location.reload(); } })
-        .catch(err => { alert('Error: ' + err.message); btn.textContent = 'Schedule'; btn.disabled = false; });
-});
 </script>
 @endsection

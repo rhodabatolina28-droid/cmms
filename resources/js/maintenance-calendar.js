@@ -323,17 +323,6 @@
         const overlay = document.getElementById('calModalOverlay');
         if (!overlay) return;
 
-        // Type toggle
-        document.querySelectorAll('.cal-type-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.cal-type-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                modalType = this.dataset.type;
-                document.getElementById('calModalType').value = modalType;
-                updateModalHeader();
-            });
-        });
-
         // Priority buttons
         document.querySelectorAll('.cal-priority-btn').forEach(btn => {
             btn.addEventListener('click', function() {
@@ -374,13 +363,8 @@
         document.getElementById('calModalDate').value = dateStr || getTodayDateStr();
         document.getElementById('calModalTitleInput').value = '';
         document.getElementById('calModalAssignee').value = '';
-        document.getElementById('calModalLocation').value = '';
         document.getElementById('calModalTime').value = '08:00';
         modalPriority = 'medium';
-
-        // Reset type buttons
-        document.querySelectorAll('.cal-type-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.cal-type-btn[data-type="' + modalType + '"]')?.classList.add('active');
 
         // Reset priority buttons
         document.querySelectorAll('.cal-priority-btn').forEach(b => b.classList.remove('active'));
@@ -401,14 +385,14 @@
     function updateModalHeader() {
         const title = document.getElementById('calModalTitle');
         const header = document.getElementById('calModalHeader');
-        if (title) title.textContent = 'Schedule ' + (modalType === 'pm' ? 'PM' : 'ICT') + ' Task';
+        if (title) title.textContent = 'Schedule PM Task';
         if (header) {
-            header.style.background = modalType === 'pm' ? '#0038A8' : '#10b981';
+            header.style.background = '#0038A8';
         }
         const submit = document.getElementById('calModalSubmit');
         if (submit) {
-            submit.style.background = modalType === 'pm' ? '#0038A8' : '#10b981';
-            submit.style.borderColor = modalType === 'pm' ? '#0038A8' : '#10b981';
+            submit.style.background = '#0038A8';
+            submit.style.borderColor = '#0038A8';
         }
     }
 
@@ -417,7 +401,6 @@
         const dateStr = document.getElementById('calModalDate').value;
         const time = document.getElementById('calModalTime').value;
         const assignee = document.getElementById('calModalAssignee').value.trim();
-        const location = document.getElementById('calModalLocation').value.trim();
 
         let hasError = false;
 
@@ -451,58 +434,51 @@
             document.getElementById('calModalAssignee').style.borderColor = '';
         }
 
-        // Validate location
-        if (!location) {
-            document.getElementById('calModalLocationError').textContent = 'Location is required.';
-            document.getElementById('calModalLocation').style.borderColor = '#dc2626';
-            hasError = true;
-        } else {
-            document.getElementById('calModalLocationError').textContent = '';
-            document.getElementById('calModalLocation').style.borderColor = '';
-        }
-
         if (hasError) return;
 
-        // Build event object
-        const parsed = new Date(dateStr + 'T00:00:00');
-        const newEvent = {
-            id: 'local-' + Date.now(),
-            event_type: modalType,
-            source: 'local',
-            source_id: null,
-            date: dateStr,
-            title: title,
-            status: 'Scheduled',
-            display_number: 'WO-' + Math.floor(1000 + Math.random() * 9000),
-            office: location,
-            assignee: assignee,
-            priority: modalPriority,
-            details_url: '#',
-            is_editable: true
-        };
+        // Get the schedule-later URL from the hidden input (falls back to the calendar events URL context)
+        const scheduleUrlInput = document.getElementById('calScheduleLaterUrl');
+        const scheduleUrl = scheduleUrlInput ? scheduleUrlInput.value : '';
+        if (!scheduleUrl) {
+            alert('PM scheduling is not configured for this user.');
+            return;
+        }
 
-        // Add to events and re-render
-        allEvents.push(newEvent);
-        const parsedDate = new Date(dateStr);
-        currentMonth = parsedDate.getMonth() + 1;
-        currentYear = parsedDate.getFullYear();
-        selectedDate = dateStr;
+        // POST to server — Schedule for Later creates a real pm_generation_schedules row
+        const submitBtn = document.getElementById('calModalSubmit');
+        submitBtn.textContent = 'Scheduling...';
+        submitBtn.disabled = true;
 
-        // Update summary counts
-        const summary = {
-            pm: allEvents.filter(e => e.event_type === 'pm').length,
-            ict: allEvents.filter(e => e.event_type === 'ict').length,
-            done: allEvents.filter(e => e.status === 'Completed').length,
-            overdue: allEvents.filter(e => e.status === 'Overdue').length
-        };
-        updateSummary(summary);
-        renderMonthlySummary(summary);
-
-        renderCalendar();
-        renderTasksForDate(dateStr);
-        renderUpcoming();
-        showEventDetail(newEvent);
-        closeModal();
+        fetch(scheduleUrl, {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                pm_schedule_id: parseInt(document.getElementById('calCurrentPmScheduleId')?.value || '0', 10) || 0,
+                scheduled_date: dateStr,
+                remarks: title + (assignee ? ' | Assignee: ' + assignee : '')
+            })
+        })
+        .then(r => {
+            if (r.redirected) { window.location.href = r.url; return null; }
+            return r.json();
+        })
+        .then(data => {
+            if (data === null) return;
+            closeModal();
+            // Reload events to reflect the newly queued PM
+            loadEvents();
+            alert(data.message || 'PM scheduled successfully.');
+        })
+        .catch(() => {
+            submitBtn.textContent = 'Save Task';
+            submitBtn.disabled = false;
+            alert('Failed to schedule PM. Please try again.');
+        });
     }
 
     // Event Listeners

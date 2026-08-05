@@ -155,15 +155,6 @@
         <form id="calModalForm" class="cal-modal-form">
             <input type="hidden" id="calModalType" value="pm">
 
-            {{-- Type Toggle --}}
-            <div class="cal-modal-field">
-                <label class="cal-modal-label">Task Type</label>
-                <div class="cal-type-toggle">
-                    <button type="button" class="cal-type-btn active" data-type="pm">PM — Preventive Maint.</button>
-                    <button type="button" class="cal-type-btn" data-type="ict">ICT — Information & Comms</button>
-                </div>
-            </div>
-
             {{-- Title --}}
             <div class="cal-modal-field">
                 <label class="cal-modal-label">Task Title *</label>
@@ -191,13 +182,6 @@
                 <p class="cal-modal-error" id="calModalAssigneeError"></p>
             </div>
 
-            {{-- Location --}}
-            <div class="cal-modal-field">
-                <label class="cal-modal-label">Location *</label>
-                <input type="text" id="calModalLocation" class="cal-modal-input" placeholder="e.g. Server Room 1">
-                <p class="cal-modal-error" id="calModalLocationError"></p>
-            </div>
-
             {{-- Priority --}}
             <div class="cal-modal-field">
                 <label class="cal-modal-label">Priority</label>
@@ -218,6 +202,13 @@
     </div>
 </div>
 
-{{-- Hidden input for events URL --}}
+{{-- Hidden inputs for URLs --}}
 <input type="hidden" id="calEventsUrl" value="{{ auth()->user()->role === 'super_admin' ? route('pm-schedules.calendar.events') : route('maintenance.calendar.events') }}">
+@if(auth()->user()->role === 'super_admin')
+@php
+    $firstActiveScheduleId = \App\Models\PMSchedule::where('is_active', true)->value('id') ?? 0;
+@endphp
+<input type="hidden" id="calScheduleLaterUrl" value="{{ route('pm-schedules.schedule-later', $firstActiveScheduleId) }}">
+<input type="hidden" id="calCurrentPmScheduleId" value="{{ $firstActiveScheduleId }}">
+@endif
 @endsection
