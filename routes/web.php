@@ -223,7 +223,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     // PM Schedules - Super Admin ONLY
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/pm-schedules', [PMScheduleController::class, 'index'])->name('pm-schedules.index');
-        Route::get('/pm-schedules/create', [PMScheduleController::class, 'create'])->name('pm-schedules.create');
+        // Create PM Schedule route removed — calendar "Add" button is now the single entry point
         Route::post('/pm-schedules', [PMScheduleController::class, 'store'])->name('pm-schedules.store')->middleware('throttle:60,1');
         Route::get('/pm-schedules/{pm_schedule}', [PMScheduleController::class, 'show'])->name('pm-schedules.show')->where('pm_schedule', '[0-9]+');
         Route::get('/pm-schedules/{pm_schedule}/edit', [PMScheduleController::class, 'edit'])->name('pm-schedules.edit')->where('pm_schedule', '[0-9]+');
