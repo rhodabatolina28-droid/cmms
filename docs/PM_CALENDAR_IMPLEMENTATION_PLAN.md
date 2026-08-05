@@ -720,21 +720,33 @@ This section records the **actual implementation state** versus the original pla
 3. **Manual queue UI path** — the original plan expected the "Schedule for Later" control on the PM generation page. The control was initially added there and is present in the committed `show.blade.php`, but the user requested that the redundant manual-queue entry UI be removed. A follow-up change will remove the Schedule-for-Later button/modal from the PM schedule page and make the calendar's "Add" button the single manual scheduling entry point.
 4. **Schedule modal** — the committed calendar includes a PM/ICT type-toggle scheduling modal that creates an event locally. The user requested that the modal become **PM-only** (remove the type toggle and Location field), that ICT be **view/assign-only** (assign IT IT dropdown), and that PM scheduling POST to the server instead of only creating a local event. Those changes are planned but not yet applied.
 
+### Phase 1: Core Calendar Cleanup — ✅ COMPLETE (August 5, 2026)
+
+The following Phase 1 items are now **implemented, tested, and committed**:
+
+| # | Item | Commit(s) |
+|---|------|-----------|
+| 1 | Remove "Schedule for Later" button + modal + JS from `pm-schedules/show.blade.php` | `d20c8d2` |
+| 2 | Make calendar Schedule modal PM-only (remove type toggle + Location) | `d20c8d2` |
+| 3 | Modal submit POSTs to server (creates `pm_generation_schedules` row) | `d20c8d2` |
+| 4 | ICT = view/assign only (IT personnel dropdown + assign button) | `4887620`, `cd84dcd` |
+| 5 | ICT assign hides when already assigned; super admin can self-assign | `cd84dcd` |
+| 6 | Toast notifications + assigned personnel name in success message | `b08f095` |
+| 7 | Color-based status chips (completed/ongoing/overdue) for PM & ICT | `a1d2aa8`, `d879a1a` |
+| 8 | Layout stability: `table-layout: fixed`, chip text constraints, day-cell overflow hidden | `a1d2aa8` |
+| 9 | Right panel updates on date switch; month nav resets selected date | `a1d2aa8` |
+| 10 | Past dates cannot be edited/added (add button hidden) | `a415356` |
+| 11 | Convert calendar from HTML `<table>` to **CSS Grid** (definitive fix for cell expansion) | `a8a8e21` |
+
 ### Pending / next steps
 
-The following items are the agreed next implementation slice:
+The following items remain for upcoming phases:
 
-1. **Remove "Schedule for Later" button + modal + JS from `resources/views/pm-schedules/show.blade.php`** — redundant because the calendar's "Add" button now provides the same manual scheduling entry point.
-2. **Make the calendar Schedule modal PM-only** — remove the type toggle and the Location field. Keep Task Title, Scheduled Date, Time, Assignee, and Priority.
-3. **On modal submit, POST to the server** to create a `pm_generation_schedules` row (the PM scheduling function) instead of only adding a local event to the calendar.
-4. **ICT = view/assign only** — clicking an ICT calendar chip opens the event detail panel with:
-   - Title: requestor name + short division code (e.g., `Juan Dela Cruz — RID`)
-   - Date/time as submitted (actual request date), not a scheduled time
-   - IT personnel `<select>` dropdown (same data as the existing `assign-panel.blade.php` component)
-   - Assign button that posts to the existing assign route
-   - View Request link
-5. **Remove the redundant "Add" affordances** if they refer to generic task creation; keep the Add button in the Tasks card as the PM scheduling entry.
-6. Add automated tests for the new combined-calendar data Action and the assignment flow once the modal changes land.
+1. **Consolidate Maintenance Calendar layout** with other super admin modules (card body structure: `polish-card`, `card-header-accent`, `card-body-content`, consistent header/subnav).
+2. **Add automated tests** for the combined-calendar data Action and the ICT assignment flow.
+3. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
+4. **PM-only Upcoming 7 Days panel** — the "Upcoming — Next 7 Days" panel should show PM events only (ICT has no future schedule date).
+5. **Sidebar navigation** — add "Maintenance Calendar" link in the Super Admin Modules section of `app.blade.php`.
 
 ### Files introduced or changed in this implementation (commit `33cb176`)
 
