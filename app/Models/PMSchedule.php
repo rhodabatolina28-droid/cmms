@@ -26,6 +26,7 @@ class PMSchedule extends Model
         'current_cycle_id',
         'cycle_count',
         'last_generated_date',
+        'next_scheduled_date',
         'created_by',
     ];
 
@@ -43,6 +44,7 @@ class PMSchedule extends Model
         'paused_at'          => 'datetime',
         'cycle_stopped_at'   => 'datetime',
         'last_generated_date'=> 'datetime',
+        'next_scheduled_date'=> 'date',
     ];
 
     public function creator(): BelongsTo
@@ -98,6 +100,13 @@ class PMSchedule extends Model
             'Annual'      => 12,
             default       => 6,
         };
-        return \Carbon\Carbon::parse($base)->addMonths($freqMonths)->toDateString();
+        $date = \Carbon\Carbon::parse($base)->addMonths($freqMonths);
+
+        // Skip Saturdays (6) and Sundays (0) — move to next weekday
+        while ($date->isWeekend()) {
+            $date->addDay();
+        }
+
+        return $date->toDateString();
     }
 }
