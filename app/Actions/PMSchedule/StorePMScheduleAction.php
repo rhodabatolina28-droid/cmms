@@ -34,7 +34,7 @@ class StorePMScheduleAction
             'asset_categories'   => [],
             'division_filter'    => $validated['division_filter'] ?? null,
             'frequency'          => $validated['frequency'],
-            'next_scheduled_date' => now()->toDateString(),
+            'next_scheduled_date' => $validated['next_scheduled_date'],
             'created_by'         => Auth::id(),
         ]);
 
