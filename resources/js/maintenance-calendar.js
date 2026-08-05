@@ -576,31 +576,20 @@
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json',
             },
             body: formData
         })
         .then(r => {
-            if (r.redirected) {
-                // The controller redirects on success — but we want to stay on calendar
-                // Check if it's a redirect to the show page (success) or back (error)
-                if (r.url.includes('pm-schedules/') && !r.url.includes('create')) {
-                    closeModal();
-                    loadEvents();
-                    showToast('PM Schedule created successfully.', 'success');
-                    return null;
-                }
-                // If redirected back with errors, follow the redirect to get error messages
-                window.location.href = r.url;
-                return null;
-            }
-            // If JSON response (validation error)
+            // Always expect JSON response from the action (AJAX mode)
             return r.json();
         })
         .then(data => {
-            if (data === null) return;
-            // Handle validation errors
+            submitBtn.textContent = 'Create Schedule';
+            submitBtn.disabled = false;
+
+            // Handle validation errors (422)
             if (data.errors) {
-                // Map field names to element IDs
                 const fieldMap = {
                     'schedule_name': { error: 'calModalScheduleNameError', input: 'calModalScheduleName' },
                     'division_filter': { error: 'calModalDivisionError', input: 'calModalDivision' },
@@ -616,19 +605,28 @@
                         if (inputEl) inputEl.style.borderColor = '#dc2626';
                     }
                 });
-                submitBtn.textContent = 'Create Schedule';
-                submitBtn.disabled = false;
-            } else if (data.message && data.message.includes('already exists')) {
-                // One active schedule per branch error
+                return;
+            }
+
+            // Handle one-active-per-branch error (success: false)
+            if (data.success === false) {
                 document.getElementById('calModalScheduleNameError').textContent = data.message;
                 document.getElementById('calModalScheduleName').style.borderColor = '#dc2626';
-                submitBtn.textContent = 'Create Schedule';
-                submitBtn.disabled = false;
                 showToast(data.message, 'error');
-            } else {
+                return;
+            }
+
+            // Handle success (success: true)
+            if (data.success === true) {
                 closeModal();
                 loadEvents();
                 showToast(data.message || 'PM Schedule created successfully.', 'success');
+                return;
+            }
+
+            // Fallback — unknown response
+            if (data.message) {
+                showToast(data.message, 'error');
             }
         })
         .catch(() => {

@@ -4,18 +4,22 @@ namespace App\Actions\PMSchedule;
 
 use App\Models\PMSchedule;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Http\Request;
 
 class StorePMScheduleAction
 {
     /**
      * Store a newly created PM schedule.
      * Enforces one active PM schedule per branch.
+     * Returns JSON for AJAX requests, redirect for regular form submits.
      *
      * @param  array  $validated
-     * @return \Illuminate\Http\RedirectResponse
+     * @param  Request|null  $request
+     * @return \Illuminate\Http\JsonResponse|\Illuminate\Http\RedirectResponse
      */
-    public function execute(array $validated)
+    public function execute(array $validated, ?Request $request = null)
     {
+        $isAjax = $request && $request->expectsJson();
         $actorBranch = Auth::user()?->branch;
         $existingActive = PMSchedule::active()
             ->when($actorBranch, function ($q) use ($actorBranch) {
@@ -24,9 +28,18 @@ class StorePMScheduleAction
             ->first();
 
         if ($existingActive) {
+            $errorMsg = "An active PM Schedule already exists for your branch: \"{$existingActive->schedule_name}\". Please deactivate or delete it before creating a new one.";
+
+            if ($isAjax) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $errorMsg,
+                ], 422);
+            }
+
             return redirect()->back()
                 ->withInput()
-                ->with('error', "An active PM Schedule already exists for your branch: \"{$existingActive->schedule_name}\". Please deactivate or delete it before creating a new one.");
+                ->with('error', $errorMsg);
         }
 
         $schedule = PMSchedule::create([
@@ -38,7 +51,17 @@ class StorePMScheduleAction
             'created_by'         => Auth::id(),
         ]);
 
+        $successMsg = 'PM Schedule created successfully.';
+
+        if ($isAjax) {
+            return response()->json([
+                'success' => true,
+                'message' => $successMsg,
+                'schedule_id' => $schedule->id,
+            ]);
+        }
+
         return redirect()->route('pm-schedules.show', $schedule->id)
-            ->with('success', 'PM Schedule created successfully.');
+            ->with('success', $successMsg);
     }
 }

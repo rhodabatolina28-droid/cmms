@@ -48,7 +48,7 @@ class PMScheduleController extends Controller
 
     public function store(StorePMScheduleRequest $request)
     {
-        return (new StorePMScheduleAction)->execute($request->validated());
+        return (new StorePMScheduleAction)->execute($request->validated(), $request);
     }
 
     public function show(PMSchedule $pmSchedule)
