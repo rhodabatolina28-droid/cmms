@@ -145,56 +145,62 @@
     <div class="cal-modal-box">
         <div class="cal-modal-header" id="calModalHeader">
             <div>
-                <p class="cal-modal-kicker">New Work Order</p>
-                <p class="cal-modal-title" id="calModalTitle">Schedule PM Task</p>
+                <p class="cal-modal-kicker">New PM Schedule</p>
+                <p class="cal-modal-title" id="calModalTitle">Create PM Schedule</p>
             </div>
             <button class="cal-modal-close" id="calModalClose"><i class="fa-solid fa-times"></i></button>
         </div>
         <form id="calModalForm" class="cal-modal-form">
-            <input type="hidden" id="calModalType" value="pm">
 
-            {{-- Title --}}
+            {{-- Schedule Name --}}
             <div class="cal-modal-field">
-                <label class="cal-modal-label">Task Title *</label>
-                <input type="text" id="calModalTitleInput" class="cal-modal-input" placeholder="e.g. Desktop PC Cleaning & Dust Removal">
-                <p class="cal-modal-error" id="calModalTitleError"></p>
+                <label class="cal-modal-label">Schedule Name *</label>
+                <input type="text" id="calModalScheduleName" class="cal-modal-input" placeholder="e.g. Quarterly PM - All Divisions">
+                <p class="cal-modal-error" id="calModalScheduleNameError"></p>
             </div>
 
-            {{-- Date + Time --}}
+            {{-- Division + Frequency --}}
             <div class="cal-modal-row">
                 <div class="cal-modal-field">
-                    <label class="cal-modal-label">Scheduled Date *</label>
-                    <input type="date" id="calModalDate" class="cal-modal-input">
-                    <p class="cal-modal-error" id="calModalDateError"></p>
+                    <label class="cal-modal-label">Target Division *</label>
+                    <select id="calModalDivision" class="cal-modal-input">
+                        <option value="">Select Division...</option>
+                        <option value="All">All Divisions</option>
+                        <option value="RID">RID — Regional Information Division</option>
+                        <option value="AD">AD — Administrative Division</option>
+                        <option value="FMD">FMD — Financial Management Division</option>
+                        <option value="COA">COA — Commission on Audit</option>
+                        <option value="CMD">CMD — Civil/Mechanical Division</option>
+                        <option value="VAD">VAD — Vehicle Acquisition Division</option>
+                        <option value="WRED">WRED — Water Resources Division</option>
+                        <option value="OED">OED — Office of the Executive Director</option>
+                    </select>
+                    <p class="cal-modal-error" id="calModalDivisionError"></p>
                 </div>
                 <div class="cal-modal-field">
-                    <label class="cal-modal-label">Time *</label>
-                    <input type="time" id="calModalTime" class="cal-modal-input" value="08:00">
+                    <label class="cal-modal-label">Frequency *</label>
+                    <select id="calModalFrequency" class="cal-modal-input">
+                        <option value="">Select Frequency...</option>
+                        <option value="Monthly">Monthly</option>
+                        <option value="Quarterly">Quarterly</option>
+                        <option value="Semi-annual">Semi-annual</option>
+                        <option value="Annual">Annual</option>
+                    </select>
+                    <p class="cal-modal-error" id="calModalFrequencyError"></p>
                 </div>
             </div>
 
-            {{-- Assignee --}}
+            {{-- Start Date --}}
             <div class="cal-modal-field">
-                <label class="cal-modal-label">Assignee *</label>
-                <input type="text" id="calModalAssignee" class="cal-modal-input" placeholder="e.g. J. Reyes">
-                <p class="cal-modal-error" id="calModalAssigneeError"></p>
-            </div>
-
-            {{-- Priority --}}
-            <div class="cal-modal-field">
-                <label class="cal-modal-label">Priority</label>
-                <div class="cal-priority-group">
-                    <button type="button" class="cal-priority-btn" data-priority="low">Low</button>
-                    <button type="button" class="cal-priority-btn active" data-priority="medium">Medium</button>
-                    <button type="button" class="cal-priority-btn" data-priority="high">High</button>
-                    <button type="button" class="cal-priority-btn" data-priority="critical">Critical</button>
-                </div>
+                <label class="cal-modal-label">Start Date * <span style="font-weight:400;opacity:0.5">(Weekdays only — no weekends)</span></label>
+                <input type="date" id="calModalStartDate" class="cal-modal-input">
+                <p class="cal-modal-error" id="calModalStartDateError"></p>
             </div>
 
             {{-- Actions --}}
             <div class="cal-modal-actions">
                 <button type="button" class="cal-modal-cancel" id="calModalCancel">Cancel</button>
-                <button type="submit" class="cal-modal-submit" id="calModalSubmit">Save Task</button>
+                <button type="submit" class="cal-modal-submit" id="calModalSubmit">Create Schedule</button>
             </div>
         </form>
     </div>
@@ -204,7 +210,6 @@
 <input type="hidden" id="calEventsUrl" value="{{ auth()->user()->role === 'super_admin' ? route('pm-schedules.calendar.events') : route('maintenance.calendar.events') }}">
 @if(auth()->user()->role === 'super_admin')
 @php
-    $firstActiveScheduleId = \App\Models\PMSchedule::where('is_active', true)->value('id') ?? 0;
     // Include active IT personnel AND the current super admin (so they can assign themselves if no IT exists)
     $itPersonnel = \App\Models\User::where('is_active', true)
         ->where(function ($q) {
@@ -213,8 +218,7 @@
         })
         ->get(['id', 'full_name', 'role']);
 @endphp
-<input type="hidden" id="calScheduleLaterUrl" value="{{ route('pm-schedules.schedule-later', $firstActiveScheduleId) }}">
-<input type="hidden" id="calCurrentPmScheduleId" value="{{ $firstActiveScheduleId }}">
+<input type="hidden" id="calStorePmScheduleUrl" value="{{ route('pm-schedules.store') }}">
 <input type="hidden" id="calItPersonnelJson" value="{{ $itPersonnel->toJson(JSON_HEX_APOS) }}">
 <input type="hidden" id="calIctAssignUrl" value="{{ url('/requests/ict') }}">
 @endif
