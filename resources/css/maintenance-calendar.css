@@ -135,6 +135,18 @@
     overflow:hidden;
     word-break:break-all;
 }
+.cal-day-content {
+    height:100%;
+    overflow:hidden;
+    display:flex;
+    flex-direction:column;
+}
+.cal-day-content .cal-chip {
+    flex-shrink:0;
+}
+.cal-day-content .cal-more {
+    flex-shrink:0;
+}
 .cal-day:hover { background:#f8fafc; }
 .cal-day.cal-today { background:#eff6ff; }
 .cal-day.cal-selected {

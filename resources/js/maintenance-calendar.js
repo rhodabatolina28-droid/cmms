@@ -120,6 +120,7 @@
             if (dateStr === selectedDate) cell.classList.add('cal-selected');
 
             const dayEvents = allEvents.filter(e => e.date === dateStr);
+            const contentWrap = cell.querySelector('.cal-day-content');
             dayEvents.slice(0, 3).forEach(e => {
                 const chip = document.createElement('button');
                 let chipClass = 'cal-chip cal-chip-' + e.event_type;
@@ -137,14 +138,14 @@
                 chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + chipText;
                 chip.title = (e.display_number || e.title || '') + ' (' + formatDate(e.date) + ')';
                 chip.onclick = function(ev) { ev.stopPropagation(); showEventDetail(e); };
-                cell.appendChild(chip);
+                if (contentWrap) contentWrap.appendChild(chip);
             });
 
             if (dayEvents.length > 3) {
                 const more = document.createElement('span');
                 more.className = 'cal-more';
                 more.textContent = '+' + (dayEvents.length - 3) + ' more';
-                cell.appendChild(more);
+                if (contentWrap) contentWrap.appendChild(more);
             }
 
             cell.onclick = function() { selectDate(dateStr); };
@@ -166,6 +167,12 @@
         const td = document.createElement('td');
         td.className = 'cal-day ' + extraClass;
         if (dateStr) td.dataset.date = dateStr;
+
+        // Fixed-height content wrapper — prevents the cell from expanding
+        const content = document.createElement('div');
+        content.className = 'cal-day-content';
+        td.appendChild(content);
+
         if (day) {
             const wrap = document.createElement('div');
             wrap.className = 'cal-day-num-wrap';
@@ -186,7 +193,7 @@
             };
             wrap.appendChild(addBtn);
 
-            td.appendChild(wrap);
+            content.appendChild(wrap);
         }
         return td;
     }
