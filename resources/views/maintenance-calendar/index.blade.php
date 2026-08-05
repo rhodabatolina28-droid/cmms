@@ -207,7 +207,13 @@
 @if(auth()->user()->role === 'super_admin')
 @php
     $firstActiveScheduleId = \App\Models\PMSchedule::where('is_active', true)->value('id') ?? 0;
-    $itPersonnel = \App\Models\User::where('role', 'it')->where('is_active', true)->get(['id', 'full_name']);
+    // Include active IT personnel AND the current super admin (so they can assign themselves if no IT exists)
+    $itPersonnel = \App\Models\User::where('is_active', true)
+        ->where(function ($q) {
+            $q->where('role', 'it')
+              ->orWhere('role', 'super_admin');
+        })
+        ->get(['id', 'full_name', 'role']);
 @endphp
 <input type="hidden" id="calScheduleLaterUrl" value="{{ route('pm-schedules.schedule-later', $firstActiveScheduleId) }}">
 <input type="hidden" id="calCurrentPmScheduleId" value="{{ $firstActiveScheduleId }}">

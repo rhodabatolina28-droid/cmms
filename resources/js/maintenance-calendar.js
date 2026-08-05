@@ -304,9 +304,10 @@
         table += '<tr><td>Office</td><td>' + (e.office || 'N/A') + '</td></tr>';
         table += '</table>';
 
-        // For ICT events, show an IT assign dropdown (super_admin only)
+        // For ICT events, show an IT assign dropdown ONLY when no one is assigned yet (super_admin only)
         let assignHtml = '';
-        if (e.event_type === 'ict' && document.getElementById('calItPersonnelJson')) {
+        const isUnassigned = !e.assignee || e.assignee === 'Unassigned' || e.assignee === 'N/A';
+        if (e.event_type === 'ict' && isUnassigned && document.getElementById('calItPersonnelJson')) {
             let itPersonnel = [];
             try {
                 itPersonnel = JSON.parse(document.getElementById('calItPersonnelJson').value || '[]');
