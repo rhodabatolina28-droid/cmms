@@ -758,3 +758,119 @@ The following items are the agreed next implementation slice:
 | `routes/web.php` | Calendar + queue routes |
 | `vite.config.js` | Vite entry for calendar CSS/JS |
 
+---
+
+## Phased Implementation Plan (Long-Term Roadmap)
+
+This section defines the **step-by-step phased roadmap** for the remaining work. Each phase is designed to be independently testable, reversible, and committed separately. The goal is long-term stability — not a quick fix.
+
+### Phase 1: Core Calendar Cleanup (Foundation — Safety First)
+
+**Goal:** Fix the inherited anti-patterns before building on top of them.
+
+1. **Remove "Schedule for Later" button + modal + JS from `resources/views/pm-schedules/show.blade.php`**
+   - The button is redundant because the calendar "Add" button becomes the single manual scheduling entry point.
+   - Remove `btn-schedule`, `#scheduleModal`, and the related JS event listeners/submit handler.
+2. **Make the calendar Schedule modal PM-only**
+   - Remove the PM/ICT type toggle.
+   - Remove the Location field.
+   - Keep: Task Title, Scheduled Date, Time, Assignee, Priority.
+3. **Modal submit → POST to server**
+   - Change `handleModalSubmit()` in `resources/js/maintenance-calendar.js` to POST to the `pm-schedules.schedule-later` route instead of only creating a local event.
+   - This creates a real `pm_generation_schedules` row.
+4. **ICT → view/assign only (no create in calendar)**
+   - Clicking an ICT chip opens the event detail panel with:
+     - Title: requestor name + short division code (e.g., `Juan Dela Cruz — RID`)
+     - Date/time as submitted (actual request date)
+     - IT personnel `<select>` dropdown (same data as `assign-panel.blade.php`)
+     - Assign button that posts to the existing assign route
+     - View Request link
+
+**Why first:** This phase fixes the inherited anti-patterns. If not fixed, all subsequent changes stack on a wrong base.
+
+---
+
+### Phase 2: Consolidate Create PM Schedule → Calendar
+
+**Goal:** One entry point for all PM scheduling — the calendar "Add" button.
+
+1. **Remove `resources/views/pm-schedules/create.blade.php`** — delete the standalone page.
+2. **Update calendar modal fields** to match the Create PM Schedule form:
+   - Schedule Name (text input)
+   - Target Division (dropdown: All Divisions, RID, AD, FMD, COA, CMD, VAD, WRED, OED)
+   - Frequency (dropdown: Monthly, Quarterly, Semi-annual, Annual)
+3. **POST to `pm-schedules.store`** — reuse the same `StorePMScheduleAction`.
+4. **Preserve the "one active schedule per branch" check** in `StorePMScheduleAction`.
+5. **Redirect to the PM schedule show page** after creation.
+
+**Why second:** The modal must be cleaned up in Phase 1 before its fields are changed to become the PM schedule config form. Once consolidated, there is no duplicate UI.
+
+---
+
+### Phase 3: ICT Assignment Flow (Complete)
+
+**Goal:** Complete the ICT experience in the calendar.
+
+1. **ICT event detail panel:**
+   - Title: requestor name + short division (e.g., `Juan Dela Cruz — RID`)
+   - Date/time: actual submission date
+   - Status badge
+2. **IT personnel dropdown** — same data as `assign-panel.blade.php`.
+3. **Assign button** → POST to the existing assign route (`ict.assign-it`).
+4. **View Request link** → existing ICT request detail.
+
+**Why third:** This does not affect the PM flow. After PM is consolidated in Phase 2, it is safe to focus on ICT.
+
+---
+
+### Phase 4: Data Integrity & Edge Cases
+
+**Goal:** Ensure nothing breaks in various scenarios.
+
+1. **Duplicate schedule detection** — unique `[schedule_name]` or `[pm_schedule_id, scheduled_date]`.
+2. **Active schedule limit** — one active schedule per branch (`StorePMScheduleAction` check).
+3. **PM generation cooldown** — do not run if `next_scheduled_at` is still in the future.
+4. **Asset changes mid-cycle** — handle new assets added while a cycle is active.
+5. **Queue status transitions** — Pending → Processing → Generated/Failed/Cancelled handled correctly.
+
+**Why fourth:** Once the UI flow is stable, harden the business logic.
+
+---
+
+### Phase 5: Automated Tests
+
+**Goal:** Lock behavior so it does not regress.
+
+1. **Combined calendar data Action tests:**
+   - ICT request appears on its request date.
+   - ICT with `service_schedule_date` appears on that date.
+   - PM + ICT appear together (All Types).
+   - PM/ICT filters return matching type only.
+   - End user cannot see another user's ICT event.
+2. **PM schedule creation via calendar** — fields, validation, one-active-per-branch.
+3. **ICT assignment flow** — assign works, re-assign works.
+4. **Manual queue due dates** — due triggers generation, overdue shows correctly.
+
+**Why fifth:** Once features are stable, lock them with tests.
+
+---
+
+### Phase 6: Documentation, Commit & Push
+
+**Goal:** Record everything and deploy.
+
+1. **Update `docs/PM_CALENDAR_IMPLEMENTATION_PLAN.md`** — final state.
+2. **Commit each phase** (small commits per phase).
+3. **Push to remote.**
+4. **Optional: Dashboard widget integration** (super-admin summary widget from the plan).
+
+---
+
+### Priority Recommendation
+
+**Start with Phase 1** because:
+- It fixes the inherited anti-patterns.
+- It does not affect the PM generation logic.
+- Each step is small — easy to test and revert.
+- All subsequent phases depend on it.
+
