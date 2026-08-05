@@ -435,15 +435,6 @@
         const overlay = document.getElementById('calModalOverlay');
         if (!overlay) return;
 
-        // Priority buttons
-        document.querySelectorAll('.cal-priority-btn').forEach(btn => {
-            btn.addEventListener('click', function() {
-                document.querySelectorAll('.cal-priority-btn').forEach(b => b.classList.remove('active'));
-                this.classList.add('active');
-                modalPriority = this.dataset.priority;
-            });
-        });
-
         // Close buttons
         document.getElementById('calModalClose')?.addEventListener('click', closeModal);
         document.getElementById('calModalCancel')?.addEventListener('click', closeModal);
@@ -453,8 +444,7 @@
 
         // Add task button in day tasks header
         document.getElementById('calAddTaskBtn')?.addEventListener('click', function() {
-            const dateStr = selectedDate || getTodayDateStr();
-            openModal('pm', dateStr);
+            openModal();
         });
 
         // Form submit
@@ -469,18 +459,12 @@
         return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
 
-    function openModal(type, dateStr) {
-        modalType = type || 'pm';
-        document.getElementById('calModalType').value = modalType;
-        document.getElementById('calModalDate').value = dateStr || getTodayDateStr();
-        document.getElementById('calModalTitleInput').value = '';
-        document.getElementById('calModalAssignee').value = '';
-        document.getElementById('calModalTime').value = '08:00';
-        modalPriority = 'medium';
-
-        // Reset priority buttons
-        document.querySelectorAll('.cal-priority-btn').forEach(b => b.classList.remove('active'));
-        document.querySelector('.cal-priority-btn[data-priority="medium"]')?.classList.add('active');
+    function openModal() {
+        // Reset all fields
+        document.getElementById('calModalScheduleName').value = '';
+        document.getElementById('calModalDivision').value = '';
+        document.getElementById('calModalFrequency').value = '';
+        document.getElementById('calModalStartDate').value = '';
 
         // Clear errors
         document.querySelectorAll('.cal-modal-error').forEach(el => el.textContent = '');
@@ -497,7 +481,7 @@
     function updateModalHeader() {
         const title = document.getElementById('calModalTitle');
         const header = document.getElementById('calModalHeader');
-        if (title) title.textContent = 'Schedule PM Task';
+        if (title) title.textContent = 'Create PM Schedule';
         if (header) {
             header.style.background = '#0038A8';
         }
@@ -509,87 +493,139 @@
     }
 
     function handleModalSubmit() {
-        const title = document.getElementById('calModalTitleInput').value.trim();
-        const dateStr = document.getElementById('calModalDate').value;
-        const time = document.getElementById('calModalTime').value;
-        const assignee = document.getElementById('calModalAssignee').value.trim();
+        const scheduleName = document.getElementById('calModalScheduleName').value.trim();
+        const division = document.getElementById('calModalDivision').value;
+        const frequency = document.getElementById('calModalFrequency').value;
+        const startDate = document.getElementById('calModalStartDate').value;
 
         let hasError = false;
 
-        // Validate title
-        if (!title) {
-            document.getElementById('calModalTitleError').textContent = 'Title is required.';
-            document.getElementById('calModalTitleInput').style.borderColor = '#dc2626';
+        // Validate schedule name
+        if (!scheduleName) {
+            document.getElementById('calModalScheduleNameError').textContent = 'Schedule name is required.';
+            document.getElementById('calModalScheduleName').style.borderColor = '#dc2626';
             hasError = true;
         } else {
-            document.getElementById('calModalTitleError').textContent = '';
-            document.getElementById('calModalTitleInput').style.borderColor = '';
+            document.getElementById('calModalScheduleNameError').textContent = '';
+            document.getElementById('calModalScheduleName').style.borderColor = '';
         }
 
-        // Validate date
-        if (!dateStr) {
-            document.getElementById('calModalDateError').textContent = 'Date is required.';
-            document.getElementById('calModalDate').style.borderColor = '#dc2626';
+        // Validate division
+        if (!division) {
+            document.getElementById('calModalDivisionError').textContent = 'Target division is required.';
+            document.getElementById('calModalDivision').style.borderColor = '#dc2626';
             hasError = true;
         } else {
-            document.getElementById('calModalDateError').textContent = '';
-            document.getElementById('calModalDate').style.borderColor = '';
+            document.getElementById('calModalDivisionError').textContent = '';
+            document.getElementById('calModalDivision').style.borderColor = '';
         }
 
-        // Validate assignee
-        if (!assignee) {
-            document.getElementById('calModalAssigneeError').textContent = 'Assignee is required.';
-            document.getElementById('calModalAssignee').style.borderColor = '#dc2626';
+        // Validate frequency
+        if (!frequency) {
+            document.getElementById('calModalFrequencyError').textContent = 'Frequency is required.';
+            document.getElementById('calModalFrequency').style.borderColor = '#dc2626';
             hasError = true;
         } else {
-            document.getElementById('calModalAssigneeError').textContent = '';
-            document.getElementById('calModalAssignee').style.borderColor = '';
+            document.getElementById('calModalFrequencyError').textContent = '';
+            document.getElementById('calModalFrequency').style.borderColor = '';
+        }
+
+        // Validate start date
+        if (!startDate) {
+            document.getElementById('calModalStartDateError').textContent = 'Start date is required.';
+            document.getElementById('calModalStartDate').style.borderColor = '#dc2626';
+            hasError = true;
+        } else {
+            // Check if weekend
+            const day = new Date(startDate).getDay();
+            if (day === 0 || day === 6) {
+                document.getElementById('calModalStartDateError').textContent = 'Start date cannot be a weekend. Please choose a weekday.';
+                document.getElementById('calModalStartDate').style.borderColor = '#dc2626';
+                hasError = true;
+            } else {
+                document.getElementById('calModalStartDateError').textContent = '';
+                document.getElementById('calModalStartDate').style.borderColor = '';
+            }
         }
 
         if (hasError) return;
 
-        // Get the schedule-later URL from the hidden input (falls back to the calendar events URL context)
-        const scheduleUrlInput = document.getElementById('calScheduleLaterUrl');
-        const scheduleUrl = scheduleUrlInput ? scheduleUrlInput.value : '';
-        if (!scheduleUrl) {
-            alert('PM scheduling is not configured for this user.');
+        // Get the store URL from the hidden input
+        const storeUrlInput = document.getElementById('calStorePmScheduleUrl');
+        const storeUrl = storeUrlInput ? storeUrlInput.value : '';
+        if (!storeUrl) {
+            showToast('PM schedule creation is not configured for this user.', 'error');
             return;
         }
 
-        // POST to server — Schedule for Later creates a real pm_generation_schedules row
+        // POST to server — creates a real pm_schedules row
         const submitBtn = document.getElementById('calModalSubmit');
-        submitBtn.textContent = 'Scheduling...';
+        submitBtn.textContent = 'Creating...';
         submitBtn.disabled = true;
 
-        fetch(scheduleUrl, {
+        // Use form data (not JSON) because the controller expects form-encoded data
+        const formData = new FormData();
+        formData.append('schedule_name', scheduleName);
+        formData.append('division_filter', division);
+        formData.append('frequency', frequency);
+        formData.append('next_scheduled_date', startDate);
+
+        fetch(storeUrl, {
             method: 'POST',
             headers: {
                 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content || '',
                 'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json',
-                'Content-Type': 'application/json'
             },
-            body: JSON.stringify({
-                pm_schedule_id: parseInt(document.getElementById('calCurrentPmScheduleId')?.value || '0', 10) || 0,
-                scheduled_date: dateStr,
-                remarks: title + (assignee ? ' | Assignee: ' + assignee : '')
-            })
+            body: formData
         })
         .then(r => {
-            if (r.redirected) { window.location.href = r.url; return null; }
+            if (r.redirected) {
+                // The controller redirects on success — but we want to stay on calendar
+                // Check if it's a redirect to the show page (success) or back (error)
+                if (r.url.includes('pm-schedules/') && !r.url.includes('create')) {
+                    closeModal();
+                    loadEvents();
+                    showToast('PM Schedule created successfully.', 'success');
+                    return null;
+                }
+                // If redirected back with errors, follow the redirect to get error messages
+                window.location.href = r.url;
+                return null;
+            }
+            // If JSON response (validation error)
             return r.json();
         })
         .then(data => {
             if (data === null) return;
-            closeModal();
-            // Reload events to reflect the newly queued PM
-            loadEvents();
-            showToast(data.message || 'PM scheduled successfully.', 'success');
+            // Handle validation errors
+            if (data.errors) {
+                Object.keys(data.errors).forEach(key => {
+                    const errorEl = document.getElementById('calModal' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, '') + 'Error');
+                    if (errorEl) {
+                        errorEl.textContent = data.errors[key][0];
+                        const inputEl = document.getElementById('calModal' + key.charAt(0).toUpperCase() + key.slice(1).replace(/_/g, ''));
+                        if (inputEl) inputEl.style.borderColor = '#dc2626';
+                    }
+                });
+                submitBtn.textContent = 'Create Schedule';
+                submitBtn.disabled = false;
+            } else if (data.message && data.message.includes('already exists')) {
+                // One active schedule per branch error
+                document.getElementById('calModalScheduleNameError').textContent = data.message;
+                document.getElementById('calModalScheduleName').style.borderColor = '#dc2626';
+                submitBtn.textContent = 'Create Schedule';
+                submitBtn.disabled = false;
+                showToast(data.message, 'error');
+            } else {
+                closeModal();
+                loadEvents();
+                showToast(data.message || 'PM Schedule created successfully.', 'success');
+            }
         })
         .catch(() => {
-            submitBtn.textContent = 'Save Task';
+            submitBtn.textContent = 'Create Schedule';
             submitBtn.disabled = false;
-            showToast('Failed to schedule PM. Please try again.', 'error');
+            showToast('Failed to create PM Schedule. Please try again.', 'error');
         });
     }
 
