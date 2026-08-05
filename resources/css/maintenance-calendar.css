@@ -126,6 +126,7 @@
 }
 .cal-day {
     height:120px;
+    max-height:120px;
     vertical-align:top;
     cursor:pointer;
     transition:background 0.15s;
@@ -136,7 +137,11 @@
     word-break:break-all;
 }
 .cal-day-content {
-    height:100%;
+    position:absolute;
+    top:6px;
+    left:6px;
+    right:6px;
+    bottom:6px;
     overflow:hidden;
     display:flex;
     flex-direction:column;
@@ -146,6 +151,18 @@
 }
 .cal-day-content .cal-more {
     flex-shrink:0;
+}
+.cal-day.cal-past {
+    background:#fafbfc;
+}
+.cal-day.cal-past:hover {
+    background:#fafbfc;
+}
+.cal-day.cal-past .cal-day-add {
+    display:none;
+}
+.cal-day.cal-past .cal-day-num {
+    color:#94a3b8;
 }
 .cal-day:hover { background:#f8fafc; }
 .cal-day.cal-today { background:#eff6ff; }

@@ -118,6 +118,7 @@
 
             if (dateStr === todayStr) cell.classList.add('cal-today');
             if (dateStr === selectedDate) cell.classList.add('cal-selected');
+            if (dateStr < todayStr) cell.classList.add('cal-past');
 
             const dayEvents = allEvents.filter(e => e.date === dateStr);
             const contentWrap = cell.querySelector('.cal-day-content');
@@ -213,7 +214,14 @@
         const body = document.getElementById('calTasksBody');
         const label = document.getElementById('calTasksDate');
         const count = document.getElementById('calTasksCount');
+        const btnAdd = document.getElementById('calAddTaskBtn');
         if (!body) return;
+
+        // Hide the Add button when no date selected or date is in the past
+        if (btnAdd) {
+            const todayStr = getTodayDateStr();
+            btnAdd.style.display = (dateStr && dateStr >= todayStr) ? '' : 'none';
+        }
 
         if (!dateStr) {
             body.innerHTML = '<div class="cal-empty"><i class="fa-solid fa-calendar-day"></i><p>Select a date to view tasks.</p></div>';
