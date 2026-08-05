@@ -5,6 +5,7 @@ namespace App\Actions\PMGenerationSchedule;
 use App\Models\Request as RequestModel;
 use App\Models\PMGenerationSchedule;
 use App\Models\PMDivisionSchedule;
+use App\Models\PMSchedule;
 use App\Models\User;
 use App\Policies\RequestPolicy;
 use Illuminate\Http\Request;
@@ -76,6 +77,32 @@ class GetMaintenanceCalendarDataAction
                     'priority'     => null,
                     'details_url'  => route('pm-schedules.show', $queue->pm_schedule_id),
                     'is_editable'  => $queue->isPending() && $user->role === 'super_admin',
+                ];
+            }
+        }
+
+        // 1.2 PM Schedules — show active schedules on their next_scheduled_date
+        if ($filter === 'all' || $filter === 'pm') {
+            $pmSchedules = PMSchedule::where('is_active', true)
+                ->whereNotNull('next_scheduled_date')
+                ->whereBetween('next_scheduled_date', [$startDate->toDateString(), $endDate->toDateString()])
+                ->get();
+
+            foreach ($pmSchedules as $sched) {
+                $events[] = [
+                    'id'           => "pm-sched-{$sched->id}",
+                    'event_type'   => 'pm',
+                    'source'       => 'pm_schedule',
+                    'source_id'    => $sched->id,
+                    'date'         => $sched->next_scheduled_date->toDateString(),
+                    'title'        => $sched->schedule_name,
+                    'status'       => 'Scheduled',
+                    'display_number' => null,
+                    'office'       => $sched->division_filter ?? 'All Divisions',
+                    'assignee'     => $sched->creator?->full_name ?? 'N/A',
+                    'priority'     => null,
+                    'details_url'  => route('pm-schedules.show', $sched->id),
+                    'is_editable'  => false,
                 ];
             }
         }

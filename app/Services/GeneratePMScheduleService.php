@@ -51,6 +51,13 @@ class GeneratePMScheduleService
             return [];
         }
 
+        // Start Date Guard: Do not generate if next_scheduled_date is still in the future.
+        // The schedule should only generate on or after its next_scheduled_date.
+        if ($schedule->next_scheduled_date && now()->lt(\Carbon\Carbon::parse($schedule->next_scheduled_date)->startOfDay())) {
+            Log::info("PM schedule {$schedule->id} not yet due. next_scheduled_date: {$schedule->next_scheduled_date}");
+            return ['__not_due__' => $schedule->next_scheduled_date->toDateString()];
+        }
+
         // Anti-Spam: Check if there's already an IN PROGRESS cycle with requests
         if ($schedule->current_focus_division) {
             // Check if there are already pending requests for this division
