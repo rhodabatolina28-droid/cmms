@@ -144,27 +144,17 @@
                 if (statusLower === 'cancelled') chipClass += ' cal-chip-cancelled';
                 if (statusLower === 'ongoing' || statusLower === 'inprogress' || statusLower === 'in-progress') chipClass += ' cal-chip-ongoing';
 
-                // Phase 3.4: Division completion indicator — add visual marker
-                if (e.event_type === 'pm' && e.division_status) {
-                    if (e.division_status === 'complete') chipClass += ' cal-chip-div-complete';
-                    if (e.division_status === 'scheduled') chipClass += ' cal-chip-div-scheduled';
-                    if (e.division_status === 'in_progress') chipClass += ' cal-chip-div-progress';
-                }
                 chip.className = chipClass;
 
-                // Build compact chip text — always prefer display_number (short) for work orders,
-                // fall back to title, and cap length to prevent breaking the calendar cell.
+                // Build compact chip text — PM grouped by division with ticket count
                 let chipText = e.display_number || e.title || '';
                 if (chipText.length > 22) chipText = chipText.substring(0, 22) + '…';
 
-                // Phase 3.4: Add division status glyph (✓ complete / ● in progress / ○ scheduled)
-                let statusGlyph = '';
-                if (e.event_type === 'pm' && e.division_status) {
-                    if (e.division_status === 'complete') statusGlyph = '✓ ';
-                    else if (e.division_status === 'in_progress') statusGlyph = '● ';
-                    else if (e.division_status === 'scheduled') statusGlyph = '○ ';
+                // PM events show division + ticket count (no status glyph)
+                if (e.event_type === 'pm' && e.ticket_count) {
+                    chipText = e.title + ' (' + e.ticket_count + ' ticket' + (e.ticket_count !== 1 ? 's' : '') + ')';
                 }
-                chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + statusGlyph + chipText;
+                chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + chipText;
                 chip.title = (e.display_number || e.title || '') + ' (' + formatDate(e.date) + ')';
                 chip.onclick = function(ev) { ev.stopPropagation(); showEventDetail(e); };
                 if (contentWrap) contentWrap.appendChild(chip);
@@ -277,10 +267,17 @@
             const badgeText = e.event_type === 'pm' ? 'PM' : 'ICT';
             const statusLower = (e.status || '').toLowerCase().replace(/\s+/g, '');
             const statusClass = 'cal-event-status-' + (statusLower || 'pending');
+
+            // PM events show division + ticket count (grouped)
+            let titleText = e.display_number || e.title || '';
+            if (e.event_type === 'pm' && e.ticket_count) {
+                titleText = e.title + ' (' + e.ticket_count + ' ticket' + (e.ticket_count !== 1 ? 's' : '') + ')';
+            }
+
             row.innerHTML =
                 '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
                 '<div class="cal-event-info">' +
-                    '<div class="cal-event-title">' + (e.display_number || e.title || '') + '</div>' +
+                    '<div class="cal-event-title">' + titleText + '</div>' +
                     '<div class="cal-event-meta">' +
                         (e.assignee ? e.assignee : '') +
                         (e.assignee && e.office ? ' · ' : '') +

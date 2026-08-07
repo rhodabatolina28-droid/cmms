@@ -313,8 +313,12 @@ class GeneratePMScheduleService
 
         if ($nextDivision) {
             // More divisions to process — clear focus so cron advances to next division
-            $schedule->update(['current_focus_division' => null]);
-            Log::info("PM advanced from '{$focusDivision}' to '{$nextDivision}' for schedule {$schedule->id}");
+            // Reset assigned_it_id so the next division needs a fresh IT assignment
+            $schedule->update([
+                'current_focus_division' => null,
+                'assigned_it_id' => null,
+            ]);
+            Log::info("PM advanced from '{$focusDivision}' to '{$nextDivision}' for schedule {$schedule->id}. IT assignment reset.");
             return [$nextDivision, false];
         }
 

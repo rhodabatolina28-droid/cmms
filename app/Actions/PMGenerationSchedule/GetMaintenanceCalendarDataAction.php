@@ -97,8 +97,7 @@ class GetMaintenanceCalendarDataAction
                 ->get();
 
             foreach ($pmSchedules as $sched) {
-                // can_assign_it is true only when PM has been generated
-                // (current_focus_division is set OR there are existing PM work orders)
+                // can_assign_it is true only when PM has been generated AND no IT assigned yet
                 $hasGeneratedPm = $sched->current_focus_division !== null
                     || RequestModel::where('pm_schedule_id', $sched->id)
                         ->where('is_auto_generated', true)
@@ -116,7 +115,7 @@ class GetMaintenanceCalendarDataAction
                     'office'       => $sched->division_filter ?? 'All Divisions',
                     'assignee'     => $sched->assignedIt?->full_name ?? 'Unassigned',
                     'assigned_it_id' => $sched->assigned_it_id,
-                    'can_assign_it' => $hasGeneratedPm,
+                    'can_assign_it' => $hasGeneratedPm && $sched->assigned_it_id === null,
                     'priority'     => null,
                     'details_url'  => route('pm-schedules.show', $sched->id),
                     'is_editable'  => false,
@@ -152,6 +151,7 @@ class GetMaintenanceCalendarDataAction
         }
 
         // 2. PM work orders (existing requests where type = Preventive Maintenance)
+        // Grouped by division + date — one event per division with ticket_count
         if ($filter === 'all' || $filter === 'pm') {
             $pmRequests = RequestModel::with(['user', 'assignedTo', 'maintenanceRequest'])
                 ->where('type', 'Preventive Maintenance')
@@ -168,6 +168,8 @@ class GetMaintenanceCalendarDataAction
                     : ($divRow->next_scheduled_at ? 'scheduled' : 'in_progress');
             }
 
+            // Group requests by division + date
+            $groupedPm = [];
             foreach ($pmRequests as $req) {
                 if (!$this->policy->viewMaintenance($user, $req)) {
                     continue;
@@ -187,20 +189,37 @@ class GetMaintenanceCalendarDataAction
                     ? $divisionStatusMap[$req->pm_schedule_id][$officeKey]
                     : 'in_progress';
 
+                $groupKey = $eventDate . '|' . $officeKey;
+                if (!isset($groupedPm[$groupKey])) {
+                    $groupedPm[$groupKey] = [
+                        'date' => Carbon::parse($eventDate)->toDateString(),
+                        'division' => $req->office ?? 'N/A',
+                        'division_status' => $divisionStatus,
+                        'ticket_count' => 0,
+                        'first_request_id' => $req->id,
+                        'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
+                    ];
+                }
+                $groupedPm[$groupKey]['ticket_count']++;
+            }
+
+            foreach ($groupedPm as $group) {
+                $shortDiv = $this->shortDivisionName($group['division']);
                 $events[] = [
-                    'id'             => "pm-wo-{$req->id}",
+                    'id'             => "pm-div-{$group['first_request_id']}",
                     'event_type'     => 'pm',
                     'source'         => 'request',
-                    'source_id'      => $req->id,
-                    'date'           => Carbon::parse($eventDate)->toDateString(),
-                    'title'          => $req->requestor_name ?? 'Preventive Maintenance',
-                    'status'         => $req->status ?? 'Pending',
-                    'division_status' => $divisionStatus,
-                    'display_number' => $req->display_number,
-                    'office'         => $req->office ?? 'N/A',
-                    'assignee'       => $req->assignedTo?->full_name ?? 'Unassigned',
-                    'priority'       => $req->priority,
-                    'details_url'    => route('maintenance.show', $req->id),
+                    'source_id'      => $group['first_request_id'],
+                    'date'           => $group['date'],
+                    'title'          => $shortDiv,
+                    'status'         => 'Scheduled',
+                    'division_status' => $group['division_status'],
+                    'ticket_count'   => $group['ticket_count'],
+                    'display_number' => null,
+                    'office'         => $group['division'],
+                    'assignee'       => $group['assignee'],
+                    'priority'       => null,
+                    'details_url'    => route('maintenance.show', $group['first_request_id']),
                     'is_editable'    => false,
                 ];
             }
