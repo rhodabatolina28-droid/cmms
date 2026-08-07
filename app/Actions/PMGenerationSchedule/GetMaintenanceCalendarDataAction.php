@@ -326,6 +326,13 @@ class GetMaintenanceCalendarDataAction
                             ->where('is_auto_generated', true)
                             ->exists()));
 
+                // Map division_status to display status (real-time)
+                $displayStatus = match ($group['division_status']) {
+                    'complete'    => 'Completed',
+                    'in_progress' => 'Ongoing',
+                    default       => 'Scheduled',
+                };
+
                 $events[] = [
                     'id'             => "pm-div-{$group['first_request_id']}",
                     'event_type'     => 'pm',
@@ -334,7 +341,7 @@ class GetMaintenanceCalendarDataAction
                     'pm_schedule_id' => $group['pm_schedule_id'],
                     'date'           => $group['date'],
                     'title'          => $shortDiv,
-                    'status'         => 'Scheduled',
+                    'status'         => $displayStatus,
                     'division_status' => $group['division_status'],
                     'ticket_count'   => $group['ticket_count'],
                     'tickets'        => $group['tickets'],

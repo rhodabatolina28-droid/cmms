@@ -301,6 +301,9 @@
 
         const upcoming = allEvents.filter(e => {
             const d = new Date(e.date);
+            const statusLower = (e.status || '').toLowerCase();
+            // Filter out Completed/Cancelled — only Scheduled/Ongoing/Overdue
+            if (statusLower === 'completed' || statusLower === 'cancelled') return false;
             return d >= today && d <= sevenDays;
         }).sort((a, b) => a.date.localeCompare(b.date));
 
