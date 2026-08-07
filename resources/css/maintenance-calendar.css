@@ -481,6 +481,31 @@
 }
 .cal-toast-close:hover { color: #1e293b; }
 
+/* Detail Sections (Divisions / Tickets) */
+.cal-detail-section {
+    margin: 12px 0;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    overflow: hidden;
+}
+.cal-detail-section-title {
+    padding: 8px 12px;
+    background: #f8fafc;
+    font-size: 11px;
+    font-weight: 700;
+    color: #64748b;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    border-bottom: 1px solid #e2e8f0;
+}
+.cal-detail-section .cal-event-row {
+    padding: 8px 12px;
+    border-bottom: 1px solid #f8fafc;
+}
+.cal-detail-section .cal-event-row:last-child {
+    border-bottom: none;
+}
+
 /* Assign Panel (ICT) */
 .cal-assign-panel {
     margin: 12px 0;

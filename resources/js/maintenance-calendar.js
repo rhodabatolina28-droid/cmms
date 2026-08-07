@@ -261,23 +261,55 @@
 
         body.innerHTML = '';
         tasks.forEach(e => {
+            // PM grouped events expand to show all individual tickets
+            if (e.event_type === 'pm' && e.tickets && e.tickets.length > 0) {
+                e.tickets.forEach(ticket => {
+                    const row = document.createElement('div');
+                    row.className = 'cal-event-row';
+                    const badgeClass = 'cal-event-badge-pm';
+                    const badgeText = 'PM';
+                    const statusLower = (ticket.status || '').toLowerCase().replace(/\s+/g, '');
+                    const statusClass = 'cal-event-status-' + (statusLower || 'pending');
+                    row.innerHTML =
+                        '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
+                        '<div class="cal-event-info">' +
+                            '<div class="cal-event-title">' + (ticket.display_number || '') + '</div>' +
+                            '<div class="cal-event-meta">' +
+                                (ticket.assignee ? ticket.assignee : '') +
+                                (ticket.assignee && e.office ? ' · ' : '') +
+                                (e.office ? e.office : '') +
+                            '</div>' +
+                        '</div>' +
+                        '<span class="cal-event-status ' + statusClass + '">' + (ticket.status || 'N/A') + '</span>';
+                    // Click ticket → show ticket details in detail body
+                    row.onclick = function() {
+                        showEventDetail({
+                            event_type: 'pm',
+                            source: 'request',
+                            title: ticket.display_number || '',
+                            display_number: ticket.display_number || '',
+                            status: ticket.status || 'Pending',
+                            assignee: ticket.assignee || 'Unassigned',
+                            office: e.office || 'N/A',
+                            date: e.date,
+                            details_url: ticket.details_url,
+                        });
+                    };
+                    body.appendChild(row);
+                });
+                return;
+            }
+
             const row = document.createElement('div');
             row.className = 'cal-event-row';
             const badgeClass = e.event_type === 'pm' ? 'cal-event-badge-pm' : 'cal-event-badge-ict';
             const badgeText = e.event_type === 'pm' ? 'PM' : 'ICT';
             const statusLower = (e.status || '').toLowerCase().replace(/\s+/g, '');
             const statusClass = 'cal-event-status-' + (statusLower || 'pending');
-
-            // PM events show division + ticket count (grouped)
-            let titleText = e.display_number || e.title || '';
-            if (e.event_type === 'pm' && e.ticket_count) {
-                titleText = e.title + ' (' + e.ticket_count + ' ticket' + (e.ticket_count !== 1 ? 's' : '') + ')';
-            }
-
             row.innerHTML =
                 '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
                 '<div class="cal-event-info">' +
-                    '<div class="cal-event-title">' + titleText + '</div>' +
+                    '<div class="cal-event-title">' + (e.display_number || e.title || '') + '</div>' +
                     '<div class="cal-event-meta">' +
                         (e.assignee ? e.assignee : '') +
                         (e.assignee && e.office ? ' · ' : '') +
@@ -373,6 +405,71 @@
         table += '<tr><td>Office</td><td>' + (e.office || 'N/A') + '</td></tr>';
         table += '</table>';
 
+        // PM Schedule event — render divisions list into Tasks panel (not detail body)
+        if (e.event_type === 'pm' && e.source === 'pm_schedule' && e.divisions && e.divisions.length > 0) {
+            const tasksBody = document.getElementById('calTasksBody');
+            const tasksDate = document.getElementById('calTasksDate');
+            if (tasksBody) {
+                if (tasksDate) tasksDate.textContent = '— Divisions';
+                tasksBody.innerHTML = '';
+                e.divisions.forEach(div => {
+                    const row = document.createElement('div');
+                    row.className = 'cal-event-row';
+                    const statusClass = div.status === 'Complete' ? 'cal-event-status-completed'
+                        : div.status === 'Ongoing' ? 'cal-event-status-inprogress'
+                        : 'cal-event-status-scheduled';
+                    row.innerHTML =
+                        '<div class="cal-event-badge cal-event-badge-pm">PM</div>' +
+                        '<div class="cal-event-info">' +
+                            '<div class="cal-event-title">' + div.name + ' (' + div.ticket_count + ' ticket' + (div.ticket_count !== 1 ? 's' : '') + ')</div>' +
+                            '<div class="cal-event-meta">Assigned: ' + (div.assigned_to || 'Unassigned') + '</div>' +
+                        '</div>' +
+                        '<span class="cal-event-status ' + statusClass + '">' + div.status + '</span>';
+                    body && tasksBody.appendChild(row);
+                });
+            }
+        }
+
+        // PM Division event — render tickets list into Tasks panel (not detail body)
+        if (e.event_type === 'pm' && e.source === 'request' && e.tickets && e.tickets.length > 0) {
+            const tasksBody = document.getElementById('calTasksBody');
+            const tasksDate = document.getElementById('calTasksDate');
+            if (tasksBody) {
+                if (tasksDate) tasksDate.textContent = '— ' + (e.title || 'Tickets');
+                tasksBody.innerHTML = '';
+                e.tickets.forEach(ticket => {
+                    const row = document.createElement('div');
+                    row.className = 'cal-event-row';
+                    const statusLower = (ticket.status || '').toLowerCase().replace(/\s+/g, '');
+                    const statusClass = 'cal-event-status-' + (statusLower || 'pending');
+                    row.innerHTML =
+                        '<div class="cal-event-badge cal-event-badge-pm">PM</div>' +
+                        '<div class="cal-event-info">' +
+                            '<div class="cal-event-title">' + (ticket.display_number || '') + '</div>' +
+                            '<div class="cal-event-meta">' + (ticket.assignee || 'Unassigned') + '</div>' +
+                        '</div>' +
+                        '<span class="cal-event-status ' + statusClass + '">' + (ticket.status || 'N/A') + '</span>';
+                    row.onclick = function() {
+                        showEventDetail({
+                            event_type: 'pm',
+                            source: 'request',
+                            title: ticket.display_number || '',
+                            display_number: ticket.display_number || '',
+                            status: ticket.status || 'Pending',
+                            assignee: ticket.assignee || 'Unassigned',
+                            office: e.office || 'N/A',
+                            date: e.date,
+                            details_url: ticket.details_url,
+                        });
+                    };
+                    tasksBody.appendChild(row);
+                });
+            }
+        }
+
+        let divisionsHtml = '';
+        let ticketsHtml = '';
+
         // For ICT events, show an IT assign dropdown ONLY when no one is assigned yet (super_admin only)
         // For PM Schedule events, show an IT assign dropdown (IT + super_admin can assign)
         let assignHtml = '';
@@ -402,9 +499,8 @@
             }
         }
 
-        // PM Schedule event — show IT assign dropdown ONLY when PM has been generated
-        // (i.e. current_focus_division is set OR there are existing PM work orders)
-        if (e.event_type === 'pm' && e.source === 'pm_schedule' && e.can_assign_it === true && document.getElementById('calItPersonnelJson')) {
+        // PM Division event — show IT assign dropdown ONLY when PM generated AND no IT assigned
+        if (e.event_type === 'pm' && e.source === 'request' && e.can_assign_it === true && document.getElementById('calItPersonnelJson')) {
             const canAssign = (currentUserRole === 'super_admin' || currentUserRole === 'it');
             if (canAssign) {
                 let itPersonnel = [];
@@ -414,7 +510,7 @@
 
                 if (itPersonnel.length > 0) {
                     const assignUrlBase = document.getElementById('calPmAssignUrl')?.value || '';
-                    const scheduleId = e.source_id || '';
+                    const scheduleId = e.pm_schedule_id || '';
                     const currentAssignedId = e.assigned_it_id || '';
                     assignHtml =
                         '<div class="cal-assign-panel">' +
@@ -434,7 +530,7 @@
         const btnText = e.event_type === 'pm' ? 'View Work Order' : 'View ICT Request';
         const btn = '<a href="' + e.details_url + '" class="cal-detail-btn"><i class="fa-solid fa-arrow-right"></i> ' + btnText + '</a>';
 
-        body.innerHTML = badges + table + assignHtml + btn;
+        body.innerHTML = badges + table + divisionsHtml + ticketsHtml + assignHtml + btn;
         card.classList.add('show');
 
         // Wire up assign button (both ICT + PM Schedule)
@@ -447,7 +543,7 @@
 
                 const url = this.dataset.assignUrl;
                 const btn = this;
-                const isPmSchedule = e.event_type === 'pm' && e.source === 'pm_schedule';
+                const isPmSchedule = e.event_type === 'pm' && e.source === 'request';
                 btn.textContent = 'Assigning...';
                 btn.disabled = true;
 

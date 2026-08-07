@@ -97,11 +97,55 @@ class GetMaintenanceCalendarDataAction
                 ->get();
 
             foreach ($pmSchedules as $sched) {
-                // can_assign_it is true only when PM has been generated AND no IT assigned yet
-                $hasGeneratedPm = $sched->current_focus_division !== null
-                    || RequestModel::where('pm_schedule_id', $sched->id)
-                        ->where('is_auto_generated', true)
-                        ->exists();
+                // Build divisions list for this schedule
+                $scheduleDivisions = [];
+                $scheduleRequests = RequestModel::where('pm_schedule_id', $sched->id)
+                    ->where('is_auto_generated', true)
+                    ->get();
+
+                // Group by office
+                $divGroups = [];
+                foreach ($scheduleRequests as $req) {
+                    $officeKey = strtoupper(trim($req->office ?? ''));
+                    if (!isset($divGroups[$officeKey])) {
+                        $divGroups[$officeKey] = [
+                            'name' => $req->office ?? 'N/A',
+                            'ticket_count' => 0,
+                            'assigned_to' => $req->assignedTo?->full_name ?? 'Unassigned',
+                        ];
+                    }
+                    $divGroups[$officeKey]['ticket_count']++;
+                }
+
+                foreach ($divGroups as $officeKey => $div) {
+                    // Determine status: complete if in pm_division_schedules with last_completed_at
+                    $divSched = PMDivisionSchedule::where('pm_schedule_id', $sched->id)
+                        ->where('division_name', 'LIKE', "%{$officeKey}%")
+                        ->latest('last_completed_at')
+                        ->first();
+
+                    $status = $divSched && $divSched->last_completed_at
+                        ? 'Complete'
+                        : ($sched->current_focus_division && strtoupper(trim($sched->current_focus_division)) === $officeKey
+                            ? 'Ongoing'
+                            : 'Next');
+
+                    $scheduleDivisions[] = [
+                        'name' => $this->shortDivisionName($div['name']),
+                        'full_name' => $div['name'],
+                        'ticket_count' => $div['ticket_count'],
+                        'status' => $status,
+                        'assigned_to' => $div['assigned_to'],
+                    ];
+                }
+
+                // Sort divisions by status priority: Ongoing (0) → Next (1) → Complete (2)
+                usort($scheduleDivisions, function ($a, $b) {
+                    $priority = ['Ongoing' => 0, 'Next' => 1, 'Complete' => 2];
+                    $pa = $priority[$a['status']] ?? 3;
+                    $pb = $priority[$b['status']] ?? 3;
+                    return $pa <=> $pb;
+                });
 
                 $events[] = [
                     'id'           => "pm-sched-{$sched->id}",
@@ -115,7 +159,8 @@ class GetMaintenanceCalendarDataAction
                     'office'       => $sched->division_filter ?? 'All Divisions',
                     'assignee'     => $sched->assignedIt?->full_name ?? 'Unassigned',
                     'assigned_it_id' => $sched->assigned_it_id,
-                    'can_assign_it' => $hasGeneratedPm && $sched->assigned_it_id === null,
+                    'can_assign_it' => false, // Assign IT is on the division event, not schedule event
+                    'divisions'    => $scheduleDivisions,
                     'priority'     => null,
                     'details_url'  => route('pm-schedules.show', $sched->id),
                     'is_editable'  => false,
@@ -198,26 +243,49 @@ class GetMaintenanceCalendarDataAction
                         'ticket_count' => 0,
                         'first_request_id' => $req->id,
                         'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
+                        'pm_schedule_id' => $req->pm_schedule_id,
+                        'tickets' => [],
                     ];
                 }
                 $groupedPm[$groupKey]['ticket_count']++;
+                $groupedPm[$groupKey]['tickets'][] = [
+                    'id' => $req->id,
+                    'display_number' => $req->display_number,
+                    'status' => $req->status ?? 'Pending',
+                    'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
+                    'details_url' => route('maintenance.show', $req->id),
+                ];
             }
 
             foreach ($groupedPm as $group) {
                 $shortDiv = $this->shortDivisionName($group['division']);
+
+                // can_assign_it is true only when PM generated AND no IT assigned yet
+                $schedule = $group['pm_schedule_id'] ? PMSchedule::find($group['pm_schedule_id']) : null;
+                $canAssignIt = $schedule
+                    && $schedule->assigned_it_id === null
+                    && ($schedule->current_focus_division !== null
+                        || RequestModel::where('pm_schedule_id', $schedule->id)
+                            ->where('is_auto_generated', true)
+                            ->exists());
+
                 $events[] = [
                     'id'             => "pm-div-{$group['first_request_id']}",
                     'event_type'     => 'pm',
                     'source'         => 'request',
                     'source_id'      => $group['first_request_id'],
+                    'pm_schedule_id' => $group['pm_schedule_id'],
                     'date'           => $group['date'],
                     'title'          => $shortDiv,
                     'status'         => 'Scheduled',
                     'division_status' => $group['division_status'],
                     'ticket_count'   => $group['ticket_count'],
+                    'tickets'        => $group['tickets'],
                     'display_number' => null,
                     'office'         => $group['division'],
                     'assignee'       => $group['assignee'],
+                    'assigned_it_id' => $schedule?->assigned_it_id,
+                    'can_assign_it'  => $canAssignIt,
                     'priority'       => null,
                     'details_url'    => route('maintenance.show', $group['first_request_id']),
                     'is_editable'    => false,
