@@ -258,6 +258,11 @@
 .cal-chip-ict { background:#10b981; }
 .cal-chip-overdue { background:#dc2626 !important; box-shadow:inset 0 0 0 2px #ef4444; }
 .cal-chip-completed-pm { background:#0d9488 !important; }
+
+/* Phase 3.4: Division completion indicators */
+.cal-chip-div-complete { box-shadow: inset 0 0 0 2px #10b981; }
+.cal-chip-div-progress { box-shadow: inset 0 0 0 2px #f59e0b; }
+.cal-chip-div-scheduled { box-shadow: inset 0 0 0 2px #94a3b8; }
 .cal-chip-completed-ict { background:#059669 !important; }
 .cal-chip-ongoing { background:#f59e0b !important; }
 .cal-chip-cancelled { background:#94a3b8; text-decoration:line-through; }

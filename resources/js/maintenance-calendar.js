@@ -141,13 +141,28 @@
                 if (statusLower === 'completed') chipClass += (e.event_type === 'pm' ? ' cal-chip-completed-pm' : ' cal-chip-completed-ict');
                 if (statusLower === 'cancelled') chipClass += ' cal-chip-cancelled';
                 if (statusLower === 'ongoing' || statusLower === 'inprogress' || statusLower === 'in-progress') chipClass += ' cal-chip-ongoing';
+
+                // Phase 3.4: Division completion indicator — add visual marker
+                if (e.event_type === 'pm' && e.division_status) {
+                    if (e.division_status === 'complete') chipClass += ' cal-chip-div-complete';
+                    if (e.division_status === 'scheduled') chipClass += ' cal-chip-div-scheduled';
+                    if (e.division_status === 'in_progress') chipClass += ' cal-chip-div-progress';
+                }
                 chip.className = chipClass;
 
                 // Build compact chip text — always prefer display_number (short) for work orders,
                 // fall back to title, and cap length to prevent breaking the calendar cell.
                 let chipText = e.display_number || e.title || '';
                 if (chipText.length > 22) chipText = chipText.substring(0, 22) + '…';
-                chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + chipText;
+
+                // Phase 3.4: Add division status glyph (✓ complete / ● in progress / ○ scheduled)
+                let statusGlyph = '';
+                if (e.event_type === 'pm' && e.division_status) {
+                    if (e.division_status === 'complete') statusGlyph = '✓ ';
+                    else if (e.division_status === 'in_progress') statusGlyph = '● ';
+                    else if (e.division_status === 'scheduled') statusGlyph = '○ ';
+                }
+                chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + statusGlyph + chipText;
                 chip.title = (e.display_number || e.title || '') + ' (' + formatDate(e.date) + ')';
                 chip.onclick = function(ev) { ev.stopPropagation(); showEventDetail(e); };
                 if (contentWrap) contentWrap.appendChild(chip);
