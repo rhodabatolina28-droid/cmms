@@ -27,6 +27,7 @@ class PMSchedule extends Model
         'cycle_count',
         'last_generated_date',
         'next_scheduled_date',
+        'assigned_it_id',
         'created_by',
     ];
 
@@ -50,6 +51,12 @@ class PMSchedule extends Model
     public function creator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    /** Assigned IT personnel for this schedule's current cycle */
+    public function assignedIt(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'assigned_it_id');
     }
 
     public function history(): HasMany

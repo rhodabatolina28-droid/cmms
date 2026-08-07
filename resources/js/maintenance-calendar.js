@@ -358,8 +358,11 @@
         table += '</table>';
 
         // For ICT events, show an IT assign dropdown ONLY when no one is assigned yet (super_admin only)
+        // For PM Schedule events, show an IT assign dropdown (IT + super_admin can assign)
         let assignHtml = '';
         const isUnassigned = !e.assignee || e.assignee === 'Unassigned' || e.assignee === 'N/A';
+        const currentUserRole = document.getElementById('calCurrentUserRole')?.value || '';
+
         if (e.event_type === 'ict' && isUnassigned && document.getElementById('calItPersonnelJson')) {
             let itPersonnel = [];
             try {
@@ -383,13 +386,41 @@
             }
         }
 
+        // PM Schedule event — show IT assign dropdown for IT and Super Admin
+        if (e.event_type === 'pm' && e.source === 'pm_schedule' && document.getElementById('calItPersonnelJson')) {
+            const canAssign = (currentUserRole === 'super_admin' || currentUserRole === 'it');
+            if (canAssign) {
+                let itPersonnel = [];
+                try {
+                    itPersonnel = JSON.parse(document.getElementById('calItPersonnelJson').value || '[]');
+                } catch (err) { itPersonnel = []; }
+
+                if (itPersonnel.length > 0) {
+                    const assignUrlBase = document.getElementById('calPmAssignUrl')?.value || '';
+                    const scheduleId = e.source_id || '';
+                    const currentAssignedId = e.assigned_it_id || '';
+                    assignHtml =
+                        '<div class="cal-assign-panel">' +
+                            '<label class="cal-modal-label">Assign IT for this Division</label>' +
+                            '<div class="cal-assign-flex">' +
+                                '<select id="calAssignSelect" class="cal-modal-input">' +
+                                    '<option value="">Select IT personnel...</option>' +
+                                    itPersonnel.map(p => '<option value="' + p.id + '" ' + (String(p.id) === String(currentAssignedId) ? 'selected' : '') + '>' + p.full_name + '</option>').join('') +
+                                '</select>' +
+                                '<button class="cal-assign-btn" id="calAssignBtn" data-assign-url="' + assignUrlBase + '/' + scheduleId + '/assign-it">Assign</button>' +
+                            '</div>' +
+                        '</div>';
+                }
+            }
+        }
+
         const btnText = e.event_type === 'pm' ? 'View Work Order' : 'View ICT Request';
         const btn = '<a href="' + e.details_url + '" class="cal-detail-btn"><i class="fa-solid fa-arrow-right"></i> ' + btnText + '</a>';
 
         body.innerHTML = badges + table + assignHtml + btn;
         card.classList.add('show');
 
-        // Wire up assign button
+        // Wire up assign button (both ICT + PM Schedule)
         const assignBtn = document.getElementById('calAssignBtn');
         if (assignBtn) {
             assignBtn.addEventListener('click', function() {
@@ -399,6 +430,7 @@
 
                 const url = this.dataset.assignUrl;
                 const btn = this;
+                const isPmSchedule = e.event_type === 'pm' && e.source === 'pm_schedule';
                 btn.textContent = 'Assigning...';
                 btn.disabled = true;
 
@@ -410,7 +442,8 @@
                         'Accept': 'application/json',
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ assigned_to: assignedTo })
+                    // PM Schedule endpoint expects assigned_it_id; ICT expects assigned_to
+                    body: JSON.stringify(isPmSchedule ? { assigned_it_id: assignedTo } : { assigned_to: assignedTo })
                 })
                 .then(r => {
                     if (r.redirected) { window.location.href = r.url; return null; }
@@ -420,9 +453,11 @@
                     if (data === null) return;
                     // Get the selected personnel name for the toast message
                     const selectedPersonName = select.options[select.selectedIndex]?.text || '';
-                    const toastMsg = selectedPersonName
-                        ? 'Assigned to ' + selectedPersonName + '. ICT request successfully assigned.'
-                        : (data.message || 'ICT request assigned successfully.');
+                    const toastMsg = isPmSchedule
+                        ? (data.message || 'PM Schedule assigned successfully.')
+                        : (selectedPersonName
+                            ? 'Assigned to ' + selectedPersonName + '. ICT request successfully assigned.'
+                            : (data.message || 'ICT request assigned successfully.'));
                     btn.textContent = 'Assign';
                     btn.disabled = false;
                     showToast(toastMsg, 'success');
@@ -431,7 +466,7 @@
                 .catch(() => {
                     btn.textContent = 'Assign';
                     btn.disabled = false;
-                    showToast('Failed to assign ICT request. Please try again.', 'error');
+                    showToast(isPmSchedule ? 'Failed to assign PM Schedule. Please try again.' : 'Failed to assign ICT request. Please try again.', 'error');
                 });
             });
         }

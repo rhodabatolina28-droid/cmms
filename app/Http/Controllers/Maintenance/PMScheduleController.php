@@ -19,6 +19,7 @@ use App\Actions\PMSchedule\RepairBrokenPMRecordsAction;
 use App\Actions\PMSchedule\GetOrdersDataAction;
 use App\Actions\PMSchedule\AdvancePMCycleAction;
 use App\Actions\PMSchedule\ManagePMCycleAction;
+use App\Actions\PMSchedule\AssignPMScheduleITAction;
 use App\Actions\PMGenerationSchedule\CreatePMGenerationScheduleAction;
 use App\Actions\PMGenerationSchedule\ReschedulePMGenerationScheduleAction;
 use App\Actions\PMGenerationSchedule\CancelPMGenerationScheduleAction;
@@ -209,6 +210,19 @@ class PMScheduleController extends Controller
     public function calendar()
     {
         return view('maintenance-calendar.index');
+    }
+
+    /**
+     * Assign an IT personnel to the PM schedule's current division.
+     * Both Super Admin and IT can perform this assignment.
+     */
+    public function assignIt(Request $request, PMSchedule $pmSchedule)
+    {
+        $validated = $request->validate([
+            'assigned_it_id' => 'required|integer|exists:users,id',
+        ]);
+
+        return (new AssignPMScheduleITAction)->execute($pmSchedule, $validated['assigned_it_id']);
     }
 
     public function calendarEvents(Request $request)

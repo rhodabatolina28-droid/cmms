@@ -255,6 +255,12 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     // PM Tasks - IT and Super Admin can view
     Route::get('/maintenance/pm-tasks', [MaintenanceController::class, 'pmTasks'])->name('pm.tasks')->middleware('role:it,super_admin');
 
+    // PM Schedule IT Assignment — both IT and Super Admin can assign
+    Route::post('/pm-schedules/{pm_schedule}/assign-it', [PMScheduleController::class, 'assignIt'])
+        ->name('pm-schedules.assign-it')
+        ->where('pm_schedule', '[0-9]+')
+        ->middleware('role:it,super_admin', 'throttle:30,1');
+
     // Maintenance Calendar - IT and Super Admin can view
     Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendar'])->name('maintenance.calendar')->middleware('role:it,super_admin');
     Route::get('/maintenance/calendar/events', [MaintenanceController::class, 'calendarEvents'])->name('maintenance.calendar.events')->middleware('role:it,super_admin');

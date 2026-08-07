@@ -208,18 +208,19 @@
 
 {{-- Hidden inputs for URLs --}}
 <input type="hidden" id="calEventsUrl" value="{{ auth()->user()->role === 'super_admin' ? route('pm-schedules.calendar.events') : route('maintenance.calendar.events') }}">
-@if(auth()->user()->role === 'super_admin')
 @php
-    // Include active IT personnel AND the current super admin (so they can assign themselves if no IT exists)
+    // Include active IT personnel AND super admins (both can be assigned to conduct PM)
     $itPersonnel = \App\Models\User::where('is_active', true)
         ->where(function ($q) {
             $q->where('role', 'it')
               ->orWhere('role', 'super_admin');
         })
         ->get(['id', 'full_name', 'role']);
+    $currentUserRole = auth()->user()->role;
 @endphp
 <input type="hidden" id="calStorePmScheduleUrl" value="{{ route('pm-schedules.store') }}">
 <input type="hidden" id="calItPersonnelJson" value="{{ $itPersonnel->toJson(JSON_HEX_APOS) }}">
 <input type="hidden" id="calIctAssignUrl" value="{{ url('/requests/ict') }}">
-@endif
+<input type="hidden" id="calPmAssignUrl" value="{{ url('/pm-schedules') }}">
+<input type="hidden" id="calCurrentUserRole" value="{{ $currentUserRole }}">
 @endsection

@@ -162,7 +162,7 @@ class GeneratePMScheduleService
                     'type'                        => 'Preventive Maintenance',
                     'status'                      => RequestModel::STATUS_SCHEDULED,
                     'linked_asset_id'             => null, // Bundled workstation PM
-                    'assigned_to'                 => null,
+                    'assigned_to'                 => $schedule->assigned_it_id, // Auto-assign to schedule's IT
                     'office'                      => $endUserDiv,
                     'branch'                      => $user?->branch ?? $actor?->branch ?? null,
                     'is_auto_generated'           => true,
