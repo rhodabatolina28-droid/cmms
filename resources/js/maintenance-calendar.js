@@ -270,14 +270,17 @@
             const statusLower = (e.status || '').toLowerCase().replace(/\s+/g, '');
             const statusClass = 'cal-event-status-' + (statusLower || 'pending');
             // Use FULL division name for PM events in tasks panel (short name only in calendar cells)
+            // Ticket count suffix is PM-only — ICT shows plain title
             let rowTitle = e.display_number || e.title || '';
+            let ticketSuffix = '';
             if (e.event_type === 'pm' && e.ticket_count) {
                 rowTitle = e.office || e.title || '';
+                ticketSuffix = ' (' + e.ticket_count + ' ticket' + (e.ticket_count !== 1 ? 's' : '') + ')';
             }
             row.innerHTML =
                 '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
                 '<div class="cal-event-info">' +
-                    '<div class="cal-event-title">' + rowTitle + ' (' + (e.ticket_count || 0) + ' ticket' + ((e.ticket_count || 0) !== 1 ? 's' : '') + ')</div>' +
+                    '<div class="cal-event-title">' + rowTitle + ticketSuffix + '</div>' +
                     '<div class="cal-event-meta">' +
                         (e.assignee ? e.assignee : '') +
                         (e.assignee && e.office ? ' · ' : '') +
