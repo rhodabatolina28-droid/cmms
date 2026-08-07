@@ -97,6 +97,13 @@ class GetMaintenanceCalendarDataAction
                 ->get();
 
             foreach ($pmSchedules as $sched) {
+                // can_assign_it is true only when PM has been generated
+                // (current_focus_division is set OR there are existing PM work orders)
+                $hasGeneratedPm = $sched->current_focus_division !== null
+                    || RequestModel::where('pm_schedule_id', $sched->id)
+                        ->where('is_auto_generated', true)
+                        ->exists();
+
                 $events[] = [
                     'id'           => "pm-sched-{$sched->id}",
                     'event_type'   => 'pm',
@@ -109,6 +116,7 @@ class GetMaintenanceCalendarDataAction
                     'office'       => $sched->division_filter ?? 'All Divisions',
                     'assignee'     => $sched->assignedIt?->full_name ?? 'Unassigned',
                     'assigned_it_id' => $sched->assigned_it_id,
+                    'can_assign_it' => $hasGeneratedPm,
                     'priority'     => null,
                     'details_url'  => route('pm-schedules.show', $sched->id),
                     'is_editable'  => false,

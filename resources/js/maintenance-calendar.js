@@ -66,6 +66,8 @@
 
             // Phase 3.0: Hide "Add" task button if an active PM schedule already exists
             const hasActiveSchedule = data.has_active_schedule === true;
+            // Store globally so renderTasksForDate + makeCell can check it
+            window._calHasActiveSchedule = hasActiveSchedule;
             const addBtn = document.getElementById('calAddTaskBtn');
             const calAddTaskHeader = document.getElementById('calAddTaskHeader');
             if (addBtn) {
@@ -208,16 +210,18 @@
             label.textContent = day;
             wrap.appendChild(label);
 
-            // Hover add button
-            const addBtn = document.createElement('button');
-            addBtn.className = 'cal-day-add';
-            addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
-            addBtn.title = 'Add task';
-            addBtn.onclick = function(ev) {
-                ev.stopPropagation();
-                openModal('pm', dateStr);
-            };
-            wrap.appendChild(addBtn);
+            // Hover add button — hidden when an active PM schedule already exists
+            if (window._calHasActiveSchedule !== true) {
+                const addBtn = document.createElement('button');
+                addBtn.className = 'cal-day-add';
+                addBtn.innerHTML = '<i class="fa-solid fa-plus"></i>';
+                addBtn.title = 'Add task';
+                addBtn.onclick = function(ev) {
+                    ev.stopPropagation();
+                    openModal('pm', dateStr);
+                };
+                wrap.appendChild(addBtn);
+            }
 
             content.appendChild(wrap);
         }
@@ -401,8 +405,9 @@
             }
         }
 
-        // PM Schedule event — show IT assign dropdown for IT and Super Admin
-        if (e.event_type === 'pm' && e.source === 'pm_schedule' && document.getElementById('calItPersonnelJson')) {
+        // PM Schedule event — show IT assign dropdown ONLY when PM has been generated
+        // (i.e. current_focus_division is set OR there are existing PM work orders)
+        if (e.event_type === 'pm' && e.source === 'pm_schedule' && e.can_assign_it === true && document.getElementById('calItPersonnelJson')) {
             const canAssign = (currentUserRole === 'super_admin' || currentUserRole === 'it');
             if (canAssign) {
                 let itPersonnel = [];
