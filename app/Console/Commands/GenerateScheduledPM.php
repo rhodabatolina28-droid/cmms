@@ -129,6 +129,10 @@ class GenerateScheduledPM extends Command
         foreach ($schedules as $schedule) {
             try {
                 $created = $service->generate($schedule);
+                if (isset($created['__not_due__'])) {
+                    $this->line("  Schedule '{$schedule->schedule_name}': not yet due until {$created['__not_due__']}. Skipping.");
+                    continue;
+                }
                 if (isset($created['__cooldown__'])) {
                     $this->line("  Schedule '{$schedule->schedule_name}': in cooldown until {$created['__cooldown__']}. Skipping.");
                     continue;
@@ -222,6 +226,16 @@ class GenerateScheduledPM extends Command
                 }
 
                 $created = $service->generate($pmSchedule);
+
+                if (isset($created['__not_due__'])) {
+                    $locked->update([
+                        'status' => PMGenerationSchedule::STATUS_FAILED,
+                        'failure_message' => "PM not yet due until {$created['__not_due__']}",
+                    ]);
+                    $this->logQueueAudit($locked, 'Scheduled PM Generation Skipped', "PM not yet due until {$created['__not_due__']}");
+                    $this->line("  Queue #{$locked->id}: not yet due until {$created['__not_due__']}");
+                    continue;
+                }
 
                 if (isset($created['__cooldown__'])) {
                     $locked->update([

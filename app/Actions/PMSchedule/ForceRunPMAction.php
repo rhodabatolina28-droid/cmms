@@ -49,6 +49,22 @@ class ForceRunPMAction
 
                 $created = $pmService->generate($schedule);
 
+                if (isset($created['__not_due__'])) {
+                    $nextDate = \Carbon\Carbon::parse($created['__not_due__'])->format('F d, Y');
+                    $results[] = [
+                        'schedule_name' => $schedule->schedule_name,
+                        'message' => "Skipped - PM not yet due. Next scheduled: {$nextDate}",
+                        'generated' => 0,
+                    ];
+                    AuditLog::log(
+                        'Manual PM Generation Skipped',
+                        'PM Schedule',
+                        "Super admin attempted to generate PM for '{$schedule->schedule_name}' but it is not yet due until {$nextDate}",
+                        $user->branch ?? 'System'
+                    );
+                    continue;
+                }
+
                 if (isset($created['__cooldown__'])) {
                     $nextDate = \Carbon\Carbon::parse($created['__cooldown__'])->format('F d, Y');
                     $results[] = [
