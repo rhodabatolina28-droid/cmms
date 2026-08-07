@@ -97,24 +97,70 @@ class GetMaintenanceCalendarDataAction
                 ->get();
 
             foreach ($pmSchedules as $sched) {
-                // Build divisions list for this schedule
+                // Build divisions list — ALL eligible divisions in the branch, not just generated ones
                 $scheduleDivisions = [];
                 $scheduleRequests = RequestModel::where('pm_schedule_id', $sched->id)
                     ->where('is_auto_generated', true)
                     ->get();
 
-                // Group by office
+                // Get all eligible divisions from active assets (respecting branch + schedule filter)
+                $assetQuery = \App\Models\InventoryAsset::where('status', 'Active')
+                    ->whereNotNull('assigned_to_user');
+
+                $creator = $sched->creator;
+                if ($creator && $creator->branch) {
+                    $assetQuery->where('branch', $creator->branch);
+                }
+
+                // Apply division filter if set
+                if ($sched->division_filter) {
+                    $divisionMappings = [
+                        'RID'  => ['RESEARCH AND INFORMATION', 'RID'],
+                        'AD'   => ['ADMINISTRATIVE', 'AD'],
+                        'FMD'  => ['FINANCIAL AND MANAGEMENT', 'FMD'],
+                        'COA'  => ['COMMISSION ON AUDIT', 'COA'],
+                        'CMD'  => ['CONCILIATION AND MEDIATION', 'CMD'],
+                        'VAD'  => ['VOLUNTARY ARBITRATION', 'VAD'],
+                        'WRED' => ['WORKPLACE RELATIONS', 'WRED'],
+                        'OED'  => ['EXECUTIVE DIRECTOR', 'OED'],
+                    ];
+                    $keywords = $divisionMappings[$sched->division_filter] ?? [$sched->division_filter];
+                    $assetQuery->where(function ($q) use ($keywords) {
+                        foreach ($keywords as $kw) {
+                            $q->orWhere('office', 'LIKE', "%{$kw}%")
+                              ->orWhere('department', 'LIKE', "%{$kw}%");
+                        }
+                    });
+                }
+
+                // Group assets by division → all divisions that exist in the branch
                 $divGroups = [];
+                foreach ($assetQuery->get() as $asset) {
+                    $officeKey = strtoupper(trim($asset->office ?? $asset->department ?? ''));
+                    if ($officeKey === '') continue;
+                    if (!isset($divGroups[$officeKey])) {
+                        $divGroups[$officeKey] = [
+                            'name' => $asset->office ?? $asset->department ?? 'N/A',
+                            'ticket_count' => 0,
+                            'assigned_to' => 'Unassigned',
+                        ];
+                    }
+                }
+
+                // Count actual tickets per division (from generated requests)
                 foreach ($scheduleRequests as $req) {
                     $officeKey = strtoupper(trim($req->office ?? ''));
                     if (!isset($divGroups[$officeKey])) {
                         $divGroups[$officeKey] = [
                             'name' => $req->office ?? 'N/A',
                             'ticket_count' => 0,
-                            'assigned_to' => $req->assignedTo?->full_name ?? 'Unassigned',
+                            'assigned_to' => 'Unassigned',
                         ];
                     }
                     $divGroups[$officeKey]['ticket_count']++;
+                    if ($req->assignedTo) {
+                        $divGroups[$officeKey]['assigned_to'] = $req->assignedTo->full_name;
+                    }
                 }
 
                 foreach ($divGroups as $officeKey => $div) {
@@ -131,8 +177,9 @@ class GetMaintenanceCalendarDataAction
                             : 'Next');
 
                     $scheduleDivisions[] = [
-                        'name' => $this->shortDivisionName($div['name']),
+                        'name' => $div['name'], // FULL division name in the divisions list
                         'full_name' => $div['name'],
+                        'short_name' => $this->shortDivisionName($div['name']), // short code for calendar cells
                         'ticket_count' => $div['ticket_count'],
                         'status' => $status,
                         'assigned_to' => $div['assigned_to'],
