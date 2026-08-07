@@ -53,6 +53,14 @@ class GetMaintenanceCalendarDataAction
 
         $events = [];
 
+        // 0. Check if there's an active PM schedule for the user's branch
+        $actorBranch = $user?->branch;
+        $hasActiveSchedule = PMSchedule::active()
+            ->when($actorBranch, function ($q) use ($actorBranch) {
+                $q->whereHas('creator', fn($u) => $u->where('branch', $actorBranch));
+            })
+            ->exists();
+
         // 1. PM manual queue rows (future scheduled PM generations)
         if ($filter === 'all' || $filter === 'pm') {
             $queueRows = PMGenerationSchedule::with(['schedule', 'generator'])
@@ -99,7 +107,7 @@ class GetMaintenanceCalendarDataAction
                     'status'       => 'Scheduled',
                     'display_number' => null,
                     'office'       => $sched->division_filter ?? 'All Divisions',
-                    'assignee'     => $sched->creator?->full_name ?? 'N/A',
+                    'assignee'     => 'Unassigned',
                     'priority'     => null,
                     'details_url'  => route('pm-schedules.show', $sched->id),
                     'is_editable'  => false,
@@ -227,6 +235,7 @@ class GetMaintenanceCalendarDataAction
                 'done'    => $doneCount,
                 'overdue' => $overdueCount,
             ],
+            'has_active_schedule' => $hasActiveSchedule,
             'month' => $month,
             'year' => $year,
             'filter' => $filter,

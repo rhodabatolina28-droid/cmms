@@ -63,6 +63,19 @@
             renderTasksForDate(selectedDate);
             renderUpcoming();
             renderMonthlySummary(data.summary || {});
+
+            // Phase 3.0: Hide "Add" task button if an active PM schedule already exists
+            const hasActiveSchedule = data.has_active_schedule === true;
+            const addBtn = document.getElementById('calAddTaskBtn');
+            const calAddTaskHeader = document.getElementById('calAddTaskHeader');
+            if (addBtn) {
+                addBtn.style.display = hasActiveSchedule ? 'none' : '';
+            }
+            // Also hide the "Add" button in the header
+            const calAddTaskBtnContainer = document.querySelector('.cal-add-task-btn-container');
+            if (calAddTaskBtnContainer) {
+                calAddTaskBtnContainer.style.display = hasActiveSchedule ? 'none' : '';
+            }
         })
         .catch(err => {
             console.error('Calendar load error:', err);
@@ -214,10 +227,11 @@
         const btnAdd = document.getElementById('calAddTaskBtn');
         if (!body) return;
 
-        // Hide the Add button when no date selected or date is in the past
+        // Hide the Add button when no date selected, date is in the past, or active schedule exists
         if (btnAdd) {
             const todayStr = getTodayDateStr();
-            btnAdd.style.display = (dateStr && dateStr >= todayStr) ? '' : 'none';
+            const hasActiveSchedule = window._calHasActiveSchedule === true;
+            btnAdd.style.display = (dateStr && dateStr >= todayStr && !hasActiveSchedule) ? '' : 'none';
         }
 
         if (!dateStr) {
