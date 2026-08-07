@@ -738,6 +738,41 @@ The following Phase 1 items are now **implemented, tested, and committed**:
 | 10 | Past dates cannot be edited/added (add button hidden) | `a415356` |
 | 11 | Convert calendar from HTML `<table>` to **CSS Grid** (definitive fix for cell expansion) | `a8a8e21` |
 
+### Phase 3: PM Calendar Flow Enhancements — ✅ COMPLETE (August 7, 2026)
+
+The following are now **implemented, tested, and committed**:
+
+| # | Item | Commit(s) |
+|---|------|-----------|
+| 3.0 | Hide "Add" task button when an active PM schedule exists (header + hover) | `7d98063` |
+| 3.1 | Fix `__not_due__` handling in `ForceRunPMAction` + `GenerateScheduledPM` (skip not-yet-due without breaking cycle) | `441c5e6` |
+| 3.2 | PM Schedule event chip shows "Unassigned" (not creator name) | `7d98063` |
+| 3.3 | **Per-Division IT Assignment (Option B2)** — migration `add_assigned_it_to_pm_schedules`, `AssignPMScheduleITAction`, routes/controller endpoint, IT dropdown on PM schedule/division event, `GeneratePMScheduleService` auto-assign new work orders | `84a7ab1` |
+| 3.4 | **Division Completion Indicator** — `division_status` (complete / in_progress / scheduled) on PM work-order events; chip glyphs `✓ / ● / ○`; CSS border indicators | `8a5e972` |
+| 3.5 | **PM vs ICT distinct colors** — PM blue `#0038A8`, ICT emerald `#10b981`, completed PM teal / completed ICT green | `8a5e972` |
+| Fix | Add button hidden properly (set `window._calHasActiveSchedule`) + hide hover `cal-day-add` | `9d29f8f` |
+| Fix | Group PM work orders by division in calendar cell + tasks panel; remove status glyphs | `2ff85fa` |
+| Fix | Tasks panel click → event detail (not redirect); PM Schedule event renders divisions list; PM Division event renders tickets | `b39516f`, `6b04165`, `6341e4c` |
+| Fix | Normalize division name matching (`shortDivisionName` both sides) so completed divisions show `Completed` | `5ec3174` |
+| Fix | Calendar cell click → division rows with real-time status + FULL division name; Upcoming filters Completed/Cancelled | `0238ed0`, `0cbb502` |
+| Fix | ICT tasks panel no "(tickets)" suffix; ICT event stays on original request date (`created_at`) | `39b742f`, `f7dcf28` |
+| Fix | PM event stays on original request date (`created_at` — same bug as ICT) | `0cbb502` |
+
+#### Cross-cutting date fix: PM/ICT events stay on their original request date
+
+Both PM work-order events and ICT request events previously used `service_schedule_date` (PM) / `service_schedule_date` or `date_received` (ICT) as the event date. Those fields are updated when a PM work order or ICT ticket is resumed/continued, which **moved the calendar event to the current day**.
+
+**Fix:** Both event types now use the request's `created_at` date, which never changes. The event stays on the day it was originally requested/generated, while the status badge still reflects live status (Scheduled/Ongoing/Completed).
+
+#### Grouped PM division view
+
+PM work orders are now **grouped by division + date** in the calendar cell and tasks panel:
+
+- Calendar cell: `PM — RID (6 tickets)` (short division code)
+- Tasks panel: `PM — Research and Information Division (6 tickets)` (full division name)
+- Clicking a division row opens the PM Division event detail, which renders the individual ticket list in the tasks panel.
+- A PM Schedule event (the recurring configuration) renders the full division list — sorted Ongoing → Next → Complete — with per-division ticket counts, assigned IT, and an Assign IT button only when `can_assign_it` is true (division is not Complete and no IT is assigned).
+
 ### Pending / next steps
 
 The following items remain for upcoming phases:
@@ -745,8 +780,7 @@ The following items remain for upcoming phases:
 1. **Consolidate Maintenance Calendar layout** with other super admin modules (card body structure: `polish-card`, `card-header-accent`, `card-body-content`, consistent header/subnav).
 2. **Add automated tests** for the combined-calendar data Action and the ICT assignment flow.
 3. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
-4. **PM-only Upcoming 7 Days panel** — the "Upcoming — Next 7 Days" panel should show PM events only (ICT has no future schedule date).
-5. **Sidebar navigation** — add "Maintenance Calendar" link in the Super Admin Modules section of `app.blade.php`.
+4. **Sidebar navigation** — add "Maintenance Calendar" link in the Super Admin Modules section of `app.blade.php`.
 
 ### Files introduced or changed in this implementation (commit `33cb176`)
 
