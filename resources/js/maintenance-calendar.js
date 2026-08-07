@@ -261,55 +261,23 @@
 
         body.innerHTML = '';
         tasks.forEach(e => {
-            // PM grouped events expand to show all individual tickets
-            if (e.event_type === 'pm' && e.tickets && e.tickets.length > 0) {
-                e.tickets.forEach(ticket => {
-                    const row = document.createElement('div');
-                    row.className = 'cal-event-row';
-                    const badgeClass = 'cal-event-badge-pm';
-                    const badgeText = 'PM';
-                    const statusLower = (ticket.status || '').toLowerCase().replace(/\s+/g, '');
-                    const statusClass = 'cal-event-status-' + (statusLower || 'pending');
-                    row.innerHTML =
-                        '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
-                        '<div class="cal-event-info">' +
-                            '<div class="cal-event-title">' + (ticket.display_number || '') + '</div>' +
-                            '<div class="cal-event-meta">' +
-                                (ticket.assignee ? ticket.assignee : '') +
-                                (ticket.assignee && e.office ? ' · ' : '') +
-                                (e.office ? e.office : '') +
-                            '</div>' +
-                        '</div>' +
-                        '<span class="cal-event-status ' + statusClass + '">' + (ticket.status || 'N/A') + '</span>';
-                    // Click ticket → show ticket details in detail body
-                    row.onclick = function() {
-                        showEventDetail({
-                            event_type: 'pm',
-                            source: 'request',
-                            title: ticket.display_number || '',
-                            display_number: ticket.display_number || '',
-                            status: ticket.status || 'Pending',
-                            assignee: ticket.assignee || 'Unassigned',
-                            office: e.office || 'N/A',
-                            date: e.date,
-                            details_url: ticket.details_url,
-                        });
-                    };
-                    body.appendChild(row);
-                });
-                return;
-            }
-
+            // PM grouped events show division row (not expanded tickets)
+            // Click division row → showEventDetail renders tickets in tasks panel
             const row = document.createElement('div');
             row.className = 'cal-event-row';
             const badgeClass = e.event_type === 'pm' ? 'cal-event-badge-pm' : 'cal-event-badge-ict';
             const badgeText = e.event_type === 'pm' ? 'PM' : 'ICT';
             const statusLower = (e.status || '').toLowerCase().replace(/\s+/g, '');
             const statusClass = 'cal-event-status-' + (statusLower || 'pending');
+            // Use FULL division name for PM events in tasks panel (short name only in calendar cells)
+            let rowTitle = e.display_number || e.title || '';
+            if (e.event_type === 'pm' && e.ticket_count) {
+                rowTitle = e.office || e.title || '';
+            }
             row.innerHTML =
                 '<div class="cal-event-badge ' + badgeClass + '">' + badgeText + '</div>' +
                 '<div class="cal-event-info">' +
-                    '<div class="cal-event-title">' + (e.display_number || e.title || '') + '</div>' +
+                    '<div class="cal-event-title">' + rowTitle + ' (' + (e.ticket_count || 0) + ' ticket' + ((e.ticket_count || 0) !== 1 ? 's' : '') + ')</div>' +
                     '<div class="cal-event-meta">' +
                         (e.assignee ? e.assignee : '') +
                         (e.assignee && e.office ? ' · ' : '') +
