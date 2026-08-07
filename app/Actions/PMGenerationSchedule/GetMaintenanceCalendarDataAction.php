@@ -259,11 +259,13 @@ class GetMaintenanceCalendarDataAction
                 ->get();
 
             // Build division → completion status map (per schedule + division)
+            // Normalize both sides with shortDivisionName so "RESEARCH AND INFORMATION DIVISION"
+            // matches "RID" (or any format variation)
             $divisionStatusMap = [];
             $divisionRows = PMDivisionSchedule::whereIn('pm_schedule_id', $pmRequests->pluck('pm_schedule_id')->filter()->unique())
                 ->get(['pm_schedule_id', 'division_name', 'last_completed_at', 'next_scheduled_at']);
             foreach ($divisionRows as $divRow) {
-                $officeKey = strtoupper(trim($divRow->division_name));
+                $officeKey = $this->shortDivisionName($divRow->division_name);
                 $divisionStatusMap[$divRow->pm_schedule_id][$officeKey] = $divRow->last_completed_at
                     ? 'complete'
                     : ($divRow->next_scheduled_at ? 'scheduled' : 'in_progress');
@@ -285,7 +287,7 @@ class GetMaintenanceCalendarDataAction
                     continue;
                 }
 
-                $officeKey = strtoupper(trim($req->office ?? ''));
+                $officeKey = $this->shortDivisionName($req->office ?? '');
                 $divisionStatus = $req->pm_schedule_id && isset($divisionStatusMap[$req->pm_schedule_id][$officeKey])
                     ? $divisionStatusMap[$req->pm_schedule_id][$officeKey]
                     : 'in_progress';
