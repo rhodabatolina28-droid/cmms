@@ -176,6 +176,14 @@ class GetMaintenanceCalendarDataAction
                             ? 'Ongoing'
                             : 'Next');
 
+                    // can_assign_it: only for Ongoing/Next divisions with no assigned IT
+                    $canAssignIt = $status !== 'Complete'
+                        && $sched->assigned_it_id === null
+                        && ($sched->current_focus_division !== null
+                            || RequestModel::where('pm_schedule_id', $sched->id)
+                                ->where('is_auto_generated', true)
+                                ->exists());
+
                     $scheduleDivisions[] = [
                         'name' => $div['name'], // FULL division name in the divisions list
                         'full_name' => $div['name'],
@@ -183,6 +191,7 @@ class GetMaintenanceCalendarDataAction
                         'ticket_count' => $div['ticket_count'],
                         'status' => $status,
                         'assigned_to' => $div['assigned_to'],
+                        'can_assign_it' => $canAssignIt,
                     ];
                 }
 
@@ -307,14 +316,15 @@ class GetMaintenanceCalendarDataAction
             foreach ($groupedPm as $group) {
                 $shortDiv = $this->shortDivisionName($group['division']);
 
-                // can_assign_it is true only when PM generated AND no IT assigned yet
+                // can_assign_it is true only when PM generated, no IT assigned, AND division is NOT complete
                 $schedule = $group['pm_schedule_id'] ? PMSchedule::find($group['pm_schedule_id']) : null;
                 $canAssignIt = $schedule
                     && $schedule->assigned_it_id === null
+                    && $group['division_status'] !== 'complete'
                     && ($schedule->current_focus_division !== null
-                        || RequestModel::where('pm_schedule_id', $schedule->id)
+                        || (RequestModel::where('pm_schedule_id', $schedule->id)
                             ->where('is_auto_generated', true)
-                            ->exists());
+                            ->exists()));
 
                 $events[] = [
                     'id'             => "pm-div-{$group['first_request_id']}",

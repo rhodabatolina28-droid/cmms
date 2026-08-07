@@ -425,7 +425,35 @@
                             '<div class="cal-event-meta">Assigned: ' + (div.assigned_to || 'Unassigned') + '</div>' +
                         '</div>' +
                         '<span class="cal-event-status ' + statusClass + '">' + div.status + '</span>';
-                    body && tasksBody.appendChild(row);
+
+                    // Show Assign IT button only for Ongoing/Next divisions with no assigned IT
+                    if (div.can_assign_it === true) {
+                        const assignBtn = document.createElement('button');
+                        assignBtn.className = 'cal-assign-btn';
+                        assignBtn.textContent = 'Assign IT';
+                        assignBtn.style.marginLeft = '8px';
+                        assignBtn.onclick = function(ev) {
+                            ev.stopPropagation();
+                            // Show assign dropdown for this division in the detail body
+                            showEventDetail({
+                                event_type: 'pm',
+                                source: 'request',
+                                title: div.name,
+                                display_number: null,
+                                status: div.status,
+                                assignee: div.assigned_to || 'Unassigned',
+                                office: div.name,
+                                date: e.date,
+                                details_url: e.details_url,
+                                pm_schedule_id: e.source_id,
+                                assigned_it_id: e.assigned_it_id,
+                                can_assign_it: true,
+                            });
+                        };
+                        row.appendChild(assignBtn);
+                    }
+
+                    tasksBody.appendChild(row);
                 });
             }
         }
