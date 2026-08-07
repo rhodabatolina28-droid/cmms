@@ -371,11 +371,10 @@ class GetMaintenanceCalendarDataAction
                 }
 
                 $repair = $req->repairRequest;
-                // Use the ORIGINAL request date — never service_schedule_date which gets
-                // updated when resuming/continuing the ticket. This keeps the event
-                // on the day it was requested.
-                $eventDate = $repair?->date_received
-                    ?? $req->created_at->toDateString();
+                // Use the ORIGINAL request creation date — this NEVER changes.
+                // date_received and service_schedule_date both get updated when
+                // resuming/continuing the ticket, which would move the event.
+                $eventDate = $req->created_at->toDateString();
 
                 if (!Carbon::parse($eventDate)->between($startDate, $endDate)) {
                     continue;
