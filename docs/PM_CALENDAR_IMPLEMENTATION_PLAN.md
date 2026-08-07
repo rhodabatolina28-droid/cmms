@@ -773,6 +773,98 @@ PM work orders are now **grouped by division + date** in the calendar cell and t
 - Clicking a division row opens the PM Division event detail, which renders the individual ticket list in the tasks panel.
 - A PM Schedule event (the recurring configuration) renders the full division list — sorted Ongoing → Next → Complete — with per-division ticket counts, assigned IT, and an Assign IT button only when `can_assign_it` is true (division is not Complete and no IT is assigned).
 
+### Phase 4: Date Tracking (assigned_at + completed_at) — PLANNED
+
+**Goal:** Track when a ticket was assigned and when it was completed, for both ICT and PM. Display these dates in the calendar detail body and in the request tables.
+
+#### Problem
+
+Currently, the `requests` table has no `assigned_at` or `completed_at` columns. The tables (All Requests, Super Admin Requests, PM Work Orders) show the status (e.g., "Completed") but not **when** it was completed. The calendar detail body also lacks these dates.
+
+#### Proposed Schema
+
+**New migration:** `add_assigned_completed_timestamps_to_requests`
+
+| Column | Type | Purpose |
+|--------|------|---------|
+| `assigned_at` | timestamp nullable | When the IT was assigned to the ticket |
+| `completed_at` | timestamp nullable | When the ticket was completed |
+
+The `created_at` column already serves as the "requested/generated" date — no new column needed.
+
+#### Backfill
+
+Existing `Completed` requests will have `completed_at` backfilled from `updated_at` (approximation) in the migration:
+
+```php
+DB::table('requests')
+    ->where('status', 'Completed')
+    ->whereNull('completed_at')
+    ->update(['completed_at' => DB::raw('updated_at')]);
+```
+
+#### Implementation Approach: Model Observer (Safest)
+
+Instead of manually setting `assigned_at`/`completed_at` in every action (which risks missing a code path), use a **Model Observer** on the `Request` model:
+
+- `updating` event → if `status` changed to `Completed`, auto-set `completed_at = now()`
+- `updating` event → if `assigned_to` changed, auto-set `assigned_at = now()`
+
+This is a single place that covers all code paths (ICT assign, PM assign, ICT completion, PM completion, etc.).
+
+#### Files to Change
+
+| # | File | Change |
+|---|------|--------|
+| 1 | `database/migrations/2026_08_07_XXXXXX_add_assigned_completed_timestamps_to_requests.php` | Add `assigned_at` + `completed_at` columns + backfill |
+| 2 | `app/Models/Request.php` | Add to `$fillable` + casts |
+| 3 | `app/Observers/RequestObserver.php` | Auto-set `assigned_at`/`completed_at` on `updating` |
+| 4 | `app/Providers/AppServiceProvider.php` | Register observer |
+| 5 | `app/Actions/PMGenerationSchedule/GetMaintenanceCalendarDataAction.php` | Include `assigned_at` + `completed_at` in event data |
+| 6 | `resources/js/maintenance-calendar.js` | Detail body — show Generated/Requested, Assigned, Completed |
+| 7 | `resources/views/requests/index.blade.php` | Add **Completed At** column |
+| 8 | `resources/views/super-admin/requests/index.blade.php` | Add **Completed At** column |
+| 9 | `resources/views/requests/maintenance/index.blade.php` | Add **Completed At** column |
+
+#### Detail Body Display (After)
+
+```
+PM — PM-2026-001
+├─ Generated:  Aug 5, 2026
+├─ Assigned:   Aug 5, 2026 (Juan)
+├─ Completed:  Aug 7, 2026
+└─ Status:     Completed
+```
+
+```
+ICT — ICT-2026-001
+├─ Requested:  Aug 5, 2026
+├─ Assigned:   Aug 6, 2026 (Pedro)
+├─ Completed:  Aug 8, 2026
+└─ Status:     Completed
+```
+
+#### Table Display (After)
+
+```
+| Request #   | Type | Status    | Completed At |
+|-------------|------|-----------|--------------|
+| PM-2026-001 | PM   | Completed | Aug 7, 2026  |
+| ICT-2026-001| ICT  | Completed | Aug 8, 2026  |
+| PM-2026-002 | PM   | Ongoing   | —            |
+```
+
+#### Safety Analysis (No Impact on PM Cycle)
+
+The `completed_at` column is **display-only** and does NOT affect:
+
+- `GeneratePMScheduleService::generate()` — eligibility queries use `status`, not `completed_at`
+- `checkAndAdvance()` — pending/completed counts use `status`, not `completed_at`
+- PM cycle advancement — unchanged
+- Existing statuses — unchanged
+
+The PM will still advance to the next division when all tickets in the current division have `status = Completed`.
+
 ### Pending / next steps
 
 The following items remain for upcoming phases:
@@ -781,6 +873,7 @@ The following items remain for upcoming phases:
 2. **Add automated tests** for the combined-calendar data Action and the ICT assignment flow.
 3. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
 4. **Sidebar navigation** — add "Maintenance Calendar" link in the Super Admin Modules section of `app.blade.php`.
+5. **Phase 4: Date Tracking (assigned_at + completed_at)** — implement the plan above.
 
 ### Files introduced or changed in this implementation (commit `33cb176`)
 
