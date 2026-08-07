@@ -279,9 +279,10 @@ class GetMaintenanceCalendarDataAction
                 }
 
                 $pmDetail = $req->maintenanceRequest;
-                $eventDate = $pmDetail?->service_schedule_date
-                    ?? $pmDetail?->maintenance_date
-                    ?? $req->created_at->toDateString();
+                // Use the ORIGINAL request creation date — this NEVER changes.
+                // service_schedule_date gets updated when resuming/continuing the PM,
+                // which would move the event to the current day.
+                $eventDate = $req->created_at->toDateString();
 
                 if (!Carbon::parse($eventDate)->between($startDate, $endDate)) {
                     continue;
