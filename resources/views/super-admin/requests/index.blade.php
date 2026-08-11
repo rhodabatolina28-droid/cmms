@@ -322,13 +322,14 @@
                             <th>Office/Division</th>
                             <th>Requestor</th>
                             <th>Assigned IT</th>
-                            <th>Date Filed</th>
+                            <th>Date Requested</th>
+                            <th>Completed At</th>
                             <th class="sa-td-center">Status</th>
                             <th class="sa-td-center">Action</th>
                         </tr>
                     </thead>
                     <tbody id="masterRequestTable">
-                        <tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                     </tbody>
                 </table>
                 <div id="requestsPagination" class="sa-pagination"></div>
@@ -380,7 +381,7 @@ async function loadRequests(page) {
 
     const tbody = document.getElementById('masterRequestTable');
     if (requestsIsFirstLoad) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
     } else {
         tbody.classList.add('fading');
     }
@@ -402,19 +403,19 @@ async function loadRequests(page) {
             updateRequestStats(result.stats, result.filtered_stats);
         } else {
             tbody.classList.remove('fading');
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
         }
     } catch (e) {
         if (e.name === 'AbortError') return;
         tbody.classList.remove('fading');
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
     }
 }
 
 function renderRequestsTable(requests) {
     const tbody = document.getElementById('masterRequestTable');
     if (!requests.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
         tbody.classList.remove('fading');
         return;
     }
@@ -423,6 +424,11 @@ function renderRequestsTable(requests) {
         const created = new Date(req.created_at);
         const dateStr = created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
         const timeStr = created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+        const completed = req.completed_at ? new Date(req.completed_at) : null;
+        const completedDateStr = completed ? completed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+        const completedTimeStr = completed ? completed.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+        const completedStr = completed ? `${completedDateStr} | ${completedTimeStr}` : '—';
 
         let statusClass = '';
         if (req.status === 'Pending') statusClass = 'sp-pending';
@@ -449,6 +455,7 @@ function renderRequestsTable(requests) {
                     : '<span class="sa-assigned-none">Unassigned</span>'}
             </td>
             <td class="sa-td-date">${dateStr} | ${timeStr}</td>
+            <td class="sa-td-date">${completedStr}</td>
             <td class="sa-td-center"><span class="status-pill ${statusClass}">${req.status}</span></td>
             <td class="sa-td-center">
                 <a href="/requests/ict/${req.id}" class="btn-action-modern">

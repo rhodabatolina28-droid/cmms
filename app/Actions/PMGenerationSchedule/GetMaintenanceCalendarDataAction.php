@@ -210,7 +210,7 @@ class GetMaintenanceCalendarDataAction
                     'source_id'    => $sched->id,
                     'date'         => $sched->next_scheduled_date->toDateString(),
                     'title'        => $sched->schedule_name,
-                    'status'       => 'Scheduled',
+                    'status'       => $sched->current_focus_division ? 'Ongoing' : 'Scheduled',
                     'display_number' => null,
                     'office'       => $sched->division_filter ?? 'All Divisions',
                     'assignee'     => $sched->assignedIt?->full_name ?? 'Unassigned',

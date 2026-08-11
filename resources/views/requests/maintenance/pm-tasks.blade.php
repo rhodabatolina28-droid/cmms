@@ -157,6 +157,7 @@
                                 <th class="pm-th-cell">PM ID</th>
                                 <th class="pm-th-cell">End User</th>
                                 <th class="pm-th-cell">Division</th>
+                                <th class="pm-th-cell">Completed At</th>
                                 <th class="pm-th-cell">Status</th>
                                 <th class="pm-th-cell-center">Action</th>
                             </tr>
@@ -171,6 +172,7 @@
                                 </td>
                                 <td class="pm-td-name">{{ $task->requestor_name }}</td>
                                 <td class="pm-td-office">{{ $task->office ?? '—' }}</td>
+                                <td class="pm-td-office">{{ $task->completed_at ? $task->completed_at->format('M d, Y | h:i A') : '—' }}</td>
                                 <td class="pm-td-status">
                                     @php
                                         $badgeClass = match($task->status) {

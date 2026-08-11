@@ -196,7 +196,8 @@
                         <tr>
                             <th>Request ID</th>
                             <th>Description</th>
-                            <th>Submission Date</th>
+                            <th>Date Requested</th>
+                            <th>Completed At</th>
                             <th class="th-status">Current Status</th>
                             <th>Feedback/Remarks</th>
                             <th class="th-action">Action</th>
@@ -211,6 +212,9 @@
                             </td>
                             <td class="td-date">
                                 {{ $req->created_at->format('M d, Y') }}
+                            </td>
+                            <td class="td-date">
+                                {{ $req->completed_at ? $req->completed_at->format('M d, Y') : '—' }}
                             </td>
                             <td class="td-center">
                                 <span class="status-pill sp-{{ strtolower($req->status) }}">
@@ -228,7 +232,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="empty-row">
+                            <td colspan="7" class="empty-row">
                                 <i class="fa-solid fa-clipboard-question empty-icon-big"></i>
                                 No requests found in your repository.
                                 @if(Auth::user()->role === 'user')

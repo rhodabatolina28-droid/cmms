@@ -869,11 +869,9 @@ The PM will still advance to the next division when all tickets in the current d
 
 The following items remain for upcoming phases:
 
-1. **Consolidate Maintenance Calendar layout** with other super admin modules (card body structure: `polish-card`, `card-header-accent`, `card-body-content`, consistent header/subnav).
-2. **Add automated tests** for the combined-calendar data Action and the ICT assignment flow.
-3. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
-4. **Sidebar navigation** — add "Maintenance Calendar" link in the Super Admin Modules section of `app.blade.php`.
-5. **Phase 4: Date Tracking (assigned_at + completed_at)** — implement the plan above.
+1. **Consolidate Maintenance Calendar layout** with other super admin modules.
+2. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
+3. **Phase 6: UX Improvements** — skeleton loader, detail card animation, legend completeness, summary filter sync, chip readability. See UX review below.
 
 ### Files introduced or changed in this implementation (commit `33cb176`)
 
@@ -976,40 +974,73 @@ This section defines the **step-by-step phased roadmap** for the remaining work.
 
 ---
 
-### Phase 5: Automated Tests
+### Phase 5: Automated Tests — ✅ COMPLETE (August 11, 2026)
 
 **Goal:** Lock behavior so it does not regress.
 
-1. **Combined calendar data Action tests:**
-   - ICT request appears on its request date.
-   - ICT with `service_schedule_date` appears on that date.
-   - PM + ICT appear together (All Types).
-   - PM/ICT filters return matching type only.
-   - End user cannot see another user's ICT event.
-2. **PM schedule creation via calendar** — fields, validation, one-active-per-branch.
-3. **ICT assignment flow** — assign works, re-assign works.
-4. **Manual queue due dates** — due triggers generation, overdue shows correctly.
+All 26 tests pass. New test file: `tests/Feature/PMCalendarTest.php`
 
-**Why fifth:** Once features are stable, lock them with tests.
+| Section | Tests | Status |
+|---------|-------|--------|
+| Combined calendar data Action | 6 | ✅ |
+| Manual queue create/reschedule/cancel | 9 | ✅ |
+| Scheduler due-date processing | 6 | ✅ |
+| Cycle completion + next_scheduled_date | 2 | ✅ |
+| Model scopes (pending / overdue / due) | 3 | ✅ |
+
+**Command to run:** `php artisan test tests/Feature/PMCalendarTest.php --env=testing`
+
+---
+
+### Phase 6: UX Improvements — PLANNED (August 11, 2026)
+
+**Goal:** Improve usability and polish based on deep UX review.
+
+Found 12 UX issues grouped by priority:
+
+#### 🔴 High Priority
+1. No skeleton loader when navigating months (brief blank flash)
+2. No animation on event detail card open/close
+3. Upcoming panel ignores currently viewed month (shows all future events)
+4. "Add" button flickers before AJAX response returns `has_active_schedule`
+5. Tasks panel "Select a date" contradicts auto-selected today
+
+#### 🟡 Medium Priority
+6. Chip text too small (`0.62rem` ≈ 10px)
+7. Monthly Summary card does not update when filter changes
+8. Legend incomplete — missing Ongoing (yellow) and Completed (teal/green)
+9. No date range label in subnav counts
+
+#### 🟢 Low Priority
+10. Today button has no active/disabled state when already on current month
+11. No confirmation dialog before reschedule/cancel
+12. Past days have no visual "view only" hint
 
 ---
 
-### Phase 6: Documentation, Commit & Push
+### Bug Fixes — August 11, 2026
 
-**Goal:** Record everything and deploy.
+The following bugs were identified and fixed in this session:
 
-1. **Update `docs/PM_CALENDAR_IMPLEMENTATION_PLAN.md`** — final state.
-2. **Commit each phase** (small commits per phase).
-3. **Push to remote.**
-4. **Optional: Dashboard widget integration** (super-admin summary widget from the plan).
+| # | Bug | Fix | Files Changed |
+|---|-----|-----|---------------|
+| 1 | PM calendar master event stuck as "Scheduled" after cycle completes | `GeneratePMScheduleService::checkAndAdvance()` now updates `next_scheduled_date` on full cycle completion | `app/Services/GeneratePMScheduleService.php` |
+| 2 | Calendar event status hardcoded to "Scheduled" even when PM is actively running | Changed to dynamic: `$sched->current_focus_division ? 'Ongoing' : 'Scheduled'` | `app/Actions/PMGenerationSchedule/GetMaintenanceCalendarDataAction.php` |
+| 3 | Existing Schedule ID 5 had stale `next_scheduled_date` (2026-08-07) after cycle already completed | One-time data fix via script: advanced to 2027-02-08 | Database (data fix) |
 
----
+### Request Tables — "Completed At" + "Date Requested" Columns — August 11, 2026
+
+Added `Completed At` column and renamed `Date Filed` → `Date Requested` across all roles:
+
+| File | Change |
+|------|--------|
+| `resources/views/super-admin/requests/index.blade.php` | Renamed header + added `Completed At` with date+time JS formatting |
+| `resources/views/admin/requests/index.blade.php` | Added `Completed At` column with Carbon date+time formatting |
+| `resources/views/requests/maintenance/index.blade.php` | Added `Completed At` column |
+| `resources/views/requests/maintenance/pm-tasks.blade.php` | Added `Completed At` column |
+| `resources/views/pm-schedules/orders.blade.php` | Added `Completed At` column for PM Work Orders |
+| `app/Actions/SuperAdmin/GetRequestsDataAction.php` | Added `completed_at` to API response |
 
 ### Priority Recommendation
 
-**Start with Phase 1** because:
-- It fixes the inherited anti-patterns.
-- It does not affect the PM generation logic.
-- Each step is small — easy to test and revert.
-- All subsequent phases depend on it.
-
+**Next: Phase 6 UX Improvements** (High Priority items first).

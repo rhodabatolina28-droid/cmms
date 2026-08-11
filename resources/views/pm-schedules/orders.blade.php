@@ -69,12 +69,13 @@
                         <th class="th">Division</th>
                         <th class="th">Assigned To</th>
                         <th class="th">Date Generated</th>
+                        <th class="th">Completed At</th>
                         <th class="th">Status</th>
                         <th class="th" style="text-align:center;">Action</th>
                     </tr>
                 </thead>
                 <tbody id="ordersTableBody">
-                    <tr><td colspan="7" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
+                    <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                 </tbody>
             </table>
         </div>
@@ -100,7 +101,7 @@ async function loadOrders(page) {
     params.set('per_page', 20);
 
     const tbody = document.getElementById('ordersTableBody');
-    tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
 
     try {
         const response = await fetch(ORDERS_DATA_URL + '?' + params.toString(), {
@@ -115,10 +116,10 @@ async function loadOrders(page) {
             renderOrdersTable(result.orders);
             renderOrdersPagination(result.total);
         } else {
-            tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Failed to load orders.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Failed to load orders.</td></tr>';
         }
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="7" style="text-align:center;padding:24px;color:#ef4444;">Error loading orders.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Error loading orders.</td></tr>';
     }
 }
 
@@ -127,7 +128,7 @@ function renderOrdersTable(orders) {
     document.getElementById('ordersCount').textContent = '...';
 
     if (!orders.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:40px;margin-bottom:12px;opacity:0.4;"></i><p style="font-size:14px;font-weight:600;">No work orders found</p></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:40px;margin-bottom:12px;opacity:0.4;"></i><p style="font-size:14px;font-weight:600;">No work orders found</p></td></tr>';
         return;
     }
 
@@ -140,6 +141,13 @@ function renderOrdersTable(orders) {
     tbody.innerHTML = sorted.map(order => {
         const created = new Date(order.created_at);
         const dateStr = created.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+        const timeStr = created.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+        const createdStr = `${dateStr} | ${timeStr}`;
+
+        const completed = order.completed_at ? new Date(order.completed_at) : null;
+        const completedDateStr = completed ? completed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+        const completedTimeStr = completed ? completed.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
+        const completedStr = completed ? `${completedDateStr} | ${completedTimeStr}` : '—';
 
         let pillClass = 'pill-default';
         let pillLabel = order.status;
@@ -154,7 +162,8 @@ function renderOrdersTable(orders) {
             <td class="td">${order.requestor_name || '—'}</td>
             <td class="td" style="color:#475569;font-size:12px;">${order.office || '—'}</td>
             <td class="td">${assignedName}</td>
-            <td class="td" style="font-size:12px;color:#64748b;">${dateStr}</td>
+            <td class="td" style="font-size:12px;color:#64748b;">${createdStr}</td>
+            <td class="td" style="font-size:12px;color:#64748b;">${completedStr}</td>
             <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span></td>
             <td class="td" style="text-align:center;">
                 ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID

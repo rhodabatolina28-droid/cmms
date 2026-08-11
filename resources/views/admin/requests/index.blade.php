@@ -366,6 +366,7 @@
                             <th>Request ID</th>
                             <th>Requestor</th>
                             <th>Date Filed</th>
+                            <th>Completed At</th>
                             <th class="ad-td-center">Status</th>
                             <th>IT Assigned</th>
                             <th class="ad-td-center">Actions</th>
@@ -385,7 +386,8 @@
                                 <div class="ad-td-sub">#{{ $req->id }}</div>
                             </td>
                             <td class="ad-td-name">{{ $req->requestor_name }}</td>
-                            <td class="ad-td-date">{{ $req->created_at->format('M d, Y') }}</td>
+                            <td class="ad-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
+                            <td class="ad-td-date">{{ $req->completed_at ? $req->completed_at->format('M d, Y | h:i A') : '—' }}</td>
                             <td class="ad-td-center">
                                 <span class="status-pill @if($req->status === 'Pending') sp-pending @elseif($req->status === 'Ongoing') sp-ongoing @elseif($req->status === 'Completed') sp-completed @elseif($req->status === 'Rejected') sp-rejected @endif">
                                     {{ $req->status }}
@@ -406,7 +408,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="ad-empty">
+                            <td colspan="7" class="ad-empty">
                                 <i class="fa-solid fa-inbox ad-empty-icon"></i>
                                 <span class="ad-empty-text">No requests recorded here.</span>
                             </td>

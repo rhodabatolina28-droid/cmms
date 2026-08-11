@@ -325,14 +325,21 @@ class GeneratePMScheduleService
         // --- All divisions complete — full cycle done ---
         // Mark the PMCycle record as completed — history is PRESERVED.
         // Next time Generate PM is triggered, a brand-new cycle will be created.
+        $soonestNextDate = null;
         if ($currentCycleId) {
-            PMCycle::where('id', $currentCycleId)->update(['completed_at' => now()]);
+            \App\Models\PMCycle::where('id', $currentCycleId)->update(['completed_at' => now()]);
+            $soonestNextDate = \App\Models\PMDivisionSchedule::where('pm_cycle_id', $currentCycleId)
+                ->whereNotNull('next_scheduled_at')
+                ->min('next_scheduled_at');
         }
+
+        $newNextDate = $soonestNextDate ?? $schedule->calculateNextDate(now()->toDateString());
 
         // Reset the schedule: clear focus and current_cycle_id so next Generate starts fresh
         $schedule->update([
             'current_focus_division' => null,
             'current_cycle_id'       => null,
+            'next_scheduled_date'    => $newNextDate,
         ]);
 
         Log::info("PM full cycle #{$schedule->cycle_count} complete for schedule {$schedule->id}. Cycle record preserved for audit.");

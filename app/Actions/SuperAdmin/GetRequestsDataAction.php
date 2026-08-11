@@ -72,7 +72,7 @@ class GetRequestsDataAction
 
         $requests = $query->with(['assignedTo:id,full_name'])
             ->orderBy('created_at', 'desc')
-            ->select(['id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at'])
+            ->select(['id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at', 'completed_at'])
             ->paginate($perPage, ['*'], 'page', $page);
 
         $hasFilters = $request->filled('search') || $request->filled('department') ||

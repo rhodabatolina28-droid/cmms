@@ -82,6 +82,7 @@
                         <th class="maint-th-cell">Requestor</th>
                         <th class="maint-th-cell">Office</th>
                         <th class="maint-th-cell">Date</th>
+                        <th class="maint-th-cell">Completed At</th>
                         <th class="maint-th-cell" style="text-align: center;">Status</th>
                         <th class="maint-th-cell">Assigned To</th>
                         <th class="maint-th-cell" style="text-align: center;">Actions</th>
@@ -98,7 +99,8 @@
                         </td>
                         <td class="maint-td-name">{{ $req->requestor_name }}</td>
                         <td class="maint-td-office">{{ $req->office }}</td>
-                        <td class="maint-td-date">{{ $req->created_at->format('M d, Y') }}</td>
+                        <td class="maint-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
+                        <td class="maint-td-date">{{ $req->completed_at ? $req->completed_at->format('M d, Y | h:i A') : '—' }}</td>
                         <td class="maint-td-status">
                             <span class="maint-status maint-status-{{ strtolower(str_replace(' ', '-', $req->status)) }}">
                                 {{ $req->status }}
@@ -127,7 +129,7 @@
                     </tr>
                     @empty
                     <tr>
-                        <td colspan="7" class="maint-empty">
+                        <td colspan="8" class="maint-empty">
                             <i class="fa-solid fa-toolbox maint-empty-icon"></i>
                             <div class="maint-empty-text">No maintenance records found</div>
                             <div class="maint-empty-sub">Scheduled PM tasks will appear here once created.</div>
