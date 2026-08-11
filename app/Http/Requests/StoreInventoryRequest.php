@@ -8,7 +8,12 @@ class StoreInventoryRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        $user = auth()->user();
+        // Only supply officers (can_supply), admins, and super_admins can create inventory items
+        return auth()->check() && (
+            in_array($user->role, ['admin', 'super_admin']) ||
+            ($user->role === 'it' && $user->can_supply)
+        );
     }
 
     public function rules(): array

@@ -8,7 +8,7 @@ class StoreICTRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check() && in_array(auth()->user()->role, ['user', 'it', 'admin', 'super_admin']);
     }
 
     public function rules(): array
@@ -23,7 +23,7 @@ class StoreICTRequest extends FormRequest
             'endUserEmail' => 'required|email|max:255',
             'employeeNo' => 'required|string|max:50',
             'repairDescription' => 'required|string|max:1000',
-            'endUserSignature' => 'required|string',
+            'endUserSignature' => 'required|string|max:200000',
             'endUserPrintedName' => 'nullable|string|max:200',
             'endUserDate' => 'required|date_format:Y-m-d',
 
@@ -43,7 +43,7 @@ class StoreICTRequest extends FormRequest
             'companyAddress' => 'nullable|string|max:500',
             'technicianLastName' => 'nullable|string|max:100',
             'technicianFirstName' => 'nullable|string|max:100',
-            'technicianSignature' => 'nullable|string',
+            'technicianSignature' => 'nullable|string|max:200000',
             'serviceDate' => 'nullable|date_format:Y-m-d',
             'pulloutDate' => 'nullable|date_format:Y-m-d',
 

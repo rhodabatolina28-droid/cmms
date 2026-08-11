@@ -8,7 +8,7 @@ class StoreMaintenanceRequest extends FormRequest
 {
     public function authorize(): bool
     {
-        return auth()->check();
+        return auth()->check() && in_array(auth()->user()->role, ['user', 'it', 'admin', 'super_admin']);
     }
 
     public function rules(): array
@@ -16,12 +16,12 @@ class StoreMaintenanceRequest extends FormRequest
         return [
             // End User (Required)
             'endUserName' => 'required|string|max:200',
-            'endUserSignature' => 'required|string',
+            'endUserSignature' => 'required|string|max:200000',
             'endUserDate' => 'nullable|date_format:Y-m-d',
 
             // Technician (Optional)
             'technicianName' => 'nullable|string|max:200',
-            'technicianSignature' => 'nullable|string',
+            'technicianSignature' => 'nullable|string|max:200000',
             'technicianDate' => 'nullable|date_format:Y-m-d',
             'problemDescription' => 'nullable|string|max:1000',
             'diagnosis' => 'nullable|string|max:1000',

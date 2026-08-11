@@ -16,10 +16,10 @@ class UpdateMaintenanceRequest extends FormRequest
     {
         // Extracted verbatim from MaintenanceController::update() lines 410-428.
         return [
-            'technicianSignature'  => 'nullable|string',
-            'technician_signature' => 'nullable|string',
-            'endUserSignature'     => 'nullable|string',
-            'end_user_signature'   => 'nullable|string',
+            'technicianSignature'  => 'nullable|string|max:200000',
+            'technician_signature' => 'nullable|string|max:200000',
+            'endUserSignature'     => 'nullable|string|max:200000',
+            'end_user_signature'   => 'nullable|string|max:200000',
             'technician_name'      => 'nullable|string|max:255',
             'technicianName'       => 'nullable|string|max:255',
             'end_user_name'        => 'nullable|string|max:255',

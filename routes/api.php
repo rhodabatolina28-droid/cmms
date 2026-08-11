@@ -18,5 +18,5 @@ Route::any('/{any?}', function () {
     return response()->json([
         'success' => false,
         'message' => 'CMMS API is disabled. Use the web portal at /login, or install laravel/sanctum to enable API routes.',
-    ], 501);
+    ], 404);
 })->where('any', '.*');
