@@ -225,9 +225,20 @@ document.addEventListener('DOMContentLoaded', function() {
     var f = document.getElementById('disposalForm');
     if (f) {
         f.addEventListener('submit', function(e) {
-            if (!confirm('Are you sure you want to recommend this asset for disposal? This action cannot be undone.')) {
-                e.preventDefault();
-            }
+            e.preventDefault();
+            Swal.fire({
+                title: 'Confirm Disposal',
+                text: "Are you sure you want to recommend this asset for disposal? This action cannot be undone.",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#dc2626',
+                cancelButtonColor: '#64748b',
+                confirmButtonText: 'Yes, recommend it!'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    f.submit();
+                }
+            });
         });
     }
 });

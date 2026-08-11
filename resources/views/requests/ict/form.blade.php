@@ -357,7 +357,7 @@
 
             @include('partials.ict._ict_form_sections')
 
-            <div class="btn-group ict-btn-group">
+            <div class="btn-group ict-btn-group sticky-action-bar">
                 @php
                     $isRejectedResubmit = $isUpdate && isset($request) && $request && $request->status === 'Rejected' && $isUser;
                 @endphp

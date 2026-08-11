@@ -91,6 +91,7 @@
         .grid-table-noborder { border-top: none; }
         .input-row-mt { margin-top: 15px; }
         .input-group-flex { flex: 1.2; }
+        .btn-group.sticky-action-bar { margin-top: 30px; }
         .checkbox-group-mt { margin-top: 10px; }
         .col-pad-none { padding: 0; border: none; }
         .col-pad-vtop { padding: 0; vertical-align: top; border-left: 1.5px solid #334155; }
@@ -176,7 +177,7 @@
 
             @include('partials.maintenance._pm_checklist')
 
-            <div class="form-actions-minimal">
+            <div class="form-actions-minimal sticky-action-bar">
                 @if(!$viewMode)
                     <button type="submit" class="btn-submit-minimal" id="pmSubmitBtn">
                         {{ $request ? ' Update Maintenance Record' : ' Submit Maintenance Form' }}

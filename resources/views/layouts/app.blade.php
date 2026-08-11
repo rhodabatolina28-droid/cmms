@@ -610,6 +610,27 @@
             e.preventDefault();
             document.getElementById('logout-form').submit();
         });
+
+        // Global Loading State for all standard forms
+        document.querySelectorAll('form').forEach(function(form) {
+            form.addEventListener('submit', function() {
+                if (this.classList.contains('no-loading') || this.target === '_blank' || this.hasAttribute('data-ajax')) return;
+                
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn && !submitBtn.disabled) {
+                    // Slight delay to allow native validation to kick in
+                    setTimeout(() => {
+                        if (!this.checkValidity || this.checkValidity()) {
+                            submitBtn.disabled = true;
+                            submitBtn.dataset.originalHtml = submitBtn.innerHTML;
+                            submitBtn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Processing...';
+                            submitBtn.style.opacity = '0.8';
+                            submitBtn.style.cursor = 'not-allowed';
+                        }
+                    }, 50);
+                }
+            });
+        });
     </script>
     
     @yield('scripts')
@@ -644,9 +665,30 @@
             button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny),
             .btn, .btn-action-premium, .action-button-premium,
             .btn-view-modern, .btn-action-modern { width: 100% !important; }
+        }
+
+        /* ══════════════════════════════════════════════════════════
+           STICKY ACTION BAR (For Long Forms)
+        ══════════════════════════════════════════════════════════ */
+        .sticky-action-bar {
+            position: sticky;
+            bottom: 0;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(5px);
+            padding: 15px;
+            border-top: 1px solid #e2e8f0;
+            box-shadow: 0 -4px 10px rgba(0,0,0,0.05);
+            z-index: 50;
+            border-radius: 0 0 10px 10px;
+        }
+
+        @media (max-width: 1000px) {
             /* Ensure topbar UI controls stay compact */
             #sidebarToggle { width: 38px !important; flex-shrink: 0 !important; }
             .notification-wrapper { flex-shrink: 0 !important; }
+
+            /* Signature Pad Mobile Fix */
+            canvas, .sig-canvas, .signature-pad { touch-action: none !important; }
         }
         @media (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
@@ -670,9 +712,25 @@
             .dashboard-container > div[style*="display:grid"] { grid-template-columns: 1fr !important; gap: 15px !important; }
             div[style*="grid-template-columns: 1fr 320px"] { grid-template-columns: 1fr !important; gap: 15px !important; }
             .form-grid-simple { grid-template-columns: 1fr !important; gap: 15px !important; }
-            .sidebar { left: -100% !important; width: min(280px, 85vw) !important; transition: left 0.3s ease !important; will-change: left !important; }
-            .sidebar.sidebar-open { left: 0 !important; }
+            
+            /* Hardware-accelerated sidebar sliding */
+            .sidebar { left: 0 !important; transform: translateX(-100%) !important; width: min(280px, 85vw) !important; transition: transform 0.35s cubic-bezier(0.4, 0, 0.2, 1) !important; will-change: transform !important; }
+            .sidebar.sidebar-open { transform: translateX(0) !important; }
             #sidebarBackdrop { z-index: 99998 !important; }
+            
+            /* Add "Swipe ->" hint for tables */
+            .table-wrap::after, .table-container::after {
+                content: 'Swipe left to view more ➔';
+                position: absolute;
+                bottom: -20px;
+                right: 0;
+                font-size: 10px;
+                color: #64748b;
+                font-weight: 700;
+                opacity: 0.8;
+                pointer-events: none;
+            }
+            .table-wrap, .table-container { position: relative; margin-bottom: 25px !important; }
         }
 
         /* ══════════════════════════════════════════════════════════
