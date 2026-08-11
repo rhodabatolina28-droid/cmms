@@ -890,6 +890,22 @@
         const yearSelect = document.getElementById('calYearSelect');
         if (monthSelect) monthSelect.value = currentMonth;
         if (yearSelect) yearSelect.value = currentYear;
+        
+        // Item 10: disable Today button if already on current month/year
+        const todayBtn = document.getElementById('calTodayBtn');
+        if (todayBtn) {
+            const d = new Date();
+            const isCurrent = currentMonth === (d.getMonth() + 1) && currentYear === d.getFullYear();
+            if (isCurrent) {
+                todayBtn.classList.add('cal-btn-disabled');
+                todayBtn.style.opacity = '0.5';
+                todayBtn.style.pointerEvents = 'none';
+            } else {
+                todayBtn.classList.remove('cal-btn-disabled');
+                todayBtn.style.opacity = '1';
+                todayBtn.style.pointerEvents = 'auto';
+            }
+        }
     }
 
     document.getElementById('calTodayBtn')?.addEventListener('click', function() {

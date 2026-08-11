@@ -167,10 +167,17 @@
     flex-shrink:0;
 }
 .cal-day.cal-past {
-    background:#fafbfc;
+    background:#f8fafc;
+    border-color:#f1f5f9;
 }
 .cal-day.cal-past:hover {
-    background:#fafbfc;
+    background:#f8fafc;
+}
+.cal-day.cal-past .cal-chip {
+    opacity:0.65;
+}
+.cal-day.cal-past .cal-chip:hover {
+    opacity:0.9;
 }
 .cal-day.cal-past .cal-day-add {
     display:none;
