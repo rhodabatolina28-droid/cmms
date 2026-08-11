@@ -12,6 +12,8 @@
     function init() {
         const todayLabel = document.getElementById('calTodayLabel');
         if (todayLabel) todayLabel.textContent = 'Today — ' + formatDate(new Date());
+        // Auto-select today on first load so tasks panel shows today's tasks immediately
+        selectedDate = getTodayDateStr();
         populateSelects();
         loadEvents();
         initModal();
@@ -49,7 +51,14 @@
 
     function loadEvents() {
         const gridBody = document.getElementById('calGridBody');
-        if (gridBody) gridBody.innerHTML = '<div class="cal-loading"><i class="fa-solid fa-circle-notch"></i></div>';
+        // Show skeleton loader instead of plain spinner
+        if (gridBody) {
+            let skeletonHTML = '';
+            for (let i = 0; i < 35; i++) {
+                skeletonHTML += '<div class="cal-day cal-skeleton-cell"><div class="cal-day-content"><div class="cal-day-num-wrap"><span class="cal-skeleton-num"></span></div><div class="cal-skeleton-chip"></div><div class="cal-skeleton-chip cal-skeleton-chip--short"></div></div></div>';
+            }
+            gridBody.innerHTML = skeletonHTML;
+        }
 
         const params = new URLSearchParams({ month: currentMonth, year: currentYear, filter: activeFilter });
         fetch(getEventsUrl() + '?' + params.toString(), {
@@ -69,11 +78,9 @@
             // Store globally so renderTasksForDate + makeCell can check it
             window._calHasActiveSchedule = hasActiveSchedule;
             const addBtn = document.getElementById('calAddTaskBtn');
-            const calAddTaskHeader = document.getElementById('calAddTaskHeader');
             if (addBtn) {
                 addBtn.style.display = hasActiveSchedule ? 'none' : '';
             }
-            // Also hide the "Add" button in the header
             const calAddTaskBtnContainer = document.querySelector('.cal-add-task-btn-container');
             if (calAddTaskBtnContainer) {
                 calAddTaskBtnContainer.style.display = hasActiveSchedule ? 'none' : '';
@@ -299,11 +306,20 @@
 
         const today = new Date();
         today.setHours(0, 0, 0, 0);
+        const realToday = new Date(today);
         const sevenDays = new Date(today);
         sevenDays.setDate(today.getDate() + 7);
 
+        // If the user is viewing a past month, show a context-aware empty state
+        const viewingDate = new Date(currentYear, currentMonth - 1, 1);
+        const currentMonthStart = new Date(realToday.getFullYear(), realToday.getMonth(), 1);
+        if (viewingDate < currentMonthStart) {
+            body.innerHTML = '<div class="cal-empty"><i class="fa-solid fa-calendar-xmark"></i><p>No upcoming tasks for this period.</p></div>';
+            return;
+        }
+
         const upcoming = allEvents.filter(e => {
-            const d = new Date(e.date);
+            const d = new Date(e.date + 'T00:00:00');
             const statusLower = (e.status || '').toLowerCase();
             // Filter out Completed/Cancelled — only Scheduled/Ongoing/Overdue
             if (statusLower === 'completed' || statusLower === 'cancelled') return false;
@@ -311,7 +327,7 @@
         }).sort((a, b) => a.date.localeCompare(b.date));
 
         if (upcoming.length === 0) {
-            body.innerHTML = '<div class="cal-empty"><i class="fa-solid fa-calendar-week"></i><p>No upcoming tasks.</p></div>';
+            body.innerHTML = '<div class="cal-empty"><i class="fa-solid fa-calendar-week"></i><p>No upcoming tasks in the next 7 days.</p></div>';
             return;
         }
 

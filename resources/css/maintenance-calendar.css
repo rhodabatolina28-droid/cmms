@@ -297,8 +297,18 @@
     box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
     overflow:hidden;
     display:none;
+    opacity:0;
+    transform:translateY(-8px);
+    transition: opacity 0.22s ease, transform 0.22s ease;
 }
-.cal-detail-card.show { display:block; }
+.cal-detail-card.show {
+    display:block;
+    animation: calDetailIn 0.22s ease forwards;
+}
+@keyframes calDetailIn {
+    from { opacity:0; transform:translateY(-8px); }
+    to   { opacity:1; transform:translateY(0); }
+}
 .cal-detail-header {
     display:flex;
     justify-content:space-between;
@@ -584,6 +594,39 @@
 .cal-loading { text-align:center; padding:40px 16px; color:#94a3b8; }
 .cal-loading i { font-size:28px; animation:spin 1s linear infinite; }
 @keyframes spin { 100% { transform:rotate(360deg); } }
+
+/* ══════════════════════════════════════════════
+   SKELETON LOADER (Phase 6.1)
+   ══════════════════════════════════════════════ */
+@keyframes calShimmer {
+    0%   { background-position: -400px 0; }
+    100% { background-position: 400px 0; }
+}
+.cal-skeleton-cell {
+    pointer-events: none;
+    cursor: default;
+    background: #fafbfc;
+}
+.cal-skeleton-cell:hover { background: #fafbfc !important; }
+.cal-skeleton-num {
+    display: inline-block;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 400px 100%;
+    animation: calShimmer 1.2s ease-in-out infinite;
+}
+.cal-skeleton-chip {
+    height: 12px;
+    border-radius: 3px;
+    margin: 3px 0;
+    background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%);
+    background-size: 400px 100%;
+    animation: calShimmer 1.2s ease-in-out infinite;
+    animation-delay: 0.1s;
+}
+.cal-skeleton-chip--short { width: 60%; }
 
 /* ══════════════════════════════════════════════
    SCHEDULE MODAL (Template-inspired)

@@ -93,7 +93,7 @@
                     </div>
                     <div class="cal-tasks-header-right">
                         <span class="cal-tasks-count" id="calTasksCount">0 items</span>
-                        <button class="cal-add-btn" id="calAddTaskBtn" title="Add task"><i class="fa-solid fa-plus"></i> Add</button>
+                        <button class="cal-add-btn" id="calAddTaskBtn" title="Add task" style="display:none"><i class="fa-solid fa-plus"></i> Add</button>
                     </div>
                 </div>
                 <div class="cal-tasks-body" id="calTasksBody">
