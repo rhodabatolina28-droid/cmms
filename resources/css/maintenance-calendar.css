@@ -1,8 +1,9 @@
 /* Maintenance Calendar — Premium CMMS Styling (Template-Inspired) */
 
-/* Page Container */
-.cal-page { width:100%; margin:0 auto; padding:0; box-sizing:border-box; }
-.cal-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:20px; flex-wrap:wrap; gap:12px; }
+/* Page Container — now inside polish-card wrapper */
+.cal-page { width:100%; padding:0; box-sizing:border-box; }
+/* Old standalone header — now hidden, replaced by card-header-accent */
+.cal-header { display:none; }
 .cal-title { font-size:24px; font-weight:800; color:#1e293b; margin:0; display:flex; align-items:center; gap:10px; }
 .cal-title i { color:#0038A8; }
 
