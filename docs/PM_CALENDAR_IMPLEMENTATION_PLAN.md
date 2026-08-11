@@ -992,29 +992,29 @@ All 26 tests pass. New test file: `tests/Feature/PMCalendarTest.php`
 
 ---
 
-### Phase 6: UX Improvements — PLANNED (August 11, 2026)
+### Phase 6: UX Improvements — ✅ COMPLETE (August 11, 2026)
 
 **Goal:** Improve usability and polish based on deep UX review.
 
 Found 12 UX issues grouped by priority:
 
-#### 🔴 High Priority
-1. No skeleton loader when navigating months (brief blank flash)
-2. No animation on event detail card open/close
-3. Upcoming panel ignores currently viewed month (shows all future events)
-4. "Add" button flickers before AJAX response returns `has_active_schedule`
-5. Tasks panel "Select a date" contradicts auto-selected today
+#### 🔴 High Priority (Done)
+1. No skeleton loader when navigating months (brief blank flash) - Added shimmer skeleton
+2. No animation on event detail card open/close - Added slide-down + fade-in CSS animation
+3. Upcoming panel ignores currently viewed month (shows all future events) - Now contextual to viewed month
+4. "Add" button flickers before AJAX response returns `has_active_schedule` - Fixed via Blade + JS state
+5. Tasks panel "Select a date" contradicts auto-selected today - Fixed via `init()` auto-select
 
-#### 🟡 Medium Priority
-6. Chip text too small (`0.62rem` ≈ 10px)
-7. Monthly Summary card does not update when filter changes
-8. Legend incomplete — missing Ongoing (yellow) and Completed (teal/green)
-9. No date range label in subnav counts
+#### 🟡 Medium Priority (Done)
+6. Chip text too small (`0.62rem` ≈ 10px) - Increased to `0.70rem`
+7. Monthly Summary card does not update when filter changes - Recomputes from `allEvents` locally
+8. Legend incomplete — missing Ongoing (yellow) and Completed (teal/green) - Added all missing statuses
+9. No date range label in subnav counts - Added month+year text
 
-#### 🟢 Low Priority
-10. Today button has no active/disabled state when already on current month
-11. No confirmation dialog before reschedule/cancel
-12. Past days have no visual "view only" hint
+#### 🟢 Low Priority (Done)
+10. Today button has no active/disabled state when already on current month - Now fades and disables properly
+11. No confirmation dialog before reschedule/cancel - N/A (These are in PM Orders view, not Calendar view)
+12. Past days have no visual "view only" hint - Reduced opacity on chips for past days
 
 ---
 
