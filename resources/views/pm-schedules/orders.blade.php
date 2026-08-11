@@ -5,11 +5,12 @@
 
 @section('styles')
 <style nonce="{{ $cspNonce }}">
-    .orders-card { background:white; border-radius:14px; border:1px solid #e2e8f0; padding:24px; box-shadow:0 4px 6px -1px rgba(0,0,0,0.05); }
-    .orders-header { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:20px; }
-    .orders-title { font-size:20px; font-weight:800; color:#1e293b; margin:0; }
-    .back-btn { display:inline-flex; align-items:center; gap:6px; padding:8px 16px; background:#f1f5f9; color:#475569; border-radius:8px; text-decoration:none; font-size:12px; font-weight:700; }
-    .back-btn:hover { background:#e2e8f0; }
+    .master-container { width: 100%; margin-top: -10px; }
+    .polish-card { background: white; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
+    .card-header-accent { background: #f8fafc; padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    .card-body-content { padding: 25px 30px; }
+    .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+    .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
     .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
     .filter-btn { padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700; text-decoration:none; border:2px solid #e2e8f0; color:#64748b; background:white; cursor:pointer; transition:all 0.2s; }
     .filter-btn:hover { border-color:#0038A8; color:#0038A8; }
@@ -20,6 +21,8 @@
     .th { padding:12px 14px; font-size:10px; font-weight:700; text-transform:uppercase; color:#475569; text-align:left; border-bottom:2px solid #0038A8; }
     .tr { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
     .tr:hover { background:#f8fafc; }
+    .tr-overdue { border-left:3px solid #f59e0b; background:#fffbeb !important; }
+    .tr-overdue:hover { background:#fef3c7 !important; }
     .td { padding:11px 14px; font-size:13px; color:#1e293b; }
     .td-num a { color:#0038A8; font-weight:700; text-decoration:none; font-size:12px; }
     .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; }
@@ -27,60 +30,73 @@
     .pill-ongoing { background:#dbeafe; color:#1e40af; }
     .pill-completed { background:#dcfce7; color:#166534; }
     .pill-default { background:#f1f5f9; color:#64748b; }
+    .pill-overdue { background:#fee2e2; color:#991b1b; margin-left:5px; }
     .empty-state { text-align:center; padding:40px; color:#94a3b8; }
     .action-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#0038A8; color:white; border-radius:6px; font-size:10px; font-weight:700; text-decoration:none; }
     .action-btn:hover { background:#002d8c; }
     .paginator { margin-top:16px; }
     .count-badge { background:#0038A8; color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; margin-left:8px; }
+    .overdue-legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 10px; }
 </style>
 @endsection
 
 @section('content')
-<div class="page-wrap">
-    <div class="orders-card">
+<div class="master-container">
+    <div class="polish-card">
 
-        <div class="orders-header">
+        <div class="card-header-accent">
             <div>
-                <h1 class="orders-title">
+                <h1 style="margin:0;font-size:18px;font-weight:800;color:#1e293b;">
                     PM Work Orders
                     <span id="ordersCount" class="count-badge">--</span>
                 </h1>
                 <p style="margin:4px 0 0;font-size:12px;color:#64748b;">All auto-generated preventive maintenance work orders</p>
             </div>
-            <a href="{{ route('pm-schedules.index') }}" class="back-btn">
-                <i class="fa-solid fa-arrow-left"></i> Back to PM Schedules
-            </a>
+            <div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+                <a href="{{ route('pm-schedules.index') }}" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#f1f5f9;color:#475569;border-radius:8px;text-decoration:none;font-size:12px;font-weight:700;">
+                    <i class="fa-solid fa-arrow-left"></i> Back to PM Schedules
+                </a>
+            </div>
         </div>
 
-        {{-- Status Filter --}}
-        <div class="filter-bar" id="filterBar">
-            <button data-status="all" class="filter-btn active">All</button>
-            <button data-status="Scheduled" class="filter-btn">To Do</button>
-            <button data-status="Ongoing" class="filter-btn">Ongoing</button>
-            <button data-status="Completed" class="filter-btn">Completed</button>
-        </div>
+        <div class="card-body-content">
+            {{-- Status Filter --}}
+            <div class="filter-bar" id="filterBar">
+                <button data-status="all" class="filter-btn active">All</button>
+                <button data-status="Scheduled" class="filter-btn">To Do</button>
+                <button data-status="Ongoing" class="filter-btn">Ongoing</button>
+                <button data-status="Completed" class="filter-btn">Completed</button>
+            </div>
 
-        <div class="table-wrap">
-            <table class="table-orders">
-                <thead>
-                    <tr class="thead-row">
-                        <th class="th">PM #</th>
-                        <th class="th">Employee</th>
-                        <th class="th">Division</th>
-                        <th class="th">Assigned To</th>
-                        <th class="th">Date Generated</th>
-                        <th class="th">Completed At</th>
-                        <th class="th">Status</th>
-                        <th class="th" style="text-align:center;">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="ordersTableBody">
-                    <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
-                </tbody>
-            </table>
-        </div>
+            <div id="overdueAlert" style="display:none; background:linear-gradient(to right, #fffbeb, #fef3c7); border-left:4px solid #f59e0b; color:#92400e; padding:12px 16px; border-radius:6px; font-size:12px; font-weight:600; margin-bottom:16px; align-items:center; gap:10px; box-shadow:0 1px 2px rgba(245,158,11,0.1);">
+                <i class="fa-solid fa-circle-exclamation" style="font-size:16px; color:#d97706;"></i>
+                <div>
+                    <span style="font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.5px;">Overdue Notice:</span> Work orders highlighted in amber have been pending in "To Do" for more than 7 days.
+                </div>
+            </div>
 
-        <div id="ordersPagination" class="paginator"></div>
+            <div class="table-wrap">
+                <table class="table-orders">
+                    <thead>
+                        <tr class="thead-row">
+                            <th class="th">PM #</th>
+                            <th class="th">Employee</th>
+                            <th class="th">Division</th>
+                            <th class="th">Assigned To</th>
+                            <th class="th">Date Generated</th>
+                            <th class="th">Completed At</th>
+                            <th class="th">Status</th>
+                            <th class="th" style="text-align:center;">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="ordersTableBody">
+                        <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="ordersPagination" class="paginator"></div>
+        </div>
     </div>
 </div>
 @endsection
@@ -102,6 +118,7 @@ async function loadOrders(page) {
 
     const tbody = document.getElementById('ordersTableBody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    document.getElementById('overdueAlert').style.display = 'none';
 
     try {
         const response = await fetch(ORDERS_DATA_URL + '?' + params.toString(), {
@@ -123,6 +140,13 @@ async function loadOrders(page) {
     }
 }
 
+function isOverdue(order) {
+    if (order.status !== 'Scheduled') return false;
+    const created = new Date(order.created_at);
+    const diffDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
+    return diffDays > 7;
+}
+
 function renderOrdersTable(orders) {
     const tbody = document.getElementById('ordersTableBody');
     document.getElementById('ordersCount').textContent = '...';
@@ -131,6 +155,8 @@ function renderOrdersTable(orders) {
         tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:40px;margin-bottom:12px;opacity:0.4;"></i><p style="font-size:14px;font-weight:600;">No work orders found</p></td></tr>';
         return;
     }
+
+    let hasOverdue = false;
 
     // Sort by status (To Do first)
     const sorted = [...orders].sort((a, b) => {
@@ -156,15 +182,20 @@ function renderOrdersTable(orders) {
         else if (order.status === 'Completed') { pillClass = 'pill-completed'; pillLabel = 'Completed'; }
 
         const assignedName = order.assigned_to ? order.assigned_to.full_name : '—';
+        const overdue = isOverdue(order);
+        if (overdue) hasOverdue = true;
+        
+        const rowClass = overdue ? 'tr tr-overdue' : 'tr';
+        const overdueTag = overdue ? `<span class="status-pill pill-overdue"><i class="fa-solid fa-clock"></i> Overdue</span>` : '';
 
-        return `<tr class="tr">
+        return `<tr class="${rowClass}">
             <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.request_number}</a></td>
             <td class="td">${order.requestor_name || '—'}</td>
             <td class="td" style="color:#475569;font-size:12px;">${order.office || '—'}</td>
             <td class="td">${assignedName}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${createdStr}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${completedStr}</td>
-            <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span></td>
+            <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span>${overdueTag}</td>
             <td class="td" style="text-align:center;">
                 ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID
                     ? `<a href="/requests/maintenance/${order.id}/conduct" class="action-btn">
@@ -176,6 +207,10 @@ function renderOrdersTable(orders) {
             </td>
         </tr>`;
     }).join('');
+
+    if (hasOverdue) {
+        document.getElementById('overdueAlert').style.display = 'flex';
+    }
 }
 
 function renderOrdersPagination(total) {

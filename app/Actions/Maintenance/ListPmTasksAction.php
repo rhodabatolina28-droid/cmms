@@ -19,7 +19,7 @@ class ListPmTasksAction
     {
         $user = Auth::user();
 
-        $query = RequestModel::with(['user', 'maintenanceRequest', 'assignedTo'])
+        $query = RequestModel::with(['user', 'maintenanceRequest', 'assignedTo', 'linkedAsset'])
             ->where('type', 'Preventive Maintenance')
             ->where('is_auto_generated', true);
 
