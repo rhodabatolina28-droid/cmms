@@ -18,6 +18,8 @@
     {{-- Sub-nav Strip: Counts + Filters --}}
     <div class="cal-subnav">
         <div class="cal-subnav-stats">
+            <span class="cal-subnav-period" id="calPeriodLabel"></span>
+            <span class="cal-subnav-divider">|</span>
             <span class="cal-subnav-stat"><span class="cal-subnav-label">PM</span><span class="cal-subnav-value" id="calPmCount">0 tasks</span></span>
             <span class="cal-subnav-divider">|</span>
             <span class="cal-subnav-stat"><span class="cal-subnav-label">ICT</span><span class="cal-subnav-value" id="calIctCount">0 tasks</span></span>
@@ -66,8 +68,11 @@
                 </div>
             </div>
             <div class="cal-legend">
-                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-pm"></span> Preventive Maintenance</div>
-                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-ict"></span> Information & Communications Technology</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-pm"></span> PM — Scheduled</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-ict"></span> ICT — Scheduled</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-ongoing"></span> Ongoing</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-completed-pm"></span> PM — Completed</div>
+                <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-completed-ict"></span> ICT — Completed</div>
                 <div class="cal-legend-item"><span class="cal-legend-dot cal-legend-dot-overdue"></span> Overdue</div>
             </div>
         </div>
@@ -101,10 +106,10 @@
                 </div>
             </div>
 
-            {{-- Card 3: Monthly Summary (when no day selected) --}}
+            {{-- Card 3: Monthly Summary --}}
             <div class="cal-summary-card" id="calSummaryCard">
                 <div class="cal-summary-header">
-                    <span class="cal-summary-title">Monthly Summary</span>
+                    <span class="cal-summary-title" id="calSummaryTitle">Monthly Summary</span>
                 </div>
                 <div class="cal-summary-grid">
                     <div class="cal-summary-item">

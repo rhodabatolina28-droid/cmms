@@ -23,6 +23,7 @@
     box-shadow:0 4px 12px rgba(0,56,168,0.15);
 }
 .cal-subnav-stats { display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+.cal-subnav-period { font-size:13px; font-weight:800; color:white; }
 .cal-subnav-stat { display:inline-flex; align-items:center; gap:6px; font-size:12px; }
 .cal-subnav-label { opacity:0.6; font-weight:600; text-transform:uppercase; letter-spacing:0.05em; font-size:10px; }
 .cal-subnav-value { font-weight:700; font-size:12px; }
@@ -233,7 +234,7 @@
 
 /* Event Chips */
 .cal-chip {
-    font-size:0.62rem;
+    font-size:0.70rem;
     padding:1px 4px;
     margin:0.5px 0;
     border-radius:3px;
@@ -282,6 +283,9 @@
 .cal-legend-dot { width:12px; height:12px; border-radius:3px; }
 .cal-legend-dot-pm { background:#0038A8; }
 .cal-legend-dot-ict { background:#10b981; }
+.cal-legend-dot-ongoing { background:#f59e0b; }
+.cal-legend-dot-completed-pm { background:#0d9488; }
+.cal-legend-dot-completed-ict { background:#059669; }
 .cal-legend-dot-overdue { background:white; border:2px solid #ef4444; }
 
 /* ══════════════════════════════════════════════

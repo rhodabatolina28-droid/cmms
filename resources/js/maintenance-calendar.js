@@ -97,10 +97,13 @@
         const ict = document.getElementById('calIctCount');
         const done = document.getElementById('calDoneCount');
         const overdue = document.getElementById('calOverdueCount');
+        const periodLabel = document.getElementById('calPeriodLabel');
         if (pm) pm.textContent = (s.pm || 0) + ' tasks';
         if (ict) ict.textContent = (s.ict || 0) + ' tasks';
         if (done) done.textContent = s.done || 0;
         if (overdue) overdue.textContent = s.overdue || 0;
+        // Item 9: show month+year period label in subnav
+        if (periodLabel) periodLabel.textContent = monthNames[currentMonth - 1] + ' ' + currentYear;
     }
 
     function renderMonthlySummary(s) {
@@ -108,10 +111,28 @@
         const ict = document.getElementById('calSummaryIct');
         const done = document.getElementById('calSummaryDone');
         const overdue = document.getElementById('calSummaryOverdue');
+        const title = document.getElementById('calSummaryTitle');
+        if (title) title.textContent = 'Monthly Summary — ' + monthNames[currentMonth - 1] + ' ' + currentYear;
         if (pm) pm.textContent = s.pm || 0;
         if (ict) ict.textContent = s.ict || 0;
         if (done) done.textContent = s.done || 0;
         if (overdue) overdue.textContent = s.overdue || 0;
+    }
+
+    // Item 7: Recompute Monthly Summary from allEvents when filter changes,
+    // so the Summary card stays in sync with the active type filter.
+    function recomputeSummaryFromEvents() {
+        const filtered = allEvents.filter(e => {
+            if (activeFilter === 'pm') return e.event_type === 'pm';
+            if (activeFilter === 'ict') return e.event_type === 'ict';
+            return true;
+        });
+        const pmCount  = filtered.filter(e => e.event_type === 'pm').length;
+        const ictCount = filtered.filter(e => e.event_type === 'ict').length;
+        const done     = filtered.filter(e => (e.status || '').toLowerCase() === 'completed').length;
+        const overdue  = filtered.filter(e => (e.status || '').toLowerCase() === 'overdue').length;
+        renderMonthlySummary({ pm: pmCount, ict: ictCount, done, overdue });
+        updateSummary({ pm: pmCount, ict: ictCount, done, overdue });
     }
 
     function renderCalendar() {
@@ -875,6 +896,7 @@
         currentMonth = new Date().getMonth() + 1;
         currentYear = new Date().getFullYear();
         syncSelects();
+        selectedDate = getTodayDateStr();
         resetDateSelection();
         loadEvents();
     });
@@ -888,7 +910,12 @@
             document.querySelectorAll('.cal-filter-btn').forEach(b => b.classList.remove('active'));
             this.classList.add('active');
             activeFilter = this.dataset.filter;
-            loadEvents();
+            // Re-render calendar grid and tasks from already-loaded events (no server round-trip)
+            renderCalendar();
+            renderTasksForDate(selectedDate);
+            renderUpcoming();
+            // Item 7: recompute Summary card counts using the new filter
+            recomputeSummaryFromEvents();
         });
     });
 
