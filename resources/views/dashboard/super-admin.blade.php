@@ -15,16 +15,65 @@
             animation: fadeInSlide 0.5s ease-out;
         }
 
-        /* PREMIUM WELCOME HERO — FLUID */
+        /* ALERTS AND PULSE EFFECTS */
+        @keyframes pulseRed {
+            0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+            70% { box-shadow: 0 0 0 15px rgba(239, 68, 68, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+        }
+        .stat-overdue-alert {
+            animation: pulseRed 2s infinite;
+            border: 1px solid #ef4444 !important;
+        }
+        
+        /* CSS BAR CHART */
+        .css-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 12px;
+        }
+        .css-bar-label {
+            width: 120px;
+            font-size: 11px;
+            font-weight: 800;
+            color: #64748b;
+            text-transform: uppercase;
+            text-align: right;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .css-bar-track {
+            flex: 1;
+            background: #f1f5f9;
+            height: 10px;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        .css-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6 0%, #8b5cf6 100%);
+            border-radius: 5px;
+            transition: width 1s ease-out;
+        }
+        .css-bar-value {
+            width: 30px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #1e293b;
+        }
+
+        /* PREMIUM WELCOME HERO — DEEP NAVY / NCMB BLUE */
         .welcome-hero {
-            background: linear-gradient(135deg, #1e1b4b 0%, #0038A8 100%);
+            background: linear-gradient(135deg, #0f172a 0%, #002878 100%);
             border-radius: clamp(10px, 1.2vw, 15px);
             padding: clamp(20px, 3vw, 35px);
             color: white;
             position: relative;
             overflow: hidden;
             margin-bottom: clamp(20px, 2.5vw, 30px);
-            box-shadow: 0 10px 25px rgba(0, 56, 168, 0.2);
+            box-shadow: 0 10px 25px rgba(0, 40, 120, 0.25);
         }
 
         .welcome-hero::after {
@@ -37,11 +86,22 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 50%;
         }
+        
+        .welcome-hero::before {
+            content: '';
+            position: absolute;
+            bottom: -50px;
+            right: 15%;
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(255,255,255,0.03) 0%, transparent 70%);
+            border-radius: 50%;
+        }
 
-        /* STATS GRID MODERN — FLUID */
+        /* STATS GRID MODERN */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
             gap: clamp(12px, 1.5vw, 20px);
             margin-bottom: clamp(20px, 2.5vw, 30px);
         }
@@ -87,6 +147,17 @@
             height: 100%;
         }
 
+        /* Stat Colors */
+        .stat-total::before { background: #0038A8; }
+        .stat-total .stat-bg-icon { color: #0038A8; }
+        .stat-pending::before { background: #f59e0b; }
+        .stat-pending .stat-bg-icon { color: #f59e0b; }
+        .stat-ongoing::before { background: #3b82f6; }
+        .stat-ongoing .stat-bg-icon { color: #3b82f6; }
+        .stat-assets::before { background: #10b981; }
+        .stat-assets .stat-bg-icon { color: #10b981; }
+        .stat-overdue::before { background: #ef4444; }
+        .stat-overdue .stat-bg-icon { color: #ef4444; }
 
         .stat-label {
             font-size: clamp(10px, 0.8vw, 11px);
@@ -104,27 +175,29 @@
             color: #1e293b;
         }
 
-        /* ANALYTICS GRID — FLUID */
+        /* ANALYTICS GRID */
         .analytics-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: clamp(15px, 2vw, 25px);
             margin-bottom: clamp(20px, 2.5vw, 30px);
         }
 
         .analytics-box {
-            background: #f8fafc;
-            border-radius: 10px;
-            padding: clamp(16px, 1.5vw, 20px);
+            background: white;
+            border-radius: 15px;
+            padding: clamp(20px, 1.5vw, 25px);
             border: 1px solid #e2e8f0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
         }
 
         .analytics-title {
-            font-size: clamp(11px, 1vw, 13px);
+            font-size: 14px;
             font-weight: 800;
             color: #1e293b;
             text-transform: uppercase;
-            margin-bottom: 15px;
+            letter-spacing: 0.5px;
+            margin-bottom: 20px;
             display: flex;
             align-items: center;
             gap: 10px;
@@ -134,8 +207,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
-            padding: 8px 0;
-            border-bottom: 1px solid #e2e8f0;
+            padding: 10px 0;
+            border-bottom: 1px solid #f1f5f9;
         }
 
         .analytics-row:last-child { border-bottom: none; }
@@ -156,42 +229,62 @@
             font-weight: 800;
             text-transform: uppercase;
         }
-        .status-pending { background: #fffbeb; color: #92400e; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .status-ongoing { background: #eff6ff; color: #1e40af; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.2); }
-        .status-completed { background: #ecfdf5; color: #065f46; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-pending { background: #fffbeb; color: #92400e; border: 1px solid rgba(245, 158, 11, 0.2); }
+        .status-ongoing { background: #eff6ff; color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.2); }
+        .status-completed { background: #ecfdf5; color: #065f46; border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-scheduled { background: #fef3c7; color: #b45309; border: 1px solid rgba(245, 158, 11, 0.2); }
 
-        /* QUICK ACTION BUTTONS */
-        .btn-action-premium {
+        /* ACTION CENTER WIDGET */
+        .action-center-card {
+            background: linear-gradient(to right bottom, #fff1f2, #ffe4e6);
+            border-radius: 12px;
+            border: 1px solid #fecdd3;
+            padding: 16px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .action-center-icon {
+            background: white;
+            color: #e11d48;
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
             display: flex;
             align-items: center;
-            gap: 12px;
-            background: #f8fafc;
-            border: 1px solid #e2e8f0;
-            padding: 16px;
-            border-radius: 10px;
-            text-decoration: none;
-            color: #1e293b;
-            font-weight: 700;
-            font-size: 14px;
-            transition: all 0.2s;
+            justify-content: center;
+            font-size: 18px;
+            box-shadow: 0 2px 4px rgba(225, 29, 72, 0.1);
+        }
+        .action-center-content h4 {
+            margin: 0 0 5px;
+            font-size: 13px;
+            font-weight: 800;
+            color: #9f1239;
+        }
+        .action-center-content p {
+            margin: 0;
+            font-size: 12px;
+            color: #be123c;
+            line-height: 1.4;
         }
 
-        .btn-action-premium:hover {
-            background: #0038A8;
-            color: white;
-            border-color: #0038A8;
-            transform: translateY(-2px);
-            box-shadow: 0 4px 6px -1px rgba(0, 56, 168, 0.2);
+        .action-center-warning {
+            background: linear-gradient(to right bottom, #fffbeb, #fef3c7);
+            border-color: #fde68a;
         }
+        .action-center-warning .action-center-icon {
+            color: #d97706;
+            box-shadow: 0 2px 4px rgba(217, 119, 6, 0.1);
+        }
+        .action-center-warning h4 { color: #92400e; }
+        .action-center-warning p { color: #b45309; }
 
+        /* LAYOUT & UTILITIES */
         @media (max-width: 1000px) {
-            .stats-grid,
-            .admin-workspace-grid {
-                grid-template-columns: 1fr !important;
-            }
-            .analytics-grid {
-                grid-template-columns: 1fr !important;
-            }
+            .admin-workspace-grid { grid-template-columns: 1fr !important; }
+            .analytics-grid { grid-template-columns: 1fr !important; }
         }
         @media (max-width: 767px) {
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
@@ -205,86 +298,33 @@
             .stat-card-premium { padding: 14px 12px !important; border-radius: 12px !important; }
             .stat-value { font-size: 20px !important; }
             .stat-label { font-size: 9px !important; margin-bottom: 4px !important; }
-            .btn-action-premium { 
-                padding: 14px 16px !important; 
-                min-height: 48px !important; 
-                align-items: center !important;
-                border-radius: 12px !important;
-            }
-            .btn-action-premium > div:last-child {
-                flex: 1 !important;
-                min-width: 0 !important;
-            }
-            .action-title { font-size: 13px !important; }
-            .action-subtitle { font-size: 10px !important; }
-            .icon-circle { 
-                width: 36px !important; 
-                height: 36px !important; 
-                font-size: 14px !important;
-                flex-shrink: 0 !important;
-            }
             .premium-table-box { padding: 16px !important; border-radius: 12px !important; }
             .table-title { font-size: 14px !important; }
             .link-master { font-size: 11px !important; }
             .table-header th { padding: 8px !important; font-size: 9px !important; }
             .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark { padding: 10px 8px !important; font-size: 11px !important; }
-            .table-cell-center { padding: 10px 8px !important; }
             .ribbon-label { font-size: 10px !important; margin-bottom: 12px !important; }
-            .section-label { font-size: 10px !important; margin: 20px 0 12px !important; }
-            .stat-padded { padding: 14px !important; border-radius: 12px !important; }
-            .analytics-box { border-radius: 12px !important; }
+            .analytics-box { border-radius: 12px !important; padding: 16px !important; }
         }
         .tr-hover-row { transition: all 0.2s; position: relative; }
         .tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
-        .tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
-
-        /* Utility classes */
+        .tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0f172a; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+        .admin-workspace-grid { display: grid; gap: 25px; grid-template-columns: 2fr 1fr; }
         .flex-sb { display: flex; justify-content: space-between; align-items: center; }
-        .flex-center { display: flex; align-items: center; }
-        .flex-center-gap { display: flex; align-items: center; gap: 10px; }
-        .text-uppercase { text-transform: uppercase; }
         .text-muted { font-size: 13px; color: #64748b; font-weight: 600; }
         .text-bold-dark { font-weight: 800; color: #1e293b; }
-        .text-small-muted { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .stat-value-warn { color: #f59e0b; }
-        .stat-value-blue { color: #3b82f6; }
-        .stat-value-green { color: #10b981; }
-        .icon-circle { background: white; border-radius: 8px; width: 35px; height: 35px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .icon-blue { color: #0038A8; }
-        .action-title { font-size: 14px; font-weight: 800; color: #1e293b; }
-        .action-subtitle { font-size: 11px; color: #64748b; font-weight: 600; }
-        .section-label { margin: 30px 0 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .table-header th { padding: 12px 10px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .table-header th.center { text-align: center; }
-        .table-cell { padding: 16px 10px; }
-        .table-cell-bold { padding: 16px 10px; font-weight: 800; color: #0038A8; }
-        .table-cell-dept { padding: 16px 10px; font-weight: 700; color: #334155; }
-        .table-cell-gray { padding: 16px 10px; color: #64748b; font-size: 13px; }
-        .table-cell-dark { padding: 16px 10px; color: #1e293b; font-weight: 600; }
-        .table-cell-center { padding: 16px 10px; text-align: center; }
-        .empty-cell { padding: 40px; text-align: center; color: #94a3b8; }
-        .ribbon-label { margin-bottom: 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .hero-role { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.7; }
-        .hero-name { font-size: 32px; font-weight: 800; margin: 0; }
-        .hero-desc { margin: 10px 0 0; opacity: 0.8; font-size: 15px; max-width: 500px; }
-        .hero-stats-box { text-align: right; background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 12px; backdrop-filter: blur(10px); }
-        .hero-stats-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-        .hero-stats-value { font-size: 24px; font-weight: 800; }
-        .mb-12 { margin-bottom: 12px; }
         .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
-        .text-system { font-size: 12px; color: #64748b; line-height: 1.5; }
-        .strong-system { color: #1e293b; font-size: 13px; }
-        .icon-ok { color: #10b981; font-size: 18px; }
-        .admin-workspace-grid { display: grid; gap: 25px; }
-        .pad-y-sm { padding: 8px 0; }
-        .mb-25 { margin-bottom: 25px; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }
         .tr-header-bottom { text-align: left; border-bottom: 2px solid #f1f5f9; }
         .table-row-border { border-bottom: 1px solid #f8fafc; transition: background 0.2s; }
         .link-inherit { text-decoration: none; color: inherit; }
-        .stat-padded { padding: 18px; background: #f8fafc; }
+        .mb-25 { margin-bottom: 25px; }
+        .empty-cell { padding: 40px; text-align: center; color: #94a3b8; }
+        .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 3px; width: 100%; margin-top: 6px; overflow: hidden; }
+        .progress-bar-fill { background: #0038A8; height: 100%; border-radius: 3px; }
     </style>
 @endsection
 
@@ -298,7 +338,7 @@
                 <div class="hero-role">System Administrator</div>
                 <h1 class="hero-name">{{ Auth::user()->full_name }}</h1>
                 <p class="hero-desc">
-                    Managing ICT operations for the <strong>National Conciliation and Mediation Board</strong> Central Office.
+                    Managing ICT and Maintenance operations for the <strong>National Conciliation and Mediation Board</strong>.
                 </p>
             </div>
             <div class="hero-stats-box">
@@ -308,11 +348,11 @@
         </div>
     </div>
 
-    <!-- STATS GRID -->
+    <!-- STATS GRID - CMMS FOCUSED -->
     <div class="stats-grid">
         <div class="stat-card-premium stat-total">
             <i class="fa-solid fa-layer-group stat-bg-icon"></i>
-            <span class="stat-label">Total Tickets</span>
+            <span class="stat-label">Total User Requests</span>
             <div class="stat-value">{{ $stats['total'] }}</div>
         </div>
         <div class="stat-card-premium stat-pending">
@@ -325,57 +365,53 @@
             <span class="stat-label">Ongoing</span>
             <div class="stat-value">{{ $stats['ongoing'] }}</div>
         </div>
-        <div class="stat-card-premium stat-completed">
-            <i class="fa-solid fa-check-double stat-bg-icon"></i>
-            <span class="stat-label">Completed</span>
-            <div class="stat-value">{{ $stats['completed'] }}</div>
+        <div class="stat-card-premium stat-assets">
+            <i class="fa-solid fa-server stat-bg-icon"></i>
+            <span class="stat-label">Active Assets</span>
+            <div class="stat-value">{{ $stats['total_assets'] }}</div>
+        </div>
+        <div class="stat-card-premium stat-overdue {{ $stats['overdue_pms'] > 0 ? 'stat-overdue-alert' : '' }}">
+            <i class="fa-solid fa-clock stat-bg-icon"></i>
+            <span class="stat-label">Overdue PMs</span>
+            <div class="stat-value">{{ $stats['overdue_pms'] }}</div>
         </div>
     </div>
 
     <!-- WORKSPACE GRID -->
     <div class="admin-workspace-grid">
         
-        <!-- LEFT: TABLE AND ANALYTICS -->
+        <!-- LEFT: ANALYTICS AND TABLE -->
         <div>
             <!-- ANALYTICS GRID -->
-            <div class="analytics-grid">
-                <div class="analytics-box">
-                    <div class="analytics-title">
-                        <i class="fa-solid fa-chart-pie icon-blue"></i>
-                        Service Distribution
+            <div class="analytics-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+                <div class="analytics-box" style="padding: 24px 26px;">
+                    <div class="analytics-title" style="margin-bottom: 4px;">
+                        <i class="fa-solid fa-chart-bar icon-blue"></i>
+                        Request Volume by Office
+                        <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
-                    <div class="analytics-row">
-                        <span class="text-muted">ICT Tickets</span>
-                        <span class="text-bold-dark">{{ $stats['ict'] }}</span>
-                    </div>
-                    <div class="analytics-row">
-                        <span class="text-muted">PM Work Orders</span>
-                        <span class="text-bold-dark">{{ $stats['maintenance'] }}</span>
+                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Offices generating the most support requests.</p>
+                    <div style="height: 280px; width: 100%; position: relative;">
+                        <canvas id="officeChart"></canvas>
                     </div>
                 </div>
 
-                  <div class="analytics-box">
-                      <div class="analytics-title">
-                          <i class="fa-solid fa-sitemap icon-blue"></i>
-                          Department Coverage
-                      </div>
-                      @forelse($departmentStats as $branch => $count)
-                      <div class="analytics-row">
-                          <span class="text-muted">{{ $branch ?: 'Unassigned' }}</span>
-                          <span class="text-bold-dark">{{ $count }} Requests</span>
-                      </div>
-                      @empty
-                    <div class="text-muted pad-y-sm">
-                        No requests found.
+                <div class="analytics-box" style="padding: 24px 26px;">
+                    <div class="analytics-title" style="margin-bottom: 4px;">
+                        <i class="fa-solid fa-chart-pie icon-blue"></i>
+                        System Health Overview
                     </div>
-                      @endforelse
-                  </div>
+                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Asset and request status at a glance.</p>
+                    <div style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
+                        <canvas id="workloadChart"></canvas>
+                    </div>
+                </div>
             </div>
 
             <!-- SYSTEM WIDE TABLE -->
             <div class="premium-table-box">
                 <div class="flex-sb mb-25">
-                    <h3 class="table-title">Recent Office Activity</h3>
+                    <h3 class="table-title">Recent Office Requests</h3>
                     <a href="{{ route('ict.index') }}" class="link-master">View Master List</a>
                 </div>
                 <div class="scroll-x">
@@ -395,31 +431,31 @@
                                 $map = ['Pending' => 0, 'Scheduled' => 0, 'Ongoing' => 1, 'Completed' => 2];
                                 return $map[$r->status] ?? 99;
                             });
-                        @endphp
-                        @forelse($sortedRecent as $req)
+                            @endphp
+                            @forelse($sortedRecent as $req)
                                 <tr class="tr-hover-row table-row-border">
                                     <td class="table-cell-bold">
                                         <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="link-inherit">
                                             {{ $req->display_number ?? $req->request_number }}
                                         </a>
                                     </td>
-                                    <td class="table-cell-dept">
+                                    <td class="table-cell-dept" style="font-size:12px;">
                                         @php
                                             $divisionLabel = $req->user->office ?? $req->user->department ?? $req->office ?? 'Central Office';
                                         @endphp
                                         {{ $divisionLabel }}
                                     </td>
-                                    <td class="table-cell-gray">{{ $req->type }}</td>
-                                    <td class="table-cell-dark">{{ $req->requestor_name }}</td>
+                                    <td class="table-cell-gray" style="font-size:11px;">{{ $req->type }}</td>
+                                    <td class="table-cell-dark" style="font-size:12px;">{{ $req->requestor_name }}</td>
                                     <td class="table-cell-center">
                                         <span class="status-pill status-{{ strtolower($req->status) }}">{{ $req->status }}</span>
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="5" class="empty-cell" style="padding: 50px 20px;">
+                                <tr><td colspan="5" class="empty-cell">
                                     <i class="fa-solid fa-inbox" style="font-size: 42px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
-                                    <div style="font-weight: 800; color: #64748b; font-size: 15px;">No System Activity</div>
-                                    <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">No requests have been submitted across the system yet.</div>
+                                    <div style="font-weight: 800; color: #64748b; font-size: 15px;">No User Requests</div>
+                                    <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">No ICT or Repair requests have been submitted across the offices yet.</div>
                                 </td></tr>
                             @endforelse
                         </tbody>
@@ -428,53 +464,283 @@
             </div>
         </div>
 
-        <!-- RIGHT: QUICK ACTIONS & TOOLS -->
+        <!-- RIGHT: CRITICAL ACTION CENTER -->
         <div>
-            <div class="ribbon-label">Management Tools</div>
-            
-            <a href="{{ route('ict.index') }}" class="btn-action-premium mb-12">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-clipboard-list icon-blue"></i>
+            <div style="margin-bottom: 25px;">
+                <h3 class="table-title" style="margin-bottom: 15px; font-size: 14px;">Critical Action Center</h3>
+                
+                @if($stats['overdue_pms'] > 0)
+                <div class="action-center-card action-center-warning">
+                    <div class="action-center-icon">
+                        <i class="fa-solid fa-clock"></i>
+                    </div>
+                    <div class="action-center-content">
+                        <h4>Overdue PM Tasks</h4>
+                        <p>There are <strong>{{ $stats['overdue_pms'] }}</strong> preventive maintenance tasks that have been pending for over 7 days.</p>
+                        <a href="{{ route('pm-schedules.orders') }}" style="display:inline-block; margin-top:8px; font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase;">Review Orders &rarr;</a>
+                    </div>
                 </div>
-                <div>
-                    <div class="action-title">Master List</div>
-                    <div class="action-subtitle">All office requests</div>
-                </div>
-            </a>
+                @endif
 
-            <a href="{{ route('super_admin.users') }}" class="btn-action-premium mb-12">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-users-gear icon-blue"></i>
+                @if($warrantyExpiring->count() > 0 || $warrantyExpired->count() > 0)
+                <div class="action-center-card">
+                    <div class="action-center-icon">
+                        <i class="fa-solid fa-shield-halved"></i>
+                    </div>
+                    <div class="action-center-content">
+                        <h4>Warranty Alerts</h4>
+                        @if($warrantyExpired->count() > 0)
+                            <p><strong>{{ $warrantyExpired->count() }}</strong> assets have expired warranties.</p>
+                        @endif
+                        @if($warrantyExpiring->count() > 0)
+                            <p><strong>{{ $warrantyExpiring->count() }}</strong> warranties expiring within 30 days.</p>
+                        @endif
+                        <a href="{{ route('super_admin.inventory') }}" style="display:inline-block; margin-top:8px; font-size:11px; font-weight:800; color:#be123c; text-transform:uppercase;">View Inventory &rarr;</a>
+                    </div>
                 </div>
-                <div>
-                    <div class="action-title">Manage Users</div>
-                    <div class="action-subtitle">System access & roles</div>
-                </div>
-            </a>
+                @endif
 
-            <a href="{{ route('pm-schedules.index') }}" class="btn-action-premium mb-12">
-                <div class="icon-circle">
-                    <i class="fa-solid fa-calendar-check icon-blue"></i>
+                @if($stats['overdue_pms'] == 0 && $warrantyExpiring->count() == 0 && $warrantyExpired->count() == 0)
+                <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:30px 20px; text-align:center;">
+                    <i class="fa-solid fa-circle-check" style="font-size:32px; color:#10b981; margin-bottom:12px;"></i>
+                    <h4 style="margin:0 0 5px; font-size:14px; font-weight:800; color:#1e293b;">All Good!</h4>
+                    <p style="margin:0; font-size:12px; color:#64748b;">No critical actions required at this time.</p>
                 </div>
-                <div>
-                    <div class="action-title">PM Schedules</div>
-                    <div class="action-subtitle">Preventive maintenance schedules</div>
-                </div>
-            </a>
+                @endif
+            </div>
 
-            <div class="section-label">System Status</div>
-            <div class="stat-card-premium stat-padded">
-                <div class="flex-center-gap mb-12">
-                    <i class="fa-solid fa-circle-check icon-ok"></i>
-                    <strong class="strong-system">All Systems Operational</strong>
-                </div>
-                <div class="text-system">
-                    Database connection stable. Background jobs are processing normally.
+            <!-- Quick Links -->
+            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
+                <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; color:#64748b;">Management Tools</h3>
+                
+                <a href="{{ route('ict.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
+                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Master List</div><div style="font-size:10px; color:#64748b;">All system requests</div></div>
+                </a>
+
+                <a href="{{ route('super_admin.users') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
+                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-users-gear"></i></div>
+                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Manage Users</div><div style="font-size:10px; color:#64748b;">System access control</div></div>
+                </a>
+
+                <a href="{{ route('pm-schedules.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
+                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">PM Schedules</div><div style="font-size:10px; color:#64748b;">Preventive maintenance</div></div>
+                </a>
+
+                <a href="{{ route('pm-schedules.calendar') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
+                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Maintenance Calendar</div><div style="font-size:10px; color:#64748b;">View schedules timeline</div></div>
+                </a>
+            </div>
+
+            <!-- CSM Snapshot (Phase 1) -->
+            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 20px;">
+                <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; font-weight: 800; color:#64748b; text-transform:uppercase;">Service Quality (CSM)</h3>
+                <div style="display:flex; align-items:center; gap:15px;">
+                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display:flex; align-items:center; justify-content:center; font-size: 18px; font-weight: 800; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
+                        {{ $csmAverage }}
+                    </div>
+                    <div style="flex:1;">
+                        <div style="display:flex; color:#f59e0b; font-size:12px; margin-bottom:4px; gap: 2px;">
+                            @for($i=1; $i<=5; $i++)
+                                <i class="fa-solid fa-star" style="{{ $i <= round($csmAverage) ? '' : 'color:#e2e8f0;' }}"></i>
+                            @endfor
+                        </div>
+                        <div style="font-size:13px; font-weight:700; color:#1e293b;">Overall Satisfaction</div>
+                        <div style="font-size:11px; color:#64748b;">Based on {{ $csmResponses }} survey records</div>
+                    </div>
                 </div>
             </div>
         </div>
-
     </div>
-
 </div>
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="{{ $cspNonce }}"></script>
+<script nonce="{{ $cspNonce }}">
+    document.addEventListener('DOMContentLoaded', function() {
+        // ─── Prepare Data for Bar Chart ──────────────────────────────────────────
+        const departmentData = @json($departmentStats);
+        const rawLabels = Object.keys(departmentData);
+        const data      = Object.values(departmentData);
+
+        // Abbreviate long office names so they fit nicely on the chart
+        const labels = rawLabels.map(k => {
+            if (!k) return 'Unassigned';
+            // Truncate anything longer than 28 chars with ellipsis
+            return k.length > 28 ? k.slice(0, 26) + '…' : k;
+        });
+
+        // Generate a stepped blue palette (government blue family)
+        const maxVal   = Math.max(...data, 1);
+        const palette  = data.map((_, i) => {
+            const ratio = i / Math.max(data.length - 1, 1);
+            // Interpolate from #0038A8 (NCMB deep blue) → #60a5fa (light blue)
+            const r = Math.round(0   + ratio * (96  - 0));
+            const g = Math.round(56  + ratio * (165 - 56));
+            const b = Math.round(168 + ratio * (250 - 168));
+            return `rgba(${r},${g},${b},0.88)`;
+        });
+
+        // ─── Vertical Bar Chart — Government Standard ────────────────────────────
+        const ctxOffice = document.getElementById('officeChart');
+        if (ctxOffice) {
+            // Sort: highest requests first
+            const sorted = labels.map((l, i) => ({ label: l, val: data[i] }))
+                                 .sort((a, b) => b.val - a.val);
+            const sortedLabels = sorted.map(x => x.label);
+            const sortedData   = sorted.map(x => x.val);
+            const maxVal       = Math.max(...sortedData, 1);
+
+            // Government blue palette — each bar gets a slightly different shade
+            const baseColors = [
+                'rgba(0, 40, 120, 0.90)',
+                'rgba(0, 56, 168, 0.85)',
+                'rgba(30, 80, 190, 0.82)',
+                'rgba(59, 106, 210, 0.80)',
+                'rgba(90, 130, 220, 0.78)',
+                'rgba(120, 160, 230, 0.75)',
+            ];
+            const barColors = sortedData.map((_, i) => baseColors[i % baseColors.length]);
+
+            new Chart(ctxOffice, {
+                type: 'bar',
+                data: {
+                    labels: sortedLabels,
+                    datasets: [{
+                        label: 'No. of Requests',
+                        data: sortedData,
+                        backgroundColor: barColors,
+                        hoverBackgroundColor: barColors.map(c => c.replace(/[\d.]+\)$/, '1)')),
+                        borderRadius: 5,
+                        borderSkipped: false,
+                        maxBarThickness: 32,   // thin bars
+                        barPercentage: 0.75,
+                        categoryPercentage: 0.80
+                    }]
+                },
+                options: {
+                    // No indexAxis — default is vertical
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    layout: { padding: { top: 20, right: 10, bottom: 5, left: 5 } },
+                    animation: { duration: 800, easing: 'easeOutQuart' },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#94a3b8',
+                            bodyColor: '#ffffff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                title: ctx => ctx[0].label,
+                                label: ctx => ` ${ctx.parsed.y} request${ctx.parsed.y !== 1 ? 's' : ''}`
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: maxVal + Math.ceil(maxVal * 0.15),
+                            grid: { color: '#f1f5f9', drawTicks: false },
+                            border: { dash: [4, 4], color: 'transparent' },
+                            ticks: {
+                                stepSize: 1,
+                                precision: 0,
+                                font: { size: 10, family: 'Inter, sans-serif' },
+                                color: '#94a3b8',
+                                padding: 6
+                            }
+                        },
+                        x: {
+                            grid: { display: false },
+                            border: { color: '#e2e8f0' },
+                            ticks: {
+                                font: { size: 10, weight: '600', family: 'Inter, sans-serif' },
+                                color: '#334155',
+                                maxRotation: 35,
+                                minRotation: 0
+                            }
+                        }
+                    }
+                },
+                plugins: [{
+                    id: 'barValueLabels',
+                    afterDatasetsDraw(chart) {
+                        const { ctx } = chart;
+                        chart.data.datasets.forEach((dataset, i) => {
+                            const meta = chart.getDatasetMeta(i);
+                            meta.data.forEach((bar, index) => {
+                                const value = dataset.data[index];
+                                if (value === 0) return;
+                                ctx.save();
+                                ctx.fillStyle = '#0038A8';
+                                ctx.font = 'bold 11px Inter, sans-serif';
+                                ctx.textAlign = 'center';
+                                ctx.textBaseline = 'bottom';
+                                ctx.fillText(value, bar.x, bar.y - 4);
+                                ctx.restore();
+                            });
+                        });
+                    }
+                }]
+            });
+        }
+
+        // ─── Doughnut Chart — System Health ──────────────────────────────────────
+        const activeRequests = ({{ $stats['pending'] ?? 0 }}) + ({{ $stats['ongoing'] ?? 0 }});
+        const overduePMs    = {{ $stats['overdue_pms'] ?? 0 }};
+        const activeAssets  = {{ $stats['total_assets'] ?? 0 }};
+        const healthyAssets = Math.max(activeAssets - (activeRequests + overduePMs), 0);
+
+        const ctxWorkload = document.getElementById('workloadChart');
+        if (ctxWorkload) {
+            new Chart(ctxWorkload, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Healthy Assets', 'Active Requests', 'Overdue PMs'],
+                    datasets: [{
+                        data: [healthyAssets, activeRequests, overduePMs],
+                        backgroundColor: ['#10b981', '#0038A8', '#ef4444'],
+                        borderWidth: 3,
+                        borderColor: '#ffffff',
+                        hoverOffset: 8
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    cutout: '72%',
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: {
+                                usePointStyle: true,
+                                pointStyle: 'circle',
+                                boxWidth: 8,
+                                padding: 14,
+                                font: { size: 11, family: 'Inter', weight: '700' },
+                                color: '#475569'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: '#0f172a',
+                            titleColor: '#94a3b8',
+                            bodyColor: '#ffffff',
+                            padding: 12,
+                            cornerRadius: 8,
+                            callbacks: {
+                                label: ctx => ` ${ctx.label}: ${ctx.parsed}`
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+    });
+</script>
 @endsection
