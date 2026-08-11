@@ -312,6 +312,8 @@ class GetMaintenanceCalendarDataAction
                     'display_number' => $req->display_number,
                     'status' => $req->status ?? 'Pending',
                     'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
+                    'assigned_at' => $req->assigned_at?->toDateString(),
+                    'completed_at' => $req->completed_at?->toDateString(),
                     'details_url' => route('maintenance.show', $req->id),
                 ];
             }
@@ -392,6 +394,8 @@ class GetMaintenanceCalendarDataAction
                     'display_number' => $req->display_number,
                     'office'         => $req->office ?? 'N/A',
                     'assignee'       => $req->assignedTo?->full_name ?? 'Unassigned',
+                    'assigned_at'    => $req->assigned_at?->toDateString(),
+                    'completed_at'   => $req->completed_at?->toDateString(),
                     'priority'       => $req->priority,
                     'details_url'    => route('ict.show', $req->id),
                     'is_editable'    => false,

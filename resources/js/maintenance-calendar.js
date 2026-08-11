@@ -377,6 +377,14 @@
         table += '<tr><td>Date</td><td>' + formatDate(e.date) + '</td></tr>';
         table += '<tr><td>Assignee</td><td>' + (e.assignee || 'N/A') + '</td></tr>';
         table += '<tr><td>Office</td><td>' + (e.office || 'N/A') + '</td></tr>';
+        // Phase 4: Date tracking — show Generated/Requested, Assigned, Completed
+        if (e.assigned_at) {
+            table += '<tr><td>' + (e.event_type === 'pm' ? 'Generated' : 'Requested') + '</td><td>' + formatDate(e.date) + '</td></tr>';
+            table += '<tr><td>Assigned</td><td>' + formatDate(e.assigned_at) + '</td></tr>';
+        }
+        if (e.completed_at) {
+            table += '<tr><td>Completed</td><td>' + formatDate(e.completed_at) + '</td></tr>';
+        }
         table += '</table>';
 
         // PM Schedule event — render divisions list into Tasks panel (not detail body)
@@ -461,6 +469,8 @@
                             assignee: ticket.assignee || 'Unassigned',
                             office: e.office || 'N/A',
                             date: e.date,
+                            assigned_at: ticket.assigned_at || null,
+                            completed_at: ticket.completed_at || null,
                             details_url: ticket.details_url,
                         });
                     };

@@ -7,7 +7,9 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Vite;
 use App\Models\InventoryAsset;
+use App\Models\Request as RequestModel;
 use App\Observers\InventoryAssetObserver;
+use App\Observers\RequestObserver;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -33,5 +35,6 @@ class AppServiceProvider extends ServiceProvider
         });
 
         InventoryAsset::observe(InventoryAssetObserver::class);
+        RequestModel::observe(RequestObserver::class);
     }
 }

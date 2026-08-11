@@ -52,6 +52,9 @@ class Request extends Model
         'downtime_start',
         'downtime_end',
         'downtime_duration',
+        // Date tracking
+        'assigned_at',
+        'completed_at',
     ];
 
     public function getRoutePrefix()
@@ -66,6 +69,8 @@ class Request extends Model
         'downtime_start' => 'datetime',
         'downtime_end' => 'datetime',
         'downtime_duration' => 'integer',
+        'assigned_at' => 'datetime',
+        'completed_at' => 'datetime',
     ];
 
     // Get display format: PM-NCR-RCMB-2026-0001 → PM-2026-0001
