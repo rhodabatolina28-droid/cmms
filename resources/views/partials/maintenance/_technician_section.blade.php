@@ -12,9 +12,18 @@
                                 <div class="input-group">
                                     <label>SIGNATURE</label>
                                     <div class="sig-container-minimal">
-                                        <canvas id="technicianSignatureCanvas" class="signature-canvas" width="300" height="64"></canvas>
-                                        <input type="hidden" id="technicianSignature" name="technicianSignature" value="{{ $maintenance->technician_signature ?? '' }}">
-                                        <button type="button" class="btn-clear-sig-minimal" data-canvas="technicianSignatureCanvas" data-input="technicianSignature">Clear</button>
+                                        @php $techSigPath = !empty($maintenance->technician_signature) ? (str_starts_with($maintenance->technician_signature, 'http') ? $maintenance->technician_signature : Storage::url($maintenance->technician_signature)) : ''; @endphp
+                                        @if(!empty($maintenance->technician_signature))
+                                            <img src="{{ $techSigPath }}" alt="Technician Signature" class="signature-preview-img" id="technicianSignatureImg">
+                                            <input type="hidden" id="technicianSignature" name="technicianSignature" value="{{ $maintenance->technician_signature }}">
+                                            @if(!$viewMode && $isAdmin)
+                                                <button type="button" class="btn-clear-sig-minimal" id="technicianResignBtn">Re-sign</button>
+                                            @endif
+                                        @else
+                                            <canvas id="technicianSignatureCanvas" class="signature-canvas" width="300" height="64"></canvas>
+                                            <input type="hidden" id="technicianSignature" name="technicianSignature" value="">
+                                            <button type="button" class="btn-clear-sig-minimal" data-canvas="technicianSignatureCanvas" data-input="technicianSignature">Clear</button>
+                                        @endif
                                     </div>
                                     <div class="sig-underline"></div>
                                 </div>

@@ -644,4 +644,13 @@
                 initSignature('endUserSignatureCanvas', 'endUserSignature');
             });
         }
+        var technicianResignBtn = document.getElementById('technicianResignBtn');
+        if (technicianResignBtn) {
+            technicianResignBtn.addEventListener('click', function() {
+                document.getElementById('technicianSignature').value = '';
+                this.parentElement.innerHTML = '<canvas id="technicianSignatureCanvas" class="signature-canvas" width="300" height="64"></canvas><input type="hidden" id="technicianSignature" name="technicianSignature" value=""><button type="button" class="btn-clear-sig-minimal" data-canvas="technicianSignatureCanvas" data-input="technicianSignature">Clear</button>';
+                initSignature('technicianSignatureCanvas', 'technicianSignature');
+            });
+        }
+
     </script>
