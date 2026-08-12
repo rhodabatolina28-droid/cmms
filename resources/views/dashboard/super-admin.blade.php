@@ -13,6 +13,14 @@
 
         .dashboard-container {
             animation: fadeInSlide 0.5s ease-out;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .dashboard-container button,
+        .dashboard-container input,
+        .dashboard-container select,
+        .dashboard-container textarea {
+            font-family: Arial, Helvetica, sans-serif;
         }
 
         /* ALERTS AND PULSE EFFECTS */
@@ -74,6 +82,36 @@
             overflow: hidden;
             margin-bottom: clamp(20px, 2.5vw, 30px);
             box-shadow: 0 10px 25px rgba(0, 40, 120, 0.25);
+        }
+
+        .hero-role {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            opacity: 0.84;
+        }
+        .hero-name {
+            margin: 6px 0;
+            font-size: clamp(26px, 2.1vw, 34px);
+            line-height: 1.2;
+        }
+        .hero-desc {
+            max-width: 720px;
+            margin: 0;
+            font-size: 14px;
+            line-height: 1.55;
+        }
+        .hero-stats-label {
+            font-size: 12px;
+            font-weight: 800;
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+        .hero-stats-value {
+            font-size: 28px;
+            font-weight: 800;
+            line-height: 1.15;
         }
 
         .welcome-hero::after {
@@ -160,7 +198,7 @@
         .stat-overdue .stat-bg-icon { color: #ef4444; }
 
         .stat-label {
-            font-size: clamp(10px, 0.8vw, 11px);
+            font-size: clamp(11px, 0.85vw, 12px);
             font-weight: 800;
             color: #64748b;
             text-transform: uppercase;
@@ -192,7 +230,7 @@
         }
 
         .analytics-title {
-            font-size: 14px;
+            font-size: 15px;
             font-weight: 800;
             color: #1e293b;
             text-transform: uppercase;
@@ -225,7 +263,7 @@
         .status-pill {
             padding: 4px 10px;
             border-radius: 20px;
-            font-size: 10px;
+            font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
         }
@@ -259,13 +297,13 @@
         }
         .action-center-content h4 {
             margin: 0 0 5px;
-            font-size: 13px;
+            font-size: 14px;
             font-weight: 800;
             color: #9f1239;
         }
         .action-center-content p {
             margin: 0;
-            font-size: 12px;
+            font-size: 13px;
             color: #be123c;
             line-height: 1.4;
         }
@@ -280,6 +318,14 @@
         }
         .action-center-warning h4 { color: #92400e; }
         .action-center-warning p { color: #b45309; }
+        .action-center-info { background: linear-gradient(to right bottom, #eff6ff, #dbeafe); border-color: #bfdbfe; }
+        .action-center-info .action-center-icon { color: #1d4ed8; box-shadow: 0 2px 4px rgba(29, 78, 216, .1); }
+        .action-center-info h4 { color: #1e40af; }
+        .action-center-info p { color: #1d4ed8; }
+        .action-center-danger { background: linear-gradient(to right bottom, #fef2f2, #fee2e2); border-color: #fecaca; }
+        .action-center-danger .action-center-icon { color: #b91c1c; box-shadow: 0 2px 4px rgba(185, 28, 28, .1); }
+        .action-center-danger h4 { color: #991b1b; }
+        .action-center-danger p { color: #b91c1c; }
 
         /* LAYOUT & UTILITIES */
         @media (max-width: 1000px) {
@@ -290,19 +336,19 @@
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
             .welcome-hero { padding: 18px 16px !important; border-radius: 12px !important; }
             .hero-name { font-size: 22px !important; }
-            .hero-desc { font-size: 13px !important; max-width: 100% !important; }
+            .hero-desc { font-size: 14px !important; max-width: 100% !important; }
             .hero-stats-box { width: 100% !important; text-align: left !important; padding: 12px 16px !important; border-radius: 10px !important; }
             .hero-stats-value { font-size: 20px !important; }
-            .hero-role { font-size: 10px !important; letter-spacing: 1.5px !important; }
+            .hero-role { font-size: 11px !important; letter-spacing: 1px !important; }
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
             .stat-card-premium { padding: 14px 12px !important; border-radius: 12px !important; }
             .stat-value { font-size: 20px !important; }
-            .stat-label { font-size: 9px !important; margin-bottom: 4px !important; }
+            .stat-label { font-size: 10px !important; margin-bottom: 4px !important; }
             .premium-table-box { padding: 16px !important; border-radius: 12px !important; }
             .table-title { font-size: 14px !important; }
             .link-master { font-size: 11px !important; }
-            .table-header th { padding: 8px !important; font-size: 9px !important; }
-            .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark { padding: 10px 8px !important; font-size: 11px !important; }
+            .table-header th { padding: 8px !important; font-size: 10px !important; }
+            .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark { padding: 10px 8px !important; font-size: 12px !important; }
             .ribbon-label { font-size: 10px !important; margin-bottom: 12px !important; }
             .analytics-box { border-radius: 12px !important; padding: 16px !important; }
         }
@@ -315,7 +361,7 @@
         .text-bold-dark { font-weight: 800; color: #1e293b; }
         .icon-blue { color: #0038A8; }
         .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
-        .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
+        .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 14px; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }
         .tr-header-bottom { text-align: left; border-bottom: 2px solid #f1f5f9; }
@@ -323,6 +369,8 @@
         .link-inherit { text-decoration: none; color: inherit; }
         .mb-25 { margin-bottom: 25px; }
         .empty-cell { padding: 40px; text-align: center; color: #94a3b8; }
+        .table-header th { padding: 12px 10px; font-size: 12px; letter-spacing: 0.4px; }
+        .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark, .table-cell-center { padding: 13px 10px; font-size: 13px; }
         .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 3px; width: 100%; margin-top: 6px; overflow: hidden; }
         .progress-bar-fill { background: #0038A8; height: 100%; border-radius: 3px; }
     </style>
@@ -330,7 +378,7 @@
 
 @section('content')
 <div class="dashboard-container">
-    
+
     <!-- WELCOME HERO (SUPER ADMIN) -->
     <div class="welcome-hero">
         <div class="flex-sb">
@@ -395,7 +443,7 @@
                         Request Volume by Office
                         <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Offices generating the most support requests.</p>
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Top offices by request volume.</p>
                     <div style="height: 280px; width: 100%; position: relative;">
                         <canvas id="officeChart"></canvas>
                     </div>
@@ -406,7 +454,7 @@
                         <i class="fa-solid fa-chart-pie icon-blue"></i>
                         Asset Status Overview
                     </div>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
                     <div style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
@@ -444,14 +492,14 @@
                                             {{ $req->display_number ?? $req->request_number }}
                                         </a>
                                     </td>
-                                    <td class="table-cell-dept" style="font-size:12px;">
+                                    <td class="table-cell-dept">
                                         @php
                                             $divisionLabel = $req->user->office ?? $req->user->department ?? $req->office ?? 'Central Office';
                                         @endphp
                                         {{ $divisionLabel }}
                                     </td>
-                                    <td class="table-cell-gray" style="font-size:11px;">{{ $req->type }}</td>
-                                    <td class="table-cell-dark" style="font-size:12px;">{{ $req->requestor_name }}</td>
+                                    <td class="table-cell-gray">{{ $req->type }}</td>
+                                    <td class="table-cell-dark">{{ $req->requestor_name }}</td>
                                     <td class="table-cell-center">
                                         <span class="status-pill status-{{ strtolower($req->status) }}">{{ $req->status }}</span>
                                     </td>
@@ -469,52 +517,8 @@
             </div>
         </div>
 
-        <!-- RIGHT: CRITICAL ACTION CENTER -->
+        <!-- RIGHT: MANAGEMENT TOOLS -->
         <div>
-            <div style="margin-bottom: 25px;">
-                <h3 class="table-title" style="margin-bottom: 15px; font-size: 14px;">Critical Action Center</h3>
-                
-                @if($stats['overdue_pms'] > 0)
-                <div class="action-center-card action-center-warning">
-                    <div class="action-center-icon">
-                        <i class="fa-solid fa-clock"></i>
-                    </div>
-                    <div class="action-center-content">
-                        <h4>Overdue PM Tasks</h4>
-                        <p>There are <strong>{{ $stats['overdue_pms'] }}</strong> preventive maintenance tasks that have been pending for over 7 days.</p>
-                        <a href="{{ route('pm-schedules.orders') }}" style="display:inline-block; margin-top:8px; font-size:11px; font-weight:800; color:#b45309; text-transform:uppercase;">Review Orders &rarr;</a>
-                    </div>
-                </div>
-                @endif
-
-                @if($warrantyExpiring->count() > 0 || $warrantyExpired->count() > 0)
-                <div class="action-center-card">
-                    <div class="action-center-icon">
-                        <i class="fa-solid fa-shield-halved"></i>
-                    </div>
-                    <div class="action-center-content">
-                        <h4>Warranty Alerts</h4>
-                        @if($warrantyExpired->count() > 0)
-                            <p><strong>{{ $warrantyExpired->count() }}</strong> assets have expired warranties.</p>
-                        @endif
-                        @if($warrantyExpiring->count() > 0)
-                            <p><strong>{{ $warrantyExpiring->count() }}</strong> warranties expiring within 30 days.</p>
-                        @endif
-                        <a href="{{ route('super_admin.inventory') }}" style="display:inline-block; margin-top:8px; font-size:11px; font-weight:800; color:#be123c; text-transform:uppercase;">View Inventory &rarr;</a>
-                    </div>
-                </div>
-                @endif
-
-                @if($stats['overdue_pms'] == 0 && $warrantyExpiring->count() == 0 && $warrantyExpired->count() == 0)
-                <div style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:12px; padding:30px 20px; text-align:center;">
-                    <i class="fa-solid fa-circle-check" style="font-size:32px; color:#10b981; margin-bottom:12px;"></i>
-                    <h4 style="margin:0 0 5px; font-size:14px; font-weight:800; color:#1e293b;">All Good!</h4>
-                    <p style="margin:0; font-size:12px; color:#64748b;">No critical actions required at this time.</p>
-                </div>
-                @endif
-            </div>
-
-            <!-- Quick Links -->
             <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                 <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; color:#64748b;">Management Tools</h3>
                 
@@ -553,7 +557,7 @@
                             @endfor
                         </div>
                         <div style="font-size:13px; font-weight:700; color:#1e293b;">Overall Satisfaction</div>
-                        <div style="font-size:11px; color:#64748b;">Based on {{ $csmResponses }} survey records</div>
+                        <div style="font-size:12px; color:#64748b;">{{ $csmResponses }}/{{ $completedIctCount }} completed ICT tickets responded ({{ $csmResponseRate }}%)</div>
                     </div>
                 </div>
             </div>
@@ -636,7 +640,7 @@
                             ticks: {
                                 stepSize: 1,
                                 precision: 0,
-                                font: { size: 10, family: 'Inter, sans-serif' },
+                                font: { size: 12, family: 'Arial, Helvetica, sans-serif' },
                                 color: '#94a3b8',
                                 padding: 6
                             }
@@ -645,7 +649,7 @@
                             grid: { display: false },
                             border: { color: '#e2e8f0' },
                             ticks: {
-                                font: { size: 11, weight: '600', family: 'Inter, sans-serif' },
+                                font: { size: 12, weight: '600', family: 'Arial, Helvetica, sans-serif' },
                                 color: '#334155'
                             }
                         }
@@ -662,7 +666,7 @@
                                 if (value === 0) return;
                                 ctx.save();
                                 ctx.fillStyle = '#0038A8';
-                                ctx.font = 'bold 11px Inter, sans-serif';
+                                ctx.font = 'bold 12px Arial, Helvetica, sans-serif';
                                 ctx.textAlign = 'left';
                                 ctx.textBaseline = 'middle';
                                 ctx.fillText(value, bar.x + 6, bar.y);
@@ -708,10 +712,10 @@
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     ctx.fillStyle = '#1e293b';
-                    ctx.font = 'bold 24px Inter, sans-serif';
+                    ctx.font = 'bold 24px Arial, Helvetica, sans-serif';
                     ctx.fillText(doughnutTotal, x, y - 6);
                     ctx.fillStyle = '#94a3b8';
-                    ctx.font = '600 10px Inter, sans-serif';
+                    ctx.font = '600 10px Arial, Helvetica, sans-serif';
                     ctx.fillText('TOTAL ASSETS', x, y + 16);
                     ctx.restore();
                 }
@@ -740,7 +744,7 @@
                                 pointStyle: 'circle',
                                 boxWidth: 8,
                                 padding: 14,
-                                font: { size: 11, family: 'Inter', weight: '700' },
+                                font: { size: 12, family: 'Arial, Helvetica, sans-serif', weight: '700' },
                                 color: '#475569',
                                 generateLabels(chart) {
                                     const cd = chart.data;

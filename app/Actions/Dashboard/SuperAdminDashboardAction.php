@@ -57,6 +57,14 @@ class SuperAdminDashboardAction
             ->groupBy('users.office')
             ->pluck('total', 'office')
             ->toArray();
+
+        // Keep the chart scannable: show the top five offices and group the rest.
+        arsort($departmentStats);
+        if (count($departmentStats) > 5) {
+            $otherTotal = array_sum(array_slice($departmentStats, 5, null, true));
+            $departmentStats = array_slice($departmentStats, 0, 5, true);
+            $departmentStats['Other Offices'] = $otherTotal;
+        }
             
         // Overdue PMs
         $overduePMsCount = RequestModel::query()
@@ -123,7 +131,14 @@ class SuperAdminDashboardAction
 
         // Client Satisfaction (CSM) Snapshot
         try {
-            $surveys = DB::table('csm_surveys')->get(['sqd1','sqd2','sqd3','sqd4','sqd5','sqd6','sqd7','sqd8','sqd9']);
+            $surveysQuery = DB::table('csm_surveys')
+                ->join('requests', 'csm_surveys.request_id', '=', 'requests.id')
+                ->join('users', 'requests.user_id', '=', 'users.id')
+                ->where('requests.type', 'ICT')
+                ->where('requests.status', RequestModel::STATUS_COMPLETED)
+                ->when($user->region, fn ($query) => $query->where('users.region', $user->region))
+                ->when($user->branch, fn ($query) => $query->where('users.branch', $user->branch));
+            $surveys = (clone $surveysQuery)->get(['csm_surveys.sqd1','csm_surveys.sqd2','csm_surveys.sqd3','csm_surveys.sqd4','csm_surveys.sqd5','csm_surveys.sqd6','csm_surveys.sqd7','csm_surveys.sqd8','csm_surveys.sqd9']);
             $totalScore = 0;
             $totalQuestions = 0;
             
@@ -146,11 +161,18 @@ class SuperAdminDashboardAction
 
             $csmAverage = $totalQuestions > 0 ? round($totalScore / $totalQuestions, 1) : 0;
             $csmResponses = $surveys->count();
+            $completedIctCount = (clone $allRequests)
+                ->where('type', 'ICT')
+                ->where('status', RequestModel::STATUS_COMPLETED)
+                ->count();
+            $csmResponseRate = $completedIctCount > 0 ? round(($csmResponses / $completedIctCount) * 100) : 0;
         } catch (\Exception $e) {
             $csmAverage = 0;
             $csmResponses = 0;
+            $completedIctCount = 0;
+            $csmResponseRate = 0;
         }
 
-        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'assetBreakdown'));
+        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount', 'assetBreakdown'));
     }
 }

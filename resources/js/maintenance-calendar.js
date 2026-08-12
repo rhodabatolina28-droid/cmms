@@ -344,7 +344,8 @@
             const statusLower = (e.status || '').toLowerCase();
             // Filter out Completed/Cancelled — only Scheduled/Ongoing/Overdue
             if (statusLower === 'completed' || statusLower === 'cancelled') return false;
-            return d >= today && d <= sevenDays;
+            // Accurate "next 7 days": exclude today (the present), start from tomorrow
+            return d > today && d <= sevenDays;
         }).sort((a, b) => a.date.localeCompare(b.date));
 
         if (upcoming.length === 0) {

@@ -133,33 +133,7 @@
                 {{-- Right Panel --}}
                 <div class="cal-right-panel">
 
-                    {{-- Card 1: Selected Event Detail --}}
-                    <div class="cal-detail-card" id="calDetailCard">
-                        <div class="cal-detail-header">
-                            <span class="cal-detail-title" id="calDetailTitle">Event Details</span>
-                            <button class="cal-detail-close" id="calDetailClose"><i class="fa-solid fa-times"></i></button>
-                        </div>
-                        <div class="cal-detail-body" id="calDetailBody"></div>
-                    </div>
-
-                    {{-- Card 2: Selected Day Tasks --}}
-                    <div class="cal-tasks-card">
-                        <div class="cal-tasks-header">
-                            <div class="cal-tasks-header-left">
-                                <span class="cal-tasks-title">Tasks</span>
-                                <span class="cal-tasks-date" id="calTasksDate"></span>
-                            </div>
-                            <div class="cal-tasks-header-right">
-                                <span class="cal-tasks-count" id="calTasksCount">0 items</span>
-                                <button class="cal-add-btn" id="calAddTaskBtn" title="Add task" style="display:none"><i class="fa-solid fa-plus"></i> Add</button>
-                            </div>
-                        </div>
-                        <div class="cal-tasks-body" id="calTasksBody">
-                            <div class="cal-empty"><i class="fa-solid fa-calendar-day"></i><p>Select a date to view tasks.</p></div>
-                        </div>
-                    </div>
-
-                    {{-- Card 3: Monthly Summary --}}
+                    {{-- Card 1: Monthly Summary --}}
                     <div class="cal-summary-card" id="calSummaryCard">
                         <div class="cal-summary-header">
                             <span class="cal-summary-title" id="calSummaryTitle">Monthly Summary</span>
@@ -181,6 +155,32 @@
                                 <span class="cal-summary-value cal-summary-value-overdue" id="calSummaryOverdue">0</span>
                                 <span class="cal-summary-label">Overdue</span>
                             </div>
+                        </div>
+                    </div>
+
+                    {{-- Card 2: Selected Event Detail --}}
+                    <div class="cal-detail-card" id="calDetailCard">
+                        <div class="cal-detail-header">
+                            <span class="cal-detail-title" id="calDetailTitle">Event Details</span>
+                            <button class="cal-detail-close" id="calDetailClose"><i class="fa-solid fa-times"></i></button>
+                        </div>
+                        <div class="cal-detail-body" id="calDetailBody"></div>
+                    </div>
+
+                    {{-- Card 3: Selected Day Tasks --}}
+                    <div class="cal-tasks-card">
+                        <div class="cal-tasks-header">
+                            <div class="cal-tasks-header-left">
+                                <span class="cal-tasks-title">Tasks</span>
+                                <span class="cal-tasks-date" id="calTasksDate"></span>
+                            </div>
+                            <div class="cal-tasks-header-right">
+                                <span class="cal-tasks-count" id="calTasksCount">0 items</span>
+                                <button class="cal-add-btn" id="calAddTaskBtn" title="Add task" style="display:none"><i class="fa-solid fa-plus"></i> Add</button>
+                            </div>
+                        </div>
+                        <div class="cal-tasks-body" id="calTasksBody">
+                            <div class="cal-empty"><i class="fa-solid fa-calendar-day"></i><p>Select a date to view tasks.</p></div>
                         </div>
                     </div>
 
