@@ -200,7 +200,7 @@
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->technician_signature))
-                                        <img src="/{{ $repairRequest->technician_signature }}" class="signature-preview" alt="Technician Signature">
+                                        <img src="/storage/{{ $repairRequest->technician_signature }}" class="signature-preview" alt="Technician Signature">
                                         <input type="hidden" id="technicianSignature" name="technicianSignature" value="{{ $repairRequest->technician_signature }}">
                                     @else
                                         <canvas id="technicianSignatureCanvas" class="signature-pad" width="220" height="48"></canvas>
@@ -277,7 +277,7 @@
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->it_personnel_signature))
-                                        <img src="/{{ $repairRequest->it_personnel_signature }}" class="signature-preview" alt="Signature">
+                                        <img src="/storage/{{ $repairRequest->it_personnel_signature }}" class="signature-preview" alt="Signature">
                                         <input type="hidden" id="itPersonnelSignature" name="itPersonnelSignature" value="{{ $repairRequest->it_personnel_signature }}">
                                     @else
                                         <canvas id="itPersonnelSignatureCanvas" class="signature-pad" width="220" height="48"></canvas>
@@ -335,7 +335,7 @@
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->end_user_acceptance_signature))
-                                        <img src="/{{ $repairRequest->end_user_acceptance_signature }}" class="signature-preview" alt="Signature">
+                                        <img src="/storage/{{ $repairRequest->end_user_acceptance_signature }}" class="signature-preview" alt="Signature">
                                         <input type="hidden" id="endUserAcceptanceSignature" name="endUserAcceptanceSignature" value="{{ $repairRequest->end_user_acceptance_signature }}">
                                     @else
                                         <canvas id="endUserAcceptanceSignatureCanvas" class="signature-pad" width="220" height="48"></canvas>

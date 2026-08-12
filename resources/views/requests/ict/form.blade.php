@@ -321,7 +321,7 @@
                             <div class="signature-wrapper">
                                 <div class="signature-container" id="endUserSignatureContainer">
                                     @if(!empty($repairRequest->end_user_signature))
-                                        <img src="/{{ $repairRequest->end_user_signature }}" class="signature-preview" alt="Signature" id="endUserSignatureImg">
+                                        <img src="/storage/{{ $repairRequest->end_user_signature }}" class="signature-preview" alt="Signature" id="endUserSignatureImg">
                                         <input type="hidden" id="endUserSignature" name="endUserSignature" value="{{ $repairRequest->end_user_signature }}">
                                     @else
                                         <canvas id="endUserSignatureCanvas" class="signature-pad" width="220" height="48"></canvas>
