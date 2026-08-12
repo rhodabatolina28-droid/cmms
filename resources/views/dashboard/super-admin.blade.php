@@ -369,6 +369,11 @@
             <i class="fa-solid fa-server stat-bg-icon"></i>
             <span class="stat-label">Active Assets</span>
             <div class="stat-value">{{ $stats['total_assets'] }}</div>
+            @if(($assetBreakdown['under_repair'] ?? 0) > 0)
+                <div style="font-size:10px; color:#c2410c; font-weight:700; margin-top:4px;">
+                    <i class="fa-solid fa-wrench" style="margin-right:3px;"></i>{{ $assetBreakdown['under_repair'] }} under repair
+                </div>
+            @endif
         </div>
         <div class="stat-card-premium stat-overdue {{ $stats['overdue_pms'] > 0 ? 'stat-overdue-alert' : '' }}">
             <i class="fa-solid fa-clock stat-bg-icon"></i>
@@ -399,9 +404,9 @@
                 <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-chart-pie icon-blue"></i>
-                        System Health Overview
+                        Asset Status Overview
                     </div>
-                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Asset and request status at a glance.</p>
+                    <p style="font-size: 11px; color: #94a3b8; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
                     <div style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
@@ -565,45 +570,23 @@
         const departmentData = @json($departmentStats);
         const rawLabels = Object.keys(departmentData);
         const data      = Object.values(departmentData);
+        const officeTotal = data.reduce((a, b) => a + b, 0);
 
-        // Abbreviate long office names so they fit nicely on the chart
-        const labels = rawLabels.map(k => {
-            if (!k) return 'Unassigned';
-            // Truncate anything longer than 28 chars with ellipsis
-            return k.length > 28 ? k.slice(0, 26) + '…' : k;
-        });
-
-        // Generate a stepped blue palette (government blue family)
-        const maxVal   = Math.max(...data, 1);
-        const palette  = data.map((_, i) => {
-            const ratio = i / Math.max(data.length - 1, 1);
-            // Interpolate from #0038A8 (NCMB deep blue) → #60a5fa (light blue)
-            const r = Math.round(0   + ratio * (96  - 0));
-            const g = Math.round(56  + ratio * (165 - 56));
-            const b = Math.round(168 + ratio * (250 - 168));
-            return `rgba(${r},${g},${b},0.88)`;
-        });
-
-        // ─── Vertical Bar Chart — Government Standard ────────────────────────────
+        // ─── Horizontal Bar Chart — Office Request Volume ─────────────────────────
+        // Horizontal axis is used so long office names fit without truncation.
         const ctxOffice = document.getElementById('officeChart');
         if (ctxOffice) {
             // Sort: highest requests first
-            const sorted = labels.map((l, i) => ({ label: l, val: data[i] }))
-                                 .sort((a, b) => b.val - a.val);
+            const sorted = rawLabels.map((l, i) => ({ label: l || 'Unassigned', val: data[i] }))
+                                    .sort((a, b) => b.val - a.val);
             const sortedLabels = sorted.map(x => x.label);
             const sortedData   = sorted.map(x => x.val);
             const maxVal       = Math.max(...sortedData, 1);
 
-            // Government blue palette — each bar gets a slightly different shade
-            const baseColors = [
-                'rgba(0, 40, 120, 0.90)',
-                'rgba(0, 56, 168, 0.85)',
-                'rgba(30, 80, 190, 0.82)',
-                'rgba(59, 106, 210, 0.80)',
-                'rgba(90, 130, 220, 0.78)',
-                'rgba(120, 160, 230, 0.75)',
-            ];
-            const barColors = sortedData.map((_, i) => baseColors[i % baseColors.length]);
+            // Top office highlighted in deep blue; the rest in light blue for scanning
+            const barColors = sortedData.map((_, i) =>
+                i === 0 ? 'rgba(0, 56, 168, 1)' : 'rgba(147, 197, 253, 0.75)'
+            );
 
             new Chart(ctxOffice, {
                 type: 'bar',
@@ -616,16 +599,16 @@
                         hoverBackgroundColor: barColors.map(c => c.replace(/[\d.]+\)$/, '1)')),
                         borderRadius: 5,
                         borderSkipped: false,
-                        maxBarThickness: 32,   // thin bars
-                        barPercentage: 0.75,
-                        categoryPercentage: 0.80
+                        maxBarThickness: 26,   // thin horizontal bars
+                        barPercentage: 0.72,
+                        categoryPercentage: 0.85
                     }]
                 },
                 options: {
-                    // No indexAxis — default is vertical
+                    indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 20, right: 10, bottom: 5, left: 5 } },
+                    layout: { padding: { top: 10, right: 24, bottom: 5, left: 5 } },
                     animation: { duration: 800, easing: 'easeOutQuart' },
                     plugins: {
                         legend: { display: false },
@@ -637,12 +620,15 @@
                             cornerRadius: 8,
                             callbacks: {
                                 title: ctx => ctx[0].label,
-                                label: ctx => ` ${ctx.parsed.y} request${ctx.parsed.y !== 1 ? 's' : ''}`
+                                label: ctx => {
+                                    const pct = officeTotal > 0 ? ((ctx.parsed.x / officeTotal) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.parsed.x} request${ctx.parsed.x !== 1 ? 's' : ''} (${pct}%)`;
+                                }
                             }
                         }
                     },
                     scales: {
-                        y: {
+                        x: {
                             beginAtZero: true,
                             max: maxVal + Math.ceil(maxVal * 0.15),
                             grid: { color: '#f1f5f9', drawTicks: false },
@@ -655,14 +641,12 @@
                                 padding: 6
                             }
                         },
-                        x: {
+                        y: {
                             grid: { display: false },
                             border: { color: '#e2e8f0' },
                             ticks: {
-                                font: { size: 10, weight: '600', family: 'Inter, sans-serif' },
-                                color: '#334155',
-                                maxRotation: 35,
-                                minRotation: 0
+                                font: { size: 11, weight: '600', family: 'Inter, sans-serif' },
+                                color: '#334155'
                             }
                         }
                     }
@@ -679,32 +663,66 @@
                                 ctx.save();
                                 ctx.fillStyle = '#0038A8';
                                 ctx.font = 'bold 11px Inter, sans-serif';
-                                ctx.textAlign = 'center';
-                                ctx.textBaseline = 'bottom';
-                                ctx.fillText(value, bar.x, bar.y - 4);
+                                ctx.textAlign = 'left';
+                                ctx.textBaseline = 'middle';
+                                ctx.fillText(value, bar.x + 6, bar.y);
                                 ctx.restore();
                             });
                         });
                     }
                 }]
             });
+
+            // Empty state: friendly message instead of a blank chart
+            if (officeTotal === 0) {
+                ctxOffice.style.display = 'none';
+                const holder = ctxOffice.parentElement;
+                const empty = document.createElement('div');
+                empty.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;text-align:center;';
+                empty.innerHTML = '<i class="fa-solid fa-chart-column" style="font-size:32px;color:#e2e8f0;"></i><div>No requests recorded yet.</div><div style="font-size:11px;font-weight:500;">Request volume by office will appear here.</div>';
+                holder.appendChild(empty);
+            }
         }
 
-        // ─── Doughnut Chart — System Health ──────────────────────────────────────
-        const activeRequests = ({{ $stats['pending'] ?? 0 }}) + ({{ $stats['ongoing'] ?? 0 }});
-        const overduePMs    = {{ $stats['overdue_pms'] ?? 0 }};
-        const activeAssets  = {{ $stats['total_assets'] ?? 0 }};
-        const healthyAssets = Math.max(activeAssets - (activeRequests + overduePMs), 0);
+        // ─── Doughnut Chart — Asset Status Overview (real inventory statuses) ────
+        const assetBreakdown = @json($assetBreakdown);
+        const doughnutValues = [
+            assetBreakdown.active,
+            assetBreakdown.spare,
+            assetBreakdown.under_repair,
+            assetBreakdown.for_disposal
+        ];
+        const doughnutTotal = assetBreakdown.total || 0;
 
         const ctxWorkload = document.getElementById('workloadChart');
         if (ctxWorkload) {
+            const centerText = {
+                id: 'doughnutCenterText',
+                afterDraw(chart, args, opts) {
+                    const { ctx } = chart;
+                    const meta = chart.getDatasetMeta(0);
+                    if (!meta.data.length) return;
+                    const first = meta.data[0];
+                    const x = first.x, y = first.y;
+                    ctx.save();
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#1e293b';
+                    ctx.font = 'bold 24px Inter, sans-serif';
+                    ctx.fillText(doughnutTotal, x, y - 6);
+                    ctx.fillStyle = '#94a3b8';
+                    ctx.font = '600 10px Inter, sans-serif';
+                    ctx.fillText('TOTAL ASSETS', x, y + 16);
+                    ctx.restore();
+                }
+            };
             new Chart(ctxWorkload, {
                 type: 'doughnut',
                 data: {
-                    labels: ['Healthy Assets', 'Active Requests', 'Overdue PMs'],
+                    labels: ['Active', 'Spare', 'Under Repair', 'For Disposal'],
                     datasets: [{
-                        data: [healthyAssets, activeRequests, overduePMs],
-                        backgroundColor: ['#10b981', '#0038A8', '#ef4444'],
+                        data: doughnutValues,
+                        backgroundColor: ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6'],
                         borderWidth: 3,
                         borderColor: '#ffffff',
                         hoverOffset: 8
@@ -713,7 +731,7 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
-                    cutout: '72%',
+                    cutout: '68%',
                     plugins: {
                         legend: {
                             position: 'bottom',
@@ -723,7 +741,23 @@
                                 boxWidth: 8,
                                 padding: 14,
                                 font: { size: 11, family: 'Inter', weight: '700' },
-                                color: '#475569'
+                                color: '#475569',
+                                generateLabels(chart) {
+                                    const cd = chart.data;
+                                    const bg = cd.datasets[0];
+                                    return cd.labels.map((label, i) => {
+                                        const val = bg.data[i];
+                                        const pct = doughnutTotal > 0 ? Math.round((val / doughnutTotal) * 100) : 0;
+                                        return {
+                                            text: `${label} · ${val} · ${pct}%`,
+                                            fillStyle: bg.backgroundColor[i],
+                                            strokeStyle: bg.backgroundColor[i],
+                                            hidden: !chart.getDataVisibility(i),
+                                            index: i,
+                                            pointStyle: 'circle'
+                                        };
+                                    });
+                                }
                             }
                         },
                         tooltip: {
@@ -733,12 +767,26 @@
                             padding: 12,
                             cornerRadius: 8,
                             callbacks: {
-                                label: ctx => ` ${ctx.label}: ${ctx.parsed}`
+                                label: ctx => {
+                                    const pct = doughnutTotal > 0 ? ((ctx.parsed / doughnutTotal) * 100).toFixed(1) : 0;
+                                    return ` ${ctx.label}: ${ctx.parsed} (${pct}%)`;
+                                }
                             }
                         }
                     }
-                }
+                },
+                plugins: [centerText]
             });
+
+            // Zero-state: show "No Data" instead of a broken ring
+            if (doughnutTotal === 0) {
+                ctxWorkload.style.display = 'none';
+                const holder = ctxWorkload.parentElement;
+                const empty = document.createElement('div');
+                empty.style.cssText = 'position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;text-align:center;';
+                empty.innerHTML = '<i class="fa-solid fa-box-open" style="font-size:32px;color:#e2e8f0;"></i><div>No inventory assets recorded yet.</div><div style="font-size:11px;font-weight:500;">Asset status will appear here.</div>';
+                holder.appendChild(empty);
+            }
         }
 
     });

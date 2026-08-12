@@ -2,21 +2,6 @@
 
 /* ── Supply Workspace Mobile Responsive ── */
 @media (max-width: 768px) {
-    /* Hero section */
-    .cmms-official-hero {
-        padding: 16px 18px !important;
-    }
-    .cmms-official-hero .ref {
-        font-size: 10px !important;
-        letter-spacing: 0.05em !important;
-    }
-    .cmms-official-hero h1 {
-        font-size: 1.1rem !important;
-    }
-    .cmms-official-hero .sub {
-        font-size: 12px !important;
-    }
-
     /* Page intro */
     .cmms-page-intro {
         flex-direction: column !important;
@@ -113,7 +98,10 @@
         flex-wrap: wrap !important;
     }
     .cmms-req-actions .cmms-btn-secondary,
-    .cmms-req-actions .cmms-btn-primary {
+    .cmms-req-actions .cmms-btn-primary,
+    .cmms-req-actions .cmms-btn-success,
+    .cmms-req-actions .cmms-btn-danger,
+    .cmms-req-actions .cmms-btn-danger-ghost {
         flex: 1 !important;
         min-width: 120px !important;
         min-height: 44px !important;
@@ -214,6 +202,7 @@
     .cmms-btn-secondary,
     .cmms-btn-success,
     .cmms-btn-danger,
+    .cmms-btn-danger-ghost,
     .cmms-btn-muted {
         font-size: 12px !important;
         padding: 10px 14px !important;

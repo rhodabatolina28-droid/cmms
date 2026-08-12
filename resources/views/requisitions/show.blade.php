@@ -61,12 +61,15 @@
 
 @section('content')
 <div class="cmms-official cmms-official-page">
-
-    <div class="cmms-official-hero">
-        <div class="ref">{{ $isIT ? 'NCMB · ICT Unit' : 'NCMB · Property and Supply' }}</div>
-        <h1>Purchase Request PR-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</h1>
-        <p class="sub">Job order {{ $ticket?->display_number ?? $ticket?->request_number ?? '—' }} · {{ ucfirst($status) }}</p>
-    </div>
+    <div class="cmms-page-card">
+        <div class="cmms-page-card-head">
+            <div>
+                <h2>Purchase Request PR-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</h2>
+                <div class="sub">Job order {{ $ticket?->display_number ?? $ticket?->request_number ?? '—' }} · {{ ucfirst($status) }}</div>
+            </div>
+            <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary">Back to requisitions</a>
+        </div>
+        <div class="cmms-page-card-body">
 
     @include('requisitions.partials.status-tracker', ['requisition' => $requisition, 'variant' => 'full'])
 
@@ -215,7 +218,7 @@
 
                     <div class="cmms-action-bar action-bar-flush">
                         @if($status === 'pending')
-                        <button type="button" class="cmms-btn-success supply-action-btn" data-action="approve">Approve</button>
+                        <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve">Approve</button>
                         <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject">Disapprove</button>
                         @elseif($status === 'approved')
                         <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue">Issue property</button>
@@ -255,6 +258,8 @@
                 </div>
             </div>
         </aside>
+    </div>
+        </div>
     </div>
 </div>
 @endsection

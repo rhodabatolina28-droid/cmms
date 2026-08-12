@@ -14,14 +14,25 @@
     .req-list-flush { padding:0; background:transparent; }
     .paginator-compact { padding:8px 0; }
     .pr-page-wrap { width:100%; }
+    .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
+    .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
+    .cmms-item-count { font-size:12px; color:#94a3b8; font-weight:700; }
+    .cmms-pr-footer { align-items:flex-start; }
+    .cmms-pr-option-wrap { display:flex; flex-direction:column; gap:4px; }
+    .cmms-pr-option-hint { font-size:11px; color:#94a3b8; font-weight:500; }
     /* Requisition card hover effect */
     .req-card-hover { transition: all 0.2s ease; }
     .req-card-hover:hover { background: #f8fafc; }
     /* Status badge glow — already in cmms-official.css */
     /* MOBILE RESPONSIVE */
     @media (max-width: 767px) {
-        .cmms-official-hero h1 { font-size: 1.1rem !important; }
-        .cmms-official-hero { padding: 16px !important; }
+        .cmms-official-hero h1,
+        .cmms-official-hero,
+        .cmms-hero-badge,
+        .cmms-official-hero .ref,
+        .cmms-official-hero .sub {
+            display: none !important;
+        }
         .cmms-tab { padding: 12px 16px !important; font-size: 13px !important; min-height: 44px !important; }
         .cmms-pr-sheet { padding: 0 !important; }
         .cmms-pr-sheet-head { flex-direction: column !important; gap: 8px !important; padding: 16px !important; }
@@ -45,14 +56,18 @@
 @section('content')
 <div class="pr-page-wrap">
     <div class="cmms-official cmms-official-page">
-
-        <div class="cmms-official-hero">
-            <div class="ref">National Conciliation and Mediation Board · ICT Unit</div>
-            <h1>My Parts Requisitions</h1>
-            <p class="sub">Request and track parts tied to your assigned ICT job orders.</p>
-        </div>
-
-        <div class="cmms-tabs" role="tablist">
+        <div class="cmms-page-card">
+            <div class="cmms-page-card-head">
+                <div>
+                    <h2>My Parts Requisitions</h2>
+                    <div class="sub">Request and track parts tied to your assigned ICT job orders.</div>
+                </div>
+                @if($activeTickets->isEmpty())
+                <a href="{{ route('dashboard.it') }}" class="cmms-btn-secondary">Back to IT dashboard</a>
+                @endif
+            </div>
+            <div class="cmms-page-card-body">
+                <div class="cmms-tabs" role="tablist">
             <button type="button" class="cmms-tab active" data-target="tab-new" role="tab">Request Parts</button>
             <button type="button" class="cmms-tab" data-target="tab-history" role="tab">History</button>
         </div>
@@ -61,6 +76,7 @@
             @if($activeTickets->isEmpty())
                 <div class="cmms-panel">
                     <div class="cmms-panel-body cmms-empty">
+                        <i class="fa-solid fa-clipboard-list cmms-empty-icon"></i>
                         <h3>No open ICT job order</h3>
                         <p>Parts can only be requested from an assigned ICT job order that is still active.</p>
                         <a href="{{ route('dashboard.it') }}" class="cmms-btn-secondary btn-back-top">Back to IT dashboard</a>
@@ -106,25 +122,26 @@
                             <table class="cmms-official-table">
                                 <thead>
                                     <tr>
+                                        <th class="col-num">#</th>
                                         <th class="col-qty">Qty</th>
                                         <th>Description and specifications</th>
-                                        <th class="col-price">Unit price</th>
-                                        <th class="col-price">Total</th>
                                         <th class="col-th-action"></th>
                                     </tr>
                                 </thead>
                                 <tbody id="ticketReqItemsList">
                                     <tr class="ticket-req-row">
+                                        <td class="col-num input-qty-center"></td>
                                         <td class="col-qty"><input type="number" class="cmms-pr-input ticket-req-qty input-qty-center" min="1" value="1" required></td>
                                         <td class="col-desc"><input type="text" class="cmms-pr-input ticket-req-desc" placeholder="e.g. NVMe SSD 1TB, DDR4 8GB RAM" required></td>
-                                        <td class="col-price col-price-muted">-</td>
-                                        <td class="col-price col-price-muted">-</td>
                                         <td class="col-action"><button type="button" class="cmms-row-remove remove-item-btn" tabindex="-1" title="Remove row">&times;</button></td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
-                        <button type="button" id="addTicketReqLine" class="cmms-pr-add-row">Add line item</button>
+                        <div class="cmms-pr-add-row-bar">
+                            <button type="button" id="addTicketReqLine" class="cmms-pr-add-row">Add line item</button>
+                            <span id="ticketReqItemCount" class="cmms-item-count" aria-live="polite">1 line item</span>
+                        </div>
 
                         <div class="cmms-pr-justification">
                             <div class="k">Purpose / justification</div>
@@ -132,10 +149,13 @@
                         </div>
 
                         <div class="cmms-pr-footer">
-                            <label class="cmms-pr-option">
-                                <input type="checkbox" id="ticketReqAwaitingParts" checked>
-                                Mark job order as <strong>Awaiting Parts</strong>
-                            </label>
+                            <div class="cmms-pr-option-wrap">
+                                <label class="cmms-pr-option">
+                                    <input type="checkbox" id="ticketReqAwaitingParts" checked>
+                                    Mark job order as <strong>Awaiting Parts</strong>
+                                </label>
+                                <span class="cmms-pr-option-hint">Sets the job order status to "Awaiting Parts" once submitted.</span>
+                            </div>
                             <button type="button" id="ticketPartsSubmitBtn" class="cmms-btn-primary">Submit to Supply</button>
                         </div>
                     </div>
@@ -147,6 +167,7 @@
             @if($requisitions->isEmpty())
                 <div class="cmms-panel">
                     <div class="cmms-panel-body cmms-empty">
+                        <i class="fa-solid fa-box-archive cmms-empty-icon"></i>
                         <h3>No requisition history</h3>
                         <p>Parts requests submitted to Supply will appear here.</p>
                     </div>
@@ -165,6 +186,8 @@
                 </div>
                 <div class="paginator-compact">{{ $requisitions->links() }}</div>
             @endif
+        </div>
+            </div>
         </div>
     </div>
 </div>
@@ -189,26 +212,42 @@
 
     const rowHtml = () => `
         <tr class="ticket-req-row">
+            <td class="col-num input-qty-center"></td>
             <td class="col-qty"><input type="number" class="cmms-pr-input ticket-req-qty input-qty-center" min="1" value="1" required></td>
             <td class="col-desc"><input type="text" class="cmms-pr-input ticket-req-desc" placeholder="Item description" required></td>
-            <td class="col-price col-price-muted">-</td>
-            <td class="col-price col-price-muted">-</td>
             <td class="col-action"><button type="button" class="cmms-row-remove remove-item-btn" tabindex="-1">&times;</button></td>
         </tr>`;
 
+    const renumberTicketRows = () => {
+        const rows = ticketReqItemsList.querySelectorAll('.ticket-req-row');
+        rows.forEach((row, idx) => {
+            const num = row.querySelector('.col-num');
+            if (num) num.textContent = (idx + 1);
+        });
+        const countEl = document.getElementById('ticketReqItemCount');
+        if (countEl) countEl.textContent = rows.length + (rows.length === 1 ? ' line item' : ' line items');
+    };
+
     document.getElementById('addTicketReqLine')?.addEventListener('click', () => {
         ticketReqItemsList.insertAdjacentHTML('beforeend', rowHtml());
+        renumberTicketRows();
+        const rows = ticketReqItemsList.querySelectorAll('.ticket-req-row');
+        const lastDesc = rows[rows.length - 1]?.querySelector('.ticket-req-desc');
+        if (lastDesc) lastDesc.focus();
     });
 
     ticketReqItemsList.addEventListener('click', (e) => {
         if (e.target.classList.contains('remove-item-btn')) {
             if (ticketReqItemsList.querySelectorAll('.ticket-req-row').length > 1) {
                 e.target.closest('tr').remove();
+                renumberTicketRows();
             } else {
                 Swal.fire({ icon: 'warning', title: 'Cannot remove', text: 'At least one item is required.', confirmButtonColor: '#0038A8' });
             }
         }
     });
+
+    renumberTicketRows();
 
     document.getElementById('ticketPartsSubmitBtn')?.addEventListener('click', async () => {
         if (submitting) return;

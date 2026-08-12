@@ -71,23 +71,38 @@ class SuperAdminDashboardAction
             })
             ->count();
             
-        // Total Assets for health metric
-        $totalAssets = InventoryAsset::query()
+        // Real asset status breakdown (region/branch scoped) — single source of truth
+        // for BOTH the stat cards and the asset-status doughnut chart.
+        $assetStatusCounts = InventoryAsset::query()
             ->when($user->region, fn ($q) => $q->where('region', $user->region))
             ->when($user->branch, fn ($q) => $q->where('branch', $user->branch))
-            ->where('status', 'Active')
-            ->count();
+            ->select('status')
+            ->get()
+            ->groupBy('status')
+            ->map->count()
+            ->toArray();
+
+        // Under Maintenance and For Repair are NOT active assets.
+        $assetBreakdown = [
+            'active'       => $assetStatusCounts['Active'] ?? 0,
+            'spare'        => $assetStatusCounts['Spare'] ?? 0,
+            'under_repair' => ($assetStatusCounts['For Repair'] ?? 0)
+                            + ($assetStatusCounts['Under Maintenance'] ?? 0),
+            'for_disposal' => ($assetStatusCounts['For Disposal'] ?? 0)
+                            + ($assetStatusCounts['Disposed'] ?? 0),
+        ];
+        $assetBreakdown['total'] = array_sum($assetBreakdown);
 
         $stats = [
-            'total'       => $statsRow->total ?? 0,
-            'pending'     => $statsRow->pending ?? 0,
-            'completed'   => $statsRow->completed ?? 0,
-            'ongoing'     => $statsRow->ongoing ?? 0,
-            'total_users' => User::query()
+            'total'        => $statsRow->total ?? 0,
+            'pending'      => $statsRow->pending ?? 0,
+            'completed'    => $statsRow->completed ?? 0,
+            'ongoing'      => $statsRow->ongoing ?? 0,
+            'total_users'  => User::query()
                 ->when($user->region, fn ($query) => $query->where('region', $user->region))
                 ->when($user->branch, fn ($query) => $query->where('branch', $user->branch))
                 ->count(),
-            'total_assets' => $totalAssets,
+            'total_assets' => $assetBreakdown['active'], // Active ONLY
             'overdue_pms'  => $overduePMsCount,
         ];
 
@@ -136,6 +151,6 @@ class SuperAdminDashboardAction
             $csmResponses = 0;
         }
 
-        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses'));
+        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'assetBreakdown'));
     }
 }

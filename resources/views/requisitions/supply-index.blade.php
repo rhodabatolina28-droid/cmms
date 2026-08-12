@@ -11,6 +11,31 @@
     .table-wrap { overflow-x:auto; }
     .text-muted-none { color:#94a3b8; font-size:0.8rem; }
     .td-nowrap { white-space:nowrap; }
+    .cmms-req-actions--quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; align-items:center; }
+    .cmms-req-actions--quick .cmms-btn-primary,
+    .cmms-req-actions--quick .cmms-btn-success,
+    .cmms-req-actions--quick .cmms-btn-danger-ghost { margin:0; }
+    .cmms-contents-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin: 0 0 14px;
+        padding: 10px 14px;
+        background: #f8fafc;
+        border: 1px solid var(--cmms-border);
+        border-radius: 8px;
+        font-size: 13px;
+        color: var(--cmms-muted);
+        position: sticky;
+        top: 78px;
+        z-index: 20;
+    }
+    .cmms-contents-bar-label strong { color: var(--cmms-ink); }
+    .cmms-req-card--needs-action { border-left:4px solid transparent; }
+    .cmms-req-card--needs-review { border-left:4px solid #d97706; }
+    .cmms-req-card--awaiting-issue { border-left:4px solid #16a34a; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -26,32 +51,52 @@
 @php
     $supplyView = $supplyView ?? 'queue';
     $filter = $filter ?? 'pending';
+    $filterLabels = [
+        'pending' => 'Pending review',
+        'approved' => 'Ready to issue',
+        'issued' => 'Issued',
+        'rejected' => 'Rejected',
+        'all' => 'All records',
+    ];
 @endphp
 <div class="cmms-official cmms-official-page">
-
-    <div class="cmms-official-hero">
-        <div class="ref">National Conciliation and Mediation Board · Property and Supply</div>
-        <h1>Supply Workspace</h1>
-        <p class="sub">{{ Auth::user()->region }}@if(Auth::user()->office) · {{ Auth::user()->office }}@endif</p>
-    </div>
-
-    <div class="cmms-page-intro">
-        <p>
-            @if($supplyView === 'tickets')
-                ICT job orders within your scope. Open the latest requisition when Supply action is needed.
-            @else
-                Parts requisitions submitted by IT personnel. Review, approve, reject, or issue from this queue.
-            @endif
-        </p>
-        <a href="{{ route(Auth::user()->role === 'super_admin' ? 'dashboard.super-admin' : 'dashboard.admin') }}" class="cmms-btn-secondary">Return to dashboard</a>
-    </div>
-
-    <div class="cmms-view-switch">
-        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}">Requisition Queue</a>
-        <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}">ICT Job Orders</a>
-    </div>
+    <div class="cmms-page-card">
+        <div class="cmms-page-card-head">
+            <div>
+                <h2>Supply Workspace</h2>
+                <div class="sub">{{ Auth::user()->region }}@if(Auth::user()->office) &middot; {{ Auth::user()->office }}@endif</div>
+            </div>
+            <a href="{{ route(Auth::user()->role === 'super_admin' ? 'dashboard.super-admin' : 'dashboard.admin') }}" class="cmms-btn-secondary">Return to dashboard</a>
+        </div>
+        <div class="cmms-page-card-body">
+            <div class="cmms-view-switch">
+                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}">Requisition Queue</a>
+                <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}">ICT Job Orders</a>
+            </div>
 
     @if($supplyView === 'queue')
+        @php
+            $toReview = (int) ($counts['pending'] ?? 0);
+            $toIssue  = (int) ($counts['approved'] ?? 0);
+            $needsAction = $toReview + $toIssue;
+        @endphp
+        <div class="cmms-action-callout {{ $needsAction > 0 ? '' : 'is-clear' }}">
+            @if($needsAction > 0)
+                <i class="fa-solid fa-bell"></i>
+                <span>
+                    You have <strong>{{ $needsAction }}</strong> requisition{{ $needsAction > 1 ? 's' : '' }} awaiting your action.
+                    @if($toReview > 0)
+                        <span class="cmms-callout-chip"><strong>{{ $toReview }}</strong> to review</span>
+                    @endif
+                    @if($toIssue > 0)
+                        <span class="cmms-callout-chip"><strong>{{ $toIssue }}</strong> ready to issue</span>
+                    @endif
+                </span>
+            @else
+                <i class="fa-solid fa-circle-check"></i>
+                <span>All caught up &mdash; no requisitions awaiting your action.</span>
+            @endif
+        </div>
         <div class="cmms-stat-strip">
             @foreach([
                 'pending' => ['To review', $counts['pending'] ?? 0],
@@ -60,18 +105,25 @@
                 'rejected' => ['Rejected', $counts['rejected'] ?? 0],
             ] as $key => [$label, $num])
             <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $key]) }}"
-               class="cmms-stat-chip {{ $filter === $key ? 'is-active' : '' }}">
+               class="cmms-stat-chip cmms-stat-chip--{{ $key }} {{ $filter === $key ? 'is-active' : '' }}">
                 <div class="n">{{ $num }}</div>
                 <div class="l">{{ $label }}</div>
             </a>
             @endforeach
         </div>
 
-        @if($filter !== 'all')
-        <div class="cmms-filter-row">
+        <div class="cmms-contents-bar">
+            <div class="cmms-contents-bar-label">
+                @if($filter === 'all')
+                    Showing all requisition records
+                @else
+                    Showing: <strong>{{ $filterLabels[$filter] ?? ucfirst($filter) }}</strong> &middot; {{ $requisitions->total() }} record(s)
+                @endif
+            </div>
+            @if($filter !== 'all')
             <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'all']) }}" class="cmms-filter-pill">View all records</a>
+            @endif
         </div>
-        @endif
 
         <div class="cmms-panel">
             <div class="cmms-panel-head">
@@ -81,7 +133,7 @@
             <div class="cmms-panel-body flush">
                 @if($requisitions->isEmpty())
                     <div class="cmms-empty">
-                        <i class="fa-solid fa-inbox" style="font-size:32px;color:#cbd5e1;display:block;margin-bottom:12px;"></i>
+                        <i class="fa-solid fa-inbox cmms-empty-icon"></i>
                         <h3 style="margin:0 0 6px;color:#475569;">No requisitions found</h3>
                         <p>There are no
                             @if($filter === 'pending') pending requisitions to review.
@@ -99,6 +151,7 @@
                                 'req' => $req,
                                 'showRequester' => true,
                                 'actionLabel' => 'Review',
+                                'quickActions' => true,
                             ])
                         @endforeach
                     </div>
@@ -117,7 +170,7 @@
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())
                     <div class="cmms-empty">
-                        <i class="fa-solid fa-clipboard-list" style="font-size:32px;color:#cbd5e1;display:block;margin-bottom:12px;"></i>
+                        <i class="fa-solid fa-clipboard-list cmms-empty-icon"></i>
                         <h3 style="margin:0 0 6px;color:#475569;">No ICT job orders</h3>
                         <p>No ICT assignments fall within your office scope.</p>
                     </div>
@@ -170,5 +223,73 @@
             @endif
         </div>
     @endif
+        </div>
+    </div>
 </div>
+@endsection
+
+@section('scripts')
+<script nonce="{{ $cspNonce }}">
+(function () {
+    if (typeof Swal === 'undefined') return;
+    const baseUrl = @json(url('requisitions'));
+    document.querySelectorAll('.supply-quick-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+            const action = btn.dataset.action;
+            const id = btn.dataset.id;
+            const pr = btn.dataset.pr;
+            const isReject = action === 'reject';
+            const labels = { approve: 'Approve', reject: 'Disapprove', issue: 'Issue parts' };
+            const { value: remarks, isConfirmed } = await Swal.fire({
+                title: labels[action] + ' ' + pr,
+                text: isReject ? 'Provide a reason for disapproval.' : 'Add an optional note, then confirm.',
+                input: isReject ? 'textarea' : 'text',
+                inputPlaceholder: isReject ? 'Reason for disapproval' : 'Optional note',
+                inputAttributes: { maxlength: '500' },
+                showCancelButton: true,
+                confirmButtonColor: '#0038A8',
+                confirmButtonText: 'Confirm',
+                inputValidator: (v) => {
+                    if (isReject && (!v || !v.trim())) return 'Please provide a reason for disapproval.';
+                },
+            });
+            if (!isConfirmed) return;
+            btn.disabled = true;
+            try {
+                const res = await fetch(baseUrl + '/' + id + '/review', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                        'Accept': 'application/json',
+                    },
+                    body: JSON.stringify({ action, remarks: remarks || '' }),
+                });
+                const data = await res.json();
+                if (data.success) {
+                    await Swal.fire({ icon: 'success', title: 'Recorded', text: data.message, confirmButtonColor: '#0038A8' });
+                    window.location.reload();
+                    return;
+                }
+                Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#0038A8' });
+            } catch (e) {
+                Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
+            }
+            btn.disabled = false;
+        });
+    });
+
+    document.querySelectorAll('.cmms-req-details-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+            const panel = document.getElementById('req-details-' + btn.dataset.rid);
+            if (!panel) return;
+            const open = panel.hasAttribute('hidden');
+            btn.classList.toggle('is-open', open);
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+            if (open) panel.removeAttribute('hidden');
+            else panel.setAttribute('hidden', '');
+        });
+    });
+})();
+</script>
 @endsection
