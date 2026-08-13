@@ -19,6 +19,9 @@ class StoreRequisitionRequest extends FormRequest
             'items'                => 'required|array|min:1',
             'items.*.description'  => 'required|string|max:500',
             'items.*.quantity'     => 'required|integer|min:1',
+            // Parts & Consumables source (optional, backward-compatible):
+            'items.*.source'       => 'nullable|string|in:parts-stock,spare,other',
+            'items.*.part_id'      => 'nullable|integer|exists:parts_stock,id',
             'remarks'              => 'nullable|string|max:2000',
             'set_awaiting_parts'   => 'nullable|boolean',
             'submission_id'        => 'nullable|string|max:64',

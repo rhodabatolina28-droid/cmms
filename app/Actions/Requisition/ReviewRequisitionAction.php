@@ -44,6 +44,20 @@ class ReviewRequisitionAction
                 return response()->json(['success' => false, 'message' => $error], 422);
             }
 
+            // Parts & Consumables: deduct on-hand stock when issuing the requisition.
+            if ($action === 'issue') {
+                $issue = (new \App\Actions\Inventory\PartsStock\IssuePartsForRequisitionAction)
+                    ->execute($requisition, $supply->id);
+
+                if (!$issue['success']) {
+                    return response()->json([
+                        'success' => false,
+                        'message' => $issue['message'],
+                        'deficits' => $issue['deficits'] ?? [],
+                    ], 422);
+                }
+            }
+
             $newStatus = match ($action) {
                 'approve' => Requisition::STATUS_APPROVED,
                 'reject' => Requisition::STATUS_REJECTED,

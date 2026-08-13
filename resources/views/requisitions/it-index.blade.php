@@ -10,6 +10,8 @@
     .pr-select { border:1px solid #e2e8f0; background:#fff; }
     .col-th-action { width:44px; }
     .input-qty-center { text-align:center; }
+    .ticket-req-source { margin-top:6px; width:100%; border:1px solid #e2e8f0; background:#fff; color:#334155; padding:7px 10px; font-size:12px; border-radius:6px; }
+    .ticket-req-source:focus { border-color:#0038A8; outline:none; }
     .col-price-muted { color:#cbd5e1; }
     .req-list-flush { padding:0; background:transparent; }
     .paginator-compact { padding:8px 0; }
@@ -132,7 +134,17 @@
                                     <tr class="ticket-req-row">
                                         <td class="col-num input-qty-center"></td>
                                         <td class="col-qty"><input type="number" class="cmms-pr-input ticket-req-qty input-qty-center" min="1" value="1" required></td>
-                                        <td class="col-desc"><input type="text" class="cmms-pr-input ticket-req-desc" placeholder="e.g. NVMe SSD 1TB, DDR4 8GB RAM" required></td>
+                                        <td class="col-desc">
+                                            <input type="text" class="cmms-pr-input ticket-req-desc" placeholder="e.g. NVMe SSD 1TB, DDR4 8GB RAM" required>
+                                            <select class="ticket-req-source">
+                                                <option value="">Source: type manually / spare asset</option>
+                                                @foreach($partsStock as $ps)
+                                                    <option value="{{ $ps->id }}" data-name="{{ $ps->item_name }}" data-unit="{{ $ps->unit }}" data-onhand="{{ $ps->on_hand_qty }}">From Parts Stock: {{ $ps->item_name }} ({{ $ps->on_hand_qty }} {{ $ps->unit }})</option>
+                                                @endforeach
+                                            </select>
+                                            <input type="hidden" class="ticket-req-part-id" value="">
+                                            <input type="hidden" class="ticket-req-source-val" value="other">
+                                        </td>
                                         <td class="col-action"><button type="button" class="cmms-row-remove remove-item-btn" tabindex="-1" title="Remove row">&times;</button></td>
                                     </tr>
                                 </tbody>
@@ -214,7 +226,17 @@
         <tr class="ticket-req-row">
             <td class="col-num input-qty-center"></td>
             <td class="col-qty"><input type="number" class="cmms-pr-input ticket-req-qty input-qty-center" min="1" value="1" required></td>
-            <td class="col-desc"><input type="text" class="cmms-pr-input ticket-req-desc" placeholder="Item description" required></td>
+            <td class="col-desc">
+                <input type="text" class="cmms-pr-input ticket-req-desc" placeholder="Item description" required>
+                <select class="ticket-req-source">
+                    <option value="">Source: type manually / spare asset</option>
+                    @foreach($partsStock as $ps)
+                        <option value="{{ $ps->id }}" data-name="{{ $ps->item_name }}" data-unit="{{ $ps->unit }}" data-onhand="{{ $ps->on_hand_qty }}">From Parts Stock: {{ $ps->item_name }} ({{ $ps->on_hand_qty }} {{ $ps->unit }})</option>
+                    @endforeach
+                </select>
+                <input type="hidden" class="ticket-req-part-id" value="">
+                <input type="hidden" class="ticket-req-source-val" value="other">
+            </td>
             <td class="col-action"><button type="button" class="cmms-row-remove remove-item-btn" tabindex="-1">&times;</button></td>
         </tr>`;
 
@@ -247,6 +269,27 @@
         }
     });
 
+    // When IT picks a part from Parts Stock, prefill the description + part_id/source.
+    ticketReqItemsList.addEventListener('change', (e) => {
+        if (!e.target.classList.contains('ticket-req-source')) return;
+        const row = e.target.closest('tr');
+        const opt = e.target.selectedOptions[0];
+        const partIdInput = row.querySelector('.ticket-req-part-id');
+        const sourceValInput = row.querySelector('.ticket-req-source-val');
+        const descInput = row.querySelector('.ticket-req-desc');
+        const qtyInput = row.querySelector('.ticket-req-qty');
+
+        if (opt && opt.value) {
+            partIdInput.value = opt.value;
+            sourceValInput.value = 'parts-stock';
+            descInput.value = opt.dataset.name || '';
+            if (!qtyInput.value || parseInt(qtyInput.value, 10) < 1) qtyInput.value = 1;
+        } else {
+            partIdInput.value = '';
+            sourceValInput.value = 'other';
+        }
+    });
+
     renumberTicketRows();
 
     document.getElementById('ticketPartsSubmitBtn')?.addEventListener('click', async () => {
@@ -263,7 +306,12 @@
         document.querySelectorAll('.ticket-req-row').forEach(row => {
             const desc = row.querySelector('.ticket-req-desc')?.value?.trim();
             const qty = parseInt(row.querySelector('.ticket-req-qty')?.value || '1', 10);
-            if (desc) items.push({ description: desc, quantity: qty });
+            if (desc) items.push({
+                description: desc,
+                quantity: qty,
+                source: row.querySelector('.ticket-req-source-val')?.value || 'other',
+                part_id: row.querySelector('.ticket-req-part-id')?.value || null,
+            });
             else hasEmptyDesc = true;
         });
 

@@ -128,6 +128,41 @@
         .status-ongoing { background: #eff6ff !important; color: #1d4ed8 !important; border: 1px solid #dbeafe !important; }
         .status-completed { background: #ecfdf5 !important; color: #047857 !important; border: 1px solid #d1fae5 !important; }
         .status-rejected { background: #fef2f2 !important; color: #b91c1c !important; border: 1px solid #fee2e2 !important; }
+
+        /* ===== Sidebar accordion (Inventory group) ===== */
+        .cmms-nav-group { display: block; }
+        .cmms-nav-parent {
+            width: 100%;
+            display: flex; align-items: center; gap: clamp(8px, 0.8vw, 12px);
+            min-height: clamp(42px, 3.6vw, 52px);
+            padding: 0 clamp(16px, 1.8vw, 24px);
+            color: rgba(255,255,255,0.85);
+            background: transparent; border: none; border-left: 4px solid transparent;
+            font-size: clamp(12px, 1vw, 15px); font-weight: 700;
+            cursor: pointer; text-align: left;
+            transition: background 0.2s, color 0.2s, border-left-color 0.2s;
+            white-space: nowrap;
+        }
+        .cmms-nav-parent:hover { background: rgba(255,255,255,0.1); color: #fff; }
+        .cmms-nav-parent.active { background: rgba(255,255,255,0.18); color: #fff; border-left-color: #FDC113; }
+        .cmms-nav-parent i:first-child { width: 16px; text-align: center; flex-shrink: 0; }
+        .cmms-nav-caret { margin-left: auto; font-size: 12px; transition: transform 0.25s ease; }
+        .cmms-nav-group.open .cmms-nav-caret { transform: rotate(180deg); }
+        .cmms-nav-sub { display: none; padding: 2px 0 6px; }
+        .cmms-nav-group.open .cmms-nav-sub { display: block; }
+        .cmms-nav-sub-link {
+            display: flex; align-items: center;
+            padding: 9px clamp(32px, 4vw, 44px);
+            margin: 0 clamp(4px, 0.4vw, 6px);
+            border-radius: 6px;
+            color: rgba(255,255,255,0.8); text-decoration: none;
+            font-size: clamp(12px, 1vw, 13.5px); font-weight: 600;
+            border-left: 3px solid transparent;
+            transition: background 0.2s, color 0.2s;
+            white-space: nowrap;
+        }
+        .cmms-nav-sub-link:hover { background: rgba(255,255,255,0.08); color: #fff; }
+        .cmms-nav-sub-link.active { background: rgba(255,255,255,0.18); color: #fff; border-left-color: #FDC113; }
     </style>
     <script nonce="{{ $cspNonce }}" src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     @yield('styles')
@@ -192,9 +227,18 @@
                     <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.index') ? 'active' : '' }}" data-tooltip="All Requests">
                         <i class="fa-solid fa-clipboard-list"></i> <span>All Requests</span>
                     </a>
-                    <a href="{{ route('super_admin.inventory') }}" class="nav-link {{ request()->routeIs('super_admin.inventory*') ? 'active' : '' }}" data-tooltip="Asset Registry">
-                        <i class="fa-solid fa-boxes-stacked"></i> <span>Asset Registry</span>
-                    </a>
+                    <div class="cmms-nav-group">
+                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('super_admin.inventory*', 'super_admin.parts', 'super_admin.purchase_requests*') ? 'active' : '' }}" aria-expanded="false">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            <span>Inventory</span>
+                            <i class="fa-solid fa-chevron-down cmms-nav-caret"></i>
+                        </button>
+                        <div class="cmms-nav-sub">
+                            <a href="{{ route('super_admin.inventory') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.inventory*') ? 'active' : '' }}">Asset Registry</a>
+                            <a href="{{ route('super_admin.parts') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.parts') ? 'active' : '' }}">Parts & Consumables</a>
+                            <a href="{{ route('super_admin.purchase_requests') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.purchase_requests*') ? 'active' : '' }}">Purchase Requests</a>
+                        </div>
+                    </div>
                     <a href="{{ route('requisitions.index') }}" class="nav-link {{ request()->routeIs('requisitions.*') ? 'active' : '' }}" data-tooltip="Parts Requests">
                         <i class="fa-solid fa-box"></i> <span>My Parts Requests</span>
                     </a>
@@ -207,9 +251,20 @@
                         <i class="fa-solid fa-users"></i> <span>Manage Personnel</span>
                     </a>
                     @if(Auth::user()->canProcessSupply())
-                        <a href="{{ route('inventory.index') }}" class="nav-link {{ request()->routeIs('inventory.*') ? 'active' : '' }}" data-tooltip="Inventory & Assets">
-                            <i class="fa-solid fa-boxes-stacked"></i> <span>Inventory & Assets</span>
-                        </a>
+                    <div class="cmms-nav-group">
+                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('inventory.*', 'physical-count.*', 'purchase_requests*') ? 'active' : '' }}" aria-expanded="false">
+                            <i class="fa-solid fa-boxes-stacked"></i>
+                            <span>Inventory</span>
+                            <i class="fa-solid fa-chevron-down cmms-nav-caret"></i>
+                        </button>
+                        <div class="cmms-nav-sub">
+                            <a href="{{ route('inventory.index') }}" class="cmms-nav-sub-link {{ request()->routeIs('inventory.index') ? 'active' : '' }}">Inventory & Assets</a>
+                            <a href="{{ route('inventory.parts') }}" class="cmms-nav-sub-link {{ request()->routeIs('inventory.parts*') ? 'active' : '' }}">Parts & Consumables</a>
+                            <a href="{{ route('inventory.qr-batch') }}" class="cmms-nav-sub-link {{ request()->routeIs('inventory.qr-batch') ? 'active' : '' }}">Batch QR Sticker Print</a>
+                            <a href="{{ route('physical-count.index') }}" class="cmms-nav-sub-link {{ request()->routeIs('physical-count.*') ? 'active' : '' }}">Physical Inventory Count</a>
+                            <a href="{{ route('purchase_requests.index') }}" class="cmms-nav-sub-link {{ request()->routeIs('purchase_requests*') ? 'active' : '' }}">Purchase Requests</a>
+                        </div>
+                    </div>
                     @endif
                     <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="Requests">
                         <i class="fa-solid fa-clipboard-list"></i> <span>{{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests</span>
@@ -633,6 +688,28 @@
         });
     </script>
     
+    <script nonce="{{ $cspNonce }}">
+        (function () {
+            // Auto-open the Inventory accordion when the current page is inside it.
+            document.querySelectorAll('.cmms-nav-group').forEach(function (group) {
+                if (group.querySelector('.cmms-nav-sub-link.active')) {
+                    group.classList.add('open');
+                    var btn = group.querySelector('.cmms-nav-parent');
+                    if (btn) btn.setAttribute('aria-expanded', 'true');
+                }
+            });
+            // Toggle the whole parent row — no need to hit a tiny arrow.
+            document.querySelectorAll('.cmms-nav-parent').forEach(function (btn) {
+                btn.addEventListener('click', function (e) {
+                    e.preventDefault();
+                    var group = btn.closest('.cmms-nav-group');
+                    if (!group) return;
+                    var open = group.classList.toggle('open');
+                    btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                });
+            });
+        })();
+    </script>
     @yield('scripts')
     {{-- MOBILE OVERRIDES — loaded last; !important wins over all stylesheets and inline styles --}}
     <style nonce="{{ $cspNonce }}">

@@ -18,6 +18,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Admin\PersonnelController;
 use App\Http\Controllers\Inventory\InventoryReportController;
 use App\Http\Controllers\Inventory\PhysicalCountController;
+use App\Http\Controllers\Inventory\PartsStockController;
+use App\Http\Controllers\PurchaseRequest\PurchaseRequestController;
 use App\Http\Controllers\Maintenance\PMScheduleController;
 
 Route::get('/', [PageController::class, 'landing']);
@@ -118,7 +120,29 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         ->middleware('role:admin', 'throttle:30,1')
         ->name('requisitions.review');
 
-    // Parts & Consumables Inventory (Supply Office) - Removed
+    // ==========================================
+    // PARTS & CONSUMABLES STOCK (SUPPLY OFFICE)
+    // ==========================================
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/inventory/parts', [PartsStockController::class, 'index'])->name('inventory.parts');
+        Route::post('/inventory/parts', [PartsStockController::class, 'store'])->name('inventory.parts.store')->middleware('throttle:30,1');
+        Route::put('/inventory/parts/{part}', [PartsStockController::class, 'update'])->name('inventory.parts.update')->middleware('throttle:30,1');
+        Route::post('/inventory/parts/{part}/stock-in', [PartsStockController::class, 'stockIn'])->name('inventory.parts.stock-in')->middleware('throttle:30,1');
+        Route::post('/inventory/parts/{part}/stock-out', [PartsStockController::class, 'stockOut'])->name('inventory.parts.stock-out')->middleware('throttle:30,1');
+        Route::get('/inventory/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('inventory.parts.movements');
+    });
+
+    // ==========================================
+    // PURCHASE REQUESTS (RA 9184) — SUPPLY OFFICE
+    // ==========================================
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/purchase-requests', [PurchaseRequestController::class, 'index'])->name('purchase_requests.index');
+        Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase_requests.show');
+        Route::post('/requisitions/{requisition}/purchase-request', [PurchaseRequestController::class, 'create'])->name('purchase_requests.create')->middleware('throttle:30,1');
+        Route::post('/purchase-requests/{purchaseRequest}/approve', [PurchaseRequestController::class, 'approve'])->name('purchase_requests.approve')->middleware('throttle:30,1');
+        Route::post('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receive'])->name('purchase_requests.receive')->middleware('throttle:30,1');
+        Route::post('/purchase-requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])->name('purchase_requests.cancel')->middleware('throttle:30,1');
+    });
 
     // ==========================================
     // ADMIN, SUPER ADMIN & SUPPLY — INVENTORY
@@ -289,5 +313,11 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::get('/inventory/{assetId}/detail', [InventoryController::class, 'superAdminDetail'])->name('super_admin.inventory.detail');
         Route::get('/inventory/export', [InventoryController::class, 'export'])->name('super_admin.inventory.export');
         // Super Admin disposal view removed — simplified flow handled by supply officer via confirm-scrapped
+
+        // Super Admin — READ-ONLY parts & consumables stock
+        Route::get('/parts', [PartsStockController::class, 'superAdminIndex'])->name('super_admin.parts');
+
+        // Super Admin — READ-ONLY purchase requests
+        Route::get('/purchase-requests', [PurchaseRequestController::class, 'superAdminIndex'])->name('super_admin.purchase_requests');
     });
 });

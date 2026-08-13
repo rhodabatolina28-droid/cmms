@@ -179,6 +179,64 @@
     </div>
     @endif
 
+    @if((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $partsStockMatches->isNotEmpty())
+    {{-- ══ SUPPLY: Parts & Consumables Stock Availability ══ --}}
+    <div class="cmms-panel mt-18" style="border-left:3px solid #0038A8;">
+        <div class="cmms-panel-head">
+            <h2><i class="fa-solid fa-boxes mr-6" style="color:#0038A8;"></i>Parts &amp; Consumables Stock</h2>
+            <span class="badge-sm text-gray-400">Available inventory from the Parts Stock (quantity-based)</span>
+        </div>
+        <div class="cmms-panel-body panel-body-flush">
+            @foreach($partsStockMatches as $lineIndex => $match)
+            @php $reqLine = $match['requested']; $part = $match['part']; @endphp
+            <div class="item-block">
+                <div class="item-header">
+                    <div>
+                        <span class="item-label">Requested item #{{ $lineIndex + 1 }}</span>
+                        <div class="item-title">
+                            {{ $reqLine['quantity'] ?? 1 }} × {{ $reqLine['description'] ?? '' }}
+                            @if($part->unit) <span class="text-gray-400">({{ $part->unit }})</span> @endif
+                        </div>
+                    </div>
+                    @if($match['deficit'])
+                        <span class="badge badge-critical" style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;">🔻 Short — needs PR</span>
+                    @else
+                        <span class="badge badge-ok" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;">● Available in stock</span>
+                    @endif
+                </div>
+                <div class="asset-row" style="background:#f8fafc;border:1px solid #e2e8f0;">
+                    <div>
+                        <span class="asset-name">{{ $part->item_name }}</span>
+                        @if($part->category) <span class="asset-model">{{ $part->category }}</span> @endif
+                        <div class="asset-sn">On-hand: {{ $part->on_hand_qty }} {{ $part->unit }}</div>
+                    </div>
+                    <div class="asset-actions">
+                        @if($match['deficit'])
+                            <span class="badge-status">Needs {{ $reqLine['quantity'] - $part->on_hand_qty }} more — Create PR</span>
+                        @else
+                            <span class="badge-available">Sufficient</span>
+                        @endif
+                    </div>
+                </div>
+            </div>
+            @endforeach
+            @php $hasDeficit = $partsStockMatches->contains(fn($m) => !empty($m['deficit'])); @endphp
+            @if(Auth::user()->canProcessSupply() && $hasDeficit)
+            <div class="info-bar" style="background:#fff7ed;color:#9a3412;border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+                <span><i class="fa-solid fa-boxes-stacked icon-mr-4"></i>May kulang sa Parts Stock — gumawa ng Purchase Request.</span>
+                <button type="button" id="createPrBtn" class="cmms-btn-primary" style="padding:7px 14px;font-size:12px;">＋ Create Purchase Request</button>
+            </div>
+            @endif
+            @if($canReview && in_array($status, ['approved'], true))
+            <div class="info-bar" style="background:#eff6ff;color:#0038A8;border-bottom:none;">
+                <i class="fa-solid fa-circle-info icon-mr-4"></i>
+                Using <b>Issue parts to IT</b> below will deduct these items from Parts Stock on-hand.
+            </div>
+            @endif
+        </div>
+    </div>
+    @endif
+
             <div class="cmms-toolbar">
                 @if($ticket)
                     <a href="{{ route('ict.show', $ticket->id) }}" class="cmms-btn-secondary" target="_blank">Job order record</a>
@@ -311,6 +369,47 @@
             busy = false;
             document.querySelectorAll('.supply-action-btn').forEach(b => b.disabled = false);
         });
+    });
+})();
+</script>
+@endif
+@php $canCreatePr = Auth::user()->canProcessSupply(); @endphp
+@if($canCreatePr)
+<script nonce="{{ $cspNonce }}">
+(function () {
+    const btn = document.getElementById('createPrBtn');
+    if (!btn) return;
+    btn.addEventListener('click', async () => {
+        const confirm = await Swal.fire({
+            icon: 'question',
+            title: 'Create Purchase Request',
+            text: 'Gagawa ng PR para sa kulang na Parts Stock lines ng requisition na ito.',
+            showCancelButton: true,
+            confirmButtonColor: '#0038A8',
+            confirmButtonText: 'Create',
+        });
+        if (!confirm.isConfirmed) return;
+        try {
+            const res = await fetch(@json(route('purchase_requests.create', $requisition->id)), {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'Accept': 'application/json',
+                },
+            });
+            const data = await res.json();
+            if (data.success) {
+                await Swal.fire({ icon: 'success', title: 'Created', text: data.message, confirmButtonColor: '#0038A8' });
+                window.location.href = data.purchase_request_id
+                    ? '{{ url('purchase-requests') }}/' + data.purchase_request_id
+                    : '{{ url('purchase-requests') }}';
+                return;
+            }
+            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Could not create.', confirmButtonColor: '#0038A8' });
+        } catch (e) {
+            Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
+        }
     });
 })();
 </script>

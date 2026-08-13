@@ -116,7 +116,13 @@ class ListRequisitionsAction
 
         $selectedTicketId = $httpRequest->query('request_id');
 
-        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId'));
+        $partsStock = \App\Models\Part::where('is_active', true)
+            ->when($itUser->region, fn ($q) => $q->where('region', $itUser->region))
+            ->when($itUser->branch, fn ($q) => $q->where('branch', $itUser->branch))
+            ->orderBy('item_name')
+            ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
+
+        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId', 'partsStock'));
     }
 
     /**
@@ -141,7 +147,13 @@ class ListRequisitionsAction
 
         $selectedTicketId = $httpRequest->query('request_id');
 
-        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId'));
+        $partsStock = \App\Models\Part::where('is_active', true)
+            ->when($superAdmin->region, fn ($q) => $q->where('region', $superAdmin->region))
+            ->when($superAdmin->branch, fn ($q) => $q->where('branch', $superAdmin->branch))
+            ->orderBy('item_name')
+            ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
+
+        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId', 'partsStock'));
     }
 
     private function supplyRequisitionCount(User $supply, string $status): int

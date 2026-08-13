@@ -1,0 +1,32 @@
+<?php
+
+namespace App\Http\Requests;
+
+use Illuminate\Foundation\Http\FormRequest;
+
+class StockInPartRequest extends FormRequest
+{
+    public function authorize(): bool
+    {
+        return auth()->check() && auth()->user()->canProcessSupply();
+    }
+
+    public function rules(): array
+    {
+        return [
+            'qty' => 'required|integer|min:1',
+            'reason' => 'required|string|max:190',
+            'reference_type' => 'nullable|string|max:32',
+            'reference_id' => 'nullable|integer',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'qty.required' => 'Quantity to add is required',
+            'qty.min' => 'Quantity must be at least 1',
+            'reason.required' => 'A source/remark is required',
+        ];
+    }
+}

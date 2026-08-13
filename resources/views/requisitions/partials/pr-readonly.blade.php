@@ -45,7 +45,12 @@
                 @forelse($requisition->items ?? [] as $i => $line)
                 <tr>
                     <td class="col-num">{{ $i + 1 }}</td>
-                    <td>{{ $line['description'] ?? '' }}</td>
+                    <td>
+                        {{ $line['description'] ?? '' }}
+                        @if(($line['source'] ?? null) === 'parts-stock')
+                            <span style="margin-left:8px;background:#eff6ff;color:#0038A8;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px;text-transform:uppercase;white-space:nowrap;">From Parts Stock</span>
+                        @endif
+                    </td>
                     <td class="col-qty">{{ $line['quantity'] ?? 1 }}</td>
                     <td class="col-price">—</td>
                     <td class="col-price">—</td>
