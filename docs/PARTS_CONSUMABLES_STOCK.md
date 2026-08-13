@@ -25,6 +25,31 @@
 
 ---
 
+## 🔧 Recent fix — Stock In/Out/Edit/History URL (2026-08-13)
+
+**Sintomas:** `The route inventory/parts//stock-in19 could not be found.` kapag nag-restock (Stock In), Stock Out, nag-edit, o nag-bukas ng History sa parts page.
+
+**Root cause** (sa `resources/views/inventory/parts.blade.php`): mali ang pagbuo ng URL sa JS para sa mga `{part}`-parameterized routes:
+- `'{{ route('inventory.parts.stock-in', ['part' => 0]) }}'.replace('/0', '/')` → nagdulot ng **dobleng slash** (`…/parts//stock-in`).
+- Ang id ay **ini-append sa wakas** (`…/stock-in` + `19`) sa halip na isingit sa `{part}` → `…/parts//stock-in19` → **404**.
+  - Dahil ang `{part}` ay **nasa gitna** ng URL (`/inventory/parts/{part}/stock-in`), hindi maaaring `prefix + id` (na naglalagay ng id sa dulo).
+
+**Fix (commit `1eecaec`):** pinalitan ng isang tunay na `PART_ID` placeholder (na pinapalitan sa JS) ang sirang `.replace('/0','/')` trick:
+```js
+const PARTS_UPDATE_PREFIX  = '{{ route('inventory.parts.update',   ['part' => 'PART_ID']) }}';
+const PARTS_STOCK_IN_PREFIX  = '{{ route('inventory.parts.stock-in',   ['part' => 'PART_ID']) }}';
+const PARTS_STOCK_OUT_PREFIX = '{{ route('inventory.parts.stock-out',  ['part' => 'PART_ID']) }}';
+const PARTS_MOVEMENTS_PREFIX = '{{ route('inventory.parts.movements',  ['part' => 'PART_ID']) }}';
+```
+Sa mga call site: `PARTS_STOCK_IN_PREFIX.replace('PART_ID', stockPart.id)` (gayundin para sa update, stock-out, movements).
+
+**Resulta:** `…/parts/19/stock-in` — walang dobleng slash, tama ang posisyon ng id.
+
+**Na-verify:** `route('inventory.parts.stock-in', ['part' => 'PART_ID'])` → `…/parts/PART_ID/stock-in` ✓ · `view:clear` + `view:cache` OK ✓ · `PartsStockTest` — **10/10 pass (39 assertions)** ✓
+
+**Commit:** `1eecaec` — buong parts-stock + purchase-request feature at ang URL fix (41 files, 3647 insertions).
+
+
 ## 1. Bakit ito kailangan (government context)
 
 - Ang `inventory_assets` ay para sa **serialized property** (isa-row-per-asset, may SN).
