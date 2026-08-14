@@ -25,12 +25,16 @@ class Part extends Model
         'region',
         'branch',
         'is_active',
+        'low_notified_at',
+        'critical_notified_at',
     ];
 
     protected $casts = [
         'on_hand_qty' => 'integer',
         'reorder_level' => 'integer',
         'is_active' => 'boolean',
+        'low_notified_at' => 'datetime',
+        'critical_notified_at' => 'datetime',
     ];
 
     // ---- Relationships -------------------------------------------------
