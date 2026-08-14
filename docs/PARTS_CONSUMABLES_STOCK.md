@@ -50,6 +50,49 @@ Sa mga call site: `PARTS_STOCK_IN_PREFIX.replace('PART_ID', stockPart.id)` (gayu
 **Commit:** `1eecaec` — buong parts-stock + purchase-request feature at ang URL fix (41 files, 3647 insertions).
 
 
+## 🔄 Recent updates — Live Ajax filtering, Super Admin history, smooth filter (2026-08-14)
+
+**Commits:** `66b8ba1` (live filtering/stats) · `586cfc4` (super admin history + banner + smooth filter).
+
+### A. Live Ajax filtering + stats cards (gaya ng inventory)
+- Bagong data endpoints: `inventory.parts.data` (supply/admin) at `super_admin.parts.data` (super admin) — JSON `{ success, parts[], total, per_page, current_page, last_page, stats }`.
+- `ListPartsStockAction` — nag-share ng query builder (`baseQuery`, `applyFilters`, `statsFor`); ang `stats` (totalParts/totalOnHand/lowStockCount/criticalCount) ay **sumusunod sa filter** (hindi na global).
+- `parts.blade.php` — JS-render table/pagination/stats; debounced search (400ms) + select change (120ms) → live update nang **walang page reload** (gaya ng inventory).
+
+### B. Super Admin history fix ("Unable to load")
+- Root cause: `inventory.parts/{part}/movements` ay nasa `role:admin` group → Super Admin (role `super_admin`) ay 403.
+- Fix: bagong route `super_admin.parts.movements` (sa `role:super_admin` group); `PARTS_MOVEMENTS_PREFIX` ay conditional sa view. Inalis din ang read-only banner.
+
+### C. Smooth filter (gaya ng inventory)
+- Alinsunod sa inventory: **walang** "Loading"/dim UI kapag nagpapalit ng filter — direktang re-render pagkatapos ng fetch. May `partsReqSeq` guard para iwas out-of-order.
+
+---
+
+## 🧭 NEXT — Low-Stock Automation (Plano)
+
+### Goal
+Awtomatikong alerto (in-app + email) tuwing may parts/consumables na **Low** o **Critical (no stock)**, at **CSV export** ng parts.
+
+### ✅ Phase 1 — Combined low-stock notifications — **DONE 2026-08-14** (commit `6d75ef1`)
+> Verified: `PartsLowStockTest` — **4/4 pass (20 assertions)** · command `parts:check-low-stock` registered sa `Console\Kernel` (`dailyAt('07:00')`).
+- Migration: idagdag ang `low_notified_at` + `critical_notified_at` (nullable timestamp) sa `parts_stock`.
+- `CheckLowStockAction`:
+  - **Hindi per-item** — i-grupo ang lahat ng bagong low/critical ayon sa **location** (region/branch) at magpadala ng **ISANG summary notification bawat supply staff** na naglilista ng lahat ng item (hal. on-hand/reorder). Kung isa lang ang item, isa pa ring notification na may 1 laman lang.
+  - Dedupe: i-flag ang item kapag naipadala na ang alerto (`low_notified_at`/`critical_notified_at`); **self-heal** kapag healthy — para makapag-alert ulit kung bumaba muli.
+  - Recipient: supply staff (`supply_officer` OR `admin` + `can_supply`) na tugma sa region/branch.
+- Artisan command `parts:check-low-stock` (+ `--dry-run`), i-register sa `Console\Kernel` (`dailyAt('07:00')`).
+- Part model: i-add sa `fillable`/`casts`.
+
+### Phase 2 — Parts CSV export
+- `ExportPartsStockAction` (CSV: Item, Unit, Category, On-hand, Reorder, Level, Region, Branch) na may scoping + filters.
+- Routes `inventory.parts.export` / `super_admin.parts.export` + "Export" button sa blade.
+
+### Phase 3 — Verify + docs + commit
+- `view:cache` + `PartsStockTest` + bagong tests; i-update itong docs; commit.
+
+---
+
+## 1. Bakit ito kailangan (government context)
 ## 1. Bakit ito kailangan (government context)
 
 - Ang `inventory_assets` ay para sa **serialized property** (isa-row-per-asset, may SN).
