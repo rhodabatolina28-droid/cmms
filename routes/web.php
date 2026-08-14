@@ -318,6 +318,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         // Super Admin — READ-ONLY parts & consumables stock
         Route::get('/parts', [PartsStockController::class, 'superAdminIndex'])->name('super_admin.parts');
         Route::get('/parts/data', [PartsStockController::class, 'data'])->name('super_admin.parts.data');
+        Route::get('/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('super_admin.parts.movements');
 
         // Super Admin — READ-ONLY purchase requests
         Route::get('/purchase-requests', [PurchaseRequestController::class, 'superAdminIndex'])->name('super_admin.purchase_requests');

@@ -209,11 +209,7 @@
                 <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-val" id="statCritical">{{ $criticalCount }}</div></div>
             </div>
 
-            @if(!empty($isSuperAdminView))
-                <div class="banner banner-warn">👁 Super Admin — Read-only. Please use a Supply account to encode or manage stock.</div>
-            @endif
-
-        <div class="parts-header">
+            <div class="parts-header">
             <form method="GET" action="{{ route($isSuperAdminView ? 'super_admin.parts' : 'inventory.parts') }}" class="parts-search">
                 <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" name="search" id="partsSearchInput" value="{{ $filters['search'] }}" placeholder="Search item / category..."></div>
                 <select name="category" id="partsCatFilter">
@@ -387,7 +383,12 @@
     const PARTS_UPDATE_PREFIX = '{{ route('inventory.parts.update', ['part' => 'PART_ID']) }}';
     const PARTS_STOCK_IN_PREFIX = '{{ route('inventory.parts.stock-in', ['part' => 'PART_ID']) }}';
     const PARTS_STOCK_OUT_PREFIX = '{{ route('inventory.parts.stock-out', ['part' => 'PART_ID']) }}';
-    const PARTS_MOVEMENTS_PREFIX = '{{ route('inventory.parts.movements', ['part' => 'PART_ID']) }}';
+    const PARTS_MOVEMENTS_PREFIX =
+        @if(!empty($isSuperAdminView))
+        '{{ route('super_admin.parts.movements', ['part' => 'PART_ID']) }}';
+        @else
+        '{{ route('inventory.parts.movements', ['part' => 'PART_ID']) }}';
+        @endif
     const PARTS_IS_READONLY = @json(!empty($isSuperAdminView));
     const PARTS_DATA_URL =
         @if(!empty($isSuperAdminView))
@@ -400,20 +401,16 @@
     (function () {
         const form = document.querySelector('.parts-search');
         if (!form) return;
+        let t;
+        const trigger = () => { clearTimeout(t); t = setTimeout(() => loadParts(1), 120); };
         form.addEventListener('submit', (e) => { e.preventDefault(); loadParts(1); });
         form.querySelectorAll('select').forEach((sel) => {
-            sel.addEventListener('change', () => loadParts(1));
+            sel.addEventListener('change', trigger);
         });
         const searchInput = form.querySelector('input[name="search"]');
         if (searchInput) {
-            let t;
-            searchInput.addEventListener('input', () => {
-                clearTimeout(t);
-                t = setTimeout(() => loadParts(1), 600);
-            });
-            searchInput.addEventListener('keydown', (e) => {
-                if (e.key === 'Enter') e.preventDefault();
-            });
+            searchInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => loadParts(1), 400); });
+            searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
         }
     })();
 
@@ -422,6 +419,7 @@
     let partsLastPage = 1;
     let allParts = [];
     let partsById = {};
+    let partsReqSeq = 0;
 
     function esc(s) {
         return String(s == null ? '' : s)
@@ -443,15 +441,17 @@
         if (page) params.set('page', page);
         params.set('per_page', 15);
 
-        const tbody = document.getElementById('partsTableBody');
-        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px 16px;color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading parts...</td></tr>';
+        const mySeq = ++partsReqSeq;
 
+        // Gaya ng inventory: direktang i-render pagkatapos ng fetch — walang loading/dim UI sa pagpapalit ng filter.
         fetch(PARTS_DATA_URL + '?' + params.toString(), {
             headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
         })
         .then((r) => r.json())
         .then((data) => {
+            if (mySeq !== partsReqSeq) return; // huwag i-render ang stale response
             if (!data || !data.success) {
+                const tbody = document.getElementById('partsTableBody');
                 if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
                 return;
             }
@@ -465,6 +465,8 @@
             updatePartsSummary(data.stats);
         })
         .catch(() => {
+            if (mySeq !== partsReqSeq) return;
+            const tbody = document.getElementById('partsTableBody');
             if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
         });
     }

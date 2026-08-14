@@ -303,4 +303,48 @@ public function test_parts_data_endpoint_returns_filtered_rows_and_stats()
 
         $resp->assertStatus(403);
     }
+
+    public function test_super_admin_can_view_part_movements()
+    {
+        $super = $this->makeUser(['role' => 'super_admin']);
+        $part = Part::create([
+            'item_name' => 'Toner HP', 'unit' => 'pc', 'category' => 'Consumables',
+            'on_hand_qty' => 2, 'reorder_level' => 5,
+        ]);
+
+        $this->actingAs($super);
+
+        $this->getJson(route('super_admin.parts.movements', ['part' => $part->id]))
+            ->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('item_name', 'Toner HP')
+            ->assertJsonPath('on_hand_qty', 2);
+    }
+
+    public function test_supply_cannot_use_super_admin_movements()
+    {
+        $supply = $this->makeUser(['role' => 'supply_officer']);
+        $part = Part::create(['item_name' => 'RAM 8GB', 'unit' => 'pcs', 'on_hand_qty' => 4, 'reorder_level' => 2]);
+
+        $this->actingAs($supply);
+
+        $this->getJson(route('super_admin.parts.movements', ['part' => $part->id]))
+            ->assertStatus(403);
+    }
+
+    public function test_super_admin_history_endpoint_available()
+    {
+        $super = $this->makeUser(['role' => 'super_admin']);
+        $part = Part::create(['item_name' => 'SSD 1TB', 'unit' => 'pcs', 'on_hand_qty' => 3, 'reorder_level' => 1]);
+
+        $this->actingAs($super);
+
+        // Ang history sa super admin view ay gumagamit na ng super_admin.parts.movements
+        // (hindi na ang role:admin na inventory.parts.movements) — ito ang dahilan ng "Unable to load".
+        $resp = $this->getJson(route('super_admin.parts.movements', ['part' => $part->id]));
+        $resp->assertOk()->assertJsonPath('success', true);
+
+        $resp403 = $this->getJson(route('inventory.parts.movements', ['part' => $part->id]));
+        $resp403->assertStatus(403);
+    }
 }
