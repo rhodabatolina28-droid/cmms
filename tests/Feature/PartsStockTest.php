@@ -177,11 +177,11 @@ class PartsStockTest extends TestCase
         $resp->assertSee('Parts &amp; Consumables', false);
     }
 
-    public function test_parts_pagination_renders_inventory_style()
+    public function test_parts_data_pagination_returns_json()
     {
         $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR']);
 
-        // 16 parts para magkaroon ng 2 pahina (per_page = 15).
+        // 16 parts para magkaroon ng 2 pahina (per_page = 15) — lahat ay NCR scope.
         for ($i = 1; $i <= 16; $i++) {
             Part::create([
                 'item_name' => 'Test Part ' . $i,
@@ -196,20 +196,26 @@ class PartsStockTest extends TestCase
 
         $this->actingAs($supply);
 
-        $resp = $this->get(route('inventory.parts'));
+        // Page 1 — 15 rows, may metadata ng pagination.
+        $resp = $this->getJson(route('inventory.parts.data'));
         $resp->assertOk()
-            ->assertSee('Showing 1–15 of 16', false)
-            ->assertSee('Next', false)      // custom pagination view -> italic Next
-            ->assertSee('2');               // may page 2 button
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('total', 16)
+            ->assertJsonPath('current_page', 1)
+            ->assertJsonPath('last_page', 2)
+            ->assertJsonPath('per_page', 15)
+            ->assertJsonCount(15, 'parts');
 
-        // Page 2 (alphabetical: ...8, 9 — kaya 'Test Part 9' ang huling item sa page 2)
-        $resp = $this->get(route('inventory.parts', ['page' => 2]));
-        $resp->assertOk()->assertSee('Test Part 9')
-            ->assertSee('Showing 16–16 of 16', false)
-            ->assertSee('Prev', false);
+        // Page 2 (alphabetical: ...Test Part 8, 9 — kaya 'Test Part 9' ang huling item).
+        $resp2 = $this->getJson(route('inventory.parts.data', ['page' => 2]));
+        $resp2->assertOk()
+            ->assertJsonPath('current_page', 2)
+            ->assertJsonPath('total', 16)
+            ->assertJsonCount(1, 'parts')
+            ->assertJsonPath('parts.0.item_name', 'Test Part 9');
     }
 
-    public function test_filters_work_on_parts_index()
+    public function test_filters_work_on_parts_data()
     {
         $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR']);
 
@@ -221,24 +227,31 @@ class PartsStockTest extends TestCase
             'item_name' => 'SSD 1TB', 'unit' => 'pcs', 'category' => 'Storage',
             'on_hand_qty' => 3, 'reorder_level' => 5, 'region' => 'NCR', 'is_active' => true,
         ]);
-
-        $this->actingAs($supply);
-
-        // Category filter
-        $resp = $this->get(route('inventory.parts', ['category' => 'Memory']));
-        $resp->assertOk()->assertSee('RAM 16GB DDR4')->assertDontSee('SSD 1TB');
-
-        // Search filter
-        $resp = $this->get(route('inventory.parts', ['search' => 'SSD']));
-        $resp->assertOk()->assertSee('SSD 1TB')->assertDontSee('RAM 16GB DDR4');
-
-        // Status filter — HDD-like critical (on_hand 0)
+        // HDD-like critical (on_hand 0).
         Part::create([
             'item_name' => 'HDD 1TB', 'unit' => 'pcs', 'category' => 'Storage',
             'on_hand_qty' => 0, 'reorder_level' => 5, 'region' => 'NCR', 'is_active' => true,
         ]);
-        $resp = $this->get(route('inventory.parts', ['status' => 'critical']));
-        $resp->assertOk()->assertSee('HDD 1TB')->assertDontSee('RAM 16GB DDR4');
+
+        $this->actingAs($supply);
+
+        // Category filter — rows only sa napiling category.
+        $this->getJson(route('inventory.parts.data', ['category' => 'Memory']))
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('parts.0.item_name', 'RAM 16GB DDR4');
+
+        // Search filter.
+        $this->getJson(route('inventory.parts.data', ['search' => 'SSD']))
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('parts.0.item_name', 'SSD 1TB');
+
+        // Status filter — critical (on_hand 0).
+        $this->getJson(route('inventory.parts.data', ['status' => 'critical']))
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('parts.0.item_name', 'HDD 1TB');
     }
 
     public function test_super_admin_readonly_index_loads()
@@ -248,5 +261,46 @@ class PartsStockTest extends TestCase
         $resp = $this->get(route('super_admin.parts'));
 
         $resp->assertOk();
+    }
+public function test_parts_data_endpoint_returns_filtered_rows_and_stats()
+    {
+        $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR']);
+
+        Part::create(['item_name' => 'RAM 16GB DDR4', 'unit' => 'pcs', 'category' => 'Memory', 'on_hand_qty' => 2, 'reorder_level' => 5, 'region' => 'NCR', 'is_active' => true]);
+        Part::create(['item_name' => 'SSD 1TB', 'unit' => 'pcs', 'category' => 'Storage', 'on_hand_qty' => 10, 'reorder_level' => 2, 'region' => 'NCR', 'is_active' => true]);
+
+        $this->actingAs($supply);
+
+        // Category filter affects rows AND the summary stats (data-driven).
+        $resp = $this->getJson(route('inventory.parts.data', ['category' => 'Storage']));
+        $resp->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('stats.totalParts', 1)
+            ->assertJsonPath('stats.totalOnHand', 10)
+            ->assertJsonPath('parts.0.item_name', 'SSD 1TB')
+            ->assertJsonPath('parts.0.level', 'ok');
+
+        // Unfiltered stats reflect the whole scoped set.
+        $this->getJson(route('inventory.parts.data'))
+            ->assertOk()
+            ->assertJsonPath('stats.totalParts', 2)
+            ->assertJsonPath('stats.lowStockCount', 1)   // RAM is low (2 < 5)
+            ->assertJsonPath('stats.criticalCount', 0);
+
+        // Status filter narrows rows as well.
+        $this->getJson(route('inventory.parts.data', ['status' => 'low']))
+            ->assertOk()
+            ->assertJsonPath('total', 1)
+            ->assertJsonPath('parts.0.item_name', 'RAM 16GB DDR4');
+    }
+
+    public function test_parts_data_endpoint_denies_non_supply()
+    {
+        $this->actingAs($this->makeUser(['role' => 'user']));
+
+        $resp = $this->getJson(route('inventory.parts.data'));
+
+        $resp->assertStatus(403);
     }
 }

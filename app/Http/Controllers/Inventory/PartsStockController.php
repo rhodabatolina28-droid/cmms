@@ -97,4 +97,23 @@ class PartsStockController extends Controller
             'movements' => $movements,
         ]);
     }
+/**
+     * JSON endpoint for the live (Ajax) parts list — gaya ng inventory data endpoint.
+     */
+    public function data(Request $request)
+    {
+        $user = Auth::user();
+
+        if ($request->routeIs('super_admin.parts.data')) {
+            if ($user->role !== 'super_admin') {
+                abort(403);
+            }
+        } elseif (! $user->canProcessSupply()) {
+            abort(403, 'Parts stock is managed by the Administrative supply admin.');
+        }
+
+        $payload = (new ListPartsStockAction)->data($request, $user);
+
+        return response()->json($payload);
+    }
 }

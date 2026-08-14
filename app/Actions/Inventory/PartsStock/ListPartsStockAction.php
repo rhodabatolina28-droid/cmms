@@ -13,11 +13,13 @@ class ListPartsStockAction
      *
      * @return array<string, mixed>
      */
-    public function execute(Request $request, User $user): array
+    /**
+     * Build the scoped base query (org region/branch) — consistent with inventory.
+     */
+    protected function baseQuery(User $user)
     {
         $query = Part::query();
 
-        // Multi-location scoping — consistent with the inventory module.
         if ($user->region) {
             $query->where('region', $user->region);
         }
@@ -25,6 +27,14 @@ class ListPartsStockAction
             $query->where('branch', $user->branch);
         }
 
+        return $query;
+    }
+
+    /**
+     * Apply the list filters (search / category / status) to a query.
+     */
+    protected function applyFilters($query, Request $request)
+    {
         $search = trim((string) $request->input('search'));
         if ($search !== '') {
             $query->where(function ($q) use ($search) {
@@ -55,24 +65,45 @@ class ListPartsStockAction
             $query->where('on_hand_qty', '<=', 0);
         }
 
+        return $query;
+    }
+
+    /**
+     * Summary stats for a query — respects any filters already applied, so the
+     * stat cards reflect the currently filtered set (gaya ng inventory module).
+     *
+     * @return array{totalParts:int,totalOnHand:int,lowStockCount:int,criticalCount:int}
+     */
+    protected function statsFor($query): array
+    {
+        return [
+            'totalParts' => (int) (clone $query)->count(),
+            'totalOnHand' => (int) (clone $query)->sum('on_hand_qty'),
+            'lowStockCount' => (int) (clone $query)
+                ->where('reorder_level', '>', 0)
+                ->whereColumn('on_hand_qty', '<', 'reorder_level')
+                ->where('on_hand_qty', '>', 0)
+                ->count(),
+            'criticalCount' => (int) (clone $query)
+                ->where('on_hand_qty', '<=', 0)
+                ->count(),
+        ];
+    }
+
+    /**
+     * Build the parts stock list data for the parts.blade.php view.
+     *
+     * @return array<string, mixed>
+     */
+    public function execute(Request $request, User $user): array
+    {
+        $query = $this->baseQuery($user);
+        $this->applyFilters($query, $request);
+
         $parts = $query->orderBy('item_name')->paginate(15)->withQueryString();
 
-        // Banner counts (respect org scoping, ignore keyword so the banner is global).
-        $scope = fn ($q) => $q
-            ->when($user->region, fn ($sub) => $sub->where('region', $user->region))
-            ->when($user->branch, fn ($sub) => $sub->where('branch', $user->branch));
-
-        $lowStockCount = $scope(Part::query())
-            ->where('reorder_level', '>', 0)
-            ->whereColumn('on_hand_qty', '<', 'reorder_level')
-            ->where('on_hand_qty', '>', 0)
-            ->count();
-
-        $criticalCount = $scope(Part::query())
-            ->where('on_hand_qty', '<=', 0)
-            ->count();
-
-        $categories = $scope(Part::query())
+        // Category dropdown stays scoped (ignores keyword/status) so it never empties.
+        $categories = $this->baseQuery($user)
             ->whereNotNull('category')
             ->distinct()
             ->pluck('category')
@@ -80,21 +111,45 @@ class ListPartsStockAction
             ->sort()
             ->values();
 
-        $totalParts = $scope(Part::query())->count();
-        $totalOnHand = $scope(Part::query())->sum('on_hand_qty');
-
-        return [
+        return array_merge([
             'parts' => $parts,
-            'lowStockCount' => $lowStockCount,
-            'criticalCount' => $criticalCount,
-            'totalParts' => $totalParts,
-            'totalOnHand' => $totalOnHand,
             'categories' => $categories,
             'filters' => [
-                'search' => $search,
-                'category' => $category,
-                'status' => $status,
+                'search' => trim((string) $request->input('search')),
+                'category' => $request->input('category'),
+                'status' => (string) $request->input('status'),
             ],
+        ], $this->statsFor($query));
+    }
+
+    /**
+     * JSON payload for the live (Ajax) parts list — mirrors the inventory data endpoint.
+     *
+     * @return array<string, mixed>
+     */
+    public function data(Request $request, User $user): array
+    {
+        $query = $this->baseQuery($user);
+        $this->applyFilters($query, $request);
+
+        $parts = $query->orderBy('item_name')->paginate((int) $request->input('per_page', 15));
+
+        return [
+            'success' => true,
+            'parts' => collect($parts->items())->map(fn (Part $part) => [
+                'id' => $part->id,
+                'item_name' => $part->item_name,
+                'unit' => $part->unit,
+                'category' => $part->category,
+                'on_hand_qty' => $part->on_hand_qty,
+                'reorder_level' => $part->reorder_level,
+                'level' => $part->statusLevel(),
+            ])->all(),
+            'total' => $parts->total(),
+            'current_page' => $parts->currentPage(),
+            'last_page' => $parts->lastPage(),
+            'per_page' => $parts->perPage(),
+            'stats' => $this->statsFor($query),
         ];
     }
 }

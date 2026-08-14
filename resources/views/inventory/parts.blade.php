@@ -195,7 +195,7 @@
         <div class="parts-card-head">
             <div>
                 <h3><i class="fa-solid fa-boxes-stacked"></i> Parts &amp; Consumables</h3>
-                <p>Supplies ledger — {{ $totalParts }} item(s) · {{ $totalOnHand }} total on-hand{!! !empty($isSuperAdminView) ? ' · <b>Read-only</b>' : '' !!}</p>
+                <p id="partsHeadSub">Supplies ledger — {{ $totalParts }} item(s) · {{ $totalOnHand }} total on-hand{!! !empty($isSuperAdminView) ? ' · Read-only' : '' !!}</p>
             </div>
             @if($canWriteInventory)
                 <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
@@ -203,10 +203,10 @@
         </div>
         <div class="parts-body">
             <div class="parts-stats">
-                <div class="stat-card"><div class="stat-label">Total Parts</div><div class="stat-val">{{ $totalParts }}</div></div>
-                <div class="stat-card"><div class="stat-label">On-hand total</div><div class="stat-val">{{ $totalOnHand }}</div></div>
-                <div class="stat-card"><div class="stat-label">Low stock</div><div class="stat-val">{{ $lowStockCount }}</div></div>
-                <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-val">{{ $criticalCount }}</div></div>
+                <div class="stat-card"><div class="stat-label">Total Parts</div><div class="stat-val" id="statTotalParts">{{ $totalParts }}</div></div>
+                <div class="stat-card"><div class="stat-label">On-hand total</div><div class="stat-val" id="statTotalOnHand">{{ $totalOnHand }}</div></div>
+                <div class="stat-card"><div class="stat-label">Low stock</div><div class="stat-val" id="statLowStock">{{ $lowStockCount }}</div></div>
+                <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-val" id="statCritical">{{ $criticalCount }}</div></div>
             </div>
 
             @if(!empty($isSuperAdminView))
@@ -215,14 +215,14 @@
 
         <div class="parts-header">
             <form method="GET" action="{{ route($isSuperAdminView ? 'super_admin.parts' : 'inventory.parts') }}" class="parts-search">
-                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" name="search" value="{{ $filters['search'] }}" placeholder="Search item / category..."></div>
-                <select name="category">
+                <div class="search-box"><i class="fa-solid fa-magnifying-glass"></i><input type="text" name="search" id="partsSearchInput" value="{{ $filters['search'] }}" placeholder="Search item / category..."></div>
+                <select name="category" id="partsCatFilter">
                     <option value="">All categories</option>
                     @foreach($categories as $cat)
                         <option value="{{ $cat }}" @selected($filters['category'] === $cat)>{{ $cat }}</option>
                     @endforeach
                 </select>
-                <select name="status">
+                <select name="status" id="partsStatusFilter">
                     <option value="">All status</option>
                     <option value="ok" @selected($filters['status'] === 'ok')>OK</option>
                     <option value="low" @selected($filters['status'] === 'low')>Low</option>
@@ -231,15 +231,6 @@
             </form>
         </div>
 
-        @if($parts->count() === 0)
-            <div class="empty-state">
-                <div class="big"></div>
-                <div>No parts &amp; consumables yet.</div>
-                @if($canWriteInventory)
-                    <div style="margin-top:14px;"><button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button></div>
-                @endif
-            </div>
-        @else
         <div style="overflow-x:auto;">
                 <table class="parts-table">
                                     <colgroup>
@@ -260,45 +251,13 @@
                             <th>Actions</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @foreach($parts as $part)
-                            @php $level = $part->statusLevel(); @endphp
-                            <tr class="{{ $level === 'critical' ? 'row-critical' : ($level === 'low' ? 'row-low' : '') }}">
-                                <td>
-                                    <div class="item-name">{{ $part->item_name }}</div>
-                                                                        <div class="item-sub">{{ $part->category ?? 'Uncategorized' }}</div>
-                                </td>
-                                <td>{{ $part->unit }}</td>
-                                <td><div class="qty-pill"><span class="qty-num {{ $level === 'critical' ? 'qty-critical' : ($level === 'low' ? 'qty-low' : 'qty-ok') }}">{{ $part->on_hand_qty }}</span><div class="qty-track"><i class="{{ $level === 'critical' ? 't-critical' : ($level === 'low' ? 't-low' : 't-ok') }}" style="width:{{ $part->reorder_level > 0 ? min(100, intval(round(($part->on_hand_qty / $part->reorder_level) * 100))) : ($part->on_hand_qty > 0 ? 100 : 0) }}%"></i></div></div></td>
-                                <td>{{ $part->reorder_level }}</td>
-                                <td>                                    @if($level === 'critical')
-                                        <span class="badge badge-critical">CRITICAL</span>
-                                    @elseif($level === 'low')
-                                        <span class="badge badge-low">LOW</span>
-                                    @else
-                                        <span class="badge badge-ok">OK</span>
-                                    @endif</td>
-                                <td>
-                                    <div class="row-actions">
-                                        @if($canWriteInventory)
-                                            <button class="act-btn" title="Edit part" onclick="openPartModal('edit', {{ $part->toJson() }})"><i class="fa-solid fa-pen"></i></button>
-                                            <button class="act-btn in" title="Stock In" onclick="openStockModal('in', {{ $part->toJson() }})"><i class="fa-solid fa-arrow-down"></i></button>
-                                            <button class="act-btn out {{ $part->on_hand_qty <= 0 ? 'disabled' : '' }}" title="Stock Out" {{ $part->on_hand_qty <= 0 ? 'disabled' : '' }} onclick="openStockModal('out', {{ $part->toJson() }})"><i class="fa-solid fa-arrow-up"></i></button>
-                                        @endif
-                                        <button class="act-btn" title="View history" onclick="openHistory({{ $part->id }}, '{{ addslashes($part->item_name) }}')"><i class="fa-solid fa-clock-rotate-left"></i></button>
-                                    </div>
-                                </td>
-                            </tr>
-                        @endforeach
+                    <tbody id="partsTableBody">
+                        <tr><td colspan="6" style="text-align:center;padding:30px 16px;color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading parts...</td></tr>
                     </tbody>
                 </table>
             </div>
 
-            <div class="parts-pagination">
-                <span class="parts-pag-info">Showing {{ $parts->firstItem() ?? 0 }}–{{ $parts->lastItem() ?? 0 }} of {{ $parts->total() }}</span>
-                {{ $parts->links('vendor.pagination.parts') }}
-            </div>
-        @endif
+            <div id="partsPagination" class="parts-pagination"></div>
         </div>
     </div>
 </div>
@@ -429,25 +388,86 @@
     const PARTS_STOCK_IN_PREFIX = '{{ route('inventory.parts.stock-in', ['part' => 'PART_ID']) }}';
     const PARTS_STOCK_OUT_PREFIX = '{{ route('inventory.parts.stock-out', ['part' => 'PART_ID']) }}';
     const PARTS_MOVEMENTS_PREFIX = '{{ route('inventory.parts.movements', ['part' => 'PART_ID']) }}';
+    const PARTS_IS_READONLY = @json(!empty($isSuperAdminView));
+    const PARTS_DATA_URL =
+        @if(!empty($isSuperAdminView))
+        '{{ route('super_admin.parts.data') }}';
+        @else
+        '{{ route('inventory.parts.data') }}';
+        @endif
 
-    // ── Auto-submit filters (UX) ──
+    // ── Live filters (Ajax) — gaya ng inventory, inu-update ang stats cards + table pag nag-filter ──
     (function () {
         const form = document.querySelector('.parts-search');
         if (!form) return;
-        // Pagpalit ng category/status select → agad mag-filter (walang kailangang i-click).
-        form.querySelectorAll('select').forEach(sel => {
-            sel.addEventListener('change', () => form.submit());
+        form.addEventListener('submit', (e) => { e.preventDefault(); loadParts(1); });
+        form.querySelectorAll('select').forEach((sel) => {
+            sel.addEventListener('change', () => loadParts(1));
         });
-        // Debounced search — paghinto mag-type (600ms) → auto-search.
         const searchInput = form.querySelector('input[name="search"]');
         if (searchInput) {
             let t;
             searchInput.addEventListener('input', () => {
                 clearTimeout(t);
-                t = setTimeout(() => form.submit(), 600);
+                t = setTimeout(() => loadParts(1), 600);
+            });
+            searchInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') e.preventDefault();
             });
         }
     })();
+
+    // ── Data / rendering ──
+    let partsPage = 1;
+    let partsLastPage = 1;
+    let allParts = [];
+    let partsById = {};
+
+    function esc(s) {
+        return String(s == null ? '' : s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;')
+            .replace(/"/g, '&quot;')
+            .replace(/'/g, '&#39;');
+    }
+
+    function loadParts(page) {
+        const params = new URLSearchParams();
+        const searchInput = document.getElementById('partsSearchInput');
+        const catFilter = document.getElementById('partsCatFilter');
+        const statusFilter = document.getElementById('partsStatusFilter');
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+        if (catFilter && catFilter.value) params.set('category', catFilter.value);
+        if (statusFilter && statusFilter.value) params.set('status', statusFilter.value);
+        if (page) params.set('page', page);
+        params.set('per_page', 15);
+
+        const tbody = document.getElementById('partsTableBody');
+        if (tbody) tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:30px 16px;color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading parts...</td></tr>';
+
+        fetch(PARTS_DATA_URL + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then((r) => r.json())
+        .then((data) => {
+            if (!data || !data.success) {
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
+                return;
+            }
+            allParts = data.parts || [];
+            partsById = {};
+            allParts.forEach((p) => { partsById[p.id] = p; });
+            partsPage = page || 1;
+            partsLastPage = data.last_page || 1;
+            renderPartsTable(allParts);
+            renderPartsPagination(data.total, data.last_page);
+            updatePartsSummary(data.stats);
+        })
+        .catch(() => {
+            if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
+        });
+    }
 
     function toast(msg, ok) {
         const t = document.getElementById('toast');
@@ -476,6 +496,82 @@
             return { ok: r.ok, status: r.status, data };
         });
     }
+
+    function renderPartsTable(rows) {
+        const tbody = document.getElementById('partsTableBody');
+        if (!tbody) return;
+        const canWrite = PARTS_CAN_WRITE;
+        if (!rows || rows.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big"></div><div>No parts &amp; consumables yet.</div>' +
+                (canWrite ? '<div style="margin-top:14px;"><button class="btn-navy" onclick="openPartModal(\'add\')">＋ Add Part</button></div>' : '') +
+                '</div></td></tr>';
+            return;
+        }
+        tbody.innerHTML = rows.map((p) => {
+            const level = p.level;
+            const rowCls = level === 'critical' ? 'row-critical' : (level === 'low' ? 'row-low' : '');
+            const qtyCls = level === 'critical' ? 'qty-critical' : (level === 'low' ? 'qty-low' : 'qty-ok');
+            const trackCls = level === 'critical' ? 't-critical' : (level === 'low' ? 't-low' : 't-ok');
+            const trackW = (p.reorder_level > 0)
+                ? Math.min(100, Math.round((p.on_hand_qty / p.reorder_level) * 100))
+                : (p.on_hand_qty > 0 ? 100 : 0);
+            const badge = level === 'critical'
+                ? '<span class="badge badge-critical">CRITICAL</span>'
+                : (level === 'low' ? '<span class="badge badge-low">LOW</span>' : '<span class="badge badge-ok">OK</span>');
+
+            let actions = '<div class="row-actions">';
+            if (canWrite) {
+                actions += '<button class="act-btn" title="Edit part" onclick="openPartModal(\'edit\', partsById[' + p.id + '])"><i class="fa-solid fa-pen"></i></button>';
+                actions += '<button class="act-btn in" title="Stock In" onclick="openStockModal(\'in\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-down"></i></button>';
+                actions += '<button class="act-btn out' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '" title="Stock Out"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-up"></i></button>';
+            }
+            actions += '<button class="act-btn" title="View history" onclick="openHistory(' + p.id + ')"><i class="fa-solid fa-clock-rotate-left"></i></button>';
+            actions += '</div>';
+
+            return '<tr class="' + rowCls + '">'
+                + '<td><div class="item-name">' + esc(p.item_name) + '</div><div class="item-sub">' + esc(p.category || 'Uncategorized') + '</div></td>'
+                + '<td>' + esc(p.unit) + '</td>'
+                + '<td><div class="qty-pill"><span class="qty-num ' + qtyCls + '">' + p.on_hand_qty + '</span><div class="qty-track"><i class="' + trackCls + '" style="width:' + trackW + '%"></i></div></div></td>'
+                + '<td>' + p.reorder_level + '</td>'
+                + '<td>' + badge + '</td>'
+                + '<td>' + actions + '</td>'
+                + '</tr>';
+        }).join('');
+    }
+
+    function renderPartsPagination(total, lastPage) {
+        const el = document.getElementById('partsPagination');
+        if (!el) return;
+        if (total === 0) { el.innerHTML = ''; return; }
+        const first = (partsPage - 1) * 15 + 1;
+        const last = Math.min(partsPage * 15, total);
+        let html = '<span class="parts-pag-info">Showing ' + first + '–' + last + ' of ' + total + '</span><div class="parts-pag-btns">';
+        html += '<button ' + (partsPage <= 1 ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage - 1) + ')"><i class="fa-solid fa-chevron-left"></i> Prev</button>';
+        for (let i = 1; i <= lastPage; i++) {
+            html += (i === partsPage)
+                ? '<span class="active">' + i + '</span>'
+                : '<button onclick="loadParts(' + i + ')">' + i + '</button>';
+        }
+        html += '<button ' + (partsPage >= lastPage ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage + 1) + ')">Next <i class="fa-solid fa-chevron-right"></i></button>';
+        html += '</div>';
+        el.innerHTML = html;
+    }
+
+    function updatePartsSummary(stats) {
+        if (!stats) return;
+        const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+        set('statTotalParts', stats.totalParts);
+        set('statTotalOnHand', stats.totalOnHand);
+        set('statLowStock', stats.lowStockCount);
+        set('statCritical', stats.criticalCount);
+        const head = document.getElementById('partsHeadSub');
+        if (head) {
+            head.textContent = 'Supplies ledger — ' + stats.totalParts + ' item(s) · ' + stats.totalOnHand + ' total on-hand' + (PARTS_IS_READONLY ? ' · Read-only' : '');
+        }
+    }
+
+    // Initial load (gaya ng inventory's loadInventory sa page load).
+    loadParts(1);
 
     let partMode = 'add', editingId = null;
     let stockMode = 'in', stockPart = null;
@@ -567,7 +663,8 @@
         });
     });
 
-    function openHistory(id, name) {
+    function openHistory(id) {
+        const name = partsById[id] ? partsById[id].item_name : '';
         document.getElementById('historyTitle').textContent = name + ' · History';
         const body = document.getElementById('historyBody');
         body.innerHTML = '<div class="empty-state"><div class="big">⏳</div>Loading...</div>';

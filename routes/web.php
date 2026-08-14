@@ -125,6 +125,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     // ==========================================
     Route::middleware('role:admin')->group(function () {
         Route::get('/inventory/parts', [PartsStockController::class, 'index'])->name('inventory.parts');
+        Route::get('/inventory/parts/data', [PartsStockController::class, 'data'])->name('inventory.parts.data');
         Route::post('/inventory/parts', [PartsStockController::class, 'store'])->name('inventory.parts.store')->middleware('throttle:30,1');
         Route::put('/inventory/parts/{part}', [PartsStockController::class, 'update'])->name('inventory.parts.update')->middleware('throttle:30,1');
         Route::post('/inventory/parts/{part}/stock-in', [PartsStockController::class, 'stockIn'])->name('inventory.parts.stock-in')->middleware('throttle:30,1');
@@ -316,6 +317,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
 
         // Super Admin — READ-ONLY parts & consumables stock
         Route::get('/parts', [PartsStockController::class, 'superAdminIndex'])->name('super_admin.parts');
+        Route::get('/parts/data', [PartsStockController::class, 'data'])->name('super_admin.parts.data');
 
         // Super Admin — READ-ONLY purchase requests
         Route::get('/purchase-requests', [PurchaseRequestController::class, 'superAdminIndex'])->name('super_admin.purchase_requests');
