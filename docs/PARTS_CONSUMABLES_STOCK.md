@@ -7,6 +7,21 @@
 
 ---
 
+## ⭐ Today's system update — Parts & Consumables (August 17, 2026)
+
+What we changed in the **Parts & Consumables** module today (in the system):
+
+- **Per-piece serial / property / cost tracking:** every physical piece (pcs/unit) now has its own **serial number**, **property number**, and **cost per unit** (new `parts_stock_units` table).
+- **Units list:** a **🔢 Units** button on each part opens a list of its pieces (serial, property, status, custodian) with a **TOTAL cost** row.
+- **Cost columns on the Parts page:** the table now shows **Unit Value** and **Total Cost** (₱ format, like Inventory).
+- **Stock In / Stock Out with serials:** Stock In can add a list of serials; Stock Out can pick specific serials and mark them as issued (stock count stays consistent).
+- **Linked to Asset & Request:** a piece can be linked to an **asset** (the "Installed Parts" card on the Asset Profile) and to a **repair request** (the "Parts Used" card on Maintenance/ICT forms).
+- **CSV Import:** an **Import CSV** button on the Parts page loads a file → preview → imports parts with their per-piece serial/property/cost.
+- **Sample data:** seeded sample parts (RAM, HDD) so this can be tested right away.
+
+---
+
+
 ## ✅ PARTS & CONSUMABLES — Recent Work (2026-08)
 
 A plain-English summary of what was added to the Parts & Consumables module.
