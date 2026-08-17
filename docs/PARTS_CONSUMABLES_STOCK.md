@@ -7,6 +7,32 @@
 
 ---
 
+## ✅ PARTS & CONSUMABLES — Recent Work (2026-08)
+
+A plain-English summary of what was added to the Parts & Consumables module.
+
+1. **Parts & Consumables Stock (Aug 13)** — add/edit parts, stock-in, stock-out, and movement history; Purchase Request (RA 9184) process; linked parts to repair requisitions; fixed a stock-in/out URL bug.
+
+2. **Live filtering & summary cards (Aug 14)** — the Parts page now filters and updates its summary cards instantly (like Inventory) without a page reload; fixed Super Admin's Parts History; removed the read-only banner; added automatic low-stock alerts (email/in-app, runs daily).
+
+3. **Serialized per-unit tracking (Aug 17)** — each physical piece (pcs/unit) now has its own **serial number**, **property number**, and **cost per unit**:
+   - New table `parts_stock_units` — one row per physical piece.
+   - **Units modal** — see every serial/property/status per piece, with a TOTAL cost row.
+   - **Stock In** can add a list of serials; **Stock Out** can pick specific serials and mark them issued.
+   - **Units button** on each part row.
+   - **Parts table** now shows **Unit Value** (cost per unit) and **Total Cost**, formatted like Inventory (₱).
+   - **Reference tracking** — a unit can be linked to an **asset** (the "Installed Parts" card on the Asset Profile) and to a **repair request** (the "Parts Used" card on Maintenance/ICT forms).
+   - Kept the stock count consistent: issuing via Stock-Out or a Requisition marks the right units as issued (no count mismatch).
+
+4. **CSV Import (Aug 17)** — the Parts page has an **Import CSV** button that loads a prepared CSV → shows a preview (parts, units, duplicate serials) → imports the parts with their per-piece serials/property/cost, keeping the stock count in sync.
+
+5. **Sample data** — a seeder adds sample parts (RAM, HDD) with per-piece serial/property/cost so the feature can be tested right away.
+
+**Full technical details:** see `docs/PARTS_SERIALIZED_UNITS_DEEPVIEW.md`.
+
+---
+
+
 ## ✅ STATUS — Na-update 2026-08-13
 
 > **Kumpleto at na-verify ang Phases A + B + C + D** — ang buong Parts & Consumables Stock module, kasama ang Purchase Request (RA 9184) workflow.
