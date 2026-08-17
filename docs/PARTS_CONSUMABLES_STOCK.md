@@ -20,6 +20,111 @@ What we changed in the **Parts & Consumables** module today (in the system):
 - **Sample data:** seeded sample parts (RAM, HDD) so this can be tested right away.
 
 ---
+## 🚧 NEXT — Auto-Custodian & Ticket Link (Planned, by Phase)
+
+> **Layunin:** Kapag may ini-issue na parts, **automatic** dapat ang custodian — kasi **nandun na ang end user sa ticket**.
+> Pag napili/ini-issue ang **Ticket/Request** (o na-issue ang requisition nito), alam na agad kung kanino i-a-assign ang bawat piece
+> (serial/property), saang **asset** naka-install, at saang **request/ticket** nakatali.
+
+### Bakit ito kailangan (review findings — Aug 17, 2026)
+
+| # | Nahanap sa deep-dive | Problema |
+|---|---|---|
+| 1 | `#s_issued_to` sa Stock Out modal ay **free-text** | Nagpapadala ng pangalan (string) sa field na `nullable\|integer` → **422 validation error**; kung walang laman, walang custodian na naka-save. Hindi talaga gumagana ang custodian sa UI. |
+| 2 | JS submit (`parts.blade.php`) ay **hindi nagpapadala** ng `issued_to` / `asset_id` / `request_id` | Kahit handa na ang backend (`StockOutAction`), hindi naaabot ng UI. |
+| 3 | `IssuePartsForRequisitionAction` ay **hindi nag-a-assign** ng `request_id` / `issued_to` / `asset_id` sa units | Kapag nag-**Issue** ang Supply ng requisition, walang custodian at walang link sa ticket ang mga piece → walang laman ang **"Parts Used" card** sa ticket. |
+| 4 | Walang `exists` validation sa `StockOutPartRequest` | Pwede mag-save ng invalid ids para sa `issued_to` / `asset_id` / `request_id`. |
+
+### Data flow (target)
+
+```
+Requisition (approved, may parts-stock lines)
+   └─> ticket (requests) ── has ──> user_id (END USER) ── = auto custodian
+                                  ├─ requestor_name
+                                  └─ linked_asset_id / asset_id = auto asset
+
+Stock Out (manual):
+   Ticket dropdown ──> auto-fill: custodian (end user) + asset + reason + qty
+   └─> payload: { issued_to, request_id, asset_id } ──> PartUnit
+```
+
+### Phase 1 — Requisition Issue: auto-assign (CORE ng "automatic")
+**File:** `app/Actions/Inventory/PartsStock/IssuePartsForRequisitionAction.php`
+- Load `$requisition->ticket` nang isang beses.
+- Para sa bawat unit na mina-mark na `issued`: itakda rin
+  - `request_id` = `$ticket->id`
+  - `issued_to` = `$ticket->user_id` ← **end user ng ticket (automatic)**
+  - `asset_id` = `$ticket->linked_asset_id ?? $ticket->asset_id`
+- Walang dropdown na kailangan — ang requisition mismo ay para na sa ticket.
+
+### Phase 2 — Options endpoint (para sa manual Stock Out)
+**File:** `app/Http/Controllers/Inventory/PartsStockController.php` + route sa `routes/web.php`
+- `GET /inventory/parts/options` — **supply/admin lang** (403 sa iba).
+- Returns:
+  ```json
+  {
+    "tickets": [{
+      "requisition_id": 5, "request_id": 150,
+      "ticket_number": "ICT-2026-0028", "description": "Printer not printing",
+      "requester_id": 27, "requester_name": "Angelica Torres",
+      "asset_id": 12, "lines": [{"part_id": 3, "quantity": 2}]
+    }],
+    "users": [{"id": 27, "name": "Angelica Torres"}]
+  }
+  ```
+- `tickets` = **approved** requisitions (status `approved`) na may ≥1 parts-stock line; i-scope sa region/branch ng Supply (pattern ng `GetInventoryUsersAction`).
+- `users` = active users sa scope (manual override fallback).
+
+### Phase 3 — Validation hardening
+**File:** `app/Http/Requests/StockOutPartRequest.php`
+- `issued_to` → `nullable|integer|exists:users,id`
+- `asset_id` → `nullable|integer|exists:inventory_assets,asset_id` (PK = `asset_id`, kumpirmado sa migration)
+- `request_id` → `nullable|integer|exists:requests,id`
+
+### Phase 4 — Stock Out modal UX (parts.blade.php)
+- **Palitan** ang free-text `#s_issued_to` ng:
+  - **Ticket / Request dropdown** `#s_ticket` (options endpoint; uunahin ang may linyang kasalukuyang part)
+  - **Custodian display** (read-only) — auto-fill mula sa ticket's end user
+  - Hidden `#s_issued_to` (user id) + hidden `#s_asset_id`
+  - **Users select** bilang manual fallback (kung walang napiling ticket)
+- **Sa pagpili ng ticket:** auto-fill custodian, asset, reason (`Issue for {ticket_number}`), at qty (mula sa requisition line, clamp sa available serials).
+- **Submit:** isama ang `issued_to`, `asset_id`, `request_id`.
+
+---
+
+
+### Phase 5 — Movement audit
+**File:** `app/Actions/Inventory/PartsStock/StockOutAction.php`
+- Kapag may `request_id`: i-set `reference_type='request'` + `reference_id=request_id` sa PartMovement (trail → kung saang ticket).
+
+### Phase 6 — Tests
+**Files:** `tests/Feature/PartsStockTest.php` + `tests/Feature/PartsUnitsTest.php`
+1. `options` endpoint: supply → 200 + shape (`tickets`/`users`); non-supply → 403.
+2. Stock Out na may ticket → units may `request_id` / `issued_to` / `asset_id` (totoong Users/Requests/Assets).
+3. Requisition issue → units naka-link sa ticket + custodian (i-update `test_requisition_issue_keeps_on_hand_consistent_with_units`).
+4. Buong suite berde: `PartsStockTest` · `PartsUnitsTest` · `RequisitionPartsIssueTest`.
+
+### Phase 7 — Docs + commit
+- I-update ang section na ito → DONE · commit + push sa `develop`.
+
+### Mga risk & prevention (para maiwasan ang problema)
+
+| Risk | Prevention |
+|---|---|
+| Ticket na walang `user_id` account | Ipakita ang `requestor_name`, iwan null ang `issued_to`, at mag-alok ng manual override (users select) |
+| Doble/paulit na approved requisitions sa dropdown | `approved` lang ang isama; ang `issued` ay hindi na dapat mag-appear |
+| Qty auto-fill > available serials | Clamp sa bilang ng `in_stock` units; pwede pa ring i-edit |
+| Race condition (dobleng i-issue) | Panatilihin ang existing `lockForUpdate()` pattern sa parts + units |
+| Invalid `asset_id` / `request_id` | `exists` validation sa FormRequest (Phase 3) |
+| `on_hand` vs units na mag-iba | Lahat sa iisang transaction (decrement + unit mark); `on_hand == count(in_stock)` verified ng tests |
+
+### Checklist bago mag-commit
+- [ ] `php artisan test tests/Feature/PartsStockTest.php tests/Feature/PartsUnitsTest.php tests/Feature/RequisitionPartsIssueTest.php`
+- [ ] Manual: pumili ng ticket sa Stock Out → auto-fill ang custodian; i-issue ang requisition → may custodian/request ang units
+- [ ] I-verify ang "Parts Used" card sa ticket at "Installed Parts" sa Asset Profile
+
+---
+
 
 
 ## ✅ PARTS & CONSUMABLES — Recent Work (2026-08)
