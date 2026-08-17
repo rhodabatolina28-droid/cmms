@@ -44,6 +44,22 @@ class Part extends Model
         return $this->hasMany(PartMovement::class, 'part_id');
     }
 
+    /**
+     * Lahat ng per-unit records (serialized parts).
+     */
+    public function units(): HasMany
+    {
+        return $this->hasMany(PartUnit::class, 'part_id');
+    }
+
+    /**
+     * Ang mga unit na nasa bodega pa (in stock).
+     */
+    public function inStockUnits(): HasMany
+    {
+        return $this->hasMany(PartUnit::class, 'part_id')->where('status', 'in_stock');
+    }
+
     // ---- Scopes --------------------------------------------------------
 
     public function scopeActive($query)

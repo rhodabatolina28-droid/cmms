@@ -126,11 +126,16 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/inventory/parts', [PartsStockController::class, 'index'])->name('inventory.parts');
         Route::get('/inventory/parts/data', [PartsStockController::class, 'data'])->name('inventory.parts.data');
+        Route::get('/inventory/parts/export', [PartsStockController::class, 'export'])->name('inventory.parts.export');
         Route::post('/inventory/parts', [PartsStockController::class, 'store'])->name('inventory.parts.store')->middleware('throttle:30,1');
         Route::put('/inventory/parts/{part}', [PartsStockController::class, 'update'])->name('inventory.parts.update')->middleware('throttle:30,1');
         Route::post('/inventory/parts/{part}/stock-in', [PartsStockController::class, 'stockIn'])->name('inventory.parts.stock-in')->middleware('throttle:30,1');
         Route::post('/inventory/parts/{part}/stock-out', [PartsStockController::class, 'stockOut'])->name('inventory.parts.stock-out')->middleware('throttle:30,1');
+        Route::post('/inventory/parts/import/preview', [PartsStockController::class, 'previewImport'])->name('inventory.parts.import.preview');
+        Route::post('/inventory/parts/import/commit', [PartsStockController::class, 'commitImport'])->name('inventory.parts.import.commit');
         Route::get('/inventory/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('inventory.parts.movements');
+        Route::get('/inventory/parts/{part}/units', [PartsStockController::class, 'units'])->name('inventory.parts.units');
+        Route::post('/inventory/parts/{part}/units', [PartsStockController::class, 'addUnit'])->name('inventory.parts.units.store');
     });
 
     // ==========================================
@@ -318,7 +323,9 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         // Super Admin — READ-ONLY parts & consumables stock
         Route::get('/parts', [PartsStockController::class, 'superAdminIndex'])->name('super_admin.parts');
         Route::get('/parts/data', [PartsStockController::class, 'data'])->name('super_admin.parts.data');
+        Route::get('/parts/export', [PartsStockController::class, 'export'])->name('super_admin.parts.export');
         Route::get('/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('super_admin.parts.movements');
+        Route::get('/parts/{part}/units', [PartsStockController::class, 'units'])->name('super_admin.parts.units');
 
         // Super Admin — READ-ONLY purchase requests
         Route::get('/purchase-requests', [PurchaseRequestController::class, 'superAdminIndex'])->name('super_admin.purchase_requests');

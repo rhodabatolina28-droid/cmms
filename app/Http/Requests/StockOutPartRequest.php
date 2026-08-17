@@ -18,6 +18,11 @@ class StockOutPartRequest extends FormRequest
             'reason' => 'required|string|max:190',
             'reference_type' => 'nullable|string|max:32',
             'reference_id' => 'nullable|integer',
+            'unit_ids' => 'nullable|array',
+            'unit_ids.*' => 'integer',
+            'issued_to' => 'nullable|integer',
+            'asset_id' => 'nullable|integer',
+            'request_id' => 'nullable|integer',
         ];
     }
 

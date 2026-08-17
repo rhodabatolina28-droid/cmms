@@ -497,6 +497,27 @@
         </div>
         @endif
 
+        {{-- Installed Parts / Consumables card (parts_stock_units.asset_id) — Phase 5 data --}}
+        <div class="detail-card main-grid-full">
+            <div class="detail-card-header"><i class="fa-solid fa-boxes-stacked" style="color:#0038A8;"></i> Installed Parts / Consumables</div>
+            <div class="detail-card-body">
+                @php $assetUnits = \App\Models\PartUnit::with('part:id,item_name')->where('asset_id', $asset->asset_id)->get(); @endphp
+                @if($assetUnits->isEmpty())
+                    <p class="text-empty" style="color:#94a3b8; font-size:13px; margin:0;">Walang parts/consumables pang naka-link sa asset na ito.</p>
+                @else
+                    @foreach($assetUnits as $au)
+                        <div class="field-row">
+                            <span class="field-label">{{ $au->part?->item_name ?? 'Part' }}</span>
+                            <span class="field-value" style="text-align:right;">
+                                {{ $au->serial_number ?: '—' }}@if($au->property_number) · {{ $au->property_number }}@endif
+                                <span class="status-pill {{ $au->status === 'in_stock' ? 'sp-spare' : 'sp-active' }}">{{ \Illuminate\Support\Str::upper($au->status) }}</span>
+                            </span>
+                        </div>
+                    @endforeach
+                @endif
+            </div>
+        </div>
+
         {{-- Notes Card --}}
         @if($asset->asset_notes)
         <div class="detail-card">

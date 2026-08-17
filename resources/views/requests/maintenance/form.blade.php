@@ -177,6 +177,8 @@
 
             @include('partials.maintenance._pm_checklist')
 
+            @include('partials._parts_used_card')
+
             <div class="form-actions-minimal sticky-action-bar">
                 @if(!$viewMode)
                     <button type="submit" class="btn-submit-minimal" id="pmSubmitBtn">

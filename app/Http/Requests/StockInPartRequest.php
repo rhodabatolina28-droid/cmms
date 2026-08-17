@@ -18,6 +18,10 @@ class StockInPartRequest extends FormRequest
             'reason' => 'required|string|max:190',
             'reference_type' => 'nullable|string|max:32',
             'reference_id' => 'nullable|integer',
+            'units' => 'nullable|array',
+            'units.*.serial_number' => 'nullable|string|max:190',
+            'units.*.property_number' => 'nullable|string|max:64',
+            'units.*.unit_value' => 'nullable|numeric',
         ];
     }
 

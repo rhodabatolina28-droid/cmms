@@ -6,6 +6,7 @@ use App\Http\Requests\StockOutPartRequest;
 use App\Models\AuditLog;
 use App\Models\Part;
 use App\Models\PartMovement;
+use App\Models\PartUnit;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -24,14 +25,51 @@ class StockOutAction
 
         $validated = $request->validated();
         $qty = (int) $validated['qty'];
+        $unitIds = $validated['unit_ids'] ?? [];
+        $issuedTo = $validated['issued_to'] ?? null;
+        $assetId = $validated['asset_id'] ?? null;
+        $requestId = $validated['request_id'] ?? null;
 
         try {
-            DB::transaction(function () use ($part, $qty, $validated, $user) {
+            DB::transaction(function () use ($part, $qty, $validated, $user, $unitIds, $issuedTo, $assetId, $requestId) {
                 $locked = Part::whereKey($part->id)->lockForUpdate()->firstOrFail();
 
                 // Block negative stock.
                 if ($locked->on_hand_qty < $qty) {
                     throw new RuntimeException('insufficient_stock');
+                }
+
+                // Tukuyin ang mga unit na mamarkahang issued.
+                if (! empty($unitIds)) {
+                    $units = PartUnit::where('part_id', $locked->id)
+                        ->whereIn('id', $unitIds)
+                        ->where('status', 'in_stock')
+                        ->lockForUpdate()
+                        ->get();
+
+                    if ($units->count() !== count($unitIds)) {
+                        throw new RuntimeException('invalid_units');
+                    }
+                } else {
+                    // Auto-pick: pinakamatatandang in-stock units (kung may units).
+                    $units = PartUnit::where('part_id', $locked->id)
+                        ->where('status', 'in_stock')
+                        ->orderBy('created_at')
+                        ->lockForUpdate()
+                        ->take($qty)
+                        ->get();
+                }
+
+                if ($units->isNotEmpty()) {
+                    foreach ($units as $unit) {
+                        $unit->update([
+                            'status' => 'issued',
+                            'issued_to' => $issuedTo ?: $unit->issued_to,
+                            'issued_at' => now(),
+                            'asset_id' => $assetId ?: $unit->asset_id,
+                            'request_id' => $requestId ?: $unit->request_id,
+                        ]);
+                    }
                 }
 
                 $locked->decrement('on_hand_qty', $qty);
@@ -52,6 +90,16 @@ class StockOutAction
                 return response()->json([
                     'success' => false,
                     'message' => 'Not enough stock on hand to issue this quantity.',
+                    'on_hand_qty' => $part->on_hand_qty,
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'invalid_units') {
+                $part->refresh();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'One or more selected units are no longer in stock.',
                     'on_hand_qty' => $part->on_hand_qty,
                 ], 422);
             }

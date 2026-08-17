@@ -173,7 +173,7 @@
     /* ===== Column alignment: justified layout + centered numerics ===== */
     .parts-table th, .parts-table td { vertical-align: middle; }
     .parts-table th:nth-child(1), .parts-table td:nth-child(1) { text-align: left; }
-    .parts-table th:nth-child(2), .parts-table th:nth-child(3), .parts-table th:nth-child(4), .parts-table th:nth-child(5), .parts-table th:nth-child(6), .parts-table td:nth-child(2), .parts-table td:nth-child(3), .parts-table td:nth-child(4), .parts-table td:nth-child(5), .parts-table td:nth-child(6) { text-align: center; }
+    .parts-table th:nth-child(2), .parts-table th:nth-child(3), .parts-table th:nth-child(4), .parts-table th:nth-child(5), .parts-table th:nth-child(6), .parts-table th:nth-child(7), .parts-table th:nth-child(8), .parts-table td:nth-child(2), .parts-table td:nth-child(3), .parts-table td:nth-child(4), .parts-table td:nth-child(5), .parts-table td:nth-child(6), .parts-table td:nth-child(7), .parts-table td:nth-child(8) { text-align: center; }
     /* Badges — colored, no emoji */
     .badge { display: inline-flex; align-items: center; justify-content: center; border-radius: 999px; font-weight: 700; letter-spacing: .3px; }
     .badge-critical { background: #fde8e8; color: #b91c1c; padding: 3px 11px; }
@@ -197,9 +197,14 @@
                 <h3><i class="fa-solid fa-boxes-stacked"></i> Parts &amp; Consumables</h3>
                 <p id="partsHeadSub">Supplies ledger — {{ $totalParts }} item(s) · {{ $totalOnHand }} total on-hand{!! !empty($isSuperAdminView) ? ' · Read-only' : '' !!}</p>
             </div>
-            @if($canWriteInventory)
-                <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
-            @endif
+            <div class="parts-toolbar">
+                <a class="btn-ghost" href="#" onclick="event.preventDefault(); exportPartsCsv();"><i class="fa-solid fa-download"></i> Export CSV</a>
+                @if($canWriteInventory)
+                    <button type="button" class="btn-ghost" onclick="document.getElementById('partsCsvInput').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
+                    <input type="file" id="partsCsvInput" accept=".csv" style="display:none;">
+                    <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
+                @endif
+            </div>
         </div>
         <div class="parts-body">
             <div class="parts-stats">
@@ -230,12 +235,14 @@
         <div style="overflow-x:auto;">
                 <table class="parts-table">
                                     <colgroup>
-                    <col style="width:32%">
-                    <col style="width:8%">
-                    <col style="width:13%">
-                    <col style="width:9%">
+                    <col style="width:24%">
+                    <col style="width:7%">
+                    <col style="width:11%">
+                    <col style="width:7%">
+                    <col style="width:14%">
+                    <col style="width:14%">
+                    <col style="width:7%">
                     <col style="width:16%">
-                    <col style="width:12%">
                 </colgroup>
                 <thead>
                         <tr>
@@ -243,6 +250,8 @@
                             <th>Unit</th>
                             <th>On-hand</th>
                             <th>Reorder</th>
+                            <th>Unit Value</th>
+                            <th>Total Cost</th>
                             <th>Status</th>
                             <th>Actions</th>
                         </tr>
@@ -340,6 +349,21 @@
                         <input type="number" name="qty" id="s_qty" min="1">
                         <div class="form-err" id="err_qty"></div>
                     </div>
+                    <div class="form-field full" id="stockSerialWrap">
+                        <label>Serial / Property numbers <span style="font-weight:400;color:#94a3b8;">(isa bawat linya: serial, property)</span></label>
+                        <textarea name="units" id="s_units" rows="3" style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font-size:13px; font-family:monospace;"></textarea>
+                        <div class="form-err" id="err_units"></div>
+                    </div>
+                    <div class="form-field full" id="stockUnitsPickerWrap" style="display:none;">
+                        <label>Pumili ng serial na ii-issue</label>
+                        <div id="s_units_picker" style="border:1px solid #d1d5db;border-radius:8px;padding:8px 10px;max-height:150px;overflow:auto;background:#fff;">
+                            <div class="empty-state" style="padding:12px;">No serials available.</div>
+                        </div>
+                    </div>
+                    <div class="form-field" id="stockIssuedToWrap" style="display:none;">
+                        <label>Issued To (custodian)</label>
+                        <input type="text" id="s_issued_to" placeholder="Juan Dela Cruz">
+                    </div>
                     <div class="form-field">
                         <label>Source / For</label>
                         <input type="text" name="reference_type" id="s_ref" maxlength="32" placeholder="Purchase / Requisition / adjustment">
@@ -372,6 +396,38 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="unitsModal">
+    <div class="modal-box">
+        <div class="modal-head">
+            <h3 id="unitsModalTitle">Units</h3>
+            <button class="modal-close" onclick="closeModal('unitsModal')">&times;</button>
+        </div>
+        <div class="modal-body">
+            <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
+                <input type="text" id="unitsSearch" placeholder="Search serial / property..." style="flex:1; min-width:160px; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font-size:13px;">
+                <button type="button" class="btn-ghost" onclick="openAddUnitModal()">＋ Add Unit</button>
+            </div>
+            <div id="addUnitForm" style="display:none; border:1px solid #e2e8f0; border-radius:8px; padding:12px; margin-bottom:12px; background:#f8fafc;">
+                <div style="display:grid; grid-template-columns:repeat(auto-fit,minmax(140px,1fr)); gap:8px;">
+                    <input type="text" id="au_serial" placeholder="Serial number" style="border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;">
+                    <input type="text" id="au_property" placeholder="Property number" style="border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;">
+                    <input type="number" id="au_value" placeholder="Unit value (₱)" step="0.01" style="border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;">
+                </div>
+                <div style="margin-top:8px; display:flex; gap:8px; justify-content:flex-end;">
+                    <button type="button" class="btn-ghost" onclick="cancelAddUnit()">Cancel</button>
+                    <button type="button" class="btn-navy" onclick="saveUnit()">Save Unit</button>
+                </div>
+            </div>
+            <div id="unitsBody" style="max-height:46vh; overflow-y:auto;">
+                <div class="empty-state"><div class="big">🔢</div><div>No units registered yet.</div></div>
+            </div>
+        </div>
+        <div class="modal-foot">
+            <button type="button" class="btn-ghost" onclick="closeModal('unitsModal')">Close</button>
+        </div>
+    </div>
+</div>
+
 <div class="toast" id="toast"></div>
 @endsection
 
@@ -396,6 +452,21 @@
         @else
         '{{ route('inventory.parts.data') }}';
         @endif
+    const PARTS_EXPORT_URL =
+        @if(!empty($isSuperAdminView))
+        '{{ route('super_admin.parts.export') }}';
+        @else
+        '{{ route('inventory.parts.export') }}';
+        @endif
+    const PARTS_UNITS_PREFIX =
+        @if(!empty($isSuperAdminView))
+        '{{ route('super_admin.parts.units', ['part' => 'PART_ID']) }}';
+        @else
+        '{{ route('inventory.parts.units', ['part' => 'PART_ID']) }}';
+        @endif
+    const PARTS_UNITS_STORE_PREFIX = '{{ route('inventory.parts.units.store', ['part' => 'PART_ID']) }}';
+    const PARTS_IMPORT_PREVIEW_URL = '{{ route('inventory.parts.import.preview') }}';
+    const PARTS_IMPORT_COMMIT_URL = '{{ route('inventory.parts.import.commit') }}';
 
     // ── Live filters (Ajax) — gaya ng inventory, inu-update ang stats cards + table pag nag-filter ──
     (function () {
@@ -428,6 +499,11 @@
             .replace(/>/g, '&gt;')
             .replace(/"/g, '&quot;')
             .replace(/'/g, '&#39;');
+    }
+
+    function fmtMoney(v) {
+        if (v === null || v === undefined || v === '') return '—';
+        return '₱' + Number(v).toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     }
 
     function loadParts(page) {
@@ -499,6 +575,50 @@
         });
     }
 
+    function exportPartsCsv() {
+        const params = new URLSearchParams();
+        const searchInput = document.getElementById('partsSearchInput');
+        const catFilter = document.getElementById('partsCatFilter');
+        const statusFilter = document.getElementById('partsStatusFilter');
+        if (searchInput && searchInput.value.trim()) params.set('search', searchInput.value.trim());
+        if (catFilter && catFilter.value) params.set('category', catFilter.value);
+        if (statusFilter && statusFilter.value) params.set('status', statusFilter.value);
+        window.location.href = PARTS_EXPORT_URL + '?' + params.toString();
+    }
+
+    function importPartsCsv() {
+        const input = document.getElementById('partsCsvInput');
+        if (!input || !input.files || !input.files[0]) return;
+        const fd = new FormData();
+        fd.append('file', input.files[0]);
+        input.value = '';
+
+        fetch(PARTS_IMPORT_PREVIEW_URL, {
+            method: 'POST',
+            headers: { 'X-CSRF-TOKEN': PARTS_CSRF, 'Accept': 'application/json' },
+            body: fd
+        })
+        .then(async (r) => { const d = await r.json().catch(() => ({})); return { ok: r.ok, data: d }; })
+        .then(({ ok, data }) => {
+            if (!ok || !data.success) { toast(data.message || 'Import preview failed.', false); return; }
+            const s = data.summary || {};
+            const okToProceed = window.confirm(
+                'Parts import preview:\n\n' +
+                '· ' + s.rows + ' row(s)\n' +
+                '· ' + s.distinct_parts + ' part(s)\n' +
+                '· ' + s.duplicate_serials + ' duplicate serial(s)\n\n' +
+                'I-import na?'
+            );
+            if (!okToProceed) return;
+
+            api(PARTS_IMPORT_COMMIT_URL, 'POST', { token: data.token }).then(({ ok: ok2, data: d2 }) => {
+                if (ok2) { toast(d2.message || 'Imported', true); setTimeout(() => location.reload(), 600); }
+                else toast(d2.message || 'Import failed.', false);
+            });
+        })
+        .catch(() => toast('Import preview failed.', false));
+    }
+
     function renderPartsTable(rows) {
         const tbody = document.getElementById('partsTableBody');
         if (!tbody) return;
@@ -528,6 +648,7 @@
                 actions += '<button class="act-btn out' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '" title="Stock Out"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-up"></i></button>';
             }
             actions += '<button class="act-btn" title="View history" onclick="openHistory(' + p.id + ')"><i class="fa-solid fa-clock-rotate-left"></i></button>';
+            actions += '<button class="act-btn" title="View units (serial / property)" onclick="openUnitsModal(' + p.id + ')"><i class="fa-solid fa-list-ul"></i></button>';
             actions += '</div>';
 
             return '<tr class="' + rowCls + '">'
@@ -535,6 +656,8 @@
                 + '<td>' + esc(p.unit) + '</td>'
                 + '<td><div class="qty-pill"><span class="qty-num ' + qtyCls + '">' + p.on_hand_qty + '</span><div class="qty-track"><i class="' + trackCls + '" style="width:' + trackW + '%"></i></div></div></td>'
                 + '<td>' + p.reorder_level + '</td>'
+                + '<td>' + fmtMoney(p.unit_value) + '</td>'
+                + '<td>' + fmtMoney(p.total_cost) + '</td>'
                 + '<td>' + badge + '</td>'
                 + '<td>' + actions + '</td>'
                 + '</tr>';
@@ -575,6 +698,8 @@
     // Initial load (gaya ng inventory's loadInventory sa page load).
     loadParts(1);
 
+    document.getElementById('partsCsvInput')?.addEventListener('change', importPartsCsv);
+
     let partMode = 'add', editingId = null;
     let stockMode = 'in', stockPart = null;
 
@@ -604,9 +729,111 @@
         document.getElementById('s_qty').value = '';
         document.getElementById('s_ref').value = '';
         document.getElementById('s_reason').value = '';
+        // Serial UI — ipapakita ayon sa mode (Phase 1: visual; backend sa Phase 3).
+        document.getElementById('s_units').value = '';
+        document.getElementById('s_issued_to').value = '';
+        document.getElementById('stockSerialWrap').style.display = mode === 'in' ? 'block' : 'none';
+        document.getElementById('stockUnitsPickerWrap').style.display = mode === 'out' ? 'block' : 'none';
+        document.getElementById('stockIssuedToWrap').style.display = mode === 'out' ? 'block' : 'none';
+        if (mode === 'out') { loadStockOutUnits(part.id); }
         document.querySelectorAll('.form-err').forEach(e => e.textContent = '');
         document.getElementById('stockModal').classList.add('open');
         document.getElementById('s_qty').focus();
+    }
+
+    function loadStockOutUnits(id) {
+        const picker = document.getElementById('s_units_picker');
+        if (!picker) return;
+        picker.innerHTML = '<div class="empty-state" style="padding:12px;">Loading serials...</div>';
+        api(PARTS_UNITS_PREFIX.replace('PART_ID', id), 'GET').then(({ ok, data }) => {
+            const inStock = ((data && data.units) || []).filter(u => u.status === 'in_stock');
+            if (!ok || inStock.length === 0) {
+                picker.innerHTML = '<div class="empty-state" style="padding:12px;">No serials available.</div>';
+                return;
+            }
+            picker.innerHTML = inStock.map(u =>
+                '<label style="display:block;padding:6px 4px;cursor:pointer;"><input type="checkbox" class="stock-unit-chk" value="' + u.id + '"> '
+                + esc((u.serial_number || '—')) + (u.property_number ? ' · ' + esc(u.property_number) : '') + '</label>'
+            ).join('');
+            picker.addEventListener('change', function () {
+                const sel = document.querySelectorAll('.stock-unit-chk:checked').length;
+                if (sel > 0 && document.getElementById('s_qty')) document.getElementById('s_qty').value = sel;
+            });
+        });
+    }
+
+    // ── Units ──
+    let currentUnitsPartId = null;
+
+    function openUnitsModal(id) {
+        const part = partsById[id] || {};
+        currentUnitsPartId = id;
+        document.getElementById('unitsModalTitle').textContent = (part.item_name || 'Part') + ' · Units';
+        document.getElementById('unitsSearch').value = '';
+        document.getElementById('addUnitForm').style.display = 'none';
+        const body = document.getElementById('unitsBody');
+        body.innerHTML = '<div class="empty-state"><div class="big">⏳</div>Loading units...</div>';
+        document.getElementById('unitsModal').classList.add('open');
+        api(PARTS_UNITS_PREFIX.replace('PART_ID', id), 'GET').then(({ ok, data }) => {
+            if (!ok || !data.units) { body.innerHTML = '<div class="empty-state">Unable to load units.</div>'; return; }
+            renderUnits(data.units);
+        });
+    }
+
+    function renderUnits(units) {
+        const body = document.getElementById('unitsBody');
+        if (units.length === 0) {
+            body.innerHTML = '<div class="empty-state"><div class="big">🔢</div><div>No units registered yet.</div></div>';
+            return;
+        }
+        const pill = (text, bg, fg) => '<span style="background:' + bg + ';color:' + fg + ';padding:2px 9px;border-radius:6px;font-weight:700;font-size:11px;">' + text + '</span>';
+        const total = units.reduce((s, u) => s + (Number(u.unit_value) || 0), 0);
+        body.innerHTML = '<div style="overflow-x:auto;"><table class="parts-table" style="table-layout:auto;width:100%;">'
+            + '<thead><tr><th>Serial</th><th>Property No</th><th>Unit Value</th><th>Status</th><th>Custodian</th></tr></thead><tbody>'
+            + units.map(u => {
+                const st = u.status === 'issued'
+                    ? pill('Issued', '#dbeafe', '#1e40af')
+                    : (u.status === 'scrapped' ? pill('Scrapped', '#fee2e2', '#991b1b') : pill('In stock', '#dcfce7', '#166534'));
+                return '<tr>'
+                    + '<td>' + esc(u.serial_number || '—') + '</td>'
+                    + '<td>' + esc(u.property_number || '—') + '</td>'
+                    + '<td>' + fmtMoney(u.unit_value) + '</td>'
+                    + '<td>' + st + '</td>'
+                    + '<td>' + esc(u.issued_to || '—') + '</td>'
+                    + '</tr>';
+            }).join('')
+            + '<tr style="border-top:2px solid #e2e8f0;font-weight:800;color:#1e293b;"><td colspan="2">TOTAL</td><td>' + fmtMoney(total) + '</td><td colspan="2"></td></tr>'
+            + '</tbody></table></div>';
+    }
+
+    function openAddUnitModal() {
+        document.getElementById('addUnitForm').style.display = 'block';
+        document.getElementById('au_serial').value = '';
+        document.getElementById('au_property').value = '';
+        document.getElementById('au_value').value = '';
+        document.getElementById('au_serial').focus();
+    }
+
+    function cancelAddUnit() {
+        document.getElementById('addUnitForm').style.display = 'none';
+    }
+
+    function saveUnit() {
+        const serial = document.getElementById('au_serial').value.trim();
+        const property = document.getElementById('au_property').value.trim();
+        const value = document.getElementById('au_value').value;
+        if (!serial && !property) { toast('Maglagay ng serial o property number.', false); return; }
+        api(PARTS_UNITS_STORE_PREFIX.replace('PART_ID', currentUnitsPartId), 'POST', {
+            serial_number: serial, property_number: property, unit_value: value
+        }).then(({ ok, data }) => {
+            if (ok) {
+                toast(data.message || 'Unit added', true);
+                openUnitsModal(currentUnitsPartId);
+                loadParts(partsPage || 1);
+            } else {
+                toast(data.message || 'Something went wrong.', false);
+            }
+        });
     }
 
     document.getElementById('partForm').addEventListener('submit', function (e) {
@@ -651,6 +878,18 @@
             reason: document.getElementById('s_reason').value,
             reference_type: document.getElementById('s_ref').value
         };
+        if (stockMode === 'in') {
+            const lines = (document.getElementById('s_units').value || '').split('\n').map(l => l.trim()).filter(l => l !== '');
+            if (lines.length) {
+                payload.units = lines.map(line => {
+                    const parts = line.split(',').map(x => x.trim());
+                    return { serial_number: parts[0] || '', property_number: parts[1] || '' };
+                });
+            }
+        } else {
+            const sel = Array.from(document.querySelectorAll('.stock-unit-chk:checked')).map(c => parseInt(c.value, 10));
+            if (sel.length) payload.unit_ids = sel;
+        }
         api(url, 'POST', payload).then(({ ok, data }) => {
             if (ok) { toast(data.message || 'Saved', true); closeModal('stockModal'); setTimeout(() => location.reload(), 400); }
             else if (data.errors) {

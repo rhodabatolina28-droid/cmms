@@ -4,6 +4,7 @@ namespace App\Actions\Inventory\PartsStock;
 
 use App\Models\Part;
 use App\Models\PartMovement;
+use App\Models\PartUnit;
 use App\Models\Requisition;
 use Illuminate\Support\Facades\DB;
 use RuntimeException;
@@ -72,6 +73,24 @@ class IssuePartsForRequisitionAction
                     $qty = $entry['qty'];
 
                     $part->decrement('on_hand_qty', $qty);
+
+                    // Consistency: kapag may per-unit records ang part, markahan ang
+                    // N na pinakamatatandang in_stock units bilang issued para hindi
+                    // mag-iba ang on_hand sa bilang ng in_stock units.
+                    $units = PartUnit::where('part_id', $part->id)
+                        ->where('status', 'in_stock')
+                        ->orderBy('created_at')
+                        ->take($qty)
+                        ->get();
+
+                    if ($units->isNotEmpty()) {
+                        foreach ($units as $unit) {
+                            $unit->update([
+                                'status' => 'issued',
+                                'issued_at' => now(),
+                            ]);
+                        }
+                    }
 
                     PartMovement::create([
                         'part_id' => $part->id,

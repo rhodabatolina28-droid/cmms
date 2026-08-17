@@ -92,6 +92,60 @@ Awtomatikong alerto (in-app + email) tuwing may parts/consumables na **Low** o *
 
 ---
 
+## 🧭 Serialized Parts / Per-Unit Custodian (Serial + Property Number)
+
+### Layunin
+Dahil sa CSV ("PROPERTY NUMBERS — INTANGIBLE") na **per-unit** (bawat RAM/license ay may sariling **SERIAL** at **PROPERTY NUMBER**, at may **RESPONSIBLE OFFICER** kada row), kailangan ng Parts & Consumables ang **per-unit tracking**:
+- Mula sa **quantity-based** (`on_hand_qty`) → **per-piece accountability** (sino ang may hawak ng specific serial/property).
+
+### Desisyon sa disenyo — paano gumagana sa quantity system
+1. **`on_hand_qty` = source of truth** (nananatili). Hindi i-a-derive mula sa units — para hindi masira ang existing logic (stats, low-stock, requisition).
+2. **`parts_stock_units` = OPTIONAL na detalye** — para sa serialized parts lamang. Ang non-serialized parts (toner, screws) ay magtrabaho gaya ng dati (qty lang).
+3. **I-sync sa iisang transaction:** bawat Stock In (may serial) → gumawa ng units + `increment`; bawat Stock Out / Requisition → `decrement` + markahan ang units (`issued`).
+
+### Data model — `parts_stock_units`
+| Column | Type | Notes |
+|---|---|---|
+| `id` | bigint PK | |
+| `part_id` | FK → parts_stock | |
+| `serial_number` | string(190) nullable | |
+| `property_number` | string(64) nullable | |
+| `unit_value` | decimal(14,2) nullable | cost per piece (mula sa CSV) |
+| `status` | enum in_stock/issued/scrapped | |
+| `issued_to` | FK users nullable | **custodian PER PIECE** |
+| `asset_id` | FK inventory_assets nullable | (may Asset) |
+| `request_id` | FK requests nullable | (may Request) |
+| `issued_at` | timestamp nullable | |
+| `timestamps` | | |
+
+### Per-piece custodian (sagot sa "qty system, paano ang custodian?")
+- `parts_stock` = quantity summary (on_hand = bilang ng `in_stock`).
+- `parts_stock_units` = bawat piraso; `issued_to` = sino ang may hawak ng specific serial/property.
+- Hal: RAM on_hand 5 → 5 unit rows; unit 1 (serial KR8220Y2BS) → custodian Juan; unit 2 → custodian Maria; atbp.
+
+### Mga risk at mitigation (na-analyze bago mag-code)
+1. **`on_hand` vs units na mag-iba** → decrement + unit-mark sa iisang transaction; `on_hand` ang kontra sa bilang ng `in_stock`.
+2. **Requisition issue hindi nagma-mark ng units** → i-update ang `IssuePartsForRequisitionAction` (mark N `in_stock`, oldest-first).
+3. **Concurrency / dobleng i-issue** → `lockForUpdate()` sa parts row at sa pipiliing unit rows.
+4. **Negative stock** → panatilihin ang existing check (`on_hand < qty` → block).
+5. **Backward compat** → units optional; walang ipinipilit na backfill sa existing parts.
+6. **Serial batch > qty / walang tugma** → validasyon: serial count ≤ qty; ang sobra ay generic units.
+7. **Existing tests (PartsStockTest / PartsLowStockTest)** → dapat manatiling berde (on_hand pa rin ang pag-u-update).
+8. **Migration idempotent** → may `down()`, nullable, walang data loss.
+
+### Phasing
+- **Phase 1 — UI/UX (kumpleto — lahat ng 3 panig):**
+  1. **Parts page** (`parts.blade.php`): Units modal · Stock In serial box · Stock Out serial picker · Units button.
+  2. **Asset Profile** (`detail.blade.php`): 🧩 **Components / Installed Parts card** (visual, empty state).
+  3. **Request detail** (ICT/Maintenance): 🧰 **Parts Used card** (visual, empty state).
+- **Phase 2 — Backend:** Migration `parts_stock_units` + Part model (`units()`, `inStockUnits()`).
+- **Phase 3 — Kumonekta (Parts):** Units modal load/save · Stock In→units+on_hand · Stock Out→mark issued · Add Unit; `PartsUnitsTest`.
+- **Phase 4 — Requisition + consistency:** mark units sa requisition issue; test `on_hand == count(in_stock)`.
+- **Phase 5 — Kumonekta (Asset & Request):** lagyan ng totoong data ang Components card (`asset_id`) at Parts Used card (`request_id`) + tests.
+- **Phase 6 — CSV Import (INTANGIBLE.csv).**
+
+---
+
 ## 1. Bakit ito kailangan (government context)
 ## 1. Bakit ito kailangan (government context)
 

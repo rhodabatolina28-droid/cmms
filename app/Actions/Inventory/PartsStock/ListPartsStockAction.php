@@ -91,6 +91,16 @@ class ListPartsStockAction
     }
 
     /**
+     * Shared scoped + filtered query (ginagamit sa data() at sa CSV export).
+     */
+    public function buildQuery(Request $request, User $user)
+    {
+        $query = $this->baseQuery($user);
+
+        return $this->applyFilters($query, $request);
+    }
+
+    /**
      * Build the parts stock list data for the parts.blade.php view.
      *
      * @return array<string, mixed>
@@ -132,7 +142,7 @@ class ListPartsStockAction
         $query = $this->baseQuery($user);
         $this->applyFilters($query, $request);
 
-        $parts = $query->orderBy('item_name')->paginate((int) $request->input('per_page', 15));
+        $parts = $query->withCount('units')->withSum('units', 'unit_value')->orderBy('item_name')->paginate((int) $request->input('per_page', 15));
 
         return [
             'success' => true,
@@ -144,6 +154,9 @@ class ListPartsStockAction
                 'on_hand_qty' => $part->on_hand_qty,
                 'reorder_level' => $part->reorder_level,
                 'level' => $part->statusLevel(),
+                'unit_count' => (int) $part->units_count,
+                'unit_value' => $part->units_count > 0 ? round((float) $part->units_sum_unit_value / $part->units_count, 2) : null,
+                'total_cost' => $part->units_count > 0 ? round((float) $part->units_sum_unit_value, 2) : null,
             ])->all(),
             'total' => $parts->total(),
             'current_page' => $parts->currentPage(),
