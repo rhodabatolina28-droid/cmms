@@ -25,6 +25,7 @@ class Part extends Model
         'region',
         'branch',
         'is_active',
+        'requires_unit_tracking',
         'low_notified_at',
         'critical_notified_at',
     ];
@@ -33,6 +34,7 @@ class Part extends Model
         'on_hand_qty' => 'integer',
         'reorder_level' => 'integer',
         'is_active' => 'boolean',
+        'requires_unit_tracking' => 'boolean',
         'low_notified_at' => 'datetime',
         'critical_notified_at' => 'datetime',
     ];

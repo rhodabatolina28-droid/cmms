@@ -32,7 +32,12 @@ class StoreRequisitionAction
         $ticket = RequestModel::findOrFail($requestId);
 
         if (!RequisitionSupport::canItSubmitForTicket($user, $ticket)) {
-            return response()->json(['success' => false, 'message' => 'You can only request parts for ICT tickets assigned to you.'], 403);
+            return response()->json(['success' => false, 'message' => 'You can only request parts for ICT or an eligible PM job order assigned to you.'], 403);
+        }
+
+        $issueContext = RequisitionSupport::ticketIssueContext($ticket);
+        if (! $issueContext['valid']) {
+            return response()->json(['success' => false, 'message' => $issueContext['message']], 422);
         }
 
         $validated = $httpRequest->validated();

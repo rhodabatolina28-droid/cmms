@@ -4,6 +4,7 @@ namespace App\Actions\Requisition;
 
 use App\Models\Requisition;
 use App\Models\InventoryAsset;
+use App\Support\RequisitionSupport;
 use Illuminate\Support\Facades\Auth;
 
 class ShowRequisitionAction
@@ -17,7 +18,7 @@ class ShowRequisitionAction
     public function execute($id)
     {
         $user = Auth::user();
-        $requisition = Requisition::with(['ticket.user', 'ticket.assignedTo', 'ticket.linkedAsset', 'requester', 'reviewer'])
+        $requisition = Requisition::with(['ticket.user', 'ticket.assignedTo', 'ticket.linkedAsset.assignedUser', 'requester', 'reviewer'])
             ->findOrFail($id);
 
         if (!$user->can('view', $requisition)) {
@@ -26,6 +27,9 @@ class ShowRequisitionAction
 
         $canReview = $user->canProcessSupply()
             && $user->can('manage', $requisition);
+        $issueContext = $requisition->ticket
+            ? RequisitionSupport::ticketIssueContext($requisition->ticket)
+            : ['valid' => false, 'message' => 'The linked ticket could not be found.', 'asset' => null, 'custodian' => null];
 
         // For supply officers: check inventory availability per requested line item
         $inventoryMatches = collect();
@@ -113,6 +117,6 @@ class ShowRequisitionAction
             }
         }
 
-        return view('requisitions.show', compact('requisition', 'canReview', 'inventoryMatches', 'partsStockMatches'));
+        return view('requisitions.show', compact('requisition', 'canReview', 'issueContext', 'inventoryMatches', 'partsStockMatches'));
     }
 }

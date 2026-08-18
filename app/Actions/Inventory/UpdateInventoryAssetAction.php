@@ -8,8 +8,11 @@ use App\Models\AuditLog;
 use App\Models\User;
 use App\Http\Requests\UpdateInventoryRequest;
 use App\Services\ParNumberService;
+use App\Services\AssetSetIntegrityService;
+use App\Services\RequestNotificationService;
 use App\Models\Scopes\InventoryScope;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class UpdateInventoryAssetAction
 {
@@ -73,6 +76,33 @@ class UpdateInventoryAssetAction
             }
         }
 
+        // Set membership is established by import or initial encoding. Moving a
+        // component between sets needs a dedicated audited transfer workflow.
+        if ($asset->parent_asset_id && array_key_exists('parent_asset_id', $data)
+            && (int) $data['parent_asset_id'] !== (int) $asset->parent_asset_id) {
+            return response()->json(['success' => false, 'message' => 'A component cannot be detached from or moved to another PAR set through normal edit.'], 422);
+        }
+
+        $setIntegrity = app(AssetSetIntegrityService::class);
+        $setCheck = $setIntegrity->validate($data, $asset);
+        if ($setCheck['error']) {
+            return response()->json(['success' => false, 'message' => $setCheck['error']], 422);
+        }
+
+        $parent = $setCheck['parent'];
+        if ($parent) {
+            if (! InventoryScope::assetInInventoryScope($user, $parent)) {
+                return response()->json(['success' => false, 'message' => 'The parent asset is outside your inventory scope.'], 403);
+            }
+
+            if (array_key_exists('assigned_to_user', $data)
+                && (int) ($data['assigned_to_user'] ?? 0) !== (int) ($parent->assigned_to_user ?? 0)) {
+                return response()->json(['success' => false, 'message' => 'A set component inherits its custodian from the parent asset. Update the parent set instead.'], 422);
+            }
+
+            $setIntegrity->applyParentContext($data, $parent);
+        }
+
         $previousStatus = $asset->status;
         $previousUser = $asset->assigned_to_user;
         $previousPar = $asset->par_number;
@@ -87,7 +117,40 @@ class UpdateInventoryAssetAction
             $data['par_number'] = ParNumberService::generateNextParNumber();
         }
 
-        $asset->update($data);
+        if ($activationError = $setIntegrity->activationError($data, $asset)) {
+            return response()->json(['success' => false, 'message' => $activationError], 422);
+        }
+
+        DB::transaction(function () use ($asset, $data, $previousUser, $previousStatus, $previousPar, $user, $request) {
+            $asset->update($data);
+
+        // When the parent set changes custodian/PAR, update every physical
+        // component too. They remain separate assets but one accountable set.
+        if (! $asset->parent_asset_id && $previousUser !== $asset->assigned_to_user) {
+            $components = $asset->components()->lockForUpdate()->get();
+            foreach ($components as $component) {
+                $componentPreviousUser = $component->assigned_to_user;
+                $component->update([
+                    'assigned_to_user' => $asset->assigned_to_user,
+                    'par_number' => $asset->par_number,
+                    'region' => $asset->region,
+                    'branch' => $asset->branch,
+                    'office' => $asset->office,
+                    'department' => $asset->department,
+                ]);
+
+                InventoryHistory::create([
+                    'asset_id' => $component->asset_id,
+                    'action' => 'Set Custodian Updated',
+                    'performed_by' => $user->id,
+                    'previous_user_id' => $componentPreviousUser,
+                    'new_user_id' => $asset->assigned_to_user,
+                    'previous_status' => $component->status,
+                    'new_status' => $component->status,
+                    'remarks' => "Inherited PAR/custodian update from parent asset #{$asset->asset_id}.",
+                ]);
+            }
+        }
 
         AuditLog::log(
             "Updated Asset", 
@@ -125,6 +188,15 @@ class UpdateInventoryAssetAction
             if ($assignedUser && $assignedUser->department !== $asset->department) {
                 $asset->update(['department' => $assignedUser->department]);
             }
+        }
+        });
+
+        if ($previousUser !== $asset->assigned_to_user) {
+            RequestNotificationService::notifyAssetCustodianTransfer(
+                $asset,
+                $previousUser ? (int) $previousUser : null,
+                $asset->assigned_to_user ? (int) $asset->assigned_to_user : null
+            );
         }
 
         return response()->json(['success' => true, 'message' => 'Asset updated successfully']);

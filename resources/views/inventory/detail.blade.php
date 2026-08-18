@@ -501,7 +501,7 @@
         <div class="detail-card main-grid-full">
             <div class="detail-card-header"><i class="fa-solid fa-boxes-stacked" style="color:#0038A8;"></i> Installed Parts / Consumables</div>
             <div class="detail-card-body">
-                @php $assetUnits = \App\Models\PartUnit::with('part:id,item_name')->where('asset_id', $asset->asset_id)->get(); @endphp
+                @php $assetUnits = \App\Models\PartUnit::with(['part:id,item_name', 'issuedTo:id,full_name', 'request:id,request_number'])->where('asset_id', $asset->asset_id)->orderByDesc('issued_at')->get(); @endphp
                 @if($assetUnits->isEmpty())
                     <p class="text-empty" style="color:#94a3b8; font-size:13px; margin:0;">Walang parts/consumables pang naka-link sa asset na ito.</p>
                 @else
@@ -511,6 +511,14 @@
                             <span class="field-value" style="text-align:right;">
                                 {{ $au->serial_number ?: '—' }}@if($au->property_number) · {{ $au->property_number }}@endif
                                 <span class="status-pill {{ $au->status === 'in_stock' ? 'sp-spare' : 'sp-active' }}">{{ \Illuminate\Support\Str::upper($au->status) }}</span>
+                                @if($au->issuedTo || $au->issued_at || $au->unit_value !== null)
+                                    <small style="display:block; margin-top:3px; color:#64748b;">
+                                        Issued to: {{ $au->issuedTo?->full_name ?? '—' }}
+                                        @if($au->issued_at) · {{ $au->issued_at->format('M d, Y') }} @endif
+                                        @if($au->unit_value !== null) · ₱{{ number_format((float) $au->unit_value, 2) }} @endif
+                                        @if($au->request) · {{ $au->request->request_number }} @endif
+                                    </small>
+                                @endif
                             </span>
                         </div>
                     @endforeach

@@ -46,6 +46,11 @@ class ReviewRequisitionAction
 
             // Parts & Consumables: deduct on-hand stock when issuing the requisition.
             if ($action === 'issue') {
+                $issueContext = RequisitionSupport::ticketIssueContext($requisition->ticket);
+                if (! $issueContext['valid']) {
+                    return response()->json(['success' => false, 'message' => $issueContext['message']], 422);
+                }
+
                 $issue = (new \App\Actions\Inventory\PartsStock\IssuePartsForRequisitionAction)
                     ->execute($requisition, $supply->id);
 
@@ -91,6 +96,13 @@ class ReviewRequisitionAction
                     $ticket,
                     RequestModel::STATUS_ONGOING,
                     'Parts were issued. Your repair request is ongoing again.'
+                );
+            }
+
+            if ($ticket && $action === 'issue' && ($issueContext['valid'] ?? false)) {
+                RequestNotificationService::notifyAssetCustodianOfPartsIssue(
+                    $ticket,
+                    (int) $issueContext['custodian']->id
                 );
             }
 

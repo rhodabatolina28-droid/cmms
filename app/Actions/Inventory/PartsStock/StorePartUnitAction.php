@@ -23,10 +23,25 @@ class StorePartUnitAction
         $property = trim((string) $request->input('property_number'));
         $value = $request->input('unit_value');
 
+        if ($part->requires_unit_tracking
+            && ($serial === '' || $property === '' || $value === null || $value === '')) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Each tracked unit needs a serial number, property number, and unit cost.',
+            ], 422);
+        }
+
         if ($serial !== '') {
             $dupe = PartUnit::where('part_id', $part->id)->where('serial_number', $serial)->first();
             if ($dupe) {
                 return response()->json(['success' => false, 'message' => 'Duplicate serial number for this part.'], 422);
+            }
+        }
+
+        if ($property !== '') {
+            $dupe = PartUnit::where('part_id', $part->id)->where('property_number', $property)->first();
+            if ($dupe) {
+                return response()->json(['success' => false, 'message' => 'Duplicate property number for this part.'], 422);
             }
         }
 

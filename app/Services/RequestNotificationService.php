@@ -145,6 +145,59 @@ class RequestNotificationService
         );
     }
 
+    /** Notify the asset custodian recorded when Supply releases a part. */
+    public static function notifyAssetCustodianOfPartsIssue(RequestModel $ticket, int $custodianId): void
+    {
+        // IT already receives the requisition workflow notification. Do not duplicate it
+        // when the ticket requester is also the asset custodian.
+        if ($custodianId < 1 || (int) $ticket->user_id === $custodianId) {
+            return;
+        }
+
+        $asset = $ticket->linkedAsset;
+        if (! $asset) {
+            return;
+        }
+
+        \App\Models\Notification::send(
+            $custodianId,
+            $ticket->id,
+            'Parts Issued to Asset',
+            "Parts were issued and recorded under asset {$asset->item_name} for ticket {$ticket->request_number}."
+        );
+    }
+
+    public static function notifyNewAssetCustodian(\App\Models\InventoryAsset $asset, int $custodianId): void
+    {
+        \App\Models\Notification::send(
+            $custodianId,
+            null,
+            'Asset Assigned',
+            "Asset {$asset->item_name} (PAR: {$asset->par_number}) has been assigned to you."
+        );
+    }
+
+    public static function notifyAssetCustodianTransfer(\App\Models\InventoryAsset $asset, ?int $previousUserId, ?int $newUserId): void
+    {
+        if ($previousUserId) {
+            \App\Models\Notification::send(
+                $previousUserId,
+                null,
+                'Asset Transfer',
+                "Asset {$asset->item_name} (PAR: {$asset->par_number}) is no longer assigned to you."
+            );
+        }
+
+        if ($newUserId && $newUserId !== $previousUserId) {
+            \App\Models\Notification::send(
+                $newUserId,
+                null,
+                'Asset Transfer',
+                "Asset {$asset->item_name} (PAR: {$asset->par_number}) has been assigned to you."
+            );
+        }
+    }
+
     /**
      * @return Collection<int, User>
      */

@@ -187,6 +187,100 @@
     .empty-state .big { font-size: 44px; margin-bottom: 10px; }
     .stat-val { font-variant-numeric: tabular-nums; }
 </style>
+<style nonce="{{ $cspNonce }}">
+    /* ── Additions only — existing styles untouched ── */
+
+    /* Fix: @keyframes was referenced but never defined */
+    @keyframes fadeInSlide {
+        0%   { opacity: 0; transform: translateY(10px); }
+        100% { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Fix search icon vertical alignment */
+    .search-box {
+        position: relative;
+        display: flex;
+        align-items: center;
+    }
+    .search-box i {
+        position: absolute;
+        left: 11px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #94a3b8;
+        font-size: 13px;
+        pointer-events: none;
+        line-height: 1;
+    }
+    .search-box input {
+        width: 100%;
+        padding: 9px 12px 9px 32px !important;
+        line-height: 1.4;
+    }
+
+    /* Smooth transitions on filter inputs */
+    .parts-search input, .parts-search select {
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    /* Table row hover — subtle left accent */
+    .parts-table td:first-child { border-left: 3px solid transparent; }
+    .parts-table tr:hover td:first-child { border-left-color: #0038A8; }
+
+    /* ── Units Modal table — fix alignment + polish ── */
+
+    /* Override: inside the units modal, all columns left-aligned */
+    #unitsModal .parts-table th,
+    #unitsModal .parts-table td { text-align: left !important; }
+
+    /* Wider modal for the units table */
+    #unitsModal .modal-box { max-width: 620px; }
+
+    /* Units search bar */
+    #unitsSearch {
+        flex: 1;
+        min-width: 160px;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 12px;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    #unitsSearch:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,.12); }
+
+    /* Add unit inline form */
+    #addUnitForm {
+        border: 1px solid #e2e8f0 !important;
+        border-radius: 10px !important;
+        background: #f8fafc !important;
+        padding: 14px !important;
+        margin-bottom: 14px !important;
+    }
+    #addUnitForm input {
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+        padding: 9px 11px;
+        font-size: 13px;
+        outline: none;
+        transition: border-color 0.2s;
+        width: 100%;
+        box-sizing: border-box;
+    }
+    #addUnitForm input:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,.12); }
+
+    /* Units body scroll area */
+    #unitsBody { max-height: 46vh; overflow-y: auto; }
+
+    /* Units table total row */
+    #unitsModal .parts-table tr.units-total-row td {
+        border-top: 2px solid #e2e8f0;
+        font-weight: 800;
+        color: #0f172a;
+        background: #f8fafc;
+        font-size: 13px;
+    }
+</style>
 @endsection
 
 @section('content')
@@ -319,6 +413,10 @@
                         <input type="number" name="on_hand_qty" id="p_on_hand" min="0" value="0">
                         <div class="form-err"></div>
                     </div>
+                    <div class="form-field full" style="display:flex;align-items:center;gap:8px;">
+                        <input type="checkbox" name="requires_unit_tracking" id="p_requires_unit_tracking" value="1" style="width:auto;">
+                        <label for="p_requires_unit_tracking" style="margin:0;">Track every unit (serial number, property number, and unit cost required)</label>
+                    </div>
                                         <div class="form-field">
                         <label>Reorder level</label>
                         <input type="number" name="reorder_level" id="p_reorder" min="0" value="0">
@@ -360,9 +458,17 @@
                             <div class="empty-state" style="padding:12px;">No serials available.</div>
                         </div>
                     </div>
+                    <div class="form-field full" id="stockOutTargetWrap" style="display:none;">
+                        <label>Attach to asset (optional)</label>
+                        <select id="s_asset_id" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;"><option value="">-- No asset (manual) --</option></select>
+                    </div>
+                    <div class="form-field full" id="stockOutTicketWrap" style="display:none;">
+                        <label>Attach to ticket (optional)</label>
+                        <select id="s_request_id" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;"><option value="">-- No ticket (manual) --</option></select>
+                    </div>
                     <div class="form-field" id="stockIssuedToWrap" style="display:none;">
                         <label>Issued To (custodian)</label>
-                        <input type="text" id="s_issued_to" placeholder="Juan Dela Cruz">
+                        <select id="s_issued_to" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;"><option value="">-- Manual / none --</option></select>
                     </div>
                     <div class="form-field">
                         <label>Source / For</label>
@@ -467,6 +573,7 @@
     const PARTS_UNITS_STORE_PREFIX = '{{ route('inventory.parts.units.store', ['part' => 'PART_ID']) }}';
     const PARTS_IMPORT_PREVIEW_URL = '{{ route('inventory.parts.import.preview') }}';
     const PARTS_IMPORT_COMMIT_URL = '{{ route('inventory.parts.import.commit') }}';
+    const PARTS_STOCK_OUT_CONTEXT_URL = '{{ route('inventory.parts.stock-out-context') }}';
 
     // ── Live filters (Ajax) — gaya ng inventory, inu-update ang stats cards + table pag nag-filter ──
     (function () {
@@ -712,6 +819,7 @@
         document.getElementById('p_unit').value = part ? part.unit : '';
         document.getElementById('p_category').value = (part && part.category) ? part.category : '';
         document.getElementById('p_on_hand').value = part ? part.on_hand_qty : 0;
+        document.getElementById('p_requires_unit_tracking').checked = !!(part && part.requires_unit_tracking);
                 document.getElementById('p_reorder').value = part ? part.reorder_level : 0;
         document.getElementById('field_on_hand').style.display = mode === 'add' ? 'flex' : 'none';
         document.querySelectorAll('.form-err').forEach(e => e.textContent = '');
@@ -735,7 +843,15 @@
         document.getElementById('stockSerialWrap').style.display = mode === 'in' ? 'block' : 'none';
         document.getElementById('stockUnitsPickerWrap').style.display = mode === 'out' ? 'block' : 'none';
         document.getElementById('stockIssuedToWrap').style.display = mode === 'out' ? 'block' : 'none';
-        if (mode === 'out') { loadStockOutUnits(part.id); }
+        document.getElementById('stockOutTargetWrap').style.display = mode === 'out' ? 'block' : 'none';
+        document.getElementById('stockOutTicketWrap').style.display = mode === 'out' ? 'block' : 'none';
+        document.getElementById('s_issued_to').innerHTML = '<option value="">-- Manual / none --</option>';
+        document.getElementById('s_asset_id').value = '';
+        document.getElementById('s_request_id').value = '';
+        if (mode === 'out') {
+            loadStockOutUnits(part.id);
+            loadStockOutContext();
+        }
         document.querySelectorAll('.form-err').forEach(e => e.textContent = '');
         document.getElementById('stockModal').classList.add('open');
         document.getElementById('s_qty').focus();
@@ -764,6 +880,63 @@
 
     // ── Units ──
     let currentUnitsPartId = null;
+
+    // ── Stock Out auto-fill (Phase 5) ──
+    let stockOutAssets = [];
+    let stockOutTickets = [];
+
+    function loadStockOutContext() {
+        api(PARTS_STOCK_OUT_CONTEXT_URL, 'GET').then(({ ok, data }) => {
+            if (!ok) return;
+            stockOutAssets = (data && data.assets) || [];
+            stockOutTickets = (data && data.tickets) || [];
+            const custEl = document.getElementById('s_issued_to');
+            if (custEl) {
+                custEl.innerHTML = '<option value="">-- Manual / none --</option>';
+                ((data && data.custodians) || []).forEach(cu => {
+                    const o = document.createElement('option');
+                    o.value = cu.id; o.textContent = cu.full_name; custEl.appendChild(o);
+                });
+            }
+            const assetEl = document.getElementById('s_asset_id');
+            if (assetEl) {
+                assetEl.innerHTML = '<option value="">-- No asset (manual) --</option>';
+                stockOutAssets.forEach(a => {
+                    const o = document.createElement('option');
+                    o.value = a.asset_id;
+                    o.textContent = '#' + a.asset_id + ' · ' + a.item_name + (a.custodian_name ? ' · ' + a.custodian_name : '');
+                    assetEl.appendChild(o);
+                });
+            }
+            const ticketEl = document.getElementById('s_request_id');
+            if (ticketEl) {
+                ticketEl.innerHTML = '<option value="">-- No ticket (manual) --</option>';
+                stockOutTickets.forEach(t => {
+                    const o = document.createElement('option');
+                    o.value = t.id;
+                    o.textContent = '[' + (t.type === 'Preventive Maintenance' ? 'PM' : 'ICT') + '] ' + t.request_number + (t.asset_name ? ' · ' + t.asset_name : '');
+                    ticketEl.appendChild(o);
+                });
+            }
+        });
+    }
+
+    const soAssetEl = document.getElementById('s_asset_id');
+    if (soAssetEl) soAssetEl.addEventListener('change', function () {
+        const asset = stockOutAssets.find(a => String(a.asset_id) === String(this.value));
+        const custEl = document.getElementById('s_issued_to');
+        if (custEl) custEl.value = asset ? String(asset.custodian_id || '') : '';
+    });
+    const soTicketEl = document.getElementById('s_request_id');
+    if (soTicketEl) soTicketEl.addEventListener('change', function () {
+        const ticket = stockOutTickets.find(t => String(t.id) === String(this.value));
+        const assetEl = document.getElementById('s_asset_id');
+        const custEl = document.getElementById('s_issued_to');
+        if (ticket) {
+            if (assetEl) assetEl.value = String(ticket.asset_id || '');
+            if (custEl) custEl.value = String(ticket.custodian_id || '');
+        }
+    });
 
     function openUnitsModal(id) {
         const part = partsById[id] || {};
@@ -802,7 +975,7 @@
                     + '<td>' + esc(u.issued_to || '—') + '</td>'
                     + '</tr>';
             }).join('')
-            + '<tr style="border-top:2px solid #e2e8f0;font-weight:800;color:#1e293b;"><td colspan="2">TOTAL</td><td>' + fmtMoney(total) + '</td><td colspan="2"></td></tr>'
+            + '<tr class="units-total-row"><td colspan="2">TOTAL</td><td>' + fmtMoney(total) + '</td><td colspan="2"></td></tr>'
             + '</tbody></table></div>';
     }
 
@@ -843,7 +1016,8 @@
             unit: document.getElementById('p_unit').value,
             category: document.getElementById('p_category').value,
             on_hand_qty: document.getElementById('p_on_hand').value,
-            reorder_level: document.getElementById('p_reorder').value
+            reorder_level: document.getElementById('p_reorder').value,
+            requires_unit_tracking: document.getElementById('p_requires_unit_tracking').checked
         };
         if (partMode === 'add') {
             api(PARTS_STORE_URL, 'POST', payload).then(({ ok, data }) => {
@@ -889,6 +1063,12 @@
         } else {
             const sel = Array.from(document.querySelectorAll('.stock-unit-chk:checked')).map(c => parseInt(c.value, 10));
             if (sel.length) payload.unit_ids = sel;
+            const iTo = document.getElementById('s_issued_to')?.value;
+            const aId = document.getElementById('s_asset_id')?.value;
+            const rId = document.getElementById('s_request_id')?.value;
+            if (iTo) payload.issued_to = iTo;
+            if (aId) payload.asset_id = aId;
+            if (rId) payload.request_id = rId;
         }
         api(url, 'POST', payload).then(({ ok, data }) => {
             if (ok) { toast(data.message || 'Saved', true); closeModal('stockModal'); setTimeout(() => location.reload(), 400); }

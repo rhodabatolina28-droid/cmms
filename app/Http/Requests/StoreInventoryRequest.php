@@ -9,11 +9,7 @@ class StoreInventoryRequest extends FormRequest
     public function authorize(): bool
     {
         $user = auth()->user();
-        // Only supply officers (can_supply), admins, and super_admins can create inventory items
-        return auth()->check() && (
-            in_array($user->role, ['admin', 'super_admin']) ||
-            ($user->role === 'it' && $user->can_supply)
-        );
+        return auth()->check() && $user->canProcessSupply();
     }
 
     public function rules(): array
@@ -23,6 +19,7 @@ class StoreInventoryRequest extends FormRequest
             'item_name' => 'required|string|max:200',
             'serial_number' => 'nullable|string|max:100|unique:inventory_assets,serial_number',
             'property_number' => 'nullable|string|max:255',
+            'parent_asset_id' => 'nullable|integer|exists:inventory_assets,asset_id',
             'brand' => 'nullable|string|max:255',
             'model' => 'nullable|string|max:255',
             'specifications' => 'nullable|string',

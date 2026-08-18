@@ -1,6 +1,6 @@
  // Inventory Management Script for Laravel
 import { getDivisionAbbr, INVENTORY_BRANCH_MAP } from './inventory/config.js';
-import { updateModalBranchDropdown, fetchFilteredUsers } from './inventory/modal-helpers.js';
+import { updateModalBranchDropdown, fetchFilteredUsers, loadParentAssets } from './inventory/modal-helpers.js';
 import { viewAssetHistory, closeHistoryModal } from './inventory/history.js';
 
 let allAssets = [];
@@ -60,6 +60,15 @@ document.addEventListener("DOMContentLoaded", function () {
     const networkDeviceType = document.getElementById("specNetworkDeviceType");
     if (networkDeviceType) {
         networkDeviceType.addEventListener("change", toggleNetworkDeviceSpecs);
+    }
+    // Parent set search input (debounced) — re-fetch candidate parent assets
+    let parentSearchTimer = null;
+    const parentSearchInput = document.getElementById("assetParentSearch");
+    if (parentSearchInput) {
+        parentSearchInput.addEventListener("input", function () {
+            clearTimeout(parentSearchTimer);
+            parentSearchTimer = setTimeout(() => loadParentAssets(parentSearchInput.value), 300);
+        });
     }
     // Note: Region, Branch, Dept, Office modal dropdowns use inline onchange handlers
 });
@@ -489,6 +498,11 @@ function openAddAssetModal() {
     document.getElementById("assetForm").reset();
     const hiddenUser = document.getElementById("assetAssignedUser");
     if (hiddenUser) hiddenUser.value = "";
+    const parentInput = document.getElementById("assetParentAssetId");
+    if (parentInput) parentInput.disabled = false;
+    const parentSearchEl = document.getElementById("assetParentSearch");
+    if (parentSearchEl) parentSearchEl.value = "";
+    loadParentAssets();
     // Hide edit banner
     const banner = document.getElementById('editAssetBanner');
     if (banner) banner.style.display = 'none';
@@ -591,6 +605,10 @@ async function editAsset(id) {
     setInputVal("assetBrandInput", asset.brand ?? "");
     setInputVal("assetModelInput", asset.model ?? "");
     setInputVal("assetPropertyNumber", asset.property_number);
+    await loadParentAssets();
+    setInputVal("assetParentAssetId", asset.parent_asset_id || "");
+    const parentInput = document.getElementById("assetParentAssetId");
+    if (parentInput) parentInput.disabled = !!asset.parent_asset_id;
     setInputVal("assetDateAcquired", asset.date_acquired ? asset.date_acquired.substring(0, 10) : "");
     setInputVal("assetWarrantyExpiration", asset.warranty_expiration ? asset.warranty_expiration.substring(0, 10) : "");
     setInputVal("assetAcquisitionCost", asset.acquisition_cost ?? "");
@@ -695,6 +713,7 @@ async function saveAsset(event) {
         status: document.getElementById("assetStatus").value,
         region: regionEl ? regionEl.value : null,
         property_number: document.getElementById("assetPropertyNumber")?.value || null,
+        parent_asset_id: document.getElementById("assetParentAssetId")?.value || null,
         date_acquired: document.getElementById("assetDateAcquired")?.value || null,
         warranty_expiration: document.getElementById("assetWarrantyExpiration")?.value || null,
         acquisition_cost: document.getElementById("assetAcquisitionCost")?.value || null,

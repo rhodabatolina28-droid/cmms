@@ -7,6 +7,9 @@
     }
     $showTracker = $showTracker ?? false;
     $quickActions = $quickActions ?? false;
+    $issueDestination = $req->ticket?->linkedAsset?->assignedUser
+        ? $req->ticket->linkedAsset->assignedUser->full_name . ' for ' . $req->ticket->linkedAsset->item_name
+        : null;
 @endphp
 <article class="cmms-req-card @if($quickActions && strtolower($req->status ?? '') === 'pending') cmms-req-card--needs-review @elseif($quickActions && strtolower($req->status ?? '') === 'approved') cmms-req-card--awaiting-issue @endif">
     <div>
@@ -41,7 +44,7 @@
                 <button type="button" class="cmms-btn-primary supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $prNo }}"><i class="fa-solid fa-check"></i> Approve</button>
                 <button type="button" class="cmms-btn-danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $prNo }}"><i class="fa-solid fa-xmark"></i> Disapprove</button>
             @else
-                <button type="button" class="cmms-btn-success supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $prNo }}"><i class="fa-solid fa-box-open"></i> Issue</button>
+                <button type="button" class="cmms-btn-success supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $prNo }}" data-issue-destination="{{ $issueDestination }}"><i class="fa-solid fa-box-open"></i> Issue</button>
                 <button type="button" class="cmms-btn-danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $prNo }}"><i class="fa-solid fa-xmark"></i> Disapprove</button>
             @endif
         @endif
@@ -73,6 +76,7 @@
                 <p>JO {{ $req->ticket?->display_number ?? $req->ticket?->request_number ?? '&mdash;' }}</p>
                 @if($req->ticket?->linkedAsset)
                     <p><span class="cmms-req-details-label">Asset:</span> {{ $req->ticket->linkedAsset->item_name }} <span class="muted">({{ $req->ticket->linkedAsset->serial_number ?? 'N/A' }})</span></p>
+                    <p><span class="cmms-req-details-label">Custodian:</span> {{ $req->ticket->linkedAsset->assignedUser?->full_name ?? 'Not assigned' }}</p>
                 @endif
                 @if($req->requester)
                     <p><span class="cmms-req-details-label">Requester:</span> {{ $req->requester->full_name }}</p>

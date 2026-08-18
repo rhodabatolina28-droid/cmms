@@ -239,10 +239,15 @@
             const id = btn.dataset.id;
             const pr = btn.dataset.pr;
             const isReject = action === 'reject';
-            const labels = { approve: 'Approve', reject: 'Disapprove', issue: 'Issue parts' };
+            const issueDestination = btn.dataset.issueDestination;
+            const labels = { approve: 'Approve', reject: 'Disapprove', issue: 'Issue to asset custodian' };
             const { value: remarks, isConfirmed } = await Swal.fire({
                 title: labels[action] + ' ' + pr,
-                text: isReject ? 'Provide a reason for disapproval.' : 'Add an optional note, then confirm.',
+                text: isReject
+                    ? 'Provide a reason for disapproval.'
+                    : action === 'issue' && issueDestination
+                        ? 'Issued units will be assigned to ' + issueDestination + '.'
+                        : 'Add an optional note, then confirm.',
                 input: isReject ? 'textarea' : 'text',
                 inputPlaceholder: isReject ? 'Reason for disapproval' : 'Optional note',
                 inputAttributes: { maxlength: '500' },

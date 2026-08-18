@@ -561,6 +561,14 @@
                     <input type="text" id="assetPropertyNumber" placeholder="e.g. NCMB-ICT-2024-001" class="form-input-gov">
                 </div>
                 <div class="mb-16">
+                    <label class="form-label-gov">Part Of Parent Set (Parent Asset) <span style="font-weight:400; color:#64748b;">(optional)</span></label>
+                    <input type="text" id="assetParentSearch" class="form-input-gov" autocomplete="off" placeholder="Search parent asset by item name, serial, PAR, or property #..." style="width:100%; margin-bottom:8px;">
+                    <select id="assetParentAssetId" class="form-input-gov" style="width:100%;">
+                        <option value="">-- Not part of a set (standalone) --</option>
+                    </select>
+                    <p class="info-text-sm">A component inherits the parent asset’s PAR number and custodian. Change set membership through an audited workflow, not normal edit.</p>
+                </div>
+                <div class="mb-16">
                     <label class="form-label-gov">Asset Notes</label>
                     <textarea id="assetNotes" class="form-input-gov textarea-sm" placeholder="Additional notes about this asset..."></textarea>
                 </div>

@@ -58,6 +58,12 @@ class PartsStockController extends Controller
         ]));
     }
 
+    public function stockOutContext(Request $request)
+    {
+        return (new \App\Actions\Inventory\PartsStock\ListStockOutContextAction)->execute();
+    }
+
+
     public function store(StorePartRequest $request)
     {
         return (new StorePartAction)->execute($request);

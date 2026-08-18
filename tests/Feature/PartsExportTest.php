@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\Part;
 use App\Models\User;
+use App\Models\PartUnit;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -85,5 +86,29 @@ class PartsExportTest extends TestCase
         $resp = $this->get(route('super_admin.parts.export'));
         $resp->assertOk();
         $this->assertStringContainsString('Toner HP', $resp->streamedContent());
+    }
+
+    public function test_export_emits_one_row_per_serialized_unit_with_custodian()
+    {
+        $this->actingAs($this->supplyOfficer());
+
+        $part = Part::create(['item_name' => 'RAM 16GB DDR4', 'unit' => 'pcs', 'category' => 'Memory', 'on_hand_qty' => 2, 'reorder_level' => 3, 'region' => 'NCR', 'is_active' => true]);
+        $custodian = $this->makeUser();
+        PartUnit::create(['part_id' => $part->id, 'serial_number' => 'RAM-S001', 'property_number' => 'PROP-1', 'unit_value' => 1200, 'status' => 'in_stock']);
+        PartUnit::create(['part_id' => $part->id, 'serial_number' => 'RAM-S002', 'property_number' => 'PROP-2', 'unit_value' => 1200, 'status' => 'issued', 'issued_to' => $custodian->id]);
+
+        $content = $this->get(route('inventory.parts.export'))->assertOk()->streamedContent();
+
+        // Unit columns are present in the header.
+        $this->assertStringContainsString('Serial No', $content);
+        $this->assertStringContainsString('Unit Status', $content);
+        $this->assertStringContainsString('Issued To', $content);
+
+        // One row per unit: both serials present with their status and custodian.
+        $this->assertStringContainsString('RAM-S001', $content);
+        $this->assertStringContainsString('RAM-S002', $content);
+        $this->assertStringContainsString('IN_STOCK', $content);
+        $this->assertStringContainsString('ISSUED', $content);
+        $this->assertStringContainsString($custodian->full_name, $content);
     }
 }

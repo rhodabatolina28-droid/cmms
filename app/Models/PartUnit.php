@@ -47,4 +47,14 @@ class PartUnit extends Model
     {
         return $this->belongsTo(User::class, 'issued_to');
     }
+
+    public function asset(): BelongsTo
+    {
+        return $this->belongsTo(InventoryAsset::class, 'asset_id', 'asset_id');
+    }
+
+    public function request(): BelongsTo
+    {
+        return $this->belongsTo(Request::class, 'request_id');
+    }
 }

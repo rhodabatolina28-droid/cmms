@@ -92,7 +92,20 @@
                             <div class="label">Property status</div>
                             <div class="value">{{ $ticket->linkedAsset->status }}</div>
                         </div>
+                        <div class="cmms-meta-card">
+                            <div class="label">Asset custodian</div>
+                            <div class="value">{{ $issueContext['custodian']?->full_name ?? 'Not assigned' }}</div>
+                        </div>
                     </div>
+                </div>
+            </div>
+            @endif
+
+            @if($canReview && $status === 'approved' && ! $issueContext['valid'])
+            <div class="cmms-panel mb-18" style="border-left:3px solid #dc2626;">
+                <div class="cmms-panel-head"><h2 style="color:#991b1b;">Issue blocked</h2></div>
+                <div class="cmms-panel-body">
+                    <p class="info-text" style="color:#991b1b;">{{ $issueContext['message'] }}</p>
                 </div>
             </div>
             @endif
@@ -230,7 +243,7 @@
             @if($canReview && in_array($status, ['approved'], true))
             <div class="info-bar" style="background:#eff6ff;color:#0038A8;border-bottom:none;">
                 <i class="fa-solid fa-circle-info icon-mr-4"></i>
-                Using <b>Issue parts to IT</b> below will deduct these items from Parts Stock on-hand.
+                Issuing will deduct these items from Parts Stock and assign their serialized units to the linked asset custodian.
             </div>
             @endif
         </div>
@@ -331,11 +344,16 @@
         btn.addEventListener('click', async () => {
             if (busy) return;
             const action = btn.dataset.action;
-            const titles = { approve: 'Approve requisition', reject: 'Reject requisition', issue: 'Issue parts to IT' };
+            const titles = { approve: 'Approve requisition', reject: 'Reject requisition', issue: 'Issue parts to asset custodian' };
+            const issueDestination = @json($issueContext['valid']
+                ? ($issueContext['custodian']->full_name . ' for ' . $issueContext['asset']->item_name)
+                : null);
             const confirm = await Swal.fire({
                 icon: 'question',
                 title: titles[action],
-                text: 'This will be recorded under your Administrative supply admin account.',
+                text: action === 'issue'
+                    ? 'Issued units will be assigned to ' + issueDestination + '.'
+                    : 'This will be recorded under your Administrative supply admin account.',
                 showCancelButton: true,
                 confirmButtonColor: '#0038A8',
                 confirmButtonText: 'Confirm',

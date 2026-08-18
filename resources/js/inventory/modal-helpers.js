@@ -56,3 +56,38 @@ export async function fetchFilteredUsers() {
         console.error("Error fetching users:", error);
     }
 }
+/**
+ * Load candidate parent assets (standalone PAR sets) for the asset modal.
+ * Preserves the currently selected value so re-filtering doesn't reset it.
+ * @param {string} query - optional search text (item name, serial, PAR, property#)
+ */
+export async function loadParentAssets(query = "") {
+    const select = document.getElementById("assetParentAssetId");
+    if (!select) return;
+
+    const params = new URLSearchParams();
+    if (query) params.set('q', query);
+
+    try {
+        const currentVal = select.value;
+        const response = await fetch(`/inventory/parent-assets?${params.toString()}`, {
+            credentials: "include",
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        });
+        const result = await response.json();
+
+        if (result.success) {
+            select.innerHTML = '<option value="">-- Not part of a set (standalone) --</option>';
+            result.assets.forEach(a => {
+                const opt = document.createElement('option');
+                opt.value = a.asset_id;
+                opt.textContent = `#${a.asset_id} · ${a.item_name} · PAR ${a.par_number || 'N/A'}${a.serial_number ? ' · SN ' + a.serial_number : ''}${a.custodian_name ? ' · ' + a.custodian_name : ''}`;
+                select.appendChild(opt);
+            });
+            // Restore previously selected parent if it still exists in the list
+            select.value = currentVal;
+        }
+    } catch (error) {
+        console.error("Error fetching parent assets:", error);
+    }
+}

@@ -11,6 +11,11 @@ class ExportPartsStockAction
      * CSV export ng parts & consumables — gaya ng ExportInventoryAction.
      * Iginagalang ang org scoping + filters (search/category/status).
      *
+     * Serialized parts: isang CSV row bawat unit (serialized unit), para makita
+     * ang bawat piraso na may serial / property / custodian. Para sa part na
+     * walang unit records, may isang row pa rin (blangko ang unit columns) para
+     * hindi mawala ang stock item sa masterlist.
+     *
      * @return \Symfony\Component\HttpFoundation\StreamedResponse
      */
     public function execute(Request $request, User $user)
@@ -20,7 +25,14 @@ class ExportPartsStockAction
         }
 
         $query = (new ListPartsStockAction)->buildQuery($request, $user);
-        $parts = $query->orderBy('item_name')->get();
+        $parts = $query
+            ->with([
+                'units.issuedTo:id,full_name',
+                'units.asset:id,item_name',
+                'units.request:id,request_number',
+            ])
+            ->orderBy('item_name')
+            ->get();
 
         $filename = 'parts_stock_export_' . now()->format('Ymd_His') . '.csv';
 
@@ -35,20 +47,49 @@ class ExportPartsStockAction
 
             fputcsv($file, [
                 'Item Name', 'Unit', 'Category', 'On-hand Qty', 'Reorder Level',
-                'Status', 'Region', 'Branch',
+                'Part Status', 'Region', 'Branch',
+                'Serial No', 'Property No', 'Unit Value', 'Unit Status',
+                'Issued To', 'Asset', 'Request',
             ]);
 
+            $emptyUnitColumns = ['', '', '', '', '', '', ''];
+
             foreach ($parts as $part) {
-                fputcsv($file, [
-                    $part->item_name,
-                    $part->unit,
-                    $part->category ?? '',
-                    $part->on_hand_qty,
-                    $part->reorder_level,
-                    strtoupper($part->statusLevel()),
-                    $part->region ?? '',
-                    $part->branch ?? '',
-                ]);
+                $units = $part->units ?? collect();
+
+                if ($units->isEmpty()) {
+                    fputcsv($file, array_merge([
+                        $part->item_name,
+                        $part->unit,
+                        $part->category ?? '',
+                        $part->on_hand_qty,
+                        $part->reorder_level,
+                        strtoupper($part->statusLevel()),
+                        $part->region ?? '',
+                        $part->branch ?? '',
+                    ], $emptyUnitColumns));
+                    continue;
+                }
+
+                foreach ($units as $u) {
+                    fputcsv($file, [
+                        $part->item_name,
+                        $part->unit,
+                        $part->category ?? '',
+                        $part->on_hand_qty,
+                        $part->reorder_level,
+                        strtoupper($part->statusLevel()),
+                        $part->region ?? '',
+                        $part->branch ?? '',
+                        $u->serial_number,
+                        $u->property_number,
+                        $u->unit_value !== null ? number_format((float) $u->unit_value, 2) : '',
+                        strtoupper($u->status),
+                        $u->issuedTo?->full_name ?? ($u->issuedTo?->name ?? ''),
+                        $u->asset?->item_name ?? ($u->asset_id ? (string) $u->asset_id : ''),
+                        $u->request?->request_number ?? ($u->request_id ? (string) $u->request_id : ''),
+                    ]);
+                }
             }
 
             fclose($file);

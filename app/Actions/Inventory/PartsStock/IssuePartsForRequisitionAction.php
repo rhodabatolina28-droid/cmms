@@ -24,9 +24,15 @@ class IssuePartsForRequisitionAction
     public function execute(Requisition $requisition, ?int $performedBy = null): array
     {
         $items = $requisition->items ?? [];
+        $ticket = $requisition->ticket;
+        $assetId = $ticket?->linked_asset_id;
+        // The IT requester is not the recipient. The ticket's linked asset
+        // supplies the accountable custodian for ticket-based releases.
+        $custodianId = $ticket?->linkedAsset?->assigned_to_user;
+        $ticketId = $ticket?->id;
 
         try {
-            DB::transaction(function () use ($items, $requisition, $performedBy, &$issue_count, &$deficits) {
+            DB::transaction(function () use ($items, $requisition, $performedBy, $assetId, $custodianId, $ticketId, &$issue_count, &$deficits) {
                 $issue_count = 0;
                 $deficits = [];
                 $toDeduct = []; // validated lines ready for deduction
@@ -80,13 +86,22 @@ class IssuePartsForRequisitionAction
                     $units = PartUnit::where('part_id', $part->id)
                         ->where('status', 'in_stock')
                         ->orderBy('created_at')
+                        ->orderBy('id')
+                        ->lockForUpdate()
                         ->take($qty)
                         ->get();
+
+                    if ($part->requires_unit_tracking && $units->count() !== $qty) {
+                        throw new RuntimeException('incomplete_unit_tracking');
+                    }
 
                     if ($units->isNotEmpty()) {
                         foreach ($units as $unit) {
                             $unit->update([
                                 'status' => 'issued',
+                                'issued_to' => $custodianId,
+                                'asset_id' => $assetId,
+                                'request_id' => $ticketId,
                                 'issued_at' => now(),
                             ]);
                         }
@@ -110,6 +125,13 @@ class IssuePartsForRequisitionAction
                     'success' => false,
                     'message' => 'Insufficient parts stock to issue this requisition.',
                     'deficits' => $deficits ?? [],
+                ];
+            }
+
+            if ($e->getMessage() === 'incomplete_unit_tracking') {
+                return [
+                    'success' => false,
+                    'message' => 'A tracked item cannot be issued until every quantity has an in-stock unit record.',
                 ];
             }
 

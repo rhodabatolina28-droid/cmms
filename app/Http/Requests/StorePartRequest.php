@@ -21,6 +21,7 @@ class StorePartRequest extends FormRequest
             'reorder_level' => 'nullable|integer|min:0',
             'region' => 'nullable|string|max:64',
             'branch' => 'nullable|string|max:64',
+            'requires_unit_tracking' => 'nullable|boolean',
         ];
     }
 

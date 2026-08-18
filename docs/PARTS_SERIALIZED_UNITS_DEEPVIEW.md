@@ -6,6 +6,148 @@
 
 ---
 
+## Planned - Automatic Ticket-Based Issue to Asset Custodian (Not Yet Implemented)
+
+### Goal
+
+Kapag ang assigned IT personnel ay nag-submit ng Parts Request para sa isang active **ICT** o
+**PM-generated** ticket, ang Supply **Issue** action ay dapat mag-release ng units sa tamang asset
+custodian automatically. Hindi dapat manual na pumili ng recipient sa ticket-based issue dahil nasa
+ticket na ang asset at custodian context.
+
+### Target flow
+
+```text
+ICT / PM ticket with linked asset
+  -> assigned IT diagnoses asset
+  -> IT selects that assigned, active ticket in Parts Request
+  -> IT submits Parts Request
+  -> ticket becomes Awaiting Parts
+  -> Supply approves requisition
+  -> Supply confirms Issue
+  -> units are issued to the linked asset's custodian
+  -> ticket returns to Ongoing; IT continues repair
+```
+
+### Ticket selection by IT
+
+The Parts Request screen must let IT select only tickets that are assigned to the logged-in IT user,
+are still active, and are eligible ICT or PM-generated work. Selecting a ticket loads its linked
+asset and the asset's current custodian as read-only request context. IT selects the needed parts and
+quantity, but does not select the custodian.
+
+### Automatic assignment rule
+
+| Unit field | Source | Rule |
+|---|---|---|
+| `request_id` | current requisition ticket | Always save the ticket ID. |
+| `asset_id` | `ticket.linked_asset_id` | Ticket-based issue requires a linked asset. |
+| `issued_to` | `ticket.linkedAsset.assigned_to_user` | Use the asset custodian, never the IT requester. |
+| `status` and `issued_at` | Issue transaction | Set to `issued` with the release timestamp. |
+
+`requisition.requested_by` identifies the IT personnel who requested the parts. It is **not** the
+recipient/custodian of the issued unit.
+
+### Preconditions and safeguards
+
+1. The ticket must be active, assigned to IT, and eligible as ICT or PM-generated.
+2. The ticket must have a linked asset.
+3. The linked asset must have `assigned_to_user`. If it does not, block Issue with a clear message;
+   never silently assign the unit to IT or another user.
+4. Only an approved requisition can be issued. A repeated Issue remains blocked by the existing
+   requisition status transition.
+5. Lock the part and selected/oldest in-stock units, validate every requested line first, then
+   update all records in one transaction.
+6. Generic/manual Stock Out remains manual because it has no ticket context. Automatic assignment
+   applies only to Issue from a Parts Request.
+
+### Planned Supply Issue UI
+
+Before confirmation, show read-only ticket context: ticket number/type, linked asset, asset
+custodian, requested parts and quantity, and serialized units to release. The confirmation must say
+that the units will be assigned to the displayed custodian. Replace **"Issue parts to IT"** with
+**"Issue parts to asset custodian"**.
+
+### Expected result after issue
+
+- `parts_stock.on_hand_qty` and matching `parts_stock_units` update in the same transaction.
+- Units appear on the linked asset's **Installed Parts / Consumables** card through `asset_id`.
+- Units appear on the ticket's **Parts Used** card through `request_id`.
+- `issued_to` identifies the linked asset custodian; the movement remains linked to the requisition.
+- The ticket returns from `Awaiting Parts` to `Ongoing`, and IT is notified to continue repair.
+
+### Visibility rule: Parts Stock versus Asset Profile
+
+| Location | What it shows |
+|---|---|
+| **Parts & Consumables** | All stock records and units currently held by Supply, including `in_stock` units. |
+| **Asset Profile - Installed Parts / Consumables** | Only units already issued and linked to that specific asset through `asset_id`. |
+| **ICT / PM Ticket - Parts Used** | Only units already issued and linked to that ticket through `request_id`. |
+
+Adding a part to Supply stock must **not** make it appear on an Asset Profile. It appears only after
+Supply issues it from the ticket-based requisition and the transaction saves both the ticket and
+asset links.
+
+### Current implementation gaps to close
+
+### Implementation progress
+
+| Phase | Status | Verification |
+|---|---|---|
+| Phase 1 - Ticket context validation | Complete | Parts Request and Supply Issue are blocked without a linked asset and its custodian; requisition view shows the custodian context. |
+| Phase 2 - Automatic unit assignment | Complete | Supply Issue saves `request_id`, `asset_id`, and the linked asset custodian in every issued serialized unit. |
+| Phase 3 - Asset/ticket visibility verification | Complete | End-to-end: after a ticket-based Issue, the serialized unit appears on the Asset Profile (via `asset_id`) and the ticket's Parts Used card (via `request_id`), flagged `issued`; unissued stock is not shown and `on_hand` stays consistent. |
+| Phase 4 - PM ticket support | Complete | Eligible PM tickets (`type` Preventive Maintenance with a linked asset) can be submitted and issued to the linked asset's custodian; auto-generated bundled PM (no linked asset) is blocked. |
+| Phase 5 - Manual Stock Out auto-fill | Complete | The Stock Out modal now lists candidate assets and eligible tickets; selecting one auto-fills the target asset and the linked asset custodian. Leaving both empty keeps the entry manual. |
+| Phase 6 - Final regression | Complete | Repeated Issue blocked (no double-deduct), insufficient stock, cancelled-ticket block, serial selection, and on-hand/units consistency all covered. (Authoritative final regression totals are in Phase 9.) |
+| Phase 7 - Export (Parts per-unit) | Complete | CSV export lists one row per serialized unit (serial, property, unit value, unit status, issued-to custodian, asset, request). `PartsExportTest` 5 tests / 21 assertions. |
+| Phase 8 - Export (Inventory parent-set) | Complete | Inventory CSV export adds a Parent Set / Component Of column reflecting the asset-set model. `InventoryExportTest` 1 test / 7 assertions. |
+| Phase 9 - Final regression + doc | Complete | Full 8-suite regression (parts + set + export) 58 tests / 269 assertions; deepview doc aligned. |
+
+
+
+Phase 1-5 automated verification: `RequisitionTicketContextTest` (14 tests, 68 assertions) covers Phase 1 guards (no asset,
+no custodian, IT not assigned, Completed and Cancelled blocks), Phase 2 unit + PartMovement links, Phase 3 card visibility, Phase 4 eligible-PM success, no-linked-asset block, and PM issue-to-custodian, and Phase 5 Stock Out context endpoint (assets/tickets/custodians). Related regression suites: `PartsUnitsTest`, `RequisitionPartsIssueTest`, `PartsImportTest` - Final regression (Phase 6-8) across the 8 parts+set+export suites: 58 tests, 269 assertions. Blade view compilation also passed.
+
+### 2026-08-18 Accountability Hardening (completed)
+
+This is separate from the original UI/backend phase numbering above. It records the audit items
+implemented after reviewing the current CMMS flow.
+
+| Audit item | Completed safeguard | Verification |
+|---|---|---|
+| 3. Referential integrity | `parts_stock_units.asset_id` and `request_id` now have indexes and foreign keys; serial and property number are unique per part. | Migration applied successfully to the local database. |
+| 4. Unit accountability | A per-item `requires_unit_tracking` rule blocks Stock In, direct Add Unit, CSV Import, Stock Out, and requisition Issue when a tracked unit lacks serial number, property number, unit cost, or a matching unit row. | Focused suite passed; FIFO selection is deterministic (`created_at`, then `id`). |
+| 5. Custodian history | `issued_to` remains the historical recipient snapshot even if the asset is later reassigned. Asset and ticket cards load the saved custodian, cost, issue date, and ticket context. | Feature test confirms asset reassignment does not overwrite the issued unit recipient. |
+| 6. Custodian notice | On successful Supply Issue, the recorded asset custodian receives a `Parts Issued to Asset` in-app/email notification; duplicate notice is avoided when they are also the ticket requester. | Feature test confirms the custodian notification is created. |
+
+Post-hardening verification (updated 2026-08-18 after Phase 1-5 tests): `PartsUnitsTest`, `PartsImportTest`,
+`RequisitionPartsIssueTest`, and `RequisitionTicketContextTest` - **40 tests passed, 177 assertions**. Blade view compilation passed.
+
+### 2026-08-18 Asset Set & Custody Hardening (verification queue deferred)
+
+The Asset Verification Queue was deliberately deferred. The safeguards below apply to new records
+and normal edits without altering historical imported assets that remain `Spare` for review.
+
+| Phase | Status | Rule now enforced |
+|---|---|---|
+| 2. Set-aware validation | Complete | A component must have a top-level parent with a PAR. Shared property context is allowed only within that same parent/component set; unrelated assets are blocked. |
+| 3. Manual Create/Update protection | Complete | Manual component creation inherits the parent PAR, custodian, and organizational scope. Update serial validation now gives a normal validation error instead of relying only on the database constraint. |
+| 4. Transfer audit and notice | Complete | Reassigning a parent updates all components’ PAR/custodian context, writes a history entry for every component, and notifies the old and new custodians. |
+| 5. Gradual accountability | Complete | A new asset or a `Spare` asset becoming `Active` requires a custodian, property number, and acquisition cost. Existing already-active legacy records are not retroactively blocked. |
+| 6. Automated verification | Complete | `InventoryAssetIntegrityTest` covers component inheritance, unrelated property rejection, whole-set transfer/history/notifications, and activation completeness. |
+
+Asset Set hardening verification (updated 2026-08-18): `InventoryAssetIntegrityTest` and `InventoryCsvImportTest` -
+**12 tests passed, 64 assertions**. The `inventory_history.previous_user_id` audit reference now also
+has an index and foreign key to `users` (`nullOnDelete`).
+
+### Remaining implementation gaps
+
+- Final regression coverage (mostly covered): repeated Issue, insufficient stock, and `on_hand_qty == in_stock_units`
+  consistency `PartsUnitsTest`; add any remaining end-to-end browser pass for the auto-fill UI. **Phases 6-8 (final regression + exports) are complete.**
+
+---
+
 ## 1. Layunin at Trigger
 
 - Ang CSV (per-unit: SERIAL + PROPERTY NUMBER + RESPONSIBLE OFFICER kada row) ay nagpapakita na ang
@@ -22,7 +164,7 @@
 | `.../IssuePartsForRequisitionAction.php` | per line (`source=parts-stock`): lock → validate → `decrement` | **RISK:** dapat din mag-mark ng units (iwas divergence) |
 | `.../StorePartAction.php` / `UpdatePartAction.php` | create/update part + audit | Walang pagbabago sa on_hand/units |
 | `.../ListPartsStockAction.php` | baseQuery/applyFilters/statsFor/data | Data JSON dapat maglaman ng `unit_count` para sa Units button |
-| `.../ExportPartsStockAction.php` | CSV export | (Phase 6) puwedeng isama ang serial/property |
+| `.../ExportPartsStockAction.php` | CSV export | (Phase 7) per-unit serial/property/custodian/asset/request - done |
 | `.../CheckLowStockAction.php` | low/critical notif (reads `on_hand_qty`) | **Walang epekto** (on_hand pa rin ang binabasa) |
 | `app/Http/Controllers/Inventory/PartsStockController.php` | index, data, export, store/update/stock-in/out, movements | Magkakaroon ng bagong endpoints ng units |
 | `app/Http/Requests/StockInPartRequest.php` | `qty, reason, reference_type, reference_id` | Dapat magdagdag ng `units` validation |
@@ -116,7 +258,7 @@ parts_stock            parts_stock_movements
 | **Requisition** | `IssuePartsForRequisitionAction` — dapat mag-mark ng units (Phase 4) |
 | **Low-stock** | `CheckLowStockAction` — walang epekto (reads on_hand) |
 | **Physical Count** | base = unit status / on_hand (future) |
-| **Export** | (Phase 6) isama ang serial/property |
+| **Export** | (Phase 7-8) isama ang serial/property per-unit + parent-set column - done |
 | **Data endpoint** (`data()`) | magdagdag ng `unit_count` para sa Units button / hint |
 
 ## 8. Mga Risk at Mitigation (detalyado)
@@ -145,6 +287,12 @@ parts_stock            parts_stock_movements
   - non-supply → 403
 
 ## 10. Detalyadong Phased Plan (may verification bawat phase)
+
+> **Tandaan sa numbering:** Ang planong ito (Phase 1-6: UI/UX, Backend, Kumonekta, Requisition,
+> Asset & Request, CSV Import) ay ang **orihinal na design plan** at **iba ang numbering** sa
+> "Implementation progress" table sa itaas (Phase 1-5: ticket context, automatic issue, visibility,
+> PM support, manual Stock Out auto-fill). Ang kasalukuyang status ay naka-track sa itaas.
+
 
 - **Phase 1 — UI/UX (3 panig):** Units modal sa `parts.blade.php` · Stock In serial box ·
   Stock Out serial picker · 🧩 Components card sa `detail.blade.php` (empty state) ·

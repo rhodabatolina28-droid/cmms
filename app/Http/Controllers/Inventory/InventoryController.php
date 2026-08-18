@@ -145,6 +145,11 @@ class InventoryController extends Controller
         return (new SearchInventoryAssetsAction)->execute($request);
     }
 
+    public function listParentAssets(Request $request)
+    {
+        return (new \App\Actions\Inventory\ListParentAssetsAction)->execute($request);
+    }
+
     public function export(Request $request)
     {
         return (new \App\Actions\Inventory\ExportInventoryAction)->execute($request);

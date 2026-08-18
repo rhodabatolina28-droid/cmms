@@ -80,7 +80,7 @@ class ListRequisitionsAction
             ));
         }
 
-        $query = Requisition::with(['ticket', 'requester', 'reviewer']);
+        $query = Requisition::with(['ticket.linkedAsset.assignedUser', 'requester', 'reviewer']);
         \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($supply, $query);
 
         if ($filter !== 'all') {
@@ -104,7 +104,10 @@ class ListRequisitionsAction
     {
         $activeTickets = RequestModel::with('user')
             ->where('assigned_to', $itUser->id)
-            ->where('type', 'ICT')
+            ->where(function ($q) {
+                $q->where('type', 'ICT')
+                  ->orWhere(fn ($pm) => $pm->where('type', 'Preventive Maintenance')->whereNotNull('linked_asset_id'));
+            })
             ->whereNotIn('status', [RequestModel::STATUS_COMPLETED, RequestModel::STATUS_CANCELLED])
             ->orderByDesc('created_at')
             ->get();
@@ -134,7 +137,10 @@ class ListRequisitionsAction
         // Active ICT tickets where Super Admin is the assigned personnel
         $activeTickets = RequestModel::with('user')
             ->where('assigned_to', $superAdmin->id)
-            ->where('type', 'ICT')
+            ->where(function ($q) {
+                $q->where('type', 'ICT')
+                  ->orWhere(fn ($pm) => $pm->where('type', 'Preventive Maintenance')->whereNotNull('linked_asset_id'));
+            })
             ->whereNotIn('status', [RequestModel::STATUS_COMPLETED, RequestModel::STATUS_CANCELLED])
             ->orderByDesc('created_at')
             ->get();

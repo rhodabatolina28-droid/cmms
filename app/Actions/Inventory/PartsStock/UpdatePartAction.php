@@ -5,6 +5,7 @@ namespace App\Actions\Inventory\PartsStock;
 use App\Http\Requests\UpdatePartRequest;
 use App\Models\AuditLog;
 use App\Models\Part;
+use App\Models\PartUnit;
 use Illuminate\Support\Facades\Auth;
 
 class UpdatePartAction
@@ -21,6 +22,23 @@ class UpdatePartAction
 
         $data = $request->validated();
         $data['is_active'] = $request->boolean('is_active', true);
+        $data['requires_unit_tracking'] = $request->boolean('requires_unit_tracking');
+
+        if ($data['requires_unit_tracking']) {
+            $completeUnits = PartUnit::where('part_id', $part->id)
+                ->where('status', 'in_stock')
+                ->whereNotNull('serial_number')
+                ->whereNotNull('property_number')
+                ->whereNotNull('unit_value')
+                ->count();
+
+            if ($completeUnits < $part->on_hand_qty) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This item cannot require unit tracking until every on-hand unit has a serial number, property number, and unit cost.',
+                ], 422);
+            }
+        }
 
         $part->update($data);
 

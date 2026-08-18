@@ -41,6 +41,10 @@ class StockOutAction
 
                 // Tukuyin ang mga unit na mamarkahang issued.
                 if (! empty($unitIds)) {
+                    if (count($unitIds) !== $qty) {
+                        throw new RuntimeException('unit_quantity_mismatch');
+                    }
+
                     $units = PartUnit::where('part_id', $locked->id)
                         ->whereIn('id', $unitIds)
                         ->where('status', 'in_stock')
@@ -55,9 +59,14 @@ class StockOutAction
                     $units = PartUnit::where('part_id', $locked->id)
                         ->where('status', 'in_stock')
                         ->orderBy('created_at')
+                        ->orderBy('id')
                         ->lockForUpdate()
                         ->take($qty)
                         ->get();
+                }
+
+                if ($locked->requires_unit_tracking && $units->count() !== $qty) {
+                    throw new RuntimeException('incomplete_unit_tracking');
                 }
 
                 if ($units->isNotEmpty()) {
@@ -100,6 +109,26 @@ class StockOutAction
                 return response()->json([
                     'success' => false,
                     'message' => 'One or more selected units are no longer in stock.',
+                    'on_hand_qty' => $part->on_hand_qty,
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'unit_quantity_mismatch') {
+                $part->refresh();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'The selected unit count must match the quantity to issue.',
+                    'on_hand_qty' => $part->on_hand_qty,
+                ], 422);
+            }
+
+            if ($e->getMessage() === 'incomplete_unit_tracking') {
+                $part->refresh();
+
+                return response()->json([
+                    'success' => false,
+                    'message' => 'This tracked item cannot be issued until every quantity has an in-stock unit record.',
                     'on_hand_qty' => $part->on_hand_qty,
                 ], 422);
             }

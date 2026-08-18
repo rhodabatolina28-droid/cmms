@@ -151,6 +151,7 @@ class ListPartsStockAction
                 'item_name' => $part->item_name,
                 'unit' => $part->unit,
                 'category' => $part->category,
+                'requires_unit_tracking' => $part->requires_unit_tracking,
                 'on_hand_qty' => $part->on_hand_qty,
                 'reorder_level' => $part->reorder_level,
                 'level' => $part->statusLevel(),

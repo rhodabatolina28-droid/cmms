@@ -21,6 +21,7 @@ class UpdatePartRequest extends FormRequest
             'region' => 'nullable|string|max:64',
             'branch' => 'nullable|string|max:64',
             'is_active' => 'nullable|boolean',
+            'requires_unit_tracking' => 'nullable|boolean',
         ];
     }
 

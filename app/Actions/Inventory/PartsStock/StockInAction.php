@@ -26,6 +26,49 @@ class StockInAction
         $qty = (int) $validated['qty'];
         $unitsData = $validated['units'] ?? [];
 
+        if ($part->requires_unit_tracking) {
+            if (count($unitsData) !== $qty) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tracked items require one unit entry for every quantity received.',
+                ], 422);
+            }
+
+            foreach ($unitsData as $unit) {
+                if (empty(trim((string) ($unit['serial_number'] ?? '')))
+                    || empty(trim((string) ($unit['property_number'] ?? '')))
+                    || !isset($unit['unit_value'])
+                    || $unit['unit_value'] === '') {
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Each tracked unit needs a serial number, property number, and unit cost.',
+                    ], 422);
+                }
+            }
+
+            $serials = collect($unitsData)->pluck('serial_number')->map(fn ($serial) => trim((string) $serial));
+            $properties = collect($unitsData)->pluck('property_number')->map(fn ($property) => trim((string) $property));
+
+            if ($serials->unique()->count() !== $serials->count()
+                || $properties->unique()->count() !== $properties->count()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Tracked unit serial numbers and property numbers must be unique within this receipt.',
+                ], 422);
+            }
+
+            if (PartUnit::where('part_id', $part->id)
+                ->where(function ($query) use ($serials, $properties) {
+                    $query->whereIn('serial_number', $serials)->orWhereIn('property_number', $properties);
+                })
+                ->exists()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'A tracked unit with the same serial number or property number already exists for this item.',
+                ], 422);
+            }
+        }
+
         DB::transaction(function () use ($part, $qty, $validated, $user, $unitsData) {
             // Row lock to avoid over-counting under concurrent updates.
             $locked = Part::whereKey($part->id)->lockForUpdate()->firstOrFail();

@@ -91,7 +91,7 @@ class RequisitionSupport
     /**
      * IT or Super Admin (acting as IT) can submit requisition if:
      * - Assigned to the ticket
-     * - Ticket is ICT type
+     * - Ticket is ICT, or an eligible PM (type Preventive Maintenance) with a linked asset
      * - Ticket is not completed/cancelled
      */
     public static function canItSubmitForTicket(User $itUser, RequestModel $ticket): bool
@@ -99,10 +99,51 @@ class RequisitionSupport
         $isAssignedWorker = $itUser->role === 'it' || $itUser->role === 'super_admin';
 
         return $isAssignedWorker
-            && $ticket->type === 'ICT'
+            && ($ticket->type === 'ICT' || ($ticket->type === 'Preventive Maintenance' && $ticket->linked_asset_id))
             && (int) $ticket->assigned_to === (int) $itUser->id
             && $ticket->status !== RequestModel::STATUS_COMPLETED
             && $ticket->status !== RequestModel::STATUS_CANCELLED;
+    }
+
+    /**
+     * Resolve the destination required for a ticket-based parts issue.
+     *
+     * IT requests a part for a ticket, but the issued unit belongs to the
+     * custodian of the ticket's linked asset. Keep this validation central so
+     * submission and Supply Issue apply the same safety rule.
+     *
+     * @return array{valid:bool,message:?string,asset:mixed,custodian:mixed}
+     */
+    public static function ticketIssueContext(RequestModel $ticket): array
+    {
+        $ticket->loadMissing('linkedAsset.assignedUser');
+        $asset = $ticket->linkedAsset;
+
+        if (! $asset) {
+            return [
+                'valid' => false,
+                'message' => 'A linked asset is required before parts can be requested or issued for this ticket.',
+                'asset' => null,
+                'custodian' => null,
+            ];
+        }
+
+        $custodian = $asset->assignedUser;
+        if (! $custodian) {
+            return [
+                'valid' => false,
+                'message' => 'Assign a custodian to the linked asset before parts can be requested or issued.',
+                'asset' => $asset,
+                'custodian' => null,
+            ];
+        }
+
+        return [
+            'valid' => true,
+            'message' => null,
+            'asset' => $asset,
+            'custodian' => $custodian,
+        ];
     }
 
     public static function validateSupplyAction(string $action, string $currentStatus): ?string

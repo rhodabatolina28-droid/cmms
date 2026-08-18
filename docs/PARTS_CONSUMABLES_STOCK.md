@@ -7,6 +7,31 @@
 
 ---
 
+
+## ⭐ Today's system update — Parts & Consumables (August 18, 2026)
+
+Today's changes in the system (parts + asset-set + exports):
+
+**Parts & Consumables — ticket-based issue & PM**
+- Parts Request / Supply Issue now require a **linked asset with a custodian** (no manual recipient pick on ticket-based issue).
+- Issuing a requisition **auto-saves the ticket, asset, and asset custodian** on every serialized unit and keeps the stock count consistent.
+- **Eligible PM tickets** (`Preventive Maintenance` with a linked asset) can now submit and issue parts, same as ICT.
+- The manual **Stock Out modal has an auto-fill**: pick an asset or ticket → fills the target asset + custodian; leave both empty → manual entry.
+
+**Asset Set Integrity (set-aware validation)**
+- Components inherit the parent's **PAR + custodian + org scope**; property numbers repeat only within a set; serial stays unique.
+- Manual create/update shows clean validation (no raw DB errors); parent reassignment propagates to components with history and old/new custodian notifications.
+- New or Spare→Active assets require custodian, property number, and cost; **legacy imported sets are not blocked**.
+
+**Exports**
+- **Parts CSV export** now lists **one row per serialized unit** (serial, property, unit value, status, custodian, asset, request).
+- **Inventory CSV export** adds a **Parent Set / Component Of** column.
+
+**Verification:** full 8-suite regression (parts + set + export) — **58 tests, 269 assertions**.
+Details: `docs/PARTS_SERIALIZED_UNITS_DEEPVIEW.md` · `docs/asset-set-integrity.md`
+
+---
+
 ## ⭐ Today's system update — Parts & Consumables (August 17, 2026)
 
 What we changed in the **Parts & Consumables** module today (in the system):
@@ -147,6 +172,13 @@ A plain-English summary of what was added to the Parts & Consumables module.
 4. **CSV Import (Aug 17)** — the Parts page has an **Import CSV** button that loads a prepared CSV → shows a preview (parts, units, duplicate serials) → imports the parts with their per-piece serials/property/cost, keeping the stock count in sync.
 
 5. **Sample data** — a seeder adds sample parts (RAM, HDD) with per-piece serial/property/cost so the feature can be tested right away.
+
+6. **Ticket-based issue, PM support, Stock Out auto-fill (Aug 18)** — Parts Request/Supply Issue now require a linked asset + custodian and auto-save the ticket/asset/custodian on every serialized unit; eligible PM tickets (with a linked asset) can request/issue parts; the manual Stock Out modal auto-fills asset + custodian when an asset or ticket is selected.
+
+7. **Export update (Aug 18)** — the Parts CSV export now lists one row per serialized unit (serial, property, unit value, status, custodian, asset, request); the Inventory CSV export adds a Parent Set / Component Of column.
+
+8. **Asset Set Integrity hardening (Aug 18)** — set-aware validation (components inherit parent PAR/custodian/org scope, property repeats only within a set, serial unique), clean create/update validation, parent reassignment propagation + old/new custodian notifications, and gradual completeness (new/Spare→Active require custodian/property/cost) without blocking legacy imports.
+
 
 **Full technical details:** see `docs/PARTS_SERIALIZED_UNITS_DEEPVIEW.md`.
 

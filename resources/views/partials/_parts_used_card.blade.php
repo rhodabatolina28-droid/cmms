@@ -4,7 +4,7 @@
     (parts_stock_units.request_id). Phase 5: real data.
 --}}
 @php
-    $partsUsed = (isset($request) && $request) ? collect(\App\Models\PartUnit::with('part:id,item_name')->where('request_id', $request->id)->get()) : collect();
+    $partsUsed = (isset($request) && $request) ? collect(\App\Models\PartUnit::with(['part:id,item_name', 'issuedTo:id,full_name'])->where('request_id', $request->id)->orderByDesc('issued_at')->get()) : collect();
 @endphp
 <div style="background:#fff; border:1px solid #e2e8f0; border-radius:12px; overflow:hidden; max-width:1100px; margin:18px auto;">
     <div style="background:linear-gradient(135deg,#f8fafc,#f1f5f9); padding:14px 20px; border-bottom:1px solid #e2e8f0; font-weight:800; font-size:14px; color:#1e293b; text-transform:uppercase; letter-spacing:.06em; display:flex; align-items:center; gap:10px;">

@@ -126,6 +126,8 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::middleware('role:admin')->group(function () {
         Route::get('/inventory/parts', [PartsStockController::class, 'index'])->name('inventory.parts');
         Route::get('/inventory/parts/data', [PartsStockController::class, 'data'])->name('inventory.parts.data');
+        Route::get('/inventory/parts/stock-out-context', [PartsStockController::class, 'stockOutContext'])->name('inventory.parts.stock-out-context');
+
         Route::get('/inventory/parts/export', [PartsStockController::class, 'export'])->name('inventory.parts.export');
         Route::post('/inventory/parts', [PartsStockController::class, 'store'])->name('inventory.parts.store')->middleware('throttle:30,1');
         Route::put('/inventory/parts/{part}', [PartsStockController::class, 'update'])->name('inventory.parts.update')->middleware('throttle:30,1');
@@ -162,6 +164,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::delete('/inventory/attachments/{attachmentId}', [InventoryController::class, 'deleteAttachment'])
             ->name('inventory.attachments.delete')->middleware('throttle:30,1');
         Route::get('/inventory/search-assets', [InventoryController::class, 'searchAssets'])->name('inventory.search-assets');
+        Route::get('/inventory/parent-assets', [InventoryController::class, 'listParentAssets'])->name('inventory.parent-assets');
         Route::get('/inventory', [InventoryController::class, 'index'])->name('inventory.index');
         Route::post('/inventory', [InventoryController::class, 'store'])->name('inventory.store')->middleware('throttle:30,1');
         Route::post('/inventory/import/preview', [InventoryController::class, 'previewImport'])->name('inventory.import.preview')->middleware('throttle:10,1');

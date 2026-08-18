@@ -21,7 +21,7 @@ class ExportInventoryAction
             abort(403);
         }
 
-        $query = InventoryAsset::with('assignedUser');
+        $query = InventoryAsset::with(['assignedUser', 'parentAsset'])->withCount('components');
 
         if ($user->canProcessSupply()) {
             InventoryScope::scopeAssetsToActor($query, $user);
@@ -67,7 +67,7 @@ class ExportInventoryAction
                 'PAR No', 'Property No', 'Item Name', 'Serial No', 'Brand', 'Model',
                 'Category', 'Status', 'Assigned To', 'Region', 'Branch', 'Office',
                 'Department', 'Date Acquired', 'Warranty Expiration', 'Acquisition Cost',
-                'End of Useful Life', 'Asset Notes',
+                'End of Useful Life', 'Asset Notes', 'Parent Set',
             ]);
 
             foreach ($assets as $asset) {
@@ -90,6 +90,9 @@ class ExportInventoryAction
                     $asset->acquisition_cost,
                     $asset->end_of_useful_life?->format('Y-m-d'),
                     $asset->asset_notes,
+                    $asset->parent_asset_id
+                        ? "Component of #{$asset->parent_asset_id} · {$asset->parentAsset?->item_name}"
+                        : ($asset->components_count > 0 ? "Set Parent (#{$asset->components_count} components)" : ''),
                 ]);
             }
 

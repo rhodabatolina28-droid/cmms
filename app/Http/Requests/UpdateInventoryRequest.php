@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateInventoryRequest extends FormRequest
 {
@@ -19,8 +20,9 @@ class UpdateInventoryRequest extends FormRequest
         // No rules changed, no fields added or removed.
         return [
             'item_name'           => 'required|string|max:255',
-            'serial_number'       => 'required|string|max:255',
+            'serial_number'       => ['required', 'string', 'max:255', Rule::unique('inventory_assets', 'serial_number')->ignore($this->route('inventory'), 'asset_id')],
             'property_number'     => 'nullable|string|max:255',
+            'parent_asset_id'     => 'nullable|integer|exists:inventory_assets,asset_id',
             'brand'               => 'nullable|string|max:255',
             'model'               => 'nullable|string|max:255',
             'status'              => 'required|in:Active,Spare,Defective,For Repair',

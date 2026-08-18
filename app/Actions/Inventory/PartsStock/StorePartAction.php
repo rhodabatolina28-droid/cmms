@@ -23,6 +23,14 @@ class StorePartAction
         $data['region'] = $data['region'] ?? $user->region;
         $data['branch'] = $data['branch'] ?? $user->branch;
         $data['is_active'] = true;
+        $data['requires_unit_tracking'] = $request->boolean('requires_unit_tracking');
+
+        if ($data['requires_unit_tracking'] && (int) ($data['on_hand_qty'] ?? 0) > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tracked items must start at zero stock. Use Stock In to record one serial, property number, and unit cost for every unit.',
+            ], 422);
+        }
 
         $part = Part::create($data);
 

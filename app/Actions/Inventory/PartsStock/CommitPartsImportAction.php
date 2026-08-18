@@ -37,6 +37,16 @@ class CommitPartsImportAction
         $absolutePath = Storage::disk('local')->path($relativePath);
         $rows = (new PartsCsvImportService)->importableRows($absolutePath);
 
+        $incompleteRow = collect($rows)->first(fn (array $row) => $row['serial'] === ''
+            || $row['property'] === ''
+            || $row['unit_value'] === null);
+        if ($incompleteRow !== null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Every imported unit needs a serial number, property number, and unit cost.',
+            ], 422);
+        }
+
         $createdParts = 0;
         $createdUnits = 0;
         $skipped = 0;
@@ -59,6 +69,7 @@ class CommitPartsImportAction
                         'reorder_level' => 0,
                         'branch' => null,
                         'is_active' => true,
+                        'requires_unit_tracking' => true,
                     ])
                 );
 
@@ -67,6 +78,10 @@ class CommitPartsImportAction
                 $locked = Part::whereKey($part->id)->lockForUpdate()->first();
                 if (! $locked) {
                     continue;
+                }
+
+                if (! $locked->requires_unit_tracking) {
+                    $locked->update(['requires_unit_tracking' => true]);
                 }
 
                 if ($row['serial'] !== '') {

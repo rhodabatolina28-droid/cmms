@@ -62,7 +62,7 @@
             <div class="cmms-page-card-head">
                 <div>
                     <h2>My Parts Requisitions</h2>
-                    <div class="sub">Request and track parts tied to your assigned ICT job orders.</div>
+                    <div class="sub">Request and track parts tied to your assigned ICT or PM job orders.</div>
                 </div>
                 @if($activeTickets->isEmpty())
                 <a href="{{ route('dashboard.it') }}" class="cmms-btn-secondary">Back to IT dashboard</a>
@@ -79,8 +79,8 @@
                 <div class="cmms-panel">
                     <div class="cmms-panel-body cmms-empty">
                         <i class="fa-solid fa-clipboard-list cmms-empty-icon"></i>
-                        <h3>No open ICT job order</h3>
-                        <p>Parts can only be requested from an assigned ICT job order that is still active.</p>
+                        <h3>No open ICT or PM job order</h3>
+                        <p>Parts can only be requested from an assigned ICT or manual PM job order that is still active.</p>
                         <a href="{{ route('dashboard.it') }}" class="cmms-btn-secondary btn-back-top">Back to IT dashboard</a>
                     </div>
                 </div>
@@ -90,14 +90,14 @@
                         <div class="cmms-pr-sheet-head">
                             <div>
                                 <h2 class="doc-title">Parts requisition</h2>
-                                <p class="doc-org">Select the ICT job order that needs parts.</p>
+                                <p class="doc-org">Select the ICT or PM job order that needs parts.</p>
                             </div>
                             <div class="cmms-pr-number-badge muted">Draft</div>
                         </div>
 
                         <div class="cmms-pr-meta-grid">
                             <div class="cmms-pr-meta-block">
-                                <div class="cmms-pr-meta-row"><span class="k">Unit</span><span class="v">ICT Unit</span></div>
+                                <div class="cmms-pr-meta-row"><span class="k">Unit</span><span class="v">ICT / PM</span></div>
                                 <div class="cmms-pr-meta-row"><span class="k">Requester</span><span class="v">{{ Auth::user()->full_name }}</span></div>
                                 <div class="cmms-pr-meta-row">
                                     <span class="k">Job order no.</span>
@@ -106,7 +106,7 @@
                                             <option value="" disabled {{ !$selectedTicketId ? 'selected' : '' }}>Select job order</option>
                                             @foreach($activeTickets as $ticket)
                                                 <option value="{{ $ticket->id }}" {{ (string) $ticket->id === (string) ($selectedTicketId ?? '') ? 'selected' : '' }}>
-                                                    {{ $ticket->display_number ?? $ticket->request_number }} &middot; {{ $ticket->status }}
+                                                    {{ $ticket->type === 'Preventive Maintenance' ? '[PM] ' : '[ICT] ' }}{{ $ticket->display_number ?? $ticket->request_number }} &middot; {{ $ticket->status }}
                                                 </option>
                                             @endforeach
                                         </select>
@@ -297,7 +297,7 @@
 
         const reqId = document.getElementById('request_id').value;
         if (!reqId) {
-            Swal.fire({ icon: 'warning', title: 'Select job order', text: 'Choose the ICT job order this request is for.', confirmButtonColor: '#0038A8' });
+            Swal.fire({ icon: 'warning', title: 'Select job order', text: 'Choose the ICT or PM job order this request is for.', confirmButtonColor: '#0038A8' });
             return;
         }
 

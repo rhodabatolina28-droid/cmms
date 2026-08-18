@@ -131,6 +131,23 @@ class PartsImportTest extends TestCase
         $this->assertSame(3, PartUnit::count());
     }
 
+    public function test_commit_rejects_import_rows_without_complete_accountability_fields()
+    {
+        $this->actingAs($this->supplyOfficer());
+        $incomplete = str_replace('KR8220Y2BS', '', $this->csvContent());
+
+        $preview = $this->call('POST', route('inventory.parts.import.preview'), [], [], [
+            'file' => UploadedFile::fake()->createWithContent('parts.csv', $incomplete),
+        ], ['Accept' => 'application/json'])->json();
+
+        $this->postJson(route('inventory.parts.import.commit'), ['token' => $preview['token']])
+            ->assertStatus(422)
+            ->assertJsonPath('message', 'Every imported unit needs a serial number, property number, and unit cost.');
+
+        $this->assertSame(0, Part::count());
+        $this->assertSame(0, PartUnit::count());
+    }
+
     public function test_non_supply_cannot_preview_import()
     {
         $this->actingAs($this->makeUser(['role' => 'admin', 'can_supply' => false]));
