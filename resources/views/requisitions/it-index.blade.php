@@ -102,15 +102,24 @@
                                 <div class="cmms-pr-meta-row">
                                     <span class="k">Job order no.</span>
                                     <span class="v">
-                                        <select id="request_id" class="cmms-pr-select pr-select" required>
+                                        <select id="request_id" class="cmms-pr-select pr-select" style="min-height:36px; padding:6px 10px; font-size:13px; font-weight:600; width:100%; border-color:#cbd5e1; border-radius:6px; outline:none; transition:border-color 0.15s ease;" onfocus="this.style.borderColor='#0038A8'" onblur="this.style.borderColor='#cbd5e1'" required>
                                             <option value="" disabled {{ !$selectedTicketId ? 'selected' : '' }}>Select job order</option>
                                             @foreach($activeTickets as $ticket)
-                                                <option value="{{ $ticket->id }}" {{ (string) $ticket->id === (string) ($selectedTicketId ?? '') ? 'selected' : '' }}>
+                                                <option value="{{ $ticket->id }}" {{ (string) $ticket->id === (string) ($selectedTicketId ?? '') ? 'selected' : '' }}
+                                                    data-type="{{ $ticket->type }}"
+                                                    data-asset="{{ $ticket->linkedAsset?->item_name ?? '' }}"
+                                                    data-serial="{{ $ticket->linkedAsset?->serial_number ?? '' }}"
+                                                    data-custodian="{{ $ticket->linkedAsset?->assignedUser?->full_name ?? '' }}"
+                                                    data-request="{{ $ticket->display_number ?? $ticket->request_number }}">
                                                     {{ $ticket->type === 'Preventive Maintenance' ? '[PM] ' : '[ICT] ' }}{{ $ticket->display_number ?? $ticket->request_number }} &middot; {{ $ticket->status }}
                                                 </option>
                                             @endforeach
                                         </select>
                                     </span>
+                                </div>
+                                <div id="dynamicAssetRow" class="cmms-pr-meta-row" style="display:none; background:#f8fafc; padding:8px 10px; border-radius:6px; border-left:3px solid #0038A8; margin-top:6px;">
+                                    <span class="k" style="color:#0038A8; font-size:10px;">For Asset &amp; Custodian</span>
+                                    <span class="v" id="dynamicAssetInfo" style="font-size:12px; color:#1e293b;"></span>
                                 </div>
                             </div>
                             <div class="cmms-pr-meta-block">
@@ -208,6 +217,8 @@
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
 (function () {
+    const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
+    
     document.querySelectorAll('.cmms-tab').forEach(tab => {
         tab.addEventListener('click', function () {
             document.querySelectorAll('.cmms-tab').forEach(t => t.classList.remove('active'));
@@ -216,6 +227,27 @@
             document.getElementById(this.dataset.target).classList.add('active');
         });
     });
+
+    const requestIdSelect = document.getElementById('request_id');
+    const dynamicAssetRow = document.getElementById('dynamicAssetRow');
+    const dynamicAssetInfo = document.getElementById('dynamicAssetInfo');
+    const updateTicketContext = () => {
+        if (!dynamicAssetInfo) return;
+        const opt = requestIdSelect && requestIdSelect.options[requestIdSelect.selectedIndex];
+        if (!opt || !opt.value) {
+            if (dynamicAssetRow) dynamicAssetRow.style.display = 'none';
+            return;
+        }
+        const asset = opt.dataset.asset || 'N/A';
+        const serial = opt.dataset.serial && opt.dataset.serial !== '-' ? `(SN: ${opt.dataset.serial})` : '';
+        const custodian = opt.dataset.custodian || 'Unassigned';
+        
+        dynamicAssetInfo.innerHTML = `<strong>${esc(asset)}</strong> <span style="color:#64748b; font-size:11px;">${esc(serial)}</span> <br><span style="color:#64748b;">issued to</span> <i class="fa-solid fa-user-check" style="color:#0038A8; margin-left:4px; font-size:10px;"></i> <strong>${esc(custodian)}</strong>`;
+        
+        if (dynamicAssetRow) dynamicAssetRow.style.display = 'grid';
+    };
+    if (requestIdSelect) requestIdSelect.addEventListener('change', updateTicketContext);
+    updateTicketContext();
 
     const ticketReqItemsList = document.getElementById('ticketReqItemsList');
     if (!ticketReqItemsList) return;

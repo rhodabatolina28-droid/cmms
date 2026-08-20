@@ -103,6 +103,8 @@ asset links.
 | Phase 7 - Export (Parts per-unit) | Complete | CSV export lists one row per serialized unit (serial, property, unit value, unit status, issued-to custodian, asset, request). `PartsExportTest` 5 tests / 21 assertions. |
 | Phase 8 - Export (Inventory parent-set) | Complete | Inventory CSV export adds a Parent Set / Component Of column reflecting the asset-set model. `InventoryExportTest` 1 test / 7 assertions. |
 | Phase 9 - Final regression + doc | Complete | Full 8-suite regression (parts + set + export) 58 tests / 269 assertions; deepview doc aligned. |
+| Phase 10 - UX: IT/SuperAdmin parts-request context | Complete | On the Parts Request screen (shared by IT and Super Admin), selecting a job order now shows a read-only context card: ticket type (ICT/PM), ticket no., linked asset (+ serial), and the asset custodian — so IT sees who the parts will be issued to without picking the custodian. |
+| Phase 11 - UX: Supply Officer requisition cards | Complete | Supply cards now show an at-a-glance "Asset custodian ... for <asset>" line, so the issue destination is visible without expanding line items; the quick Issue confirm already names the custodian + asset. |
 
 
 
@@ -145,6 +147,114 @@ has an index and foreign key to `users` (`nullOnDelete`).
 
 - Final regression coverage (mostly covered): repeated Issue, insufficient stock, and `on_hand_qty == in_stock_units`
   consistency `PartsUnitsTest`; add any remaining end-to-end browser pass for the auto-fill UI. **Phases 6-8 (final regression + exports) are complete.**
+
+### 2026-08-20 Phase 5 UI/UX Polish (Asset Profile Set Components)
+- **Centralized Device Categorization:** Added `isMajorDevice()` to the `InventoryAsset` model to eliminate hardcoded category strings in the UI. 
+- **Unified Set Components Card:** Refactored `detail.blade.php` to display a single, unified "Set Components" card per custodian:
+  - **Actual Components & Peripherals:** Parent assets, formal child components, and standalone peripherals (Mice, Keyboards, UPS) are now visually blended together seamlessly as parts of the primary workstation.
+  - **Major Assigned Assets:** Other major standalone devices (Laptops, Printers, Scanners, Network/Servers) assigned to the same custodian are appended inside the *same* card, separated by a visual divider, eliminating the need for a redundant "Other Assigned Assets" panel.
+- **Performance:** Replaced multiple localized queries with a single `allCustodianAssets` query, filtered efficiently via Collections.
+  - Uses `InventoryAsset::isMajorDevice()` (centralized in the model, see §A below) to split peripherals
+    from major devices — no more hardcoded category strings in the Blade view.
+
+### 2026-08-20 Additional Features & Hardening
+
+#### A. `isMajorDevice()` model method (refined today)
+
+`app/Models/InventoryAsset.php` now exposes `isMajorDevice(): bool` which centralises the
+"major device vs. peripheral" decision that was previously hardcoded in Blade views.
+
+| Category | `isMajorDevice()` |
+|---|---|
+| Desktop, Laptop, Printer/Scanner, Network/Server, Tablet | `true` (own row / grouping) |
+| Monitor, Mouse, Keyboard, UPS, Headset, etc. | `false` (peripheral) |
+
+This is used in `detail.blade.php` to render two sub-sections inside the unified Set Components card:
+- **Peripherals & components** (peripherals assigned to the same custodian, merged with formal child components)
+- **Other main devices** assigned to the same custodian (separated by a visual divider)
+
+#### B. SuperAdmin `UpdateUserAction` — Org Scope Sync + Role Guard
+
+`app/Actions/SuperAdmin/UpdateUserAction.php` (+96 lines) gained three safeguards when an
+admin edits a user account:
+
+1. **Org Scope Auto-Sync** — When a user's `region`, `branch`, `office`, or `department` changes
+   (either directly, or because the Supply Officer role re-classification rewrote them), every
+   **non-locked** asset assigned to that user is updated to match — **and so are all child components
+   of any parent asset**. All syncs run inside a single `DB::transaction` using `chunkById(50)` to
+   handle large custodians. Each synced component writes an `InventoryHistory` row:
+   `'Org Scope Updated'` with remarks `Org scope synced: {old office} → {new office}`.
+
+2. **Supply Officer role guard** — `supply_officer` can now only be assigned to users in the
+   **Administrative Division / Administrative Department**. On save the role is auto-promoted to
+   `admin` with `can_supply = true` so the existing supply permissions remain intact.
+
+3. **Scope access control** — `abortIfOutsideOfficeScope()` prevents an admin from editing a user
+   whose `region` or `branch` differs from the acting admin's own scope.
+
+Audit: every update still logs via `AuditLog::log()`, now appending
+`' · org scope synced to assigned assets'` to the description when applicable.
+
+#### C. `VerifyAssetSetIntegrity` Console Command (NEW — read-only audit)
+
+`app/Console/Commands/VerifyAssetSetIntegrity.php` (new, untracked) — scheduled daily at **08:00**
+via `app/Console/Kernel.php`. This is the **read-only** audit counterpart to the
+write-time `AssetSetIntegrityService` (documented in `asset-set-integrity.md`). It finds violations
+that may exist in **legacy data** without modifying anything.
+
+| Check key | What it finds |
+|---|---|
+| `orphan_components` | Components whose `parent_asset_id` points to a deleted/missing asset |
+| `nested_component_as_parent` | An asset that is both a component AND a parent of another |
+| `parent_missing_par` | A parent asset with no PAR number |
+| `component_par_mismatch` | Component PAR ≠ parent PAR |
+| `component_custodian_mismatch` | Component custodian ≠ parent custodian |
+| `component_org_mismatch` | Component region/branch/office/department ≠ parent's |
+| `property_number_cross_set_reuse` | Same property number on two unrelated standalone roots |
+| `status_custodian_inconsistency` | Active asset with no custodian, or Spare asset with a custodian |
+
+**Usage:**
+```bash
+php artisan inventory:verify-asset-sets          # human-readable table
+php artisan inventory:verify-asset-sets --json   # machine-readable JSON
+php artisan inventory:verify-asset-sets --check=orphan_components   # single check
+```
+
+**Verification:** `tests/Feature/InventoryAssetIntegrityTest.php` adds a test case that seeds
+10 deliberate violations, runs the command with `--json`, and asserts the summary counts
+(1 orphan, 1 nested, 1 parent-missing-par, 1 PAR mismatch, 1 custodian mismatch, 1 org mismatch,
+2 cross-set reuse, 2 status/custodian inconsistency → total 10). Read-only assertion confirms no
+seeded data was mutated.
+
+#### D. Requisition Context & Card UX — Phases 10–11 follow-through
+
+Following the Phase 10–11 table entries above, today's Blade + Action changes complete the
+end-to-end wiring:
+
+- **`ListRequisitionsAction::itIndex`** — eager-load chain changed from `with('user')` to
+  `with(['user', 'linkedAsset.assignedUser'])` so the IT requisition index can render the
+  asset custodian **without an N+1 query**.
+- **ICT / PM request forms** (`requests/ict/form.blade.php`, `requests/maintenance/form.blade.php`)
+  — removed the `@include('partials._parts_used_card')` (the partial no longer exists; parts-used
+  display is now handled by the unified requisition card partials below).
+- **Supply Officer cards** (`requisitions/partials/req-card.blade.php`, `pr-readonly.blade.php`)
+  — supply cards now show an at-a-glance `"Asset custodian: {name} for {asset}"` line on every
+  requisition card, so the issue destination is visible without expanding line items.
+- **IT/SuperAdmin Parts Request** (`requisitions/it-index.blade.php`) — the job-order `<select>`
+  received focused styling (min-height, border, focus ring) and a read-only context card showing
+  ticket type (ICT/PM), ticket number, linked asset (+ serial), and the asset custodian.
+
+#### E. CSS Consolidation
+
+The mobile-responsive CSS that lived in separate partials under
+`resources/css/cmms-official/_components.css` and `_layout.css` was consolidated into the main
+`public/css/cmms-official.css` (192 additions net). Pre-refactor backups were saved to:
+
+```
+storage/ux_backup/cmms-official.20260812_104445.css     (pre-consolidation baseline)
+storage/ux_backup/_concat2.css
+storage/ux_backup/_concat_reference.css
+```
 
 ---
 

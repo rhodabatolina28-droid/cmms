@@ -4,6 +4,14 @@
 intentionally **skipped** per the August 18, 2026 instruction so we can first see the
 real data gaps before enforcing any rules.
 
+> **2026-08-20 update:** The deferred read-only Verification Queue is now available as
+> `php artisan inventory:verify-asset-sets` (see `app/Console/Commands/VerifyAssetSetIntegrity.php`,
+> scheduled daily at 08:00 via `app/Console/Kernel.php`). It scans for the 8 set-integrity
+> violation types listed below **without modifying anything**, so the real data gaps can be
+> reviewed before any enforcement is turned on. Run with `--json` for machine-readable output
+> or `--check=<name>` for a single check. Full details are documented in
+> `docs/PARTS_SERIALIZED_UNITS_DEEPVIEW.md` §C.
+
 Plain-English summary of what this change set does and why it is safe for the existing
 imported Desktop sets.
 

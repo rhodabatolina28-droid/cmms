@@ -102,7 +102,7 @@ class ListRequisitionsAction
 
     private function itIndex(User $itUser, Request $httpRequest)
     {
-        $activeTickets = RequestModel::with('user')
+        $activeTickets = RequestModel::with(['user', 'linkedAsset.assignedUser'])
             ->where('assigned_to', $itUser->id)
             ->where(function ($q) {
                 $q->where('type', 'ICT')
@@ -135,7 +135,7 @@ class ListRequisitionsAction
     private function superAdminRequisitionIndex(User $superAdmin, Request $httpRequest)
     {
         // Active ICT tickets where Super Admin is the assigned personnel
-        $activeTickets = RequestModel::with('user')
+        $activeTickets = RequestModel::with(['user', 'linkedAsset.assignedUser'])
             ->where('assigned_to', $superAdmin->id)
             ->where(function ($q) {
                 $q->where('type', 'ICT')

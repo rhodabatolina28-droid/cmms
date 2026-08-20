@@ -436,13 +436,26 @@
         </div>
         @endif
 
-        {{-- Set Components Card \u2014 only when this asset belongs to a Complete Set --}}
-        @if($asset->components->isNotEmpty() || $asset->parentAsset)
         @php
             $detailRouteName = isset($isSuperAdminView) && $isSuperAdminView
                 ? 'super_admin.inventory.detail'
                 : 'inventory.detail';
+            
+            // Fetch ALL standalone assets for the custodian in ONE query
+            $allCustodianAssets = ($asset->assigned_to_user)
+                ? \App\Models\InventoryAsset::where('assigned_to_user', $asset->assigned_to_user)
+                    ->where('asset_id', '!=', $asset->asset_id)
+                    ->whereNull('parent_asset_id')
+                    ->orderBy('category')->orderBy('item_name')->get()
+                : collect();
+
+            // Use the central Model logic to categorize them instead of hardcoding in the view
+            $custodianPeripherals = $allCustodianAssets->reject(fn($a) => $a->isMajorDevice());
+            $custodianMajorAssets = $allCustodianAssets->filter(fn($a) => $a->isMajorDevice());
         @endphp
+
+        {{-- Set Components Card --}}
+        @if($asset->components->isNotEmpty() || $asset->parentAsset || $custodianPeripherals->isNotEmpty() || $custodianMajorAssets->isNotEmpty())
         <div class="detail-card">
             <div class="detail-card-header"><i class="fa-solid fa-layer-group"></i> Set Components</div>
             <div class="detail-card-body">
@@ -493,11 +506,47 @@
                         @endif
                     @endforeach
                 @endif
+
+                @if($custodianPeripherals->isNotEmpty())
+                    @foreach($custodianPeripherals as $ca)
+                    <div class="field-row">
+                        <span class="field-label">{{ $ca->category }}</span>
+                        <span class="field-value">
+                            <a href="{{ route($detailRouteName, $ca->asset_id) }}" style="color:#0038A8; text-decoration:none; font-weight:600;">{{ $ca->item_name }}</a>
+                            @if($ca->serial_number)
+                                <span class="font-mono" style="margin-left:8px; font-size:11px; color:#64748b;">SN: {{ $ca->serial_number }}</span>
+                            @else
+                                <span style="margin-left:8px; font-size:11px; color:#d97706;">SN: pending verification</span>
+                            @endif
+                            <span style="margin-left:8px; font-size:11px; color:#64748b;">{{ $ca->property_number }}</span>
+                        </span>
+                    </div>
+                    @endforeach
+                @endif
+
+                @if($custodianMajorAssets->isNotEmpty())
+                    <p style="margin: 12px 0 8px 0; padding-top: 12px; border-top: 1px solid #e2e8f0; font-size: 12px; color: #64748b;">Other main devices assigned to this custodian:</p>
+                    @foreach($custodianMajorAssets as $ca)
+                    <div class="field-row">
+                        <span class="field-label">{{ $ca->category }}</span>
+                        <span class="field-value">
+                            <a href="{{ route($detailRouteName, $ca->asset_id) }}" style="color:#0038A8; text-decoration:none; font-weight:600;">{{ $ca->item_name }}</a>
+                            @if($ca->serial_number)
+                                <span class="font-mono" style="margin-left:8px; font-size:11px; color:#64748b;">SN: {{ $ca->serial_number }}</span>
+                            @else
+                                <span style="margin-left:8px; font-size:11px; color:#d97706;">SN: pending verification</span>
+                            @endif
+                            <span style="margin-left:8px; font-size:11px; color:#64748b;">{{ $ca->property_number }}</span>
+                        </span>
+                    </div>
+                    @endforeach
+                @endif
             </div>
         </div>
         @endif
 
-        {{-- Installed Parts / Consumables card (parts_stock_units.asset_id) — Phase 5 data --}}
+
+{{-- Installed Parts / Consumables card (parts_stock_units.asset_id) — Phase 5 data --}}
         <div class="detail-card main-grid-full">
             <div class="detail-card-header"><i class="fa-solid fa-boxes-stacked" style="color:#0038A8;"></i> Installed Parts / Consumables</div>
             <div class="detail-card-body">

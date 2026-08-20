@@ -7,6 +7,8 @@ use App\Models\InventoryHistory;
 use App\Models\Notification;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 class InventoryAssetIntegrityTest extends TestCase
@@ -192,4 +194,138 @@ class InventoryAssetIntegrityTest extends TestCase
             ->assertJsonCount(1, 'assets');
     }
 
+public function test_user_org_scope_change_syncs_assigned_assets_and_components(): void
+    {
+        $super = $this->user(['role' => 'super_admin', 'region' => 'NCR', 'branch' => 'RCMB']);
+        $target = $this->user(['role' => 'user', 'region' => 'NCR', 'branch' => 'RCMB', 'office' => 'RESEARCH AND INFORMATION DIVISION', 'department' => 'INTERNAL SERVICES DEPARTMENT']);
+        $otherUser = $this->user(['role' => 'user', 'region' => 'NCR', 'branch' => 'RCMB', 'office' => 'FINANCIAL AND MANAGEMENT DIVISION', 'department' => 'INTERNAL SERVICES DEPARTMENT']);
+
+        $parent = $this->asset([
+            'assigned_to_user' => $target->id,
+            'status' => 'Active',
+            'acquisition_cost' => 45000,
+            'property_number' => 'PROP-SYNC-1',
+            'par_number' => 'PAR-SYNC-1',
+            'region' => 'NCR', 'branch' => 'RCMB',
+            'office' => 'RESEARCH AND INFORMATION DIVISION',
+            'department' => 'INTERNAL SERVICES DEPARTMENT',
+        ]);
+        $component = $this->asset([
+            'item_name' => 'Sync Monitor',
+            'assigned_to_user' => $target->id,
+            'status' => 'Active',
+            'parent_asset_id' => $parent->asset_id,
+            'acquisition_cost' => 8000,
+            'property_number' => 'PROP-SYNC-1',
+            'par_number' => 'PAR-SYNC-1',
+            'office' => 'RESEARCH AND INFORMATION DIVISION',
+            'department' => 'INTERNAL SERVICES DEPARTMENT',
+        ]);
+        // Another user's asset must NOT be moved.
+        $otherUserAsset = $this->asset([
+            'assigned_to_user' => $otherUser->id,
+            'status' => 'Active',
+            'office' => 'FINANCIAL AND MANAGEMENT DIVISION',
+            'department' => 'INTERNAL SERVICES DEPARTMENT',
+        ]);
+
+        $this->actingAs($super)
+            ->putJson(route('super_admin.users.update', $target->id), [
+                'full_name' => $target->full_name,
+                'email' => $target->email,
+                'role' => 'user',
+                'region' => 'NCR',
+                'branch' => 'RCMB',
+                'office' => 'FINANCIAL AND MANAGEMENT DIVISION',
+                'department' => 'INTERNAL SERVICES DEPARTMENT',
+            ])
+            ->assertOk()
+            ->assertJsonPath('success', true);
+
+        // Parent + component moved to the user's new office.
+        $this->assertSame('FINANCIAL AND MANAGEMENT DIVISION', $parent->refresh()->office);
+        $this->assertSame('FINANCIAL AND MANAGEMENT DIVISION', $component->refresh()->office);
+        // Other user's asset untouched.
+        $this->assertSame('FINANCIAL AND MANAGEMENT DIVISION', $otherUserAsset->refresh()->office);
+        // History row recorded for the moved parent.
+                $this->assertDatabaseHas('inventory_history', [
+            'asset_id' => $parent->asset_id,
+            'action' => 'Org Scope Updated',
+        ]);
+    }
+
+    /**
+     * Verification Phase (read-only): the verify command must report existing
+     * set-integrity violations without mutating anything. Mirrors the
+     * transactional probe validated against a live DB.
+     */
+    public function test_verification_command_reports_integrity_violations(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer']);
+        $uid = $supply->id;
+        $other = $this->user()->id;
+        $third = $this->user()->id;
+
+        // Parent with components but NO par + a child that mismatches par, custodian and org.
+        $parent = $this->asset([
+            'item_name' => 'P1 No PAR', 'serial_number' => 'P1-NOPAR',
+            'par_number' => null, 'assigned_to_user' => $uid, 'status' => 'Active',
+            'acquisition_cost' => 45000,
+        ]);
+        $component = $this->asset([
+            'item_name' => 'C1 mismatch', 'serial_number' => 'C1-MISMATCH',
+            'category' => 'Monitor', 'parent_asset_id' => $parent->asset_id,
+            'par_number' => 'WRONG-PAR', 'assigned_to_user' => $other, 'status' => 'Active',
+            'region' => 'NCR2', 'branch' => 'B2', 'office' => 'O2', 'department' => 'D2',
+        ]);
+
+        // Orphan: real parent then soft-delete -> component still points at it.
+        $orphanParent = $this->asset(['item_name' => 'P-orphan', 'serial_number' => 'PORPHAN', 'par_number' => 'PAR-ORPHAN']);
+        $this->asset([
+            'item_name' => 'Orphan C', 'serial_number' => 'ORPHAN-1', 'category' => 'Monitor',
+            'parent_asset_id' => $orphanParent->asset_id, 'par_number' => 'PAR-ORPHAN',
+            'assigned_to_user' => $uid, 'status' => 'Active',
+        ]);
+        $orphanParent->delete();
+
+        // Nested: a component (C2) used as a parent of another component (C3).
+        $p2 = $this->asset(['item_name' => 'P2', 'serial_number' => 'P2-NEST', 'par_number' => 'PAR-NEST', 'assigned_to_user' => $uid, 'status' => 'Active']);
+        $c2 = $this->asset(['item_name' => 'C2-as-parent', 'serial_number' => 'C2-NEST', 'category' => 'Monitor', 'parent_asset_id' => $p2->asset_id, 'par_number' => 'PAR-NEST', 'assigned_to_user' => $uid, 'status' => 'Active']);
+        $this->asset(['item_name' => 'C3 under C2', 'serial_number' => 'C3-NEST', 'category' => 'Monitor', 'parent_asset_id' => $c2->asset_id, 'par_number' => 'PAR-NEST', 'assigned_to_user' => $uid, 'status' => 'Active']);
+
+        // Property number reused across two unrelated standalone roots.
+        $this->asset(['item_name' => 'P3 reuse', 'serial_number' => 'P3-REUSE', 'property_number' => 'PROP-REUSE', 'category' => 'Laptop']);
+        $this->asset(['item_name' => 'P4 reuse', 'serial_number' => 'P4-REUSE', 'property_number' => 'PROP-REUSE', 'category' => 'Laptop']);
+
+        // Status/custodian inconsistency (must bypass the boot auto-correction).
+        InventoryAsset::withoutEvents(fn () => InventoryAsset::create([
+            'category' => 'Printer/Scanner', 'item_name' => 'Active no custodian', 'serial_number' => 'A1-NOCUST',
+            'status' => 'Active', 'region' => 'NCR', 'branch' => 'Main Office',
+        ]));
+        InventoryAsset::withoutEvents(fn () => InventoryAsset::create([
+            'category' => 'Laptop', 'item_name' => 'Spare with custodian', 'serial_number' => 'A2-WITHCUST',
+            'status' => 'Spare', 'assigned_to_user' => $third, 'region' => 'NCR', 'branch' => 'Main Office',
+        ]));
+
+        Artisan::call('inventory:verify-asset-sets', ['--json' => true]);
+        $payload = json_decode(Artisan::output(), true);
+
+        $this->assertSame(1, $payload['summary']['orphan_components']);
+        $this->assertSame(1, $payload['summary']['nested_component_as_parent']);
+        $this->assertSame(1, $payload['summary']['parent_missing_par']);
+        $this->assertSame(1, $payload['summary']['component_par_mismatch']);
+        $this->assertSame(1, $payload['summary']['component_custodian_mismatch']);
+        $this->assertSame(1, $payload['summary']['component_org_mismatch']);
+        $this->assertSame(2, $payload['summary']['property_number_cross_set_reuse']);
+        $this->assertSame(2, $payload['summary']['status_custodian_inconsistency']);
+        $this->assertSame(10, $payload['total']);
+
+                // Read-only: the scan must not have mutated any seeded data.
+        $this->assertDatabaseHas('inventory_assets', [
+            'asset_id' => $component->asset_id,
+            'par_number' => 'WRONG-PAR',
+            'assigned_to_user' => $other,
+            'status' => 'Active',
+        ]);
+    }
 }

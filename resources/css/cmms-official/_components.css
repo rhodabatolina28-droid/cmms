@@ -207,11 +207,12 @@
 }
 .cmms-pr-number-badge {
     font-size: 12px;
-    font-weight: 700;
+    font-weight: 800;
     padding: 6px 12px;
-    border: 1px solid #9b1c1c;
-    color: #9b1c1c;
-    background: #fff;
+    border: 1px solid #0038A8;
+    color: #0038A8;
+    background: #eff6ff;
+    border-radius: 6px;
 }
 .cmms-pr-number-badge.muted {
     border-color: #c5c9d0;

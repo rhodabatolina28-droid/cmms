@@ -205,4 +205,13 @@ class InventoryAsset extends Model
         // Most IT equipment has a 5-year depreciation lifecycle
         return \Carbon\Carbon::parse($this->date_acquired)->addYears(5)->isPast();
     }
+
+    /**
+     * Determines if this asset is a primary/major device (gets its own row/grouping) 
+     * rather than a peripheral or accessory.
+     */
+    public function isMajorDevice(): bool
+    {
+        return in_array($this->category, ['Desktop', 'Laptop', 'Printer/Scanner', 'Network/Server', 'Tablet']);
+    }
 }

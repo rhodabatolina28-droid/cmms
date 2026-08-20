@@ -6,7 +6,7 @@
     $status = $requisition->status;
 @endphp
 
-@section('title', 'PR-' . str_pad($requisition->id, 5, '0', STR_PAD_LEFT))
+@section('title', 'REQ-' . str_pad($requisition->id, 5, '0', STR_PAD_LEFT))
 @section('page-title', $isIT ? 'IT Department — Requisition Details' : 'Supply Office — Requisition Review')
 
 @section('styles')
@@ -64,14 +64,13 @@
     <div class="cmms-page-card">
         <div class="cmms-page-card-head">
             <div>
-                <h2>Purchase Request PR-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</h2>
-                <div class="sub">Job order {{ $ticket?->display_number ?? $ticket?->request_number ?? '—' }} · {{ ucfirst($status) }}</div>
+                <h2>Parts Requisition REQ-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</h2>
+                <div class="sub">Job order {{ $ticket?->display_number ?? $ticket?->request_number ?? '&mdash;' }} &middot; {{ ucfirst($status) }}</div>
             </div>
             <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary">Back to requisitions</a>
         </div>
         <div class="cmms-page-card-body">
 
-    @include('requisitions.partials.status-tracker', ['requisition' => $requisition, 'variant' => 'full'])
 
     <div class="cmms-layout-split">
         <div>
@@ -100,6 +99,8 @@
                 </div>
             </div>
             @endif
+
+            @include('requisitions.partials.status-tracker', ['requisition' => $requisition, 'variant' => 'full'])
 
             @if($canReview && $status === 'approved' && ! $issueContext['valid'])
             <div class="cmms-panel mb-18" style="border-left:3px solid #dc2626;">
@@ -267,6 +268,14 @@
 
         <aside class="cmms-sticky-side">
             @if($canReview && in_array($status, ['pending', 'approved'], true))
+            {{-- Amber action-required banner --}}
+            <div style="background:{{ $status === 'pending' ? '#fff7ed' : '#eff6ff' }}; border:1px solid {{ $status === 'pending' ? '#fed7aa' : '#bfdbfe' }}; border-left:3px solid {{ $status === 'pending' ? '#d97706' : '#0038A8' }}; border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
+                <i class="fa-solid {{ $status === 'pending' ? 'fa-triangle-exclamation' : 'fa-box-open' }}" style="color:{{ $status === 'pending' ? '#d97706' : '#0038A8' }}; font-size:15px;"></i>
+                <div>
+                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:{{ $status === 'pending' ? '#92400e' : '#1e40af' }}; margin-bottom:2px;">Action required</div>
+                    <div style="font-size:12px; color:{{ $status === 'pending' ? '#78350f' : '#1e40af' }};">{{ $status === 'pending' ? 'Review and approve or disapprove this requisition.' : 'This requisition is approved — issue the parts to the custodian.' }}</div>
+                </div>
+            </div>
             <div class="cmms-panel" id="supplyReviewPanel">
                 <div class="cmms-panel-head">
                     <h2>Official action</h2>
@@ -289,11 +298,11 @@
 
                     <div class="cmms-action-bar action-bar-flush">
                         @if($status === 'pending')
-                        <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve">Approve</button>
-                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject">Disapprove</button>
+                        <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve"><i class="fa-solid fa-check"></i> Approve</button>
+                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
                         @elseif($status === 'approved')
-                        <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue">Issue property</button>
-                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject">Disapprove</button>
+                        <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
                         @endif
                     </div>
                 </div>
@@ -303,7 +312,7 @@
                 <div class="cmms-panel-head"><h2>Record closed</h2></div>
                 <div class="cmms-panel-body">
                     <p class="info-text-sm">
-                        This purchase request is <strong>{{ $status }}</strong>. No further action is required.
+                        This parts requisition is <strong>{{ $status }}</strong>. No further action is required.
                     </p>
                 </div>
             </div>
@@ -321,10 +330,17 @@
             <div class="cmms-panel mt-18">
                 <div class="cmms-panel-head"><h2>Particulars</h2></div>
                 <div class="cmms-panel-body panel-body-compact">
-                    <div class="cmms-pr-meta-row"><span class="k">PR number</span><span class="v">PR-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</span></div>
+                    <div class="cmms-pr-meta-row"><span class="k">REQ number</span><span class="v" style="font-weight:800; color:#0038A8;">REQ-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</span></div>
+                    <div class="cmms-pr-meta-row"><span class="k">Status</span><span class="v"><span class="cmms-status-badge cmms-status-{{ strtolower($status) }}">{{ ucfirst($status) }}</span></span></div>
+                    <div class="cmms-pr-meta-row"><span class="k">Requester</span><span class="v">{{ $requisition->requester?->full_name ?? '&mdash;' }}</span></div>
+                    @if($ticket)
+                    <div class="cmms-pr-meta-row"><span class="k">Job order</span><span class="v">{{ $ticket->display_number ?? $ticket->request_number }}</span></div>
+                    <div class="cmms-pr-meta-row"><span class="k">Ticket type</span><span class="v"><span class="cmms-req-tag {{ $ticket->type === 'Preventive Maintenance' ? 'cmms-req-tag--issue' : 'cmms-req-tag--review' }}">{{ $ticket->type === 'Preventive Maintenance' ? '[PM]' : '[ICT]' }}</span></span></div>
+                    @endif
                     <div class="cmms-pr-meta-row"><span class="k">Line items</span><span class="v">{{ count($requisition->items ?? []) }}</span></div>
                     @if($requisition->reviewer && $requisition->reviewed_at)
                     <div class="cmms-pr-meta-row"><span class="k">Last action by</span><span class="v">{{ $requisition->reviewer->full_name }}</span></div>
+                    <div class="cmms-pr-meta-row"><span class="k">Reviewed</span><span class="v">{{ $requisition->reviewed_at->format('d M Y, h:i A') }}</span></div>
                     @endif
                 </div>
             </div>

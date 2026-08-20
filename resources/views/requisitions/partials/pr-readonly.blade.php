@@ -1,15 +1,15 @@
 @php
     $ticket = $requisition->ticket;
-    $prNo = 'PR-' . str_pad($requisition->id, 5, '0', STR_PAD_LEFT);
+    $reqNo = 'REQ-' . str_pad($requisition->id, 5, '0', STR_PAD_LEFT);
 @endphp
 <style nonce="{{ $cspNonce }}">.cmms-empty-cell { text-align: center; color: #5c6573; padding: 20px; }</style>
 <div class="cmms-pr-sheet">
     <div class="cmms-pr-sheet-head">
         <div>
-            <h2 class="doc-title">Purchase Request</h2>
+            <h2 class="doc-title">Parts Requisition</h2>
             <p class="doc-org">NCMB · Property and Supply Division · ICT Unit</p>
         </div>
-        <div class="cmms-pr-number-badge">{{ $prNo }}</div>
+        <div class="cmms-pr-number-badge">{{ $reqNo }}</div>
     </div>
 
     <div class="cmms-pr-meta-grid">

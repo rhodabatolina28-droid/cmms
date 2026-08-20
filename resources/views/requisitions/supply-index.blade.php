@@ -44,6 +44,112 @@
         .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
         .cmms-pagination-bar { padding: 10px 12px !important; }
     }
+
+    /* Government Formal Tabs */
+    .cmms-gov-tabs {
+        display: flex;
+        gap: 24px;
+        border-bottom: 2px solid #e2e8f0;
+        margin-bottom: 20px;
+    }
+    .cmms-gov-tabs a {
+        padding: 10px 4px;
+        font-size: 11px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        color: #64748b;
+        text-decoration: none;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -2px;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .cmms-gov-tabs a:hover { color: #0f172a; }
+    .cmms-gov-tabs a.active { color: #0038A8; border-bottom-color: #0038A8; }
+    .gov-badge {
+        background: #fee2e2;
+        color: #b91c1c;
+        padding: 2px 6px;
+        border-radius: 12px;
+        font-size: 10px;
+        line-height: 1;
+    }
+
+    /* Government Queue Summary */
+    .cmms-gov-summary {
+        background: #f8fafc;
+        border: 1px solid #c5c9d0;
+        border-radius: 6px;
+        padding: 12px 18px;
+        margin-bottom: 20px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+    }
+    .gov-summary-title {
+        font-size: 10px;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #475569;
+        min-width: 120px;
+        padding-right: 20px;
+        border-right: 1px solid #cbd5e1;
+    }
+    .gov-summary-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 32px;
+        flex: 1;
+    }
+    .gov-summary-item {
+        text-decoration: none;
+        display: flex;
+        align-items: baseline;
+        gap: 8px;
+        opacity: 0.5;
+        transition: opacity 0.2s;
+    }
+    .gov-summary-item:hover { opacity: 0.8; }
+    .gov-summary-item.active { opacity: 1; border-bottom: 2px solid transparent; }
+    .gov-summary-item .gov-val {
+        font-size: 16px;
+        font-weight: 800;
+        color: #0f172a;
+    }
+    .gov-summary-item .gov-lbl {
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        color: #64748b;
+    }
+    .gov-summary-item--pending.active .gov-val { color: #b45309; }
+    .gov-summary-item--approved.active .gov-val { color: #0038A8; }
+    .gov-summary-item--issued.active .gov-val { color: #15803d; }
+    .gov-summary-item--rejected.active .gov-val { color: #b91c1c; }
+    
+    /* Refined Action Callout for Gov UX */
+    .cmms-action-callout {
+        display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px;
+        background: #fff; border-left: 4px solid #0038A8; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
+        border-radius: 4px; font-size: 13px; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
+    }
+    .cmms-action-callout.is-clear { border-left-color: #15803d; }
+    .cmms-action-callout i { font-size: 16px; color: #0038A8; }
+    .cmms-action-callout.is-clear i { color: #15803d; }
+    .cmms-action-callout strong { font-weight: 700; color: #0038A8; }
+    .cmms-action-callout.is-clear strong { color: #15803d; }
+    .cmms-callout-chip::before { content: " | "; color: #cbd5e1; margin: 0 4px; }
+    
+    @media (max-width: 768px) {
+        .cmms-gov-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
+        .gov-summary-title { border-right: none; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; width: 100%; }
+        .gov-summary-grid { gap: 16px; }
+    }
 </style>
 @endsection
 
@@ -69,9 +175,16 @@
             <a href="{{ route(Auth::user()->role === 'super_admin' ? 'dashboard.super-admin' : 'dashboard.admin') }}" class="cmms-btn-secondary">Return to dashboard</a>
         </div>
         <div class="cmms-page-card-body">
-            <div class="cmms-view-switch">
-                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}">Requisition Queue</a>
-                <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}">ICT Job Orders</a>
+            <div class="cmms-gov-tabs">
+                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}">
+                    REQUISITION QUEUE
+                    @if($supplyView === 'queue' && isset($counts['pending']) && $counts['pending'] > 0)
+                        <span class="gov-badge">{{ $counts['pending'] }}</span>
+                    @endif
+                </a>
+                <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}">
+                    ICT JOB ORDERS
+                </a>
             </div>
 
     @if($supplyView === 'queue')
@@ -97,19 +210,22 @@
                 <span>All caught up &mdash; no requisitions awaiting your action.</span>
             @endif
         </div>
-        <div class="cmms-stat-strip">
-            @foreach([
-                'pending' => ['To review', $counts['pending'] ?? 0],
-                'approved' => ['Ready to issue', $counts['approved'] ?? 0],
-                'issued' => ['Issued', $counts['issued'] ?? 0],
-                'rejected' => ['Rejected', $counts['rejected'] ?? 0],
-            ] as $key => [$label, $num])
-            <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $key]) }}"
-               class="cmms-stat-chip cmms-stat-chip--{{ $key }} {{ $filter === $key ? 'is-active' : '' }}">
-                <div class="n">{{ $num }}</div>
-                <div class="l">{{ $label }}</div>
-            </a>
-            @endforeach
+        <div class="cmms-gov-summary">
+            <div class="gov-summary-title">QUEUE SUMMARY</div>
+            <div class="gov-summary-grid">
+                @foreach([
+                    'pending' => ['To review', $counts['pending'] ?? 0],
+                    'approved' => ['Ready to issue', $counts['approved'] ?? 0],
+                    'issued' => ['Issued', $counts['issued'] ?? 0],
+                    'rejected' => ['Rejected', $counts['rejected'] ?? 0],
+                ] as $key => [$label, $num])
+                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $key]) }}"
+                   class="gov-summary-item gov-summary-item--{{ $key }} {{ $filter === $key ? 'active' : '' }}">
+                    <div class="gov-val">{{ $num }}</div>
+                    <div class="gov-lbl">{{ $label }}</div>
+                </a>
+                @endforeach
+            </div>
         </div>
 
         <div class="cmms-contents-bar">
@@ -191,7 +307,7 @@
                                 @foreach($ictTickets as $t)
                                 <tr>
                                     <td><strong>{{ $t->display_number ?? $t->request_number }}</strong></td>
-                                    <td><span class="cmms-ticket-status">{{ $t->status }}</span></td>
+                                    <td><span class="cmms-ticket-status cmms-ticket-status--{{ strtolower(str_replace(' ', '-', $t->status)) }}">{{ $t->status }}</span></td>
                                     <td>{{ $t->assignedTo?->full_name ?? '-' }}</td>
                                     <td>{{ $t->user?->full_name ?? '-' }}</td>
                                     <td>
@@ -207,7 +323,7 @@
                                     <td class="td-nowrap">
                                         @if($t->requisitions->isNotEmpty())
                                             @php $latest = $t->requisitions->sortByDesc('created_at')->first(); @endphp
-                                            <a href="{{ route('requisitions.show', $latest->id) }}" class="cmms-btn-secondary">Latest PR</a>
+                                            <a href="{{ route('requisitions.show', $latest->id) }}" class="cmms-btn-secondary">Latest REQ</a>
                                         @endif
                                         <a href="{{ route('ict.show', $t->id) }}" class="cmms-btn-secondary" target="_blank">Job order</a>
                                     </td>
