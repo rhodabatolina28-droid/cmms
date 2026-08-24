@@ -117,7 +117,7 @@
 @section('content')
 @php
     $supplyView = $supplyView ?? 'queue';
-    $filter = $filter ?? 'pending';
+    $filter = $filter ?? 'all';
     $q = isset($q) ? trim((string) $q) : '';
     $sort = $sort ?? 'newest';
     // Carry current search/sort context across tab & filter links (drop empties

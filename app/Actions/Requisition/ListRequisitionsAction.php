@@ -46,14 +46,14 @@ class ListRequisitionsAction
             $supplyView = 'queue';
         }
 
-        $filter = $httpRequest->query('status', 'pending');
+        // Default queue view = All records; the stat cards narrow it down.
+        $filter = $httpRequest->query('status', 'all');
         $allowed = ['pending', 'approved', 'issued', 'rejected', 'all'];
         if (!in_array($filter, $allowed, true)) {
-            $filter = 'pending';
+            $filter = 'all';
         }
 
-        // Optional free-text search + sort (Supply queue only; defaults keep the
-        // original newest-first listing untouched).
+        // Optional free-text search + sort (Supply queue only).
         $q = trim((string) $httpRequest->query('q', ''));
         $sort = $httpRequest->query('sort', 'newest');
         if (!in_array($sort, ['newest', 'oldest'], true)) {

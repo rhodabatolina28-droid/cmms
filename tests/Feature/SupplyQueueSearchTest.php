@@ -127,7 +127,7 @@ class SupplyQueueSearchTest extends TestCase
         $desc->assertSeeInOrder([$newNo, $oldNo]);
     }
 
-    public function test_default_listing_without_params_still_works(): void
+    public function test_default_listing_shows_all_records(): void
     {
         $supply = $this->makeSupplyAdmin();
         $requester = $this->makeUser();
@@ -135,8 +135,26 @@ class SupplyQueueSearchTest extends TestCase
         $pending = $this->makeRequisition($requester);
         $issued = $this->makeRequisition($requester, ['status' => Requisition::STATUS_ISSUED]);
 
-        // No params → defaults to pending queue, newest first — unchanged behaviour.
+        // No params → defaults to the All records queue so everything is visible.
         $response = $this->actingAs($supply)->get(route('requisitions.index'));
+        $response->assertOk();
+        $response->assertSee('REQ-' . str_pad((string) $pending->id, 5, '0', STR_PAD_LEFT));
+        $response->assertSee('REQ-' . str_pad((string) $issued->id, 5, '0', STR_PAD_LEFT));
+        $response->assertSee('All records');
+    }
+
+    public function test_pending_filter_still_narrows_to_pending_only(): void
+    {
+        $supply = $this->makeSupplyAdmin();
+        $requester = $this->makeUser();
+
+        $pending = $this->makeRequisition($requester);
+        $issued = $this->makeRequisition($requester, ['status' => Requisition::STATUS_ISSUED]);
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', [
+            'view' => 'queue',
+            'status' => 'pending',
+        ]));
         $response->assertOk();
         $response->assertSee('REQ-' . str_pad((string) $pending->id, 5, '0', STR_PAD_LEFT));
         $response->assertDontSee('REQ-' . str_pad((string) $issued->id, 5, '0', STR_PAD_LEFT));
