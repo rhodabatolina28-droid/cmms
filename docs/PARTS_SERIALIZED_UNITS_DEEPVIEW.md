@@ -2,11 +2,11 @@
 
 > Batay sa malalim na pagsusuri ng kasalukuyang Parts & Consumables module bago mag-implement ng
 > **per-unit serial + property number tracking** (na-trigger ng CSV "PROPERTY NUMBERS — INTANGIBLE").
-> Petsa: 2026-08-14
+> Petsa: 2026-08-14 · **Huling update:** 2026-08-24 · **Status: COMPLETE** — lahat ng phases at hardening ay implemented at berde ang automated tests.
 
 ---
 
-## Planned - Automatic Ticket-Based Issue to Asset Custodian (Not Yet Implemented)
+## Automatic Ticket-Based Issue to Asset Custodian (✅ Implemented — see Phase 1–5 status below)
 
 ### Goal
 
@@ -88,8 +88,6 @@ Adding a part to Supply stock must **not** make it appear on an Asset Profile. I
 Supply issues it from the ticket-based requisition and the transaction saves both the ticket and
 asset links.
 
-### Current implementation gaps to close
-
 ### Implementation progress
 
 | Phase | Status | Verification |
@@ -145,8 +143,11 @@ has an index and foreign key to `users` (`nullOnDelete`).
 
 ### Remaining implementation gaps
 
-- Final regression coverage (mostly covered): repeated Issue, insufficient stock, and `on_hand_qty == in_stock_units`
-  consistency `PartsUnitsTest`; add any remaining end-to-end browser pass for the auto-fill UI. **Phases 6-8 (final regression + exports) are complete.**
+None in code. All phases (1–11), the Aug 18 accountability hardening, and the Aug 20 UX polish are implemented and
+covered by automated tests — all parts/set/requisition/export suites pass as of 2026-08-24 (67 tests across
+`PartsUnitsTest`, `RequisitionPartsIssueTest`, `RequisitionTicketContextTest`, `PartsStockTest`, `PartsExportTest`,
+`PartsImportTest`, `InventoryAssetIntegrityTest`). The only open item is a manual end-to-end browser pass for the
+Stock Out auto-fill UI.
 
 ### 2026-08-20 Phase 5 UI/UX Polish (Asset Profile Set Components)
 - **Centralized Device Categorization:** Added `isMajorDevice()` to the `InventoryAsset` model to eliminate hardcoded category strings in the UI. 

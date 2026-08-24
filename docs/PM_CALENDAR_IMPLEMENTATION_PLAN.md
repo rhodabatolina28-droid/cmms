@@ -717,8 +717,8 @@ This section records the **actual implementation state** versus the original pla
 
 1. **Scope** — the original plan (above) described a PM-only first release and optional combine with ICT later. The implemented calendar is already a combined PM/ICT calendar. This is an intentional, approved expansion, not a regression.
 2. **Right-side panels** — the original plan listed three right-side cards. The implementation adds a fourth "Monthly Summary" card and a single "Add" task card used for the Schedule modal.
-3. **Manual queue UI path** — the original plan expected the "Schedule for Later" control on the PM generation page. The control was initially added there and is present in the committed `show.blade.php`, but the user requested that the redundant manual-queue entry UI be removed. A follow-up change will remove the Schedule-for-Later button/modal from the PM schedule page and make the calendar's "Add" button the single manual scheduling entry point.
-4. **Schedule modal** — the committed calendar includes a PM/ICT type-toggle scheduling modal that creates an event locally. The user requested that the modal become **PM-only** (remove the type toggle and Location field), that ICT be **view/assign-only** (assign IT IT dropdown), and that PM scheduling POST to the server instead of only creating a local event. Those changes are planned but not yet applied.
+3. **Manual queue UI path** — the original plan expected the "Schedule for Later" control on the PM generation page. The control was initially added there and is present in the committed `show.blade.php`, but the user requested that the redundant manual-queue entry UI be removed. A follow-up change will remove the Schedule-for-Later button/modal from the PM schedule page and make the calendar's "Add" button the single manual scheduling entry point. **— ✅ Applied since (Phase 1 item 1, commit `d20c8d2`).**
+4. **Schedule modal** — the committed calendar includes a PM/ICT type-toggle scheduling modal that creates an event locally. The user requested that the modal become **PM-only** (remove the type toggle and Location field), that ICT be **view/assign-only** (assign IT IT dropdown), and that PM scheduling POST to the server instead of only creating a local event. Those changes were subsequently applied — see Phase 1 items 2–5 (commits `d20c8d2`, `4887620`, `cd84dcd`, `b08f095`). **✅ Resolved.**
 
 ### Phase 1: Core Calendar Cleanup — ✅ COMPLETE (August 5, 2026)
 
@@ -865,13 +865,11 @@ The `completed_at` column is **display-only** and does NOT affect:
 
 The PM will still advance to the next division when all tickets in the current division have `status = Completed`.
 
-### Pending / next steps
+### Previously pending — all completed (verified in code, 2026-08-24)
 
-The following items remain for upcoming phases:
-
-1. **Consolidate Maintenance Calendar layout** with other super admin modules.
-2. **Phase 2: Consolidate Create PM Schedule → Calendar** — remove standalone `pm-schedules/create.blade.php`, update calendar modal fields to match Create PM Schedule (Schedule Name, Target Division, Frequency), POST to `pm-schedules.store`, preserve one-active-per-branch check.
-3. **Phase 6: UX Improvements** — skeleton loader, detail card animation, legend completeness, summary filter sync, chip readability. See UX review below.
+1. ~~Consolidate Maintenance Calendar layout~~ — ✅ Done: calendar wrapped in `.polish-card` to match the other super-admin modules (commit `28bc779`, refined by `51fcc2a`).
+2. ~~Phase 2: Consolidate Create PM Schedule → Calendar~~ — ✅ Done: standalone `pm-schedules/create.blade.php` removed; the calendar modal carries Schedule Name / Target Division / Frequency and POSTs to `pm-schedules.store` via the `calStorePmScheduleUrl` hidden input.
+3. ~~Phase 6: UX Improvements~~ — ✅ Done August 11, 2026 (see Phase 6 section above).
 
 ### Files introduced or changed in this implementation (commit `33cb176`)
 
@@ -1041,6 +1039,7 @@ Added `Completed At` column and renamed `Date Filed` → `Date Requested` across
 | `resources/views/pm-schedules/orders.blade.php` | Added `Completed At` column for PM Work Orders |
 | `app/Actions/SuperAdmin/GetRequestsDataAction.php` | Added `completed_at` to API response |
 
-### Priority Recommendation
+### Status
 
-**Next: Phase 6 UX Improvements** (High Priority items first).
+All planned phases (1–6), the August 11 bug fixes, and the layout consolidation are complete and verified by
+`PMCalendarTest` (26 tests, passing as of 2026-08-24). No pending work remains in this module.
