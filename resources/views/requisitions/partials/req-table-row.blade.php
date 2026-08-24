@@ -15,9 +15,11 @@
 @endphp
 <tr class="cmms-req-row {{ $rowAccent }}" data-status="{{ $statusKey }}">
     <td class="td-nowrap">
-        <span class="cmms-req-id"><i class="fa-solid fa-file-invoice" style="opacity:.6;margin-right:4px;"></i>{{ $reqNo }}</span>
+        <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-req-id" style="text-decoration:none;" title="Open full record">
+            <i class="fa-solid fa-file-invoice" style="opacity:.6;margin-right:4px;"></i>{{ $reqNo }}
+        </a>
         @if($quickActions && $isPending)
-            <span class="cmms-req-age"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ (int) $req->created_at->diffInDays(now()) }}d</span>
+            <div><span class="cmms-req-age"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ (int) $req->created_at->diffInDays(now()) }}d old</span></div>
         @endif
     </td>
     @if(!empty($showRequester))
@@ -37,14 +39,12 @@
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
+    <td class="td-nowrap">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
     <td class="td-nowrap">
-        <div>
-            <span style="font-size:11px;color:#94a3b8;">Filed&nbsp;&nbsp;</span>{{ $req->created_at->format('M d, Y | h:i A') }}
-        </div>
         @if($statusKey === 'issued' && $req->reviewed_at)
-            <div style="margin-top:3px;font-weight:700;color:#15803d;">
-                <span style="font-size:11px;">Done&nbsp;</span><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>{{ $req->reviewed_at->format('M d, Y | h:i A') }}
-            </div>
+            <span style="font-weight:700;color:#15803d;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>{{ $req->reviewed_at->format('M d, Y | h:i A') }}</span>
+        @else
+            <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
     <td>
@@ -66,12 +66,11 @@
             @endif
             <span class="cmms-actions-divider" aria-hidden="true"></span>
             <button type="button" class="act-btn cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items" aria-label="Toggle details for {{ $reqNo }}"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
-            <a href="{{ route('requisitions.show', $req->id) }}" class="act-btn" title="Open full record" aria-label="Open full record for {{ $reqNo }}"><i class="fa-solid fa-up-right-from-square"></i></a>
         </div>
     </td>
 </tr>
 <tr class="cmms-req-details-row" id="req-details-{{ $req->id }}" hidden>
-    <td colspan="{{ !empty($showRequester) ? 7 : 6 }}">
+    <td colspan="{{ !empty($showRequester) ? 8 : 7 }}">
         <div class="cmms-req-details-grid">
             <div class="cmms-req-details-col">
                 <div class="k"><i class="fa-solid fa-list-check" style="opacity:.6;margin-right:6px;"></i>Line items &middot; {{ count($items) }}</div>
