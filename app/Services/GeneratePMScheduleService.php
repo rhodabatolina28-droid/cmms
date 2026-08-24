@@ -53,7 +53,17 @@ class GeneratePMScheduleService
 
         // Start Date Guard: Do not generate if next_scheduled_date is still in the future.
         // The schedule should only generate on or after its next_scheduled_date.
-        if ($schedule->next_scheduled_date && now()->lt(\Carbon\Carbon::parse($schedule->next_scheduled_date)->startOfDay())) {
+        // EXCEPTION: an idle schedule (no active cycle) that already has a completed
+        // cycle falls through so the Cooldown Guard below can emit the canonical
+        // '__cooldown__' signal instead of the generic '__not_due__'.
+        $idleWithCompletedCycle = !$schedule->current_cycle_id
+            && PMCycle::where('pm_schedule_id', $schedule->id)
+                ->whereNotNull('completed_at')
+                ->exists();
+
+        if ($schedule->next_scheduled_date
+            && now()->lt(\Carbon\Carbon::parse($schedule->next_scheduled_date)->startOfDay())
+            && !$idleWithCompletedCycle) {
             Log::info("PM schedule {$schedule->id} not yet due. next_scheduled_date: {$schedule->next_scheduled_date}");
             return ['__not_due__' => $schedule->next_scheduled_date->toDateString()];
         }
