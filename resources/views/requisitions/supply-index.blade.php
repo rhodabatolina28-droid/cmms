@@ -14,25 +14,6 @@
     .cmms-page-card, .cmms-page-card-body { max-width:100%; min-width:0; }
     @media (max-width:768px) {
         .cmms-req-table th, .cmms-req-table td { padding:10px 12px; font-size:12.5px; }
-        /* Rows become stacked cards - no horizontal scroll */
-        .cmms-req-table { min-width:0; }
-        .cmms-req-table thead { display:none; }
-        .cmms-req-table, .cmms-req-table tbody, .cmms-req-table tr.cmms-req-row, .cmms-req-table td { display:block; width:100%; }
-        .cmms-req-table tr.cmms-req-row { padding:12px 14px; border-bottom:1px solid #e2e8f0; }
-        .cmms-req-table td { border:none; padding:6px 0; text-align:left !important; white-space:normal; }
-        .cmms-req-table td:first-child { border-left:none; }
-        .cmms-req-table td::before {
-            content:attr(data-label);
-            display:block; font-size:10px; font-weight:800; text-transform:uppercase;
-            letter-spacing:.04em; color:#94a3b8; margin-bottom:3px;
-        }
-        .cmms-req-table td[data-label="REQ #"]::before,
-        .cmms-req-table td[data-label="Actions"]::before { display:none; }
-        .cmms-req-table td.td-nowrap, .cmms-req-table td.cell-trim { white-space:normal; }
-        .cmms-req-table .row-actions { justify-content:flex-start; gap:8px; flex-wrap:nowrap; }
-        .cmms-req-table tr.cmms-req-details-row > td { padding-top:0; }
-        .cmms-req-details-grid { grid-template-columns:1fr !important; }
-        .cmms-req-table tr.cmms-req-details-row[hidden] { display:none !important; }
     }
     .text-muted-none { color:#94a3b8; font-size:0.8rem; }
     .td-nowrap { white-space:nowrap; }
@@ -58,8 +39,9 @@
     .act-btn:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Table style - matched to Parts & Consumables (pantay-pantay) */
-    .cmms-req-table { table-layout:fixed; min-width:960px; }
+    /* Column alignment: fixed layout - ITEMS is the wide middle column; rest compact */
+    table.cmms-ticket-table { min-width:820px; }
+    .cmms-req-table { table-layout:fixed; min-width:860px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
     .cmms-req-table th {
