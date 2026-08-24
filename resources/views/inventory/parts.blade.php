@@ -61,6 +61,10 @@
     }
     .form-field input:focus, .form-field select:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,.12); }
     .form-err { color: #dc2626; font-size: 11.5px; font-weight: 600; min-height: 14px; }
+    .field-hint { font-size: 11.5px; color: #64748b; margin-top: 2px; line-height: 1.5; min-height: 0; font-weight: 500; }
+    .field-hint.warn { color: #b45309; font-weight: 700; }
+    .field-hint.ok { color: #15803d; font-weight: 700; }
+    .field-hint-strong { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #0038A8; border-radius: 6px; padding: 9px 11px; color: #0f172a; font-size: 12.5px; }
     .current-hand { background: #f0f4ff; color: #0038A8; font-weight: 800; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
     .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #e2e8f0; }
 
@@ -454,6 +458,7 @@
                     <div class="form-field full" id="stockSerialWrap">
                         <label>Serial / Property numbers <span style="font-weight:400;color:#94a3b8;">(isa bawat linya: serial, property)</span></label>
                         <textarea name="units" id="s_units" rows="3" style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font-size:13px; font-family:monospace;"></textarea>
+                        <div class="field-hint" id="unitsCountHint"></div>
                         <div class="form-err" id="err_units"></div>
                     </div>
                     <div class="form-field full" id="stockUnitsPickerWrap" style="display:none;">
@@ -473,6 +478,9 @@
                     <div class="form-field" id="stockIssuedToWrap" style="display:none;">
                         <label>Issued To (custodian)</label>
                         <select id="s_issued_to" style="width:100%;border:1px solid #cbd5e1;border-radius:8px;padding:8px 10px;font-size:13px;"><option value="">-- Manual / none --</option></select>
+                    </div>
+                    <div class="form-field full" id="stockOutDestHintWrap" style="display:none;">
+                        <div class="field-hint field-hint-strong" id="stockOutDestHint"></div>
                     </div>
                     <div class="form-field">
                         <label>Source / For</label>
@@ -851,6 +859,66 @@
 
     // Initial load (gaya ng inventory's loadInventory sa page load).
     loadParts(1);
+
+    // ── Live hints: serial counter (Stock In) + issue destination (Stock Out) ──
+    (function () {
+        const unitsEl = document.getElementById('s_units');
+        const qtyEl = document.getElementById('s_qty');
+        const unitsHint = document.getElementById('unitsCountHint');
+
+        function serialCountHint() {
+            if (!unitsHint || !unitsEl || !qtyEl) return;
+            const wrapVisible = !!document.getElementById('stockSerialWrap')?.offsetParent;
+            if (!wrapVisible) { unitsHint.textContent = ''; unitsHint.className = 'field-hint'; return; }
+            const lines = unitsEl.value.split('\n').map(l => l.trim()).filter(Boolean);
+            const qty = parseInt(qtyEl.value, 10) || 0;
+            if (!lines.length && !qty) { unitsHint.textContent = ''; unitsHint.className = 'field-hint'; return; }
+            let cls = 'field-hint';
+            let msg = lines.length + ' serial line(s) entered · qty = ' + qty;
+            if (qty > 0 && lines.length > qty) {
+                cls += ' warn';
+                msg += ' — more serial lines than qty.';
+            } else if (qty > 0 && lines.length < qty) {
+                msg += ' · ' + (qty - lines.length) + ' will be added as generic unit(s).';
+            } else if (qty > 0) {
+                cls += ' ok';
+                msg += ' · matched.';
+            }
+            unitsHint.textContent = msg;
+            unitsHint.className = cls;
+        }
+        unitsEl?.addEventListener('input', serialCountHint);
+        qtyEl?.addEventListener('input', serialCountHint);
+
+        function destHint() {
+            const hintWrap = document.getElementById('stockOutDestHintWrap');
+            const hint = document.getElementById('stockOutDestHint');
+            if (!hintWrap || !hint) return;
+            if (typeof stockMode !== 'undefined' && stockMode !== 'out') { hintWrap.style.display = 'none'; return; }
+            if (!hintWrap.offsetParent) { hintWrap.style.display = 'none'; return; }
+            const parts = [];
+            const custSel = document.getElementById('s_issued_to');
+            const assetSel = document.getElementById('s_asset_id');
+            const tickSel = document.getElementById('s_request_id');
+            const clean = (sel) => (sel?.selectedOptions?.[0]?.textContent || '').replace(/\s*--.*--\s*/g, '').trim();
+            if (custSel?.value) parts.push('<b>' + esc(clean(custSel)) + '</b>');
+            if (assetSel?.value) parts.push('asset: <b>' + esc((assetSel.selectedOptions[0]?.textContent || '').replace(/^#\d+\s+/, '').trim()) + '</b>');
+            if (tickSel?.value) parts.push('ticket: <b>' + esc((tickSel.selectedOptions[0]?.textContent || '').trim()) + '</b>');
+            if (!parts.length) { hintWrap.style.display = 'none'; return; }
+            hint.innerHTML = '<i class="fa-solid fa-box-open" style="margin-right:6px;color:#0038A8;"></i>Issuing to: ' + parts.join(' &nbsp;·&nbsp; ');
+            hintWrap.style.display = '';
+        }
+        ['s_issued_to', 's_asset_id', 's_request_id'].forEach((id) => {
+            document.getElementById(id)?.addEventListener('change', destHint);
+        });
+
+        // Refresh both hints whenever the stock modal opens / mode switches.
+        const prevOpenStockModal = window.openStockModal;
+        window.openStockModal = function (mode, part) {
+            if (typeof prevOpenStockModal === 'function') prevOpenStockModal(mode, part);
+            setTimeout(() => { serialCountHint(); destHint(); }, 0);
+        };
+    })();
 
     document.getElementById('partsCsvInput')?.addEventListener('change', importPartsCsv);
 

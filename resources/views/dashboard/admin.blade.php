@@ -361,6 +361,48 @@
                 @endforelse
             </div>
 
+            @if(Auth::user()->canProcessSupply() && !empty($supplyStats))
+                <div class="queue-panel" style="margin-bottom:14px;">
+                    <div class="flex-center-sb">
+                        <div class="ribbon-label mb-0">Supply Snapshot</div>
+                        <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace</a>
+                    </div>
+                    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
+                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'pending']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
+                            <span style="display:block;font-size:20px;font-weight:900;color:#92400e;">{{ $supplyStats['pending_reqs'] ?? 0 }}</span>
+                            <span style="font-size:11px;">To review</span>
+                        </a>
+                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'approved']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
+                            <span style="display:block;font-size:20px;font-weight:900;color:#0038A8;">{{ $supplyStats['approved_reqs'] ?? 0 }}</span>
+                            <span style="font-size:11px;">Ready to issue</span>
+                        </a>
+                        <a href="{{ route('inventory.parts', ['status' => 'low']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
+                            <span style="display:block;font-size:20px;font-weight:900;color:#b45309;">{{ $supplyStats['low_stock'] ?? 0 }}</span>
+                            <span style="font-size:11px;">Low stock</span>
+                        </a>
+                        <a href="{{ route('inventory.parts', ['status' => 'critical']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
+                            <span style="display:block;font-size:20px;font-weight:900;color:#b91c1c;">{{ $supplyStats['critical'] ?? 0 }}</span>
+                            <span style="font-size:11px;">Critical</span>
+                        </a>
+                    </div>
+
+                    @if(($pendingRequisitions ?? collect())->isNotEmpty())
+                        <div class="ribbon-label" style="margin-top:12px;">Awaiting your review</div>
+                        @foreach($pendingRequisitions->take(3) as $prq)
+                            <a href="{{ route('requisitions.show', $prq->id) }}" class="queue-item">
+                                <div class="flex-start-gap">
+                                    <div>
+                                        <div class="job-number">REQ-{{ str_pad((string) $prq->id, 5, '0', STR_PAD_LEFT) }}</div>
+                                        <div class="job-meta">{{ $prq->requester?->full_name ?? '—' }}</div>
+                                    </div>
+                                    <span class="assign-link">Review</span>
+                                </div>
+                            </a>
+                        @endforeach
+                    @endif
+                </div>
+            @endif
+
             <div class="ribbon-label">Management Tools</div>
             <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
                 <i class="fa-solid fa-list-check"></i> Manage Requests

@@ -144,6 +144,17 @@ class AdminDashboardAction
                 'approved_reqs' => $reqStatusRow->approved_reqs ?? 0,
             ];
 
+            // Parts stock health — same level logic as ListPartsStockAction::statsFor()
+            $partStatsRow = \App\Models\Part::query()
+                ->when($user->region, fn ($qp) => $qp->where('region', $user->region))
+                ->when($user->branch, fn ($qp) => $qp->where('branch', $user->branch))
+                ->selectRaw("SUM(CASE WHEN reorder_level > 0 AND on_hand_qty < reorder_level AND on_hand_qty > 0 THEN 1 ELSE 0 END) as low_stock")
+                ->selectRaw("SUM(CASE WHEN on_hand_qty <= 0 THEN 1 ELSE 0 END) as critical")
+                ->first();
+
+            $supplyStats['low_stock'] = (int) ($partStatsRow->low_stock ?? 0);
+            $supplyStats['critical'] = (int) ($partStatsRow->critical ?? 0);
+
             $pendingRequisitions = (clone $reqQuery)
                 ->where('status', Requisition::STATUS_PENDING)
                 ->with(['ticket', 'requester'])
