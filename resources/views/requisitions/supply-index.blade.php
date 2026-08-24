@@ -8,7 +8,13 @@
 <style nonce="{{ $cspNonce }}">
     .cmms-count-badge { font-size:0.75rem; color:#64748b; font-weight:600; }
     .cmms-pagination-bar { padding:14px 20px; border-top:1px solid #e2e8f0; }
-    .table-wrap { overflow-x:auto; }
+    .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+    /* Containment: hindi lalabas ang table sa page â€” scroll lang sa loob ng table area */
+    .cmms-panel { max-width:100%; min-width:0; }
+    .cmms-page-card, .cmms-page-card-body { max-width:100%; min-width:0; }
+    @media (max-width:768px) {
+        .cmms-req-table th, .cmms-req-table td { padding:10px 12px; font-size:12.5px; }
+    }
     .text-muted-none { color:#94a3b8; font-size:0.8rem; }
     .td-nowrap { white-space:nowrap; }
     .cmms-req-actions--quick { display:flex; flex-wrap:wrap; gap:8px; justify-content:flex-end; align-items:center; }
@@ -22,7 +28,7 @@
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
     .cmms-req-table .right { text-align:right; }
-    /* Icon action buttons Ã¢â‚¬â€ same look as Parts & Consumables rows */
+    /* Icon action buttons ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â same look as Parts & Consumables rows */
     .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
     .act-btn.in { border-color:#bbf7d0; color:#15803d; }
@@ -33,7 +39,7 @@
     .act-btn:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Table style Ã¢â‚¬â€ matched to Parts & Consumables (pantay-pantay) */
+    /* Table style ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â matched to Parts & Consumables (pantay-pantay) */
     .cmms-req-table { table-layout:fixed; min-width:960px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
@@ -92,8 +98,8 @@
         line-height: 1;
     }
 
-    /* QUEUE SUMMARY ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â stat cards */
-    .queue-summary-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
+    /* QUEUE SUMMARY ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â stat cards */
+    .queue-summary-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px; }
     .qstat { display:block; background:#fff; border:1px solid var(--cmms-border); border-radius:10px; padding:12px 14px; text-decoration:none; transition:all .15s; }
     .qstat:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.08); }
     .qstat:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
@@ -122,7 +128,6 @@
     .cmms-sort-toggle a.active { background:#0038A8; color:#fff; }
 
     @media (max-width: 768px) {
-        .queue-summary-cards { grid-template-columns: repeat(2, 1fr); }
         .cmms-queue-toolbar { flex-direction: column; align-items: stretch; }
         .cmms-sort-toggle { justify-content: stretch; }
         .cmms-sort-toggle a { flex: 1; justify-content: center; }
@@ -284,7 +289,7 @@
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>ICT job orders</h2>
-                <span class="cmms-count-badge">Read-only ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ $ictTickets->total() }} ticket(s)</span>
+                <span class="cmms-count-badge">Read-only ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ $ictTickets->total() }} ticket(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())
