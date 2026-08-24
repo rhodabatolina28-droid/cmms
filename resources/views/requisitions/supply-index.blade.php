@@ -15,24 +15,6 @@
     .cmms-req-actions--quick .cmms-btn-primary,
     .cmms-req-actions--quick .cmms-btn-success,
     .cmms-req-actions--quick .cmms-btn-danger-ghost { margin:0; }
-    .cmms-contents-bar {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        flex-wrap: wrap;
-        gap: 10px;
-        margin: 0 0 14px;
-        padding: 10px 14px;
-        background: #f8fafc;
-        border: 1px solid var(--cmms-border);
-        border-radius: 8px;
-        font-size: 13px;
-        color: var(--cmms-muted);
-        position: sticky;
-        top: 78px;
-        z-index: 20;
-    }
-    .cmms-contents-bar-label strong { color: var(--cmms-ink); }
     /* Queue table row status accent */
     .cmms-req-table td:first-child { border-left:3px solid transparent; }
     .cmms-req-table tr.cmms-req-row--needs-review td:first-child { border-left-color:#d97706; }
@@ -95,7 +77,7 @@
     }
 
     /* QUEUE SUMMARY Ã¢â‚¬â€ stat cards */
-    .queue-summary-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .queue-summary-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
     .qstat { display:block; background:#fff; border:1px solid var(--cmms-border); border-radius:10px; padding:12px 14px; text-decoration:none; transition:all .15s; }
     .qstat:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.08); }
     .qstat:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
@@ -176,13 +158,17 @@
             </div>
 
     @if($supplyView === 'queue')
-        <div class="queue-summary-cards">
-            @foreach([
+        @php
+            $queueCounts = [
                 'pending' => ['To review', $counts['pending'] ?? 0],
                 'approved' => ['Ready to issue', $counts['approved'] ?? 0],
                 'issued' => ['Issued', $counts['issued'] ?? 0],
                 'rejected' => ['Rejected', $counts['rejected'] ?? 0],
-            ] as $key => [$label, $num])
+            ];
+            $queueCounts['all'] = ['All records', array_sum(array_column($queueCounts, 1))];
+        @endphp
+        <div class="queue-summary-cards">
+            @foreach($queueCounts as $key => [$label, $num])
             <a href="{{ route('requisitions.index', array_filter(['view' => 'queue', 'status' => $key, 'q' => $q], fn ($v) => $v !== '' && $v !== null)) }}"
                class="qstat qstat--{{ $key }} {{ $filter === $key ? 'active' : '' }}" aria-pressed="{{ $filter === $key ? 'true' : 'false' }}">
                 <span class="qstat-val">{{ $num }}</span>
@@ -207,25 +193,9 @@
             </div>
         </div>
 
-        <div class="cmms-contents-bar">
-            <div class="cmms-contents-bar-label">
-                @if($filter === 'all')
-                    Showing all requisition records
-                @else
-                    Showing: <strong>{{ $filterLabels[$filter] ?? ucfirst($filter) }}</strong> &middot; {{ $requisitions->total() }} record(s)
-                @endif
-                @if($q !== '')
-                    &middot; matching &ldquo;<strong>{{ $q }}</strong>&rdquo;
-                @endif
-            </div>
-            @if($filter !== 'all')
-            <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'all']) }}" class="cmms-filter-pill">View all records</a>
-            @endif
-        </div>
-
         <div class="cmms-panel">
             <div class="cmms-panel-head">
-                <h2>Parts requisition records</h2>
+                <h2>Parts requisition records <span style="font-size:12px;font-weight:700;color:#64748b;">&mdash; {{ $filterLabels[$filter] ?? ucfirst($filter) }}</span></h2>
                 <span class="cmms-count-badge">{{ $requisitions->total() }} record(s)</span>
             </div>
             <div class="cmms-panel-body flush">
