@@ -42,7 +42,7 @@
     <td class="td-nowrap">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
     <td class="td-nowrap">
         @if($statusKey === 'issued' && $req->reviewed_at)
-            <span style="font-weight:700;color:#15803d;"><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>{{ $req->reviewed_at->format('M d, Y | h:i A') }}</span>
+            {{ $req->reviewed_at->format('M d, Y | h:i A') }}
         @else
             <span class="text-muted-none">&mdash;</span>
         @endif
@@ -64,7 +64,6 @@
                 <button type="button" class="act-btn in supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" data-issue-destination="{{ $issueDestination }}" title="Issue parts to asset custodian" aria-label="Issue requisition {{ $reqNo }}"><i class="fa-solid fa-box-open"></i></button>
                 <button type="button" class="act-btn out supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Disapprove requisition" aria-label="Disapprove requisition {{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
             @endif
-            <span class="cmms-actions-divider" aria-hidden="true"></span>
             <button type="button" class="act-btn cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items" aria-label="Toggle details for {{ $reqNo }}"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
         </div>
     </td>

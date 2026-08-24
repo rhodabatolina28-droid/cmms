@@ -22,8 +22,8 @@
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
     .cmms-req-table .right { text-align:right; }
-    /* Icon action buttons â€” same look as Parts & Consumables rows */
-    .act-btn { width:34px; height:34px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:13px; transition:all .15s; text-decoration:none; }
+    /* Icon action buttons Ã¢â‚¬â€ same look as Parts & Consumables rows */
+    .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
     .act-btn.in { border-color:#bbf7d0; color:#15803d; }
     .act-btn.in:hover { background:#f0fdf4; border-color:#86efac; color:#166534; }
@@ -31,10 +31,9 @@
     .act-btn.out:hover { background:#fef2f2; border-color:#fca5a5; }
     .act-btn:disabled { opacity:.4; cursor:not-allowed; }
     .act-btn:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
-    .cmms-actions-divider { width:1px; height:20px; background:#e2e8f0; display:inline-block; margin:0 1px; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Table style â€” matched to Parts & Consumables (pantay-pantay) */
+    /* Table style Ã¢â‚¬â€ matched to Parts & Consumables (pantay-pantay) */
     .cmms-req-table { table-layout:fixed; min-width:960px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
@@ -93,7 +92,7 @@
         line-height: 1;
     }
 
-    /* QUEUE SUMMARY ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â stat cards */
+    /* QUEUE SUMMARY ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬ÃƒÂ¢Ã¢â€šÂ¬Ã‚Â stat cards */
     .queue-summary-cards { display:grid; grid-template-columns:repeat(5,1fr); gap:10px; margin-bottom:14px; }
     .qstat { display:block; background:#fff; border:1px solid var(--cmms-border); border-radius:10px; padding:12px 14px; text-decoration:none; transition:all .15s; }
     .qstat:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.08); }
@@ -285,7 +284,7 @@
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>ICT job orders</h2>
-                <span class="cmms-count-badge">Read-only Ãƒâ€šÃ‚Â· {{ $ictTickets->total() }} ticket(s)</span>
+                <span class="cmms-count-badge">Read-only ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ $ictTickets->total() }} ticket(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())
