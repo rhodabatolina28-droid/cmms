@@ -145,10 +145,26 @@
     .cmms-action-callout.is-clear strong { color: #15803d; }
     .cmms-callout-chip::before { content: " | "; color: #cbd5e1; margin: 0 4px; }
     
+    /* Queue toolbar: search + sort */
+    .cmms-queue-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .cmms-queue-toolbar form { display:flex; align-items:center; gap:9px; flex:1; min-width:230px; background:#fff; border:1px solid var(--cmms-border); border-radius:8px; padding:8px 12px; }
+    .cmms-queue-toolbar form > i { color:#94a3b8; font-size:13px; }
+    .cmms-queue-toolbar form input[type="text"] { border:none !important; outline:none; box-shadow:none; flex:1; min-width:120px; font-size:13px; background:transparent; padding:0; margin:0; }
+    .cmms-queue-toolbar form input[type="text"]:focus { border:none !important; }
+    .cmms-queue-toolbar .cmms-filter-pill { white-space:nowrap; }
+    .cmms-sort-toggle { display:inline-flex; border:1px solid var(--cmms-border); border-radius:8px; overflow:hidden; background:#fff; }
+    .cmms-sort-toggle a { display:inline-flex; align-items:center; gap:6px; padding:8px 13px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; text-decoration:none; transition:all .15s; }
+    .cmms-sort-toggle a + a { border-left:1px solid var(--cmms-border); }
+    .cmms-sort-toggle a:hover { color:#0038A8; background:#f8fafc; }
+    .cmms-sort-toggle a.active { background:#0038A8; color:#fff; }
+
     @media (max-width: 768px) {
         .cmms-gov-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
         .gov-summary-title { border-right: none; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; width: 100%; }
         .gov-summary-grid { gap: 16px; }
+        .cmms-queue-toolbar { flex-direction: column; align-items: stretch; }
+        .cmms-sort-toggle { justify-content: stretch; }
+        .cmms-sort-toggle a { flex: 1; justify-content: center; }
     }
 </style>
 @endsection
@@ -157,6 +173,15 @@
 @php
     $supplyView = $supplyView ?? 'queue';
     $filter = $filter ?? 'pending';
+    $q = isset($q) ? trim((string) $q) : '';
+    $sort = $sort ?? 'newest';
+    // Carry current search/sort context across tab & filter links (drop empties
+    // so default URLs stay clean and unchanged).
+    $carryParams = function (array $base) use ($q, $sort) {
+        if ($q !== '') { $base['q'] = $q; }
+        if (in_array(($base['view'] ?? ''), ['queue'], true) && $sort !== 'newest') { $base['sort'] = $sort; }
+        return array_filter($base, fn ($v) => $v !== '' && $v !== null);
+    };
     $filterLabels = [
         'pending' => 'Pending review',
         'approved' => 'Ready to issue',
@@ -176,13 +201,13 @@
         </div>
         <div class="cmms-page-card-body">
             <div class="cmms-gov-tabs">
-                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}">
+                <a href="{{ route('requisitions.index', $carryParams(['view' => 'queue'])) }}" class="{{ $supplyView === 'queue' ? 'active' : '' }}" @if($supplyView === 'queue') aria-current="page" @endif>
                     REQUISITION QUEUE
                     @if($supplyView === 'queue' && isset($counts['pending']) && $counts['pending'] > 0)
                         <span class="gov-badge">{{ $counts['pending'] }}</span>
                     @endif
                 </a>
-                <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}">
+                <a href="{{ route('requisitions.index', $carryParams(['view' => 'tickets'])) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}" @if($supplyView === 'tickets') aria-current="page" @endif>
                     ICT JOB ORDERS
                 </a>
             </div>
@@ -228,12 +253,31 @@
             </div>
         </div>
 
+        <div class="cmms-queue-toolbar">
+            <form method="GET" action="{{ route('requisitions.index') }}" role="search">
+                <input type="hidden" name="view" value="queue">
+                <input type="hidden" name="status" value="{{ $filter }}">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="q" value="{{ $q }}" placeholder="Search REQ no / requester / JO no / item..." maxlength="100" aria-label="Search requisitions">
+                @if($q !== '')
+                    <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $filter]) }}" class="cmms-filter-pill" title="Clear search">&times; Clear</a>
+                @endif
+            </form>
+            <div class="cmms-sort-toggle" role="group" aria-label="Sort order">
+                <a href="{{ route('requisitions.index', array_filter(['view' => 'queue', 'status' => $filter, 'q' => $q], fn ($v) => $v !== '' && $v !== null)) }}" class="{{ $sort !== 'oldest' ? 'active' : '' }}">Newest</a>
+                <a href="{{ route('requisitions.index', array_filter(['view' => 'queue', 'status' => $filter, 'q' => $q, 'sort' => 'oldest'], fn ($v) => $v !== '' && $v !== null)) }}" class="{{ $sort === 'oldest' ? 'active' : '' }}"><i class="fa-solid fa-arrow-down-short-wide"></i> Oldest first</a>
+            </div>
+        </div>
+
         <div class="cmms-contents-bar">
             <div class="cmms-contents-bar-label">
                 @if($filter === 'all')
                     Showing all requisition records
                 @else
                     Showing: <strong>{{ $filterLabels[$filter] ?? ucfirst($filter) }}</strong> &middot; {{ $requisitions->total() }} record(s)
+                @endif
+                @if($q !== '')
+                    &middot; matching &ldquo;<strong>{{ $q }}</strong>&rdquo;
                 @endif
             </div>
             @if($filter !== 'all')
@@ -278,6 +322,16 @@
             @endif
         </div>
     @else
+        <div class="cmms-queue-toolbar">
+            <form method="GET" action="{{ route('requisitions.index') }}" role="search">
+                <input type="hidden" name="view" value="tickets">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="text" name="q" value="{{ $q }}" placeholder="Search job order no / end user / assigned IT..." maxlength="100" aria-label="Search job orders">
+                @if($q !== '')
+                    <a href="{{ route('requisitions.index', ['view' => 'tickets']) }}" class="cmms-filter-pill" title="Clear search">&times; Clear</a>
+                @endif
+            </form>
+        </div>
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>ICT job orders</h2>

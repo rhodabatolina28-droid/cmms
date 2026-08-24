@@ -103,6 +103,10 @@
     .parts-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 12px; margin-bottom: 18px; }
     .stat-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; box-shadow: 0 2px 8px rgba(15,23,42,.04); transition: transform .15s ease, box-shadow .15s ease; }
     .stat-card:hover { transform: translateY(-2px); box-shadow: 0 10px 22px rgba(15,23,42,.08); }
+    .stat-card.stat-clickable { cursor: pointer; }
+    .stat-card.stat-clickable:focus-visible { outline: 2px solid #0038A8; outline-offset: 2px; }
+    .stat-card.stat-clickable.active-filter { border-color: #0038A8; box-shadow: inset 0 0 0 1px #0038A8, 0 10px 22px rgba(15,23,42,.08); }
+    .stat-card.stat-clickable.active-filter .stat-label { color: #0038A8; }
     .stat-val { font-size: 22px; font-weight: 800; line-height: 1.2; color: #1e293b; }
     .stat-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
 
@@ -304,8 +308,8 @@
             <div class="parts-stats">
                 <div class="stat-card"><div class="stat-label">Total Parts</div><div class="stat-val" id="statTotalParts">{{ $totalParts }}</div></div>
                 <div class="stat-card"><div class="stat-label">On-hand total</div><div class="stat-val" id="statTotalOnHand">{{ $totalOnHand }}</div></div>
-                <div class="stat-card"><div class="stat-label">Low stock</div><div class="stat-val" id="statLowStock">{{ $lowStockCount }}</div></div>
-                <div class="stat-card"><div class="stat-label">Critical</div><div class="stat-val" id="statCritical">{{ $criticalCount }}</div></div>
+                <div class="stat-card stat-clickable" data-level="low" role="button" tabindex="0" title="Click to show only low-stock items"><div class="stat-label">Low stock</div><div class="stat-val" id="statLowStock">{{ $lowStockCount }}</div></div>
+                <div class="stat-card stat-clickable" data-level="critical" role="button" tabindex="0" title="Click to show only critical items"><div class="stat-label">Critical</div><div class="stat-val" id="statCritical">{{ $criticalCount }}</div></div>
             </div>
 
             <div class="parts-header">
@@ -590,6 +594,34 @@
             searchInput.addEventListener('input', () => { clearTimeout(t); t = setTimeout(() => loadParts(1), 400); });
             searchInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') e.preventDefault(); });
         }
+    })();
+
+    // ── Clickable Low/Critical stat cards → toggle status filter ──
+    (function () {
+        const syncActive = () => {
+            const current = document.getElementById('partsStatusFilter')?.value || '';
+            document.querySelectorAll('.stat-card.stat-clickable').forEach((card) => {
+                card.classList.toggle('active-filter', card.dataset.level === current);
+            });
+        };
+        document.querySelectorAll('.stat-card.stat-clickable').forEach((card) => {
+            const toggle = () => {
+                const sel = document.getElementById('partsStatusFilter');
+                if (!sel) return;
+                sel.value = sel.value === card.dataset.level ? '' : card.dataset.level;
+                loadParts(1);
+                syncActive();
+            };
+            card.addEventListener('click', toggle);
+            card.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggle(); }
+            });
+        });
+        // Reflect initial filter state (e.g. page loaded with ?status=critical)
+        document.addEventListener('DOMContentLoaded', syncActive);
+        if (document.readyState !== 'loading') syncActive();
+        // Keep highlight in sync when user changes the select manually
+        document.getElementById('partsStatusFilter')?.addEventListener('change', syncActive);
     })();
 
     // ── Data / rendering ──

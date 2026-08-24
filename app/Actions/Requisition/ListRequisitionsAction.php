@@ -52,6 +52,14 @@ class ListRequisitionsAction
             $filter = 'pending';
         }
 
+        // Optional free-text search + sort (Supply queue only; defaults keep the
+        // original newest-first listing untouched).
+        $q = trim((string) $httpRequest->query('q', ''));
+        $sort = $httpRequest->query('sort', 'newest');
+        if (!in_array($sort, ['newest', 'oldest'], true)) {
+            $sort = 'newest';
+        }
+
         $counts = [
             'pending' => $this->supplyRequisitionCount($supply, Requisition::STATUS_PENDING),
             'approved' => $this->supplyRequisitionCount($supply, Requisition::STATUS_APPROVED),
@@ -63,6 +71,14 @@ class ListRequisitionsAction
             $ticketQuery = RequestModel::with(['user', 'assignedTo', 'requisitions'])
                 ->withCount('requisitions');
             \App\Support\RequestHelpers::scopeIctTicketsForSupplyAdmin($supply, $ticketQuery);
+
+            if ($q !== '') {
+                $ticketQuery->where(function ($w) use ($q) {
+                    $w->where('request_number', 'like', "%{$q}%")
+                        ->orWhereHas('user', fn ($u) => $u->where('full_name', 'like', "%{$q}%"))
+                        ->orWhereHas('assignedTo', fn ($a) => $a->where('full_name', 'like', "%{$q}%"));
+                });
+            }
 
             $ictTickets = $ticketQuery
                 ->orderByDesc('updated_at')
@@ -76,7 +92,9 @@ class ListRequisitionsAction
                 'filter',
                 'counts',
                 'supplyView',
-                'ictTickets'
+                'ictTickets',
+                'q',
+                'sort'
             ));
         }
 
@@ -87,7 +105,31 @@ class ListRequisitionsAction
             $query->where('status', $filter);
         }
 
-        $requisitions = $query->orderByDesc('created_at')->paginate(20)->withQueryString();
+        if ($q !== '') {
+            // REQ-##### alias or plain id, requester name, job order number,
+            // item descriptions (items JSON) or purpose text.
+            $rawId = ctype_digit($q) ? (int) $q : null;
+            if (!$rawId && preg_match('/^req[-_ ]?0*(\d+)$/i', $q, $m)) {
+                $rawId = (int) $m[1];
+            }
+
+            $query->where(function ($w) use ($q, $rawId) {
+                if ($rawId !== null) {
+                    $w->orWhere('id', $rawId);
+                }
+                $w->orWhere(function ($s) use ($q) {
+                    $s->whereHas('requester', fn ($r) => $r->where('full_name', 'like', "%{$q}%"));
+                    $s->orWhereHas('ticket', fn ($t) => $t->where('request_number', 'like', "%{$q}%"));
+                    $s->orWhere('items', 'like', "%{$q}%");
+                    $s->orWhere('remarks', 'like', "%{$q}%");
+                });
+            });
+        }
+
+        $requisitions = $query
+            ->orderBy('created_at', $sort === 'oldest' ? 'asc' : 'desc')
+            ->paginate(20)
+            ->withQueryString();
 
         $ictTickets = RequestModel::whereRaw('0=1')->paginate(1);
 
@@ -96,7 +138,9 @@ class ListRequisitionsAction
             'filter',
             'counts',
             'supplyView',
-            'ictTickets'
+            'ictTickets',
+            'q',
+            'sort'
         ));
     }
 
