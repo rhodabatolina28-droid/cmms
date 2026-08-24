@@ -34,11 +34,9 @@
     .cmms-qbtn--ghost:hover { color:#0038A8; border-color:#0038A8; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Column alignment: fixed layout, EQUAL widths, content wraps visibly */
+    /* Column alignment: fixed layout — ITEMS is the wide middle column; rest compact */
     .cmms-req-table { table-layout:fixed; min-width:880px; }
-    .cmms-req-table col { width:14.28%; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
-    .cmms-req-table th + th, .cmms-req-table td + td { border-left:1px solid #eef2f6; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
@@ -223,13 +221,13 @@
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-ticket-table cmms-req-table">
                             <colgroup>
-                                <col>
-                                <col>
-                                <col>
-                                <col>
-                                <col>
-                                <col>
-                                <col>
+                                <col style="width:9%">
+                                <col style="width:13%">
+                                <col style="width:15%">
+                                <col style="width:32%">
+                                <col style="width:9%">
+                                <col style="width:11%">
+                                <col style="width:11%">
                             </colgroup>
                             <thead>
                                 <tr>
