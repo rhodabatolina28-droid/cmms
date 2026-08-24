@@ -33,9 +33,25 @@
         z-index: 20;
     }
     .cmms-contents-bar-label strong { color: var(--cmms-ink); }
-    .cmms-req-card--needs-action { border-left:4px solid transparent; }
-    .cmms-req-card--needs-review { border-left:4px solid #d97706; }
-    .cmms-req-card--awaiting-issue { border-left:4px solid #16a34a; }
+    /* Queue table row status accent */
+    .cmms-req-table td:first-child { border-left:3px solid transparent; }
+    .cmms-req-table tr.cmms-req-row--needs-review td:first-child { border-left-color:#d97706; }
+    .cmms-req-table tr.cmms-req-row--awaiting-issue td:first-child { border-left-color:#16a34a; }
+    .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
+    .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
+    .cmms-req-table .right { text-align:right; }
+    .cmms-qbtn-group { display:inline-flex; gap:6px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
+    .cmms-qbtn { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:6px; font-size:11.5px; font-weight:700; border:none; cursor:pointer; text-decoration:none; transition:all .15s; }
+    .cmms-qbtn--primary { background:#0038A8; color:#fff; }
+    .cmms-qbtn--primary:hover { background:#002d8a; }
+    .cmms-qbtn--success { background:#15803d; color:#fff; }
+    .cmms-qbtn--success:hover { background:#116632; }
+    .cmms-qbtn--danger-ghost { background:#fff; color:#b91c1c; border:1px solid #fecaca; }
+    .cmms-qbtn--danger-ghost:hover { background:#fef2f2; }
+    .cmms-qbtn--ghost { background:#fff; color:#475569; border:1px solid #cbd5e1; }
+    .cmms-qbtn--ghost:hover { color:#0038A8; border-color:#0038A8; }
+    .cmms-req-details-chevron { transition:transform .15s; }
+    .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -78,72 +94,21 @@
         line-height: 1;
     }
 
-    /* Government Queue Summary */
-    .cmms-gov-summary {
-        background: #f8fafc;
-        border: 1px solid #c5c9d0;
-        border-radius: 6px;
-        padding: 12px 18px;
-        margin-bottom: 20px;
-        display: flex;
-        align-items: center;
-        gap: 24px;
-    }
-    .gov-summary-title {
-        font-size: 10px;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #475569;
-        min-width: 120px;
-        padding-right: 20px;
-        border-right: 1px solid #cbd5e1;
-    }
-    .gov-summary-grid {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 32px;
-        flex: 1;
-    }
-    .gov-summary-item {
-        text-decoration: none;
-        display: flex;
-        align-items: baseline;
-        gap: 8px;
-        opacity: 0.5;
-        transition: opacity 0.2s;
-    }
-    .gov-summary-item:hover { opacity: 0.8; }
-    .gov-summary-item.active { opacity: 1; border-bottom: 2px solid transparent; }
-    .gov-summary-item .gov-val {
-        font-size: 16px;
-        font-weight: 800;
-        color: #0f172a;
-    }
-    .gov-summary-item .gov-lbl {
-        font-size: 11px;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.04em;
-        color: #64748b;
-    }
-    .gov-summary-item--pending.active .gov-val { color: #b45309; }
-    .gov-summary-item--approved.active .gov-val { color: #0038A8; }
-    .gov-summary-item--issued.active .gov-val { color: #15803d; }
-    .gov-summary-item--rejected.active .gov-val { color: #b91c1c; }
+    /* QUEUE SUMMARY Ã¢â‚¬â€ stat cards */
+    .queue-summary-cards { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:14px; }
+    .qstat { display:block; background:#fff; border:1px solid var(--cmms-border); border-radius:10px; padding:12px 14px; text-decoration:none; transition:all .15s; }
+    .qstat:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.08); }
+    .qstat:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
+    .qstat.active { border-color:#0038A8; box-shadow:inset 0 0 0 1px #0038A8, 0 6px 16px rgba(0,56,168,.08); }
+    .qstat-val { display:block; font-size:22px; font-weight:900; color:#0f172a; line-height:1.2; }
+    .qstat-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#64748b; }
+    .qstat--pending.active { border-color:#d97706; box-shadow:inset 0 0 0 1px #d97706; }
+    .qstat--pending.active .qstat-val { color:#b45309; }
+    .qstat--issued.active { border-color:#16a34a; box-shadow:inset 0 0 0 1px #16a34a; }
+    .qstat--issued.active .qstat-val { color:#15803d; }
+    .qstat--rejected.active { border-color:#dc2626; box-shadow:inset 0 0 0 1px #dc2626; }
+    .qstat--rejected.active .qstat-val { color:#b91c1c; }
     
-    /* Refined Action Callout for Gov UX */
-    .cmms-action-callout {
-        display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin: 0 0 16px; padding: 12px 16px;
-        background: #fff; border-left: 4px solid #0038A8; border-top: 1px solid #e2e8f0; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;
-        border-radius: 4px; font-size: 13px; color: #0f172a; box-shadow: 0 1px 2px rgba(0,0,0,0.02);
-    }
-    .cmms-action-callout.is-clear { border-left-color: #15803d; }
-    .cmms-action-callout i { font-size: 16px; color: #0038A8; }
-    .cmms-action-callout.is-clear i { color: #15803d; }
-    .cmms-action-callout strong { font-weight: 700; color: #0038A8; }
-    .cmms-action-callout.is-clear strong { color: #15803d; }
-    .cmms-callout-chip::before { content: " | "; color: #cbd5e1; margin: 0 4px; }
     
     /* Queue toolbar: search + sort */
     .cmms-queue-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
@@ -159,9 +124,7 @@
     .cmms-sort-toggle a.active { background:#0038A8; color:#fff; }
 
     @media (max-width: 768px) {
-        .cmms-gov-summary { flex-direction: column; align-items: flex-start; gap: 12px; }
-        .gov-summary-title { border-right: none; border-bottom: 1px solid #cbd5e1; padding-bottom: 8px; width: 100%; }
-        .gov-summary-grid { gap: 16px; }
+        .queue-summary-cards { grid-template-columns: repeat(2, 1fr); }
         .cmms-queue-toolbar { flex-direction: column; align-items: stretch; }
         .cmms-sort-toggle { justify-content: stretch; }
         .cmms-sort-toggle a { flex: 1; justify-content: center; }
@@ -213,44 +176,19 @@
             </div>
 
     @if($supplyView === 'queue')
-        @php
-            $toReview = (int) ($counts['pending'] ?? 0);
-            $toIssue  = (int) ($counts['approved'] ?? 0);
-            $needsAction = $toReview + $toIssue;
-        @endphp
-        <div class="cmms-action-callout {{ $needsAction > 0 ? '' : 'is-clear' }}">
-            @if($needsAction > 0)
-                <i class="fa-solid fa-bell"></i>
-                <span>
-                    You have <strong>{{ $needsAction }}</strong> requisition{{ $needsAction > 1 ? 's' : '' }} awaiting your action.
-                    @if($toReview > 0)
-                        <span class="cmms-callout-chip"><strong>{{ $toReview }}</strong> to review</span>
-                    @endif
-                    @if($toIssue > 0)
-                        <span class="cmms-callout-chip"><strong>{{ $toIssue }}</strong> ready to issue</span>
-                    @endif
-                </span>
-            @else
-                <i class="fa-solid fa-circle-check"></i>
-                <span>All caught up &mdash; no requisitions awaiting your action.</span>
-            @endif
-        </div>
-        <div class="cmms-gov-summary">
-            <div class="gov-summary-title">QUEUE SUMMARY</div>
-            <div class="gov-summary-grid">
-                @foreach([
-                    'pending' => ['To review', $counts['pending'] ?? 0],
-                    'approved' => ['Ready to issue', $counts['approved'] ?? 0],
-                    'issued' => ['Issued', $counts['issued'] ?? 0],
-                    'rejected' => ['Rejected', $counts['rejected'] ?? 0],
-                ] as $key => [$label, $num])
-                <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => $key]) }}"
-                   class="gov-summary-item gov-summary-item--{{ $key }} {{ $filter === $key ? 'active' : '' }}">
-                    <div class="gov-val">{{ $num }}</div>
-                    <div class="gov-lbl">{{ $label }}</div>
-                </a>
-                @endforeach
-            </div>
+        <div class="queue-summary-cards">
+            @foreach([
+                'pending' => ['To review', $counts['pending'] ?? 0],
+                'approved' => ['Ready to issue', $counts['approved'] ?? 0],
+                'issued' => ['Issued', $counts['issued'] ?? 0],
+                'rejected' => ['Rejected', $counts['rejected'] ?? 0],
+            ] as $key => [$label, $num])
+            <a href="{{ route('requisitions.index', array_filter(['view' => 'queue', 'status' => $key, 'q' => $q], fn ($v) => $v !== '' && $v !== null)) }}"
+               class="qstat qstat--{{ $key }} {{ $filter === $key ? 'active' : '' }}" aria-pressed="{{ $filter === $key ? 'true' : 'false' }}">
+                <span class="qstat-val">{{ $num }}</span>
+                <span class="qstat-lbl">{{ $label }}</span>
+            </a>
+            @endforeach
         </div>
 
         <div class="cmms-queue-toolbar">
@@ -305,15 +243,29 @@
                         </p>
                     </div>
                 @else
-                    <div class="cmms-req-list">
-                        @foreach($requisitions as $req)
-                            @include('requisitions.partials.req-card', [
-                                'req' => $req,
-                                'showRequester' => true,
-                                'actionLabel' => 'Review',
-                                'quickActions' => true,
-                            ])
-                        @endforeach
+                    <div class="table-wrap">
+                        <table class="cmms-official-table cmms-ticket-table cmms-req-table">
+                            <thead>
+                                <tr>
+                                    <th>REQ #</th>
+                                    <th>Status</th>
+                                    <th>Requester</th>
+                                    <th>Job order</th>
+                                    <th>Items</th>
+                                    <th>Date filed</th>
+                                    <th class="right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($requisitions as $req)
+                                    @include('requisitions.partials.req-table-row', [
+                                        'req' => $req,
+                                        'showRequester' => true,
+                                        'quickActions' => true,
+                                    ])
+                                @endforeach
+                            </tbody>
+                        </table>
                     </div>
                 @endif
             </div>
@@ -335,7 +287,7 @@
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>ICT job orders</h2>
-                <span class="cmms-count-badge">Read-only · {{ $ictTickets->total() }} ticket(s)</span>
+                <span class="cmms-count-badge">Read-only Ã‚Â· {{ $ictTickets->total() }} ticket(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())

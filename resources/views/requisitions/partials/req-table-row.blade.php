@@ -1,0 +1,98 @@
+@php
+    $reqNo = 'REQ-' . str_pad($req->id, 5, '0', STR_PAD_LEFT);
+    $statusKey = strtolower($req->status);
+    $items = $req->items ?? [];
+    $quickActions = $quickActions ?? false;
+    $isPending = $statusKey === 'pending';
+    $isApproved = $statusKey === 'approved';
+    $canQuick = $quickActions && in_array($statusKey, ['pending', 'approved'], true);
+    $rowAccent = '';
+    if ($quickActions && $isPending) { $rowAccent = 'cmms-req-row--needs-review'; }
+    elseif ($quickActions && $isApproved) { $rowAccent = 'cmms-req-row--awaiting-issue'; }
+    $issueDestination = $req->ticket?->linkedAsset?->assignedUser
+        ? $req->ticket->linkedAsset->assignedUser->full_name . ' for ' . $req->ticket->linkedAsset->item_name
+        : null;
+@endphp
+<tr class="cmms-req-row {{ $rowAccent }}" data-status="{{ $statusKey }}">
+    <td class="td-nowrap">
+        <span class="cmms-req-id"><i class="fa-solid fa-file-invoice" style="opacity:.6;margin-right:4px;"></i>{{ $reqNo }}</span>
+        @if($quickActions && $isPending)
+            <span class="cmms-req-age"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ (int) $req->created_at->diffInDays(now()) }}d</span>
+        @endif
+    </td>
+    <td class="td-nowrap">
+        <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
+        @if($quickActions && $isPending)
+            <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
+        @elseif($quickActions && $isApproved)
+            <span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span>
+        @endif
+    </td>
+    @if(!empty($showRequester))
+    <td>{{ $req->requester?->full_name ?? '&mdash;' }}</td>
+    @endif
+    <td class="td-nowrap">
+        @if($req->ticket)
+            <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-req-jo"><i class="fa-solid fa-link" style="opacity:.7;margin-right:3px;"></i>JO {{ $req->ticket->display_number ?? $req->ticket->request_number }}</a>
+        @else
+            <span class="text-muted-none">&mdash;</span>
+        @endif
+    </td>
+    <td>
+        @if(count($items))
+            {{ ($items[0]['quantity'] ?? 1) }}× {{ \Illuminate\Support\Str::limit($items[0]['description'] ?? '', 34) }}@if(count($items) > 1) <span style="font-weight:600;color:#0038A8;">+{{ count($items) - 1 }}</span>@endif
+        @else
+            <span class="text-muted-none">&mdash;</span>
+        @endif
+    </td>
+    <td class="td-nowrap">{{ $req->created_at->format('d M Y') }}</td>
+    <td class="td-nowrap right">
+        <div class="cmms-qbtn-group">
+            @if($canQuick && $isPending)
+                <button type="button" class="cmms-qbtn cmms-qbtn--primary supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-check"></i> Approve</button>
+                <button type="button" class="cmms-qbtn cmms-qbtn--danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
+            @elseif($canQuick && $isApproved)
+                <button type="button" class="cmms-qbtn cmms-qbtn--success supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" data-issue-destination="{{ $issueDestination }}"><i class="fa-solid fa-box-open"></i> Issue</button>
+                <button type="button" class="cmms-qbtn cmms-qbtn--danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
+            @endif
+            <button type="button" class="cmms-qbtn cmms-qbtn--ghost cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
+        </div>
+    </td>
+<tr class="cmms-req-details-row" id="req-details-{{ $req->id }}" hidden>
+    <td colspan="{{ !empty($showRequester) ? 7 : 6 }}">
+        <div class="cmms-req-details-grid">
+            <div class="cmms-req-details-col">
+                <div class="k"><i class="fa-solid fa-list-check" style="opacity:.6;margin-right:6px;"></i>Line items &middot; {{ count($items) }}</div>
+                @if(count($items))
+                <ul class="cmms-req-details-list">
+                    @foreach($items as $line)
+                        <li><span class="q">{{ $line['quantity'] ?? 1 }}&times;</span> {{ $line['description'] ?? '' }}</li>
+                    @endforeach
+                </ul>
+                @else
+                    <p class="muted">No line items.</p>
+                @endif
+            </div>
+            <div class="cmms-req-details-col">
+                <div class="k"><i class="fa-solid fa-circle-info" style="opacity:.6;margin-right:6px;"></i>Purpose / justification</div>
+                <p>{{ $req->remarks ?: '—' }}</p>
+            </div>
+            <div class="cmms-req-details-col">
+                <div class="k"><i class="fa-solid fa-laptop-medical" style="opacity:.6;margin-right:6px;"></i>Job order context</div>
+                <p style="font-weight:700;color:#0038A8;margin-bottom:6px;">JO {{ $req->ticket?->display_number ?? $req->ticket?->request_number ?? '—' }}</p>
+                @if($req->ticket?->linkedAsset)
+                    <p><span class="cmms-req-details-label">Asset:</span> {{ $req->ticket->linkedAsset->item_name }} <span class="muted">({{ $req->ticket->linkedAsset->serial_number ?? 'N/A' }})</span></p>
+                    <p><span class="cmms-req-details-label">Custodian:</span> {{ $req->ticket->linkedAsset->assignedUser?->full_name ?? 'Not assigned' }}</p>
+                @endif
+                @if($req->requester)
+                    <p style="margin-top:6px;"><span class="cmms-req-details-label">Requester:</span> {{ $req->requester->full_name }}</p>
+                @endif
+                <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-btn-secondary" style="margin-top:8px;display:inline-block;">Open full record</a>
+            </div>
+        </div>
+        @if($req->reviewer && $req->reviewed_at)
+            <div class="cmms-req-details-meta">Last action by {{ $req->reviewer->full_name }} &middot; {{ $req->reviewed_at->format('d M Y, h:i A') }}</div>
+        @endif
+    </td>
+</tr>
+</tr>
