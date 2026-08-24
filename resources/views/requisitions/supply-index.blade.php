@@ -34,6 +34,11 @@
     .cmms-qbtn--ghost:hover { color:#0038A8; border-color:#0038A8; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
+    /* Column alignment: fixed layout + trimmed cells */
+    .cmms-req-table { table-layout:fixed; min-width:880px; }
+    .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
+    .cmms-req-table .cell-trim { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cmms-req-table td.cmms-qbtn-cell, .cmms-req-table td.td-nowrap { white-space:nowrap; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -216,6 +221,15 @@
                 @else
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-ticket-table cmms-req-table">
+                            <colgroup>
+                                <col style="width:13%">
+                                <col style="width:14%">
+                                <col style="width:13%">
+                                <col>
+                                <col style="width:10%">
+                                <col style="width:15%">
+                                <col style="width:12%">
+                            </colgroup>
                             <thead>
                                 <tr>
                                     <th>REQ #</th>

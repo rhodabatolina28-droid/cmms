@@ -21,7 +21,7 @@
         @endif
     </td>
     @if(!empty($showRequester))
-    <td>{{ $req->requester?->full_name ?? '&mdash;' }}</td>
+    <td class="cell-trim" title="{{ $req->requester?->full_name ?? '' }}">{{ $req->requester?->full_name ?? '&mdash;' }}</td>
     @endif
     <td class="td-nowrap">
         @if($req->ticket)
@@ -30,7 +30,7 @@
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
-    <td>
+    <td class="cell-trim" title="{{ count($items) }} item(s){{ isset($items[0]['description']) ? ': ' . $items[0]['description'] : '' }}">
         @if(count($items))
             {{ ($items[0]['quantity'] ?? 1) }}× {{ \Illuminate\Support\Str::limit($items[0]['description'] ?? '', 34) }}@if(count($items) > 1) <span style="font-weight:600;color:#0038A8;">+{{ count($items) - 1 }}</span>@endif
         @else
@@ -58,6 +58,7 @@
             <button type="button" class="cmms-qbtn cmms-qbtn--ghost cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
         </div>
     </td>
+</tr>
 <tr class="cmms-req-details-row" id="req-details-{{ $req->id }}" hidden>
     <td colspan="{{ !empty($showRequester) ? 7 : 6 }}">
         <div class="cmms-req-details-grid">
@@ -94,5 +95,4 @@
             <div class="cmms-req-details-meta">Last action by {{ $req->reviewer->full_name }} &middot; {{ $req->reviewed_at->format('d M Y, h:i A') }}</div>
         @endif
     </td>
-</tr>
 </tr>
