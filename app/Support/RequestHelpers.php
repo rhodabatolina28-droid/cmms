@@ -593,15 +593,19 @@ class RequestHelpers
 
     public static function scopeIctTicketsForSupplyAdmin(User $supply, $query)
     {
+        // Both ICT and PM-generated tickets can carry parts requests, so both
+        // belong in the Job Orders tab (PM mirrors superAdminRequisitionIndex rules).
         if ($supply->role === 'super_admin') {
-            // Super admin: show all ICT tickets that have requisitions
-            return $query->where('type', 'ICT')
+            // Super admin: show all ICT/PM tickets that have requisitions
+            return $query->where(fn ($q) => $q->where('type', 'ICT')
+                ->orWhere('type', 'Preventive Maintenance'))
                 ->whereHas('requisitions');
         }
 
-        // Supply Officer: show ICT tickets that have requisitions in their branch
+        // Supply Officer: show ICT/PM tickets that have requisitions in their branch
         // (Supply Officers are in Administrative office but handle supply for the entire branch)
-        return $query->where('type', 'ICT')
+        return $query->where(fn ($q) => $q->where('type', 'ICT')
+            ->orWhere('type', 'Preventive Maintenance'))
             ->whereHas('requisitions', function ($q) use ($supply) {
                 $q->whereExists(function ($sub) use ($supply) {
                     $sub->select(\Illuminate\Support\Facades\DB::raw(1))

@@ -159,4 +159,38 @@ class SupplyQueueSearchTest extends TestCase
         $response->assertSee('REQ-' . str_pad((string) $pending->id, 5, '0', STR_PAD_LEFT));
         $response->assertDontSee('REQ-' . str_pad((string) $issued->id, 5, '0', STR_PAD_LEFT));
     }
+
+    public function test_tickets_tab_includes_pm_generated_job_orders(): void
+    {
+        $supply = $this->makeSupplyAdmin();
+        $it = $this->makeUser(['role' => 'it']);
+
+        // PM-generated ticket carrying a parts request
+        $pmTicket = Ticket::create([
+            'user_id' => $this->makeUser()->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'JO-NCR-RCMB-2026-' . str_pad((string) (++$this->counter), 4, '0', STR_PAD_LEFT),
+            'type' => 'Preventive Maintenance',
+            'linked_asset_id' => null,
+            'requestor_name' => 'PM Requestor',
+            'description' => 'Quarterly maintenance',
+            'status' => Ticket::STATUS_ONGOING,
+            'region' => 'NCR',
+        ]);
+        Requisition::create([
+            'request_id' => $pmTicket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_PENDING,
+            'items' => [['description' => 'Thermal paste', 'quantity' => 1]],
+        ]);
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', ['view' => 'tickets']));
+
+        // Table renders the SHORT display form (region/branch stripped by accessor).
+        $parts = explode('-', $pmTicket->request_number);
+        $shortDisplay = $parts[0] . '-' . $parts[3] . '-' . $parts[4];
+
+        $response->assertOk();
+        $response->assertSee($shortDisplay);
+    }
 }

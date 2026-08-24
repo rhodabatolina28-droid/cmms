@@ -176,7 +176,7 @@
                     @endif
                 </a>
                 <a href="{{ route('requisitions.index', $carryParams(['view' => 'tickets'])) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}" @if($supplyView === 'tickets') aria-current="page" @endif>
-                    ICT JOB ORDERS
+                    JOB ORDERS
                 </a>
             </div>
 
@@ -290,15 +290,15 @@
         </div>
         <div class="cmms-panel">
             <div class="cmms-panel-head">
-                <h2>ICT job orders</h2>
+                <h2>Job orders</h2>
                     <span class="cmms-count-badge">Read-only &middot; {{ $ictTickets->total() }} ticket(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())
                     <div class="cmms-empty">
                         <i class="fa-solid fa-clipboard-list cmms-empty-icon"></i>
-                        <h3 style="margin:0 0 6px;color:#475569;">No ICT job orders</h3>
-                        <p>No ICT assignments fall within your office scope.</p>
+                        <h3 style="margin:0 0 6px;color:#475569;">No job orders</h3>
+                        <p>No assigned job orders fall within your office scope.</p>
                     </div>
                 @else
                     <div class="table-wrap">
@@ -306,6 +306,7 @@
                             <thead>
                                 <tr>
                                     <th>Job order</th>
+                                    <th>Type</th>
                                     <th>Status</th>
                                     <th>Assigned IT</th>
                                     <th>End user</th>
@@ -317,6 +318,7 @@
                                 @foreach($ictTickets as $t)
                                 <tr>
                                     <td><strong>{{ $t->display_number ?? $t->request_number }}</strong></td>
+                                    <td><span class="cmms-req-tag {{ $t->type === 'Preventive Maintenance' ? 'cmms-req-tag--issue' : 'cmms-req-tag--review' }}">{{ $t->type === 'Preventive Maintenance' ? 'PM' : 'ICT' }}</span></td>
                                     <td><span class="cmms-ticket-status cmms-ticket-status--{{ strtolower(str_replace(' ', '-', $t->status)) }}">{{ $t->status }}</span></td>
                                     <td>{{ $t->assignedTo?->full_name ?? '-' }}</td>
                                     <td>{{ $t->user?->full_name ?? '-' }}</td>
