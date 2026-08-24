@@ -23,7 +23,7 @@
     @if(!empty($showRequester))
     <td class="cell-trim" title="{{ $req->requester?->full_name ?? '' }}">{{ $req->requester?->full_name ?? '&mdash;' }}</td>
     @endif
-    <td class="td-nowrap">
+    <td class="cell-trim">
         @if($req->ticket)
             <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-req-jo"><i class="fa-solid fa-link" style="opacity:.7;margin-right:3px;"></i>JO {{ $req->ticket->display_number ?? $req->ticket->request_number }}</a>
         @else
@@ -38,15 +38,15 @@
         @endif
     </td>
     <td class="td-nowrap">{{ $req->created_at->format('d M Y') }}</td>
-    <td class="td-nowrap">
+    <td>
         <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
         @if($quickActions && $isPending)
-            <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
+            <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--review">Needs review</span></div>
         @elseif($quickActions && $isApproved)
-            <span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span>
+            <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span></div>
         @endif
     </td>
-    <td class="td-nowrap right">
+    <td class="right">
         <div class="cmms-qbtn-group">
             @if($canQuick && $isPending)
                 <button type="button" class="cmms-qbtn cmms-qbtn--primary supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-check"></i> Approve</button>
