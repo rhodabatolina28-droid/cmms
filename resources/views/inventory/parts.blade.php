@@ -351,7 +351,7 @@
                         </tr>
                     </thead>
                     <tbody id="partsTableBody">
-                        <tr><td colspan="6" style="text-align:center;padding:30px 16px;color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading parts...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;padding:30px 16px;color:#64748b;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading parts...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -497,7 +497,7 @@
             <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
         </div>
         <div class="modal-body" id="historyBody" style="max-height:50vh;overflow-y:auto;">
-            <div class="empty-state"><div class="big"></div>Loading...</div>
+            <div class="empty-state"><div class="big"><i class="fa-solid fa-circle-notch fa-spin"></i></div>Loading...</div>
         </div>
     </div>
 </div>
@@ -525,7 +525,7 @@
                 </div>
             </div>
             <div id="unitsBody" style="max-height:46vh; overflow-y:auto;">
-                <div class="empty-state"><div class="big">🔢</div><div>No units registered yet.</div></div>
+                <div class="empty-state"><div class="big"><i class="fa-solid fa-list-ul"></i></div><div>No units registered yet.</div></div>
             </div>
         </div>
         <div class="modal-foot">
@@ -635,7 +635,7 @@
             if (mySeq !== partsReqSeq) return; // huwag i-render ang stale response
             if (!data || !data.success) {
                 const tbody = document.getElementById('partsTableBody');
-                if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
+                if (tbody) tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Unable to load parts.</div></td></tr>';
                 return;
             }
             allParts = data.parts || [];
@@ -650,7 +650,7 @@
         .catch(() => {
             if (mySeq !== partsReqSeq) return;
             const tbody = document.getElementById('partsTableBody');
-            if (tbody) tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state">Unable to load parts.</div></td></tr>';
+            if (tbody) tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state">Unable to load parts.</div></td></tr>';
         });
     }
 
@@ -693,37 +693,52 @@
         window.location.href = PARTS_EXPORT_URL + '?' + params.toString();
     }
 
-    function importPartsCsv() {
+    async function importPartsCsv() {
         const input = document.getElementById('partsCsvInput');
         if (!input || !input.files || !input.files[0]) return;
         const fd = new FormData();
         fd.append('file', input.files[0]);
         input.value = '';
 
-        fetch(PARTS_IMPORT_PREVIEW_URL, {
-            method: 'POST',
-            headers: { 'X-CSRF-TOKEN': PARTS_CSRF, 'Accept': 'application/json' },
-            body: fd
-        })
-        .then(async (r) => { const d = await r.json().catch(() => ({})); return { ok: r.ok, data: d }; })
-        .then(({ ok, data }) => {
-            if (!ok || !data.success) { toast(data.message || 'Import preview failed.', false); return; }
-            const s = data.summary || {};
-            const okToProceed = window.confirm(
-                'Parts import preview:\n\n' +
-                '· ' + s.rows + ' row(s)\n' +
-                '· ' + s.distinct_parts + ' part(s)\n' +
-                '· ' + s.duplicate_serials + ' duplicate serial(s)\n\n' +
-                'I-import na?'
-            );
-            if (!okToProceed) return;
-
-            api(PARTS_IMPORT_COMMIT_URL, 'POST', { token: data.token }).then(({ ok: ok2, data: d2 }) => {
-                if (ok2) { toast(d2.message || 'Imported', true); setTimeout(() => location.reload(), 600); }
-                else toast(d2.message || 'Import failed.', false);
+        let preview;
+        try {
+            const r = await fetch(PARTS_IMPORT_PREVIEW_URL, {
+                method: 'POST',
+                headers: { 'X-CSRF-TOKEN': PARTS_CSRF, 'Accept': 'application/json' },
+                body: fd
             });
-        })
-        .catch(() => toast('Import preview failed.', false));
+            const data = await r.json().catch(() => ({}));
+            preview = { ok: r.ok, data };
+        } catch (e) {
+            toast('Import preview failed.', false);
+            return;
+        }
+        if (!preview.ok || !preview.data.success) { toast(preview.data.message || 'Import preview failed.', false); return; }
+
+        const s = preview.data.summary || {};
+        const { value: proceed } = await Swal.fire({
+            icon: 'info',
+            title: 'Parts import preview',
+            html:
+                '<div style="text-align:left;font-size:13px;line-height:2.1;color:#1e293b;">'
+                + '<i class="fa-solid fa-table-rows" style="width:22px;color:#64748b;"></i> <b>' + (s.rows ?? 0) + '</b> row(s)<br>'
+                + '<i class="fa-solid fa-boxes-stacked" style="width:22px;color:#64748b;"></i> <b>' + (s.distinct_parts ?? 0) + '</b> part(s)<br>'
+                + '<i class="fa-solid fa-clone" style="width:22px;color:#b45309;"></i> <b>' + (s.duplicate_serials ?? 0) + '</b> duplicate serial(s)'
+                + '</div>',
+            showCancelButton: true,
+            confirmButtonColor: '#0038A8',
+            confirmButtonText: 'Import now',
+            cancelButtonText: 'Cancel',
+        });
+        if (!proceed) return;
+
+        try {
+            const res = await api(PARTS_IMPORT_COMMIT_URL, 'POST', { token: preview.data.token });
+            if (res.ok) { toast(res.data.message || 'Imported', true); setTimeout(() => location.reload(), 600); }
+            else toast(res.data.message || 'Import failed.', false);
+        } catch (e) {
+            toast('Import failed.', false);
+        }
     }
 
     function renderPartsTable(rows) {
@@ -731,7 +746,7 @@
         if (!tbody) return;
         const canWrite = PARTS_CAN_WRITE;
         if (!rows || rows.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6"><div class="empty-state"><div class="big"></div><div>No parts &amp; consumables yet.</div>' +
+            tbody.innerHTML = '<tr><td colspan="8"><div class="empty-state"><div class="big"><i class="fa-solid fa-boxes-stacked"></i></div><div>No parts &amp; consumables yet.</div>' +
                 (canWrite ? '<div style="margin-top:14px;"><button class="btn-navy" onclick="openPartModal(\'add\')">＋ Add Part</button></div>' : '') +
                 '</div></td></tr>';
             return;
@@ -832,7 +847,7 @@
         stockPart = part;
         document.getElementById('stockModalTitle').textContent = mode === 'in' ? 'Stock In' : 'Stock Out (Issue)';
         document.getElementById('stockQtyLabel').textContent = mode === 'in' ? 'Qty to add *' : 'Qty to issue *';
-        document.getElementById('stockSubmit').textContent = mode === 'in' ? '✓ Stock In' : '✓ Issue';
+        document.getElementById('stockSubmit').innerHTML = mode === 'in' ? '<i class="fa-solid fa-arrow-down" style="margin-right:6px;"></i>Stock In' : '<i class="fa-solid fa-box-open" style="margin-right:6px;"></i>Issue';
         document.getElementById('stockCurrent').textContent = 'Current on-hand: ' + part.on_hand_qty + ' ' + part.unit;
         document.getElementById('s_qty').value = '';
         document.getElementById('s_ref').value = '';
@@ -945,7 +960,7 @@
         document.getElementById('unitsSearch').value = '';
         document.getElementById('addUnitForm').style.display = 'none';
         const body = document.getElementById('unitsBody');
-        body.innerHTML = '<div class="empty-state"><div class="big">⏳</div>Loading units...</div>';
+        body.innerHTML = '<div class="empty-state"><div class="big"><i class="fa-solid fa-circle-notch fa-spin"></i></div>Loading units...</div>';
         document.getElementById('unitsModal').classList.add('open');
         api(PARTS_UNITS_PREFIX.replace('PART_ID', id), 'GET').then(({ ok, data }) => {
             if (!ok || !data.units) { body.innerHTML = '<div class="empty-state">Unable to load units.</div>'; return; }
@@ -956,7 +971,7 @@
     function renderUnits(units) {
         const body = document.getElementById('unitsBody');
         if (units.length === 0) {
-            body.innerHTML = '<div class="empty-state"><div class="big">🔢</div><div>No units registered yet.</div></div>';
+            body.innerHTML = '<div class="empty-state"><div class="big"><i class="fa-solid fa-list-ul"></i></div><div>No units registered yet.</div></div>';
             return;
         }
         const pill = (text, bg, fg) => '<span style="background:' + bg + ';color:' + fg + ';padding:2px 9px;border-radius:6px;font-weight:700;font-size:11px;">' + text + '</span>';
@@ -1088,7 +1103,7 @@
         const name = partsById[id] ? partsById[id].item_name : '';
         document.getElementById('historyTitle').textContent = name + ' · History';
         const body = document.getElementById('historyBody');
-        body.innerHTML = '<div class="empty-state"><div class="big">⏳</div>Loading...</div>';
+        body.innerHTML = '<div class="empty-state"><div class="big"><i class="fa-solid fa-circle-notch fa-spin"></i></div>Loading...</div>';
         document.getElementById('historyModal').classList.add('open');
         api(PARTS_MOVEMENTS_PREFIX.replace('PART_ID', id), 'GET').then(({ ok, data }) => {
             if (!ok || !data.movements) { body.innerHTML = '<div class="empty-state">Unable to load.</div>'; return; }

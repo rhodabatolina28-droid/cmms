@@ -28,6 +28,7 @@
     .prx-table th { text-align: left; padding: 11px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #64748b; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
     .prx-table td { padding: 12px 14px; font-size: 13.5px; border-bottom: 1px solid #f1f5f9; }
     .stripe { padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 12px; border: 1px solid; }
+    .stripe i { margin-right: 6px; }
     .stripe-info { background: #eff6ff; color: #0038A8; border-color: #bfdbfe; }
     .stripe-ok { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
     .btn-navy { background: #0038A8; color: #fff; border: none; padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
@@ -51,13 +52,13 @@
         <div class="prx-body">
             <div>
                 @if($status === 'pending' && $canWrite)
-                    <div class="stripe stripe-info">⏳ Waiting for approval by Supply Office.</div>
+                    <div class="stripe stripe-info"><i class="fa-solid fa-hourglass-half"></i>Waiting for approval by Supply Office.</div>
                 @elseif($status === 'approved' && $canWrite)
-                    <div class="stripe stripe-info">✅ Approved — pindutin ang <b>Receive</b> kapag dumating na ang parts para ma-stock-in.</div>
+                    <div class="stripe stripe-info"><i class="fa-solid fa-circle-check"></i>Approved — pindutin ang <b>Receive</b> kapag dumating na ang parts para ma-stock-in.</div>
                 @elseif($status === 'received')
-                    <div class="stripe stripe-ok">📦 Received — ang on-hand ng parts ay na-update na (Stock In).</div>
+                    <div class="stripe stripe-ok"><i class="fa-solid fa-box-open"></i>Received — ang on-hand ng parts ay na-update na (Stock In).</div>
                 @elseif($status === 'cancelled')
-                    <div class="stripe stripe-ok">🚫 Cancelled.</div>
+                    <div class="stripe stripe-ok"><i class="fa-solid fa-ban"></i>Cancelled.</div>
                 @endif
 
                 <div class="prx-grid">
@@ -103,17 +104,17 @@
                 @if($canWrite)
                 <div style="display:flex;flex-direction:column;gap:10px;">
                     @if($status === 'pending')
-                        <button class="btn-navy prx-act" data-action="approve">✓ Approve Purchase Request</button>
-                        <button class="btn-red prx-act" data-action="cancel">Cancel</button>
+                        <button class="btn-navy prx-act" data-action="approve"><i class="fa-solid fa-check" style="margin-right:6px;"></i>Approve Purchase Request</button>
+                        <button class="btn-red prx-act" data-action="cancel"><i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel</button>
                     @elseif($status === 'approved')
-                        <button class="btn-green prx-act" data-action="receive">📦 Receive — Stock In</button>
-                        <button class="btn-red prx-act" data-action="cancel">Cancel</button>
+                        <button class="btn-green prx-act" data-action="receive"><i class="fa-solid fa-box-open" style="margin-right:6px;"></i>Receive — Stock In</button>
+                        <button class="btn-red prx-act" data-action="cancel"><i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel</button>
                     @endif
                 </div>
                 @endif
 
                 <div style="margin-top:14px;">
-                    <a href="{{ url('purchase-requests') }}" class="btn-ghost" style="width:100%;box-sizing:border-box;">← Return to list</a>
+                    <a href="{{ url('purchase-requests') }}" class="btn-ghost" style="width:100%;box-sizing:border-box;"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Return to list</a>
                 </div>
             </aside>
         </div>

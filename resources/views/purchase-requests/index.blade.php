@@ -22,6 +22,9 @@
     .p-cancelled { background: #fee2e2; color: #991b1b; }
     .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
     .empty-state .big { font-size: 40px; margin-bottom: 8px; }
+    .empty-state .big i { color: #94a3b8; }
+    .prx-view { display: inline-block; padding: 6px 14px; border-radius: 8px; font-size: 12.5px; font-weight: 700; text-decoration: none; background: #fff; border: 1px solid #0038A8; color: #0038A8; transition: all .15s; }
+    .prx-view:hover { background: #0038A8; color: #fff; }
     @media (max-width: 768px) {
         .prx-head { flex-direction: column; align-items: flex-start; }
         .prx-table { min-width: 600px; }
@@ -32,7 +35,7 @@
 @section('content')
 <div class="prx-container">
     @if(!empty($isSuperAdminView))
-        <div class="p-badge p-approved" style="margin-bottom:12px;">👁 Read-only oversight — Super Admin</div>
+        <div class="p-badge p-approved" style="margin-bottom:12px;"><i class="fa-solid fa-eye" style="margin-right:5px;"></i>Read-only oversight — Super Admin</div>
     @endif
 
     <div class="prx-card">
@@ -49,7 +52,7 @@
 
         @if($requests->count() === 0)
             <div class="empty-state">
-                <div class="big">📄</div>
+                <div class="big"><i class="fa-regular fa-folder-open"></i></div>
                 <div>Wala pang purchase request dito.</div>
             </div>
         @else
@@ -78,7 +81,7 @@
                             <td>{{ count($pr->items ?? []) }}</td>
                             <td>{{ $pr->requester?->full_name ?? '—' }}</td>
                             <td>{{ $pr->created_at->format('M d, Y') }}</td>
-                            <td><a href="{{ route(($isSuperAdminView ? 'super_admin.purchase_requests' : 'purchase_requests.show'), $pr->id) }}" class="prx-filter" style="text-decoration:none;border-color:#0038A8;color:#0038A8;">View</a></td>
+                            <td><a href="{{ route(($isSuperAdminView ? 'super_admin.purchase_requests' : 'purchase_requests.show'), $pr->id) }}" class="prx-view">View</a></td>
                         </tr>
                         @endforeach
                     </tbody>
