@@ -144,6 +144,45 @@ class ListRequisitionsAction
         ));
     }
 
+    /**
+     * History-tab filters for IT / Super-Admin "My Parts Requisitions".
+     * Defaults keep the full newest-first listing untouched.
+     */
+    private function historyFilters(Request $httpRequest): array
+    {
+        $status = $httpRequest->query('history_status', 'all');
+        if (!in_array($status, ['all', 'pending', 'approved', 'issued', 'rejected'], true)) {
+            $status = 'all';
+        }
+
+        $q = trim((string) $httpRequest->query('history_q', ''));
+
+        return [$status, $q];
+    }
+
+    private function applyHistoryFilters($query, string $status, string $q)
+    {
+        if ($status !== 'all') {
+            $query->where('status', $status);
+        }
+        if ($q !== '') {
+            $rawId = ctype_digit($q) ? (int) $q : null;
+            if (!$rawId && preg_match('/^req[-_ ]?0*(\d+)$/i', $q, $m)) {
+                $rawId = (int) $m[1];
+            }
+            $query->where(function ($w) use ($q, $rawId) {
+                if ($rawId !== null) {
+                    $w->orWhere('id', $rawId);
+                }
+                $w->orWhere(function ($s) use ($q) {
+                    $s->orWhere('items', 'like', "%{$q}%");
+                    $s->orWhere('remarks', 'like', "%{$q}%");
+                });
+            });
+        }
+        return $query;
+    }
+
     private function itIndex(User $itUser, Request $httpRequest)
     {
         $activeTickets = RequestModel::with(['user', 'linkedAsset.assignedUser'])
@@ -156,10 +195,13 @@ class ListRequisitionsAction
             ->orderByDesc('created_at')
             ->get();
 
-        $requisitions = Requisition::with(['ticket', 'requester', 'reviewer'])
-            ->where('requested_by', $itUser->id)
-            ->orderByDesc('created_at')
-            ->paginate(20);
+        [$historyStatus, $historyQ] = $this->historyFilters($httpRequest);
+
+        $requisitions = $this->applyHistoryFilters(
+            Requisition::with(['ticket', 'requester', 'reviewer'])->where('requested_by', $itUser->id),
+            $historyStatus,
+            $historyQ
+        )->orderByDesc('created_at')->paginate(20)->withQueryString();
 
         $selectedTicketId = $httpRequest->query('request_id');
 
@@ -169,7 +211,14 @@ class ListRequisitionsAction
             ->orderBy('item_name')
             ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
 
-        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId', 'partsStock'));
+        return view('requisitions.it-index', compact(
+            'activeTickets',
+            'requisitions',
+            'selectedTicketId',
+            'partsStock',
+            'historyStatus',
+            'historyQ'
+        ));
     }
 
     /**
@@ -189,11 +238,14 @@ class ListRequisitionsAction
             ->orderByDesc('created_at')
             ->get();
 
-        // Their submitted requisitions
-        $requisitions = Requisition::with(['ticket', 'requester', 'reviewer'])
-            ->where('requested_by', $superAdmin->id)
-            ->orderByDesc('created_at')
-            ->paginate(20);
+        // Their submitted requisitions (History tab filters)
+        [$historyStatus, $historyQ] = $this->historyFilters($httpRequest);
+
+        $requisitions = $this->applyHistoryFilters(
+            Requisition::with(['ticket', 'requester', 'reviewer'])->where('requested_by', $superAdmin->id),
+            $historyStatus,
+            $historyQ
+        )->orderByDesc('created_at')->paginate(20)->withQueryString();
 
         $selectedTicketId = $httpRequest->query('request_id');
 
@@ -203,7 +255,14 @@ class ListRequisitionsAction
             ->orderBy('item_name')
             ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
 
-        return view('requisitions.it-index', compact('activeTickets', 'requisitions', 'selectedTicketId', 'partsStock'));
+        return view('requisitions.it-index', compact(
+            'activeTickets',
+            'requisitions',
+            'selectedTicketId',
+            'partsStock',
+            'historyStatus',
+            'historyQ'
+        ));
     }
 
     private function supplyRequisitionCount(User $supply, string $status): int

@@ -16,6 +16,19 @@
     .req-list-flush { padding:0; background:transparent; }
     .paginator-compact { padding:8px 0; }
     .pr-page-wrap { width:100%; }
+    .cmms-history-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
+    .cmms-history-toolbar form { display:flex; align-items:center; gap:9px; flex:1; min-width:220px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; }
+    .cmms-history-toolbar form > i { color:#94a3b8; font-size:13px; }
+    .cmms-history-toolbar input[type="text"] { border:none !important; outline:none; box-shadow:none; flex:1; min-width:120px; font-size:13px; background:transparent; padding:0; margin:0; }
+    .chips { display:inline-flex; border:1px solid #e2e8f0; border-radius:8px; overflow:hidden; background:#fff; }
+    .chips a { padding:8px 13px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; text-decoration:none; transition:all .15s; }
+    .chips a + a { border-left:1px solid #e2e8f0; }
+    .chips a:hover { color:#0038A8; background:#f8fafc; }
+    .chips a.active { background:#0038A8; color:#fff; }
+    @media (max-width:767px) {
+        .cmms-history-toolbar { flex-direction:column; align-items:stretch; }
+        .chips a { flex:1; text-align:center; display:inline-block; }
+    }
     .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
     .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
     .cmms-item-count { font-size:12px; color:#94a3b8; font-weight:700; }
@@ -185,6 +198,20 @@
         </div>
 
         <div id="tab-history" class="cmms-tab-content" role="tabpanel">
+            <div class="cmms-history-toolbar">
+                <form method="GET" action="{{ route('requisitions.index') }}" role="search">
+                    <i class="fa-solid fa-magnifying-glass"></i>
+                    <input type="text" name="history_q" value="{{ $historyQ }}" placeholder="Search REQ no / item / remarks..." maxlength="100" aria-label="Search requisition history">
+                    @if($historyQ !== '')
+                        <a href="{{ route('requisitions.index') }}" class="pr-select" style="text-decoration:none;padding:6px 10px;" title="Clear search">&times; Clear</a>
+                    @endif
+                </form>
+                <div class="chips" role="group" aria-label="Filter by status">
+                    @foreach([['all','All'],['pending','Pending'],['approved','Approved'],['issued','Issued'],['rejected','Rejected']] as [$k,$lbl])
+                    <a href="{{ route('requisitions.index', array_filter(['history_status'=>$k,'history_q'=>$historyQ], fn ($v) => $v !== '' && $v !== null)) }}" class="{{ $historyStatus === $k ? 'active' : '' }}">{{ $lbl }}</a>
+                    @endforeach
+                </div>
+            </div>
             @if($requisitions->isEmpty())
                 <div class="cmms-panel">
                     <div class="cmms-panel-body cmms-empty">

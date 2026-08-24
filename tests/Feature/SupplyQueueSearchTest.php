@@ -193,4 +193,38 @@ class SupplyQueueSearchTest extends TestCase
         $response->assertOk();
         $response->assertSee($shortDisplay);
     }
+
+    public function test_it_history_defaults_to_all_and_status_filter_narrows(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+
+        $pending = $this->makeRequisition($it);
+        $issued = $this->makeRequisition($it, ['status' => Requisition::STATUS_ISSUED]);
+
+        $pendingNo = 'REQ-' . str_pad((string) $pending->id, 5, '0', STR_PAD_LEFT);
+        $issuedNo = 'REQ-' . str_pad((string) $issued->id, 5, '0', STR_PAD_LEFT);
+
+        $default = $this->actingAs($it)->get(route('requisitions.index'));
+        $default->assertOk();
+        $default->assertSee($pendingNo);
+        $default->assertSee($issuedNo);
+
+        $filtered = $this->actingAs($it)->get(route('requisitions.index', ['history_status' => 'issued']));
+        $filtered->assertOk();
+        $filtered->assertSee($issuedNo);
+        $filtered->assertDontSee($pendingNo);
+    }
+
+    public function test_it_history_search_matches_item_description(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $this->makeRequisition($it, ['items' => [['description' => 'NVMe SSD 1TB', 'quantity' => 1]]]);
+        $this->makeRequisition($it, ['items' => [['description' => 'Mouse pad', 'quantity' => 1]]]);
+
+        $response = $this->actingAs($it)->get(route('requisitions.index', ['history_q' => 'NVMe']));
+
+        $response->assertOk();
+        $response->assertSee('NVMe SSD 1TB');
+        $response->assertDontSee('Mouse pad');
+    }
 }
