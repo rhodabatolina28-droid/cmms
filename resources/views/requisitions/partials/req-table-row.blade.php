@@ -20,14 +20,6 @@
             <span class="cmms-req-age"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ (int) $req->created_at->diffInDays(now()) }}d</span>
         @endif
     </td>
-    <td class="td-nowrap">
-        <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
-        @if($quickActions && $isPending)
-            <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
-        @elseif($quickActions && $isApproved)
-            <span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span>
-        @endif
-    </td>
     @if(!empty($showRequester))
     <td>{{ $req->requester?->full_name ?? '&mdash;' }}</td>
     @endif
@@ -46,6 +38,14 @@
         @endif
     </td>
     <td class="td-nowrap">{{ $req->created_at->format('d M Y') }}</td>
+    <td class="td-nowrap">
+        <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
+        @if($quickActions && $isPending)
+            <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
+        @elseif($quickActions && $isApproved)
+            <span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span>
+        @endif
+    </td>
     <td class="td-nowrap right">
         <div class="cmms-qbtn-group">
             @if($canQuick && $isPending)

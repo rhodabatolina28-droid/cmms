@@ -159,13 +159,14 @@
 
     @if($supplyView === 'queue')
         @php
-            $queueCounts = [
+            $baseCounts = [
                 'pending' => ['To review', $counts['pending'] ?? 0],
                 'approved' => ['Ready to issue', $counts['approved'] ?? 0],
                 'issued' => ['Issued', $counts['issued'] ?? 0],
                 'rejected' => ['Rejected', $counts['rejected'] ?? 0],
             ];
-            $queueCounts['all'] = ['All records', array_sum(array_column($queueCounts, 1))];
+            // "All records" leads the row so the default view is first.
+            $queueCounts = ['all' => ['All records', array_sum(array_column($baseCounts, 1))]] + $baseCounts;
         @endphp
         <div class="queue-summary-cards">
             @foreach($queueCounts as $key => [$label, $num])
@@ -218,11 +219,11 @@
                             <thead>
                                 <tr>
                                     <th>REQ #</th>
-                                    <th>Status</th>
                                     <th>Requester</th>
                                     <th>Job order</th>
                                     <th>Items</th>
                                     <th>Date filed</th>
+                                    <th>Status</th>
                                     <th class="right">Actions</th>
                                 </tr>
                             </thead>
