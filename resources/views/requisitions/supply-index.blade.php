@@ -22,16 +22,16 @@
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
     .cmms-req-table .right { text-align:right; }
-    .cmms-qbtn-group { display:inline-flex; gap:6px; align-items:center; justify-content:flex-end; flex-wrap:wrap; }
-    .cmms-qbtn { display:inline-flex; align-items:center; gap:5px; padding:6px 10px; border-radius:6px; font-size:11.5px; font-weight:700; border:none; cursor:pointer; text-decoration:none; transition:all .15s; }
-    .cmms-qbtn--primary { background:#0038A8; color:#fff; }
-    .cmms-qbtn--primary:hover { background:#002d8a; }
-    .cmms-qbtn--success { background:#15803d; color:#fff; }
-    .cmms-qbtn--success:hover { background:#116632; }
-    .cmms-qbtn--danger-ghost { background:#fff; color:#b91c1c; border:1px solid #fecaca; }
-    .cmms-qbtn--danger-ghost:hover { background:#fef2f2; }
-    .cmms-qbtn--ghost { background:#fff; color:#475569; border:1px solid #cbd5e1; }
-    .cmms-qbtn--ghost:hover { color:#0038A8; border-color:#0038A8; }
+    /* Icon action buttons — same look as Parts & Consumables rows */
+    .act-btn { width:34px; height:34px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:13px; transition:all .15s; text-decoration:none; }
+    .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
+    .act-btn.in { border-color:#bbf7d0; color:#15803d; }
+    .act-btn.in:hover { background:#f0fdf4; border-color:#86efac; color:#166534; }
+    .act-btn.out { border-color:#fecaca; color:#b91c1c; }
+    .act-btn.out:hover { background:#fef2f2; border-color:#fca5a5; }
+    .act-btn:disabled { opacity:.4; cursor:not-allowed; }
+    .act-btn:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
+    .cmms-actions-divider { width:1px; height:20px; background:#e2e8f0; display:inline-block; margin:0 1px; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
     /* Table style — matched to Parts & Consumables (pantay-pantay) */
@@ -56,7 +56,7 @@
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
         .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
         input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
-        .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
+        .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel):not(.act-btn) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
         .cmms-pagination-bar { padding: 10px 12px !important; }
     }
 

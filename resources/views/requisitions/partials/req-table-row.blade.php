@@ -47,15 +47,17 @@
         @endif
     </td>
     <td class="right">
-        <div class="cmms-qbtn-group">
+        <div class="row-actions" style="justify-content:flex-end;">
             @if($canQuick && $isPending)
-                <button type="button" class="cmms-qbtn cmms-qbtn--primary supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-check"></i> Approve</button>
-                <button type="button" class="cmms-qbtn cmms-qbtn--danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="act-btn in supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Approve requisition" aria-label="Approve requisition {{ $reqNo }}"><i class="fa-solid fa-check"></i></button>
+                <button type="button" class="act-btn out supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Disapprove requisition" aria-label="Disapprove requisition {{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
             @elseif($canQuick && $isApproved)
-                <button type="button" class="cmms-qbtn cmms-qbtn--success supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" data-issue-destination="{{ $issueDestination }}"><i class="fa-solid fa-box-open"></i> Issue</button>
-                <button type="button" class="cmms-qbtn cmms-qbtn--danger-ghost supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
+                <button type="button" class="act-btn in supply-quick-btn" data-action="issue" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" data-issue-destination="{{ $issueDestination }}" title="Issue parts to asset custodian" aria-label="Issue requisition {{ $reqNo }}"><i class="fa-solid fa-box-open"></i></button>
+                <button type="button" class="act-btn out supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Disapprove requisition" aria-label="Disapprove requisition {{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>
             @endif
-            <button type="button" class="cmms-qbtn cmms-qbtn--ghost cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
+            <span class="cmms-actions-divider" aria-hidden="true"></span>
+            <button type="button" class="act-btn cmms-req-details-btn" data-rid="{{ $req->id }}" aria-expanded="false" title="Full details and items" aria-label="Toggle details for {{ $reqNo }}"><i class="fa-solid fa-angles-down cmms-req-details-chevron"></i></button>
+            <a href="{{ route('requisitions.show', $req->id) }}" class="act-btn" title="Open full record" aria-label="Open full record for {{ $reqNo }}"><i class="fa-solid fa-up-right-from-square"></i></a>
         </div>
     </td>
 </tr>
