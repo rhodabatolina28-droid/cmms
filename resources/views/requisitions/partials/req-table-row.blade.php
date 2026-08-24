@@ -38,10 +38,12 @@
         @endif
     </td>
     <td class="td-nowrap">
-        {{ $req->created_at->format('d M Y · h:i A') }}
+        <div>
+            <span style="font-size:11px;color:#94a3b8;">Filed&nbsp;&nbsp;</span>{{ $req->created_at->format('M d, Y | h:i A') }}
+        </div>
         @if($statusKey === 'issued' && $req->reviewed_at)
-            <div style="margin-top:4px;font-size:11px;font-weight:700;color:#15803d;">
-                <i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>Completed {{ $req->reviewed_at->format('d M Y · h:i A') }}
+            <div style="margin-top:3px;font-weight:700;color:#15803d;">
+                <span style="font-size:11px;">Done&nbsp;</span><i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>{{ $req->reviewed_at->format('M d, Y | h:i A') }}
             </div>
         @endif
     </td>
