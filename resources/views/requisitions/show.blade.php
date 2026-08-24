@@ -47,6 +47,20 @@
     .panel-body-compact { padding:14px 16px; }
     .mr-6 { margin-right:6px; }
     .text-gray-400 { color:#94a3b8; }
+    .badge-short { background:#fee2e2; color:#991b1b; font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px; white-space:nowrap; }
+    .badge-stock-ok { background:#dcfce7; color:#166534; font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px; white-space:nowrap; }
+    .rq-banner { border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; gap:8px; border:1px solid; }
+    .rq-banner-icon { font-size:15px; }
+    .rq-banner-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+    .rq-banner-text { font-size:12px; }
+    .rq-banner--pending { background:#fff7ed; border-color:#fed7aa; border-left:3px solid #d97706; }
+    .rq-banner--pending .rq-banner-icon { color:#d97706; }
+    .rq-banner--pending .rq-banner-title { color:#92400e; }
+    .rq-banner--pending .rq-banner-text { color:#78350f; }
+    .rq-banner--approved { background:#eff6ff; border-color:#bfdbfe; border-left:3px solid #0038A8; }
+    .rq-banner--approved .rq-banner-icon { color:#0038A8; }
+    .rq-banner--approved .rq-banner-title { color:#1e40af; }
+    .rq-banner--approved .rq-banner-text { color:#1e40af; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
@@ -213,9 +227,9 @@
                         </div>
                     </div>
                     @if($match['deficit'])
-                        <span class="badge badge-critical" style="background:#fee2e2;color:#991b1b;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;">🔻 Short — needs PR</span>
+                        <span class="badge-short"><i class="fa-solid fa-triangle-exclamation" style="margin-right:5px;"></i>Short — needs PR</span>
                     @else
-                        <span class="badge badge-ok" style="background:#dcfce7;color:#166534;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;">● Available in stock</span>
+                        <span class="badge-stock-ok"><i class="fa-solid fa-circle-check" style="margin-right:5px;"></i>Available in stock</span>
                     @endif
                 </div>
                 <div class="asset-row" style="background:#f8fafc;border:1px solid #e2e8f0;">
@@ -268,12 +282,12 @@
 
         <aside class="cmms-sticky-side">
             @if($canReview && in_array($status, ['pending', 'approved'], true))
-            {{-- Amber action-required banner --}}
-            <div style="background:{{ $status === 'pending' ? '#fff7ed' : '#eff6ff' }}; border:1px solid {{ $status === 'pending' ? '#fed7aa' : '#bfdbfe' }}; border-left:3px solid {{ $status === 'pending' ? '#d97706' : '#0038A8' }}; border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; gap:8px;">
-                <i class="fa-solid {{ $status === 'pending' ? 'fa-triangle-exclamation' : 'fa-box-open' }}" style="color:{{ $status === 'pending' ? '#d97706' : '#0038A8' }}; font-size:15px;"></i>
+            {{-- Action-required banner --}}
+            <div class="rq-banner rq-banner--{{ $status === 'pending' ? 'pending' : 'approved' }}">
+                <i class="fa-solid {{ $status === 'pending' ? 'fa-triangle-exclamation' : 'fa-box-open' }} rq-banner-icon" aria-hidden="true"></i>
                 <div>
-                    <div style="font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:0.04em; color:{{ $status === 'pending' ? '#92400e' : '#1e40af' }}; margin-bottom:2px;">Action required</div>
-                    <div style="font-size:12px; color:{{ $status === 'pending' ? '#78350f' : '#1e40af' }};">{{ $status === 'pending' ? 'Review and approve or disapprove this requisition.' : 'This requisition is approved — issue the parts to the custodian.' }}</div>
+                    <div class="rq-banner-title">Action required</div>
+                    <div class="rq-banner-text">{{ $status === 'pending' ? 'Review and approve or disapprove this requisition.' : 'This requisition is approved — issue the parts to the custodian.' }}</div>
                 </div>
             </div>
             <div class="cmms-panel" id="supplyReviewPanel">

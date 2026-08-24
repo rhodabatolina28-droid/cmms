@@ -119,9 +119,9 @@
                 @endif
                 <span class="cmms-st-dot" aria-hidden="true">
                     @if($state === 'done')
-                        <span class="cmms-st-dot-inner">✓</span>
+                        <span class="cmms-st-dot-inner"><i class="fa-solid fa-check"></i></span>
                     @elseif($state === 'rejected')
-                        <span class="cmms-st-dot-inner">✕</span>
+                        <span class="cmms-st-dot-inner"><i class="fa-solid fa-xmark"></i></span>
                     @elseif($state === 'active')
                         <span class="cmms-st-dot-inner cmms-st-pulse"></span>
                     @else
