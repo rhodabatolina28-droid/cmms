@@ -127,13 +127,20 @@
 
             @include('requisitions.partials.pr-readonly', ['requisition' => $requisition])
 
-    @if((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $inventoryMatches->isNotEmpty())
+    @php
+        // Only Spare units are releasable - Active/in-use copies never appear here,
+        // and the whole panel stays hidden when no spares match the request.
+        $spareInventoryMatches = $inventoryMatches->map(function ($m) {
+            return ['requested' => $m['requested'], 'assets' => $m['assets']->where('status', 'Spare')->values()];
+        })->filter(fn ($m) => $m['assets']->isNotEmpty())->values();
+    @endphp
+    @if((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $spareInventoryMatches->isNotEmpty())
     {{-- ══ SUPPLY: Inventory Availability Check ══ --}}
     <div class="cmms-panel mt-18 panel-inventory">
         <div class="cmms-panel-head panel-head-green">
             <h2 class="text-green-700"><i class="fa-solid fa-warehouse icon-green"></i>Inventory Availability Check</h2>
             <span class="badge-sm text-green-800">
-                {{ $inventoryMatches->count() }} of {{ count($requisition->items ?? []) }} item(s) may have matching stock
+                {{ $spareInventoryMatches->count() }} of {{ count($requisition->items ?? []) }} item(s) have spare stock ready for issue
             </span>
         </div>
         <div class="cmms-panel-body panel-body-flush">
@@ -141,7 +148,7 @@
                 <i class="fa-solid fa-circle-info icon-mr-4"></i>
                 These are possible matches from the current inventory. Verify physically before deciding to issue from stock or procure new.
             </div>
-            @foreach($inventoryMatches as $lineIndex => $match)
+            @foreach($spareInventoryMatches as $lineIndex => $match)
             @php $reqLine = $match['requested']; $assets = $match['assets']; @endphp
             <div class="item-block">
                 <div class="item-header">
@@ -191,18 +198,6 @@
                 </div>
             </div>
             @endforeach
-        </div>
-    </div>
-    @elseif((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $inventoryMatches->isEmpty() && count($requisition->items ?? []) > 0)
-    <div class="cmms-panel mt-18">
-        <div class="cmms-panel-head">
-            <h2><i class="fa-solid fa-warehouse icon-gray"></i>Inventory Availability Check</h2>
-        </div>
-        <div class="cmms-panel-body">
-            <p class="info-text">
-                <i class="fa-solid fa-circle-xmark text-gray-400 icon-mr-4"></i>
-                No matching spare or in-use assets found in inventory for the requested items. May need to procure new parts.
-            </p>
         </div>
     </div>
     @endif
