@@ -37,7 +37,14 @@
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
-    <td class="td-nowrap">{{ $req->created_at->format('d M Y') }}</td>
+    <td class="td-nowrap">
+        {{ $req->created_at->format('d M Y · h:i A') }}
+        @if($statusKey === 'issued' && $req->reviewed_at)
+            <div style="margin-top:4px;font-size:11px;font-weight:700;color:#15803d;">
+                <i class="fa-solid fa-circle-check" style="margin-right:4px;"></i>Completed {{ $req->reviewed_at->format('d M Y · h:i A') }}
+            </div>
+        @endif
+    </td>
     <td>
         <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
         @if($quickActions && $isPending)

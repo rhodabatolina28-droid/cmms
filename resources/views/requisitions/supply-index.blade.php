@@ -237,8 +237,8 @@
                                 <col style="width:12%">
                                 <col style="width:14%">
                                 <col style="width:14%">
-                                <col style="width:26%">
-                                <col style="width:8%">
+                                <col style="width:23%">
+                                <col style="width:11%">
                                 <col style="width:8%">
                                 <col>
                             </colgroup>
@@ -248,7 +248,7 @@
                                     <th>Requester</th>
                                     <th>Job order</th>
                                     <th>Items</th>
-                                    <th>Date filed</th>
+                                    <th>Date</th>
                                     <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
