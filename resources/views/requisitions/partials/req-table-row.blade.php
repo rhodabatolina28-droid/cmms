@@ -46,8 +46,8 @@
             <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span></div>
         @endif
     </td>
-    <td class="right">
-        <div class="row-actions" style="justify-content:flex-end;">
+    <td>
+        <div class="row-actions">
             @if($canQuick && $isPending)
                 <button type="button" class="act-btn in supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Approve requisition" aria-label="Approve requisition {{ $reqNo }}"><i class="fa-solid fa-check"></i></button>
                 <button type="button" class="act-btn out supply-quick-btn" data-action="reject" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Disapprove requisition" aria-label="Disapprove requisition {{ $reqNo }}"><i class="fa-solid fa-xmark"></i></button>

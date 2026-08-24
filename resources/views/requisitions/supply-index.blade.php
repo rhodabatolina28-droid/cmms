@@ -50,7 +50,7 @@
     }
     .cmms-req-table td:first-child { text-align:left; }
     .cmms-req-table tr.cmms-req-details-row > td { text-align:left; }
-    .cmms-req-table .cmms-qbtn-group { justify-content:center; }
+    .cmms-req-table .cmms-qbtn-group, .cmms-req-table .row-actions { justify-content:center; flex-wrap:nowrap; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -234,13 +234,13 @@
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-ticket-table cmms-req-table">
                             <colgroup>
-                                <col style="width:16%">
-                                <col style="width:15%">
-                                <col style="width:15%">
-                                <col style="width:24%">
-                                <col style="width:10%">
-                                <col style="width:9%">
-                                <col style="width:11%">
+                                <col style="width:12%">
+                                <col style="width:14%">
+                                <col style="width:14%">
+                                <col style="width:26%">
+                                <col style="width:8%">
+                                <col style="width:8%">
+                                <col>
                             </colgroup>
                             <thead>
                                 <tr>
@@ -250,7 +250,7 @@
                                     <th>Items</th>
                                     <th>Date filed</th>
                                     <th>Status</th>
-                                    <th class="right">Actions</th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody>
