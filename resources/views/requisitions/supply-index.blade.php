@@ -34,10 +34,23 @@
     .cmms-qbtn--ghost:hover { color:#0038A8; border-color:#0038A8; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Column alignment: fixed layout — ITEMS is the wide middle column; rest compact */
+    /* Table style — matched to Parts & Consumables (pantay-pantay) */
     .cmms-req-table { table-layout:fixed; min-width:880px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
+    .cmms-req-table th {
+        padding:12px 16px; font-size:11px; text-transform:uppercase; letter-spacing:.5px;
+        color:#64748b; background:#f8fafc; border-bottom:2px solid #e2e8f0; text-align:center;
+    }
+    .cmms-req-table th:first-child { text-align:left; }
+    .cmms-req-table td {
+        padding:13px 16px; font-size:13.5px;
+        border-bottom:1px solid #f1f5f9; color:#1e293b;
+        text-align:center;
+    }
+    .cmms-req-table td:first-child { text-align:left; }
+    .cmms-req-table tr.cmms-req-details-row > td { text-align:left; }
+    .cmms-req-table .cmms-qbtn-group { justify-content:center; }
     @media (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -221,12 +234,12 @@
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-ticket-table cmms-req-table">
                             <colgroup>
-                                <col style="width:9%">
-                                <col style="width:13%">
+                                <col style="width:16%">
                                 <col style="width:15%">
-                                <col style="width:32%">
+                                <col style="width:15%">
+                                <col style="width:24%">
+                                <col style="width:10%">
                                 <col style="width:9%">
-                                <col style="width:11%">
                                 <col style="width:11%">
                             </colgroup>
                             <thead>
