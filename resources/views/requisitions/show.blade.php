@@ -212,7 +212,8 @@
     <div class="cmms-panel mt-18" style="border-left:3px solid #0038A8;">
         <div class="cmms-panel-head">
             <h2><i class="fa-solid fa-boxes mr-6" style="color:#0038A8;"></i>Parts &amp; Consumables Stock</h2>
-            <span class="badge-sm text-gray-400">Available inventory from the Parts Stock (quantity-based)</span>
+            @php $okLines = $partsStockMatches->filter(fn ($m) => empty($m['deficit']))->count(); @endphp
+            <span class="badge-sm text-green-800">{{ $okLines }} of {{ $partsStockMatches->count() }} line(s) available in stock</span>
         </div>
         <div class="cmms-panel-body panel-body-flush">
             @foreach($partsStockMatches as $lineIndex => $match)
@@ -352,12 +353,6 @@
                 <div class="cmms-panel-head"><h2>Particulars</h2></div>
                 <div class="cmms-panel-body panel-body-compact">
                     <div class="cmms-pr-meta-row"><span class="k">REQ number</span><span class="v" style="font-weight:800; color:#0038A8;">REQ-{{ str_pad($requisition->id, 5, '0', STR_PAD_LEFT) }}</span></div>
-                    <div class="cmms-pr-meta-row"><span class="k">Status</span><span class="v"><span class="cmms-status-badge cmms-status-{{ strtolower($status) }}">{{ ucfirst($status) }}</span></span></div>
-                    <div class="cmms-pr-meta-row"><span class="k">Requester</span><span class="v">{{ $requisition->requester?->full_name ?? '&mdash;' }}</span></div>
-                    @if($ticket)
-                    <div class="cmms-pr-meta-row"><span class="k">Job order</span><span class="v">{{ $ticket->display_number ?? $ticket->request_number }}</span></div>
-                    <div class="cmms-pr-meta-row"><span class="k">Ticket type</span><span class="v"><span class="cmms-req-tag {{ $ticket->type === 'Preventive Maintenance' ? 'cmms-req-tag--issue' : 'cmms-req-tag--review' }}">{{ $ticket->type === 'Preventive Maintenance' ? '[PM]' : '[ICT]' }}</span></span></div>
-                    @endif
                     <div class="cmms-pr-meta-row"><span class="k">Line items</span><span class="v">{{ count($requisition->items ?? []) }}</span></div>
                     @if($requisition->reviewer && $requisition->reviewed_at)
                     <div class="cmms-pr-meta-row"><span class="k">Last action by</span><span class="v">{{ $requisition->reviewer->full_name }}</span></div>
