@@ -9,11 +9,30 @@
     .cmms-count-badge { font-size:0.75rem; color:#64748b; font-weight:600; }
     .cmms-pagination-bar { padding:14px 20px; border-top:1px solid #e2e8f0; }
     .table-wrap { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-    /* Containment: hindi lalabas ang table sa page â€” scroll lang sa loob ng table area */
+    /* Containment: horizontal scroll stays inside the table area */
     .cmms-panel { max-width:100%; min-width:0; }
     .cmms-page-card, .cmms-page-card-body { max-width:100%; min-width:0; }
     @media (max-width:768px) {
         .cmms-req-table th, .cmms-req-table td { padding:10px 12px; font-size:12.5px; }
+        /* Rows become stacked cards - no horizontal scroll */
+        .cmms-req-table { min-width:0; }
+        .cmms-req-table thead { display:none; }
+        .cmms-req-table, .cmms-req-table tbody, .cmms-req-table tr.cmms-req-row, .cmms-req-table td { display:block; width:100%; }
+        .cmms-req-table tr.cmms-req-row { padding:12px 14px; border-bottom:1px solid #e2e8f0; }
+        .cmms-req-table td { border:none; padding:6px 0; text-align:left !important; white-space:normal; }
+        .cmms-req-table td:first-child { border-left:none; }
+        .cmms-req-table td::before {
+            content:attr(data-label);
+            display:block; font-size:10px; font-weight:800; text-transform:uppercase;
+            letter-spacing:.04em; color:#94a3b8; margin-bottom:3px;
+        }
+        .cmms-req-table td[data-label="REQ #"]::before,
+        .cmms-req-table td[data-label="Actions"]::before { display:none; }
+        .cmms-req-table td.td-nowrap, .cmms-req-table td.cell-trim { white-space:normal; }
+        .cmms-req-table .row-actions { justify-content:flex-start; gap:8px; flex-wrap:nowrap; }
+        .cmms-req-table tr.cmms-req-details-row > td { padding-top:0; }
+        .cmms-req-details-grid { grid-template-columns:1fr !important; }
+        .cmms-req-table tr.cmms-req-details-row[hidden] { display:none !important; }
     }
     .text-muted-none { color:#94a3b8; font-size:0.8rem; }
     .td-nowrap { white-space:nowrap; }
@@ -28,7 +47,7 @@
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
     .cmms-req-table .right { text-align:right; }
-    /* Icon action buttons ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â same look as Parts & Consumables rows */
+    /* Icon action buttons - same look as Parts & Consumables rows */
     .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
     .act-btn.in { border-color:#bbf7d0; color:#15803d; }
@@ -39,7 +58,7 @@
     .act-btn:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
     .cmms-req-details-chevron { transition:transform .15s; }
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
-    /* Table style ÃƒÂ¢Ã¢â€šÂ¬Ã¢â‚¬Â matched to Parts & Consumables (pantay-pantay) */
+    /* Table style - matched to Parts & Consumables (pantay-pantay) */
     .cmms-req-table { table-layout:fixed; min-width:960px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
@@ -98,7 +117,7 @@
         line-height: 1;
     }
 
-    /* QUEUE SUMMARY ÃƒÆ’Ã†â€™Ãƒâ€šÃ‚Â¢ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡Ãƒâ€šÃ‚Â¬ÃƒÆ’Ã‚Â¢ÃƒÂ¢Ã¢â‚¬Å¡Ã‚Â¬Ãƒâ€šÃ‚Â stat cards */
+    /* QUEUE SUMMARY stat cards */
     .queue-summary-cards { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px, 1fr)); gap:10px; margin-bottom:14px; }
     .qstat { display:block; background:#fff; border:1px solid var(--cmms-border); border-radius:10px; padding:12px 14px; text-decoration:none; transition:all .15s; }
     .qstat:hover { transform:translateY(-2px); box-shadow:0 10px 22px rgba(15,23,42,.08); }
@@ -289,7 +308,7 @@
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>ICT job orders</h2>
-                <span class="cmms-count-badge">Read-only ÃƒÆ’Ã†â€™ÃƒÂ¢Ã¢â€šÂ¬Ã…Â¡ÃƒÆ’Ã¢â‚¬Å¡Ãƒâ€šÃ‚Â· {{ $ictTickets->total() }} ticket(s)</span>
+                    <span class="cmms-count-badge">Read-only &middot; {{ $ictTickets->total() }} ticket(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($ictTickets->isEmpty())

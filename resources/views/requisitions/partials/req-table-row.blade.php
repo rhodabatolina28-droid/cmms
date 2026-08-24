@@ -23,31 +23,31 @@
         @endif
     </td>
     @if(!empty($showRequester))
-    <td class="cell-trim" title="{{ $req->requester?->full_name ?? '' }}">{{ $req->requester?->full_name ?? '&mdash;' }}</td>
+    <td class="cell-trim" data-label="Requester" title="{{ $req->requester?->full_name ?? '' }}">{{ $req->requester?->full_name ?? '&mdash;' }}</td>
     @endif
-    <td class="cell-trim">
+    <td class="cell-trim" data-label="Job order">
         @if($req->ticket)
             <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-req-jo"><i class="fa-solid fa-link" style="opacity:.7;margin-right:3px;"></i>JO {{ $req->ticket->display_number ?? $req->ticket->request_number }}</a>
         @else
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
-    <td class="cell-trim" title="{{ count($items) }} item(s){{ isset($items[0]['description']) ? ': ' . $items[0]['description'] : '' }}">
+    <td class="cell-trim" data-label="Items" title="{{ count($items) }} item(s){{ isset($items[0]['description']) ? ': ' . $items[0]['description'] : '' }}">
         @if(count($items))
             {{ ($items[0]['quantity'] ?? 1) }}× {{ \Illuminate\Support\Str::limit($items[0]['description'] ?? '', 34) }}@if(count($items) > 1) <span style="font-weight:600;color:#0038A8;">+{{ count($items) - 1 }}</span>@endif
         @else
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
-    <td class="td-nowrap">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
-    <td class="td-nowrap">
+    <td class="td-nowrap" data-label="Date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
+    <td class="td-nowrap" data-label="Completed">
         @if($statusKey === 'issued' && $req->reviewed_at)
             {{ $req->reviewed_at->format('M d, Y | h:i A') }}
         @else
             <span class="text-muted-none">&mdash;</span>
         @endif
     </td>
-    <td>
+    <td data-label="Status">
         <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
         @if($quickActions && $isPending)
             <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--review">Needs review</span></div>
@@ -55,7 +55,7 @@
             <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span></div>
         @endif
     </td>
-    <td>
+    <td data-label="Actions">
         <div class="row-actions">
             @if($canQuick && $isPending)
                 <button type="button" class="act-btn in supply-quick-btn" data-action="approve" data-id="{{ $req->id }}" data-pr="{{ $reqNo }}" title="Approve requisition" aria-label="Approve requisition {{ $reqNo }}"><i class="fa-solid fa-check"></i></button>
