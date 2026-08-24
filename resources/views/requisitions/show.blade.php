@@ -315,10 +315,17 @@
                         <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve"><i class="fa-solid fa-check"></i> Approve</button>
                         <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
                         @elseif($status === 'approved')
-                        <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                            @if($issueContext['valid'])
+                                <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                            @else
+                                <button type="button" class="cmms-btn-success" disabled title="{{ $issueContext['message'] }}"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                            @endif
                         <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
                         @endif
                     </div>
+                    @if($status === 'approved' && ! $issueContext['valid'])
+                    <p class="info-text" style="color:#991b1b;margin-top:8px;"><i class="fa-solid fa-circle-exclamation mr-6"></i>{{ $issueContext['message'] }}</p>
+                    @endif
                 </div>
             </div>
             @elseif($status === 'issued' || $status === 'rejected')
@@ -370,11 +377,26 @@
 <script nonce="{{ $cspNonce }}">
 (function () {
     let busy = false;
+    const remarksEl = () => document.getElementById('supplyReviewRemarks');
+
     document.querySelectorAll('.supply-action-btn').forEach(btn => {
         btn.addEventListener('click', async () => {
             if (busy) return;
             const action = btn.dataset.action;
             const titles = { approve: 'Approve requisition', reject: 'Reject requisition', issue: 'Issue parts to asset custodian' };
+
+            // A disapproval must carry a documented reason (mirrors queue quick-actions).
+            if (action === 'reject' && !(remarksEl()?.value.trim())) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Reason required',
+                    text: 'Please provide a reason for disapproving this requisition.',
+                    confirmButtonColor: '#0038A8',
+                });
+                remarksEl()?.focus();
+                return;
+            }
+
             const issueDestination = @json($issueContext['valid']
                 ? ($issueContext['custodian']->full_name . ' for ' . $issueContext['asset']->item_name)
                 : null);
@@ -401,16 +423,43 @@
                     },
                     body: JSON.stringify({
                         action,
-                        remarks: document.getElementById('supplyReviewRemarks')?.value || '',
+                        remarks: remarksEl()?.value || '',
                     }),
                 });
-                const data = await res.json();
+                const data = await res.json().catch(() => ({}));
+
+                // Validation errors (e.g. missing disapproval reason caught server-side).
+                if (!res.ok && data.errors) {
+                    const first = Object.values(data.errors)[0]?.[0] || data.message || 'Please check the form.';
+                    Swal.fire({ icon: 'warning', title: 'Check the form', text: first, confirmButtonColor: '#0038A8' });
+                    busy = false;
+                    document.querySelectorAll('.supply-action-btn').forEach(b => b.disabled = false);
+                    remarksEl()?.focus();
+                    return;
+                }
+
                 if (data.success) {
                     await Swal.fire({ icon: 'success', title: 'Recorded', text: data.message, confirmButtonColor: '#0038A8' });
                     window.location.href = data.redirect || @json(route('requisitions.show', $requisition->id));
                     return;
                 }
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#0038A8' });
+
+                // Stock shortage — show exactly which lines are short.
+                if (Array.isArray(data.deficits) && data.deficits.length) {
+                    const rows = data.deficits.map(d =>
+                        '· <b>' + d.description + '</b> — requested <b>' + d.requested + '</b>, on-hand <b>' + d.available + '</b>'
+                    ).join('<br>');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Insufficient parts stock',
+                        html:
+                            '<div style="text-align:left;font-size:13px;line-height:1.9;">' + rows + '</div>'
+                            + '<div style="margin-top:10px;font-size:12px;color:#64748b;">Tip: use “Create Purchase Request” in the Parts Stock panel above to procure the shortage.</div>',
+                        confirmButtonColor: '#0038A8',
+                    });
+                } else {
+                    Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Could not process.', confirmButtonColor: '#0038A8' });
+                }
             } catch (e) {
                 Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
             }

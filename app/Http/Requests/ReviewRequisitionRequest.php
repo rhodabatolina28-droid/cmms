@@ -14,10 +14,18 @@ class ReviewRequisitionRequest extends FormRequest
 
     public function rules(): array
     {
-        // Extracted verbatim from RequisitionController::review() lines 217-220.
+        // Extracted verbatim from RequisitionController::review() lines 217-220,
+        // plus a documented-reason requirement for disapprovals.
         return [
             'action'  => 'required|in:approve,reject,issue',
-            'remarks' => 'nullable|string|max:2000',
+            'remarks' => 'nullable|string|max:2000|required_if:action,reject',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'remarks.required_if' => 'Please provide a reason for disapproval.',
         ];
     }
 }
