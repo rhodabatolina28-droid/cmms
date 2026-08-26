@@ -42,7 +42,7 @@ class ListRequisitionsAction
     private function supplyIndex(Request $httpRequest, User $supply)
     {
         $supplyView = $httpRequest->query('view', 'queue');
-        if (!in_array($supplyView, ['queue', 'tickets'], true)) {
+        if (!in_array($supplyView, ['queue', 'tickets', 'purchase-requests'], true)) {
             $supplyView = 'queue';
         }
 
@@ -66,6 +66,37 @@ class ListRequisitionsAction
             'issued' => $this->supplyRequisitionCount($supply, Requisition::STATUS_ISSUED),
             'rejected' => $this->supplyRequisitionCount($supply, Requisition::STATUS_REJECTED),
         ];
+
+        // PR submitted count — always computed for the workspace tab badge.
+        $prCounts = ['submitted' => \App\Models\PurchaseRequest::where('status', \App\Models\PurchaseRequest::STATUS_SUBMITTED)->count()];
+
+        if ($supplyView === 'purchase-requests') {
+            // PR document flow — queue + history via the PR list action.
+            $prData = (new \App\Actions\PurchaseRequest\ListPurchaseRequestsAction)
+                ->execute($httpRequest, $supply);
+            $prCounts = $prData['counts'];
+
+            // Submitted queue (awaiting Supply review/finalize).
+            $prQueue = \App\Models\PurchaseRequest::with('requester', 'creator', 'requisition.ticket')
+                ->where('status', \App\Models\PurchaseRequest::STATUS_SUBMITTED)
+                ->orderByDesc('created_at')
+                ->get();
+
+            $requisitions = Requisition::whereRaw('0=1')->paginate(1);
+            $ictTickets = RequestModel::whereRaw('0=1')->paginate(1);
+
+            return view('requisitions.supply-index', array_merge(compact(
+                'requisitions',
+                'filter',
+                'counts',
+                'supplyView',
+                'ictTickets',
+                'q',
+                'sort',
+                'prCounts',
+                'prQueue'
+            ), $prData));
+        }
 
         if ($supplyView === 'tickets') {
             $ticketQuery = RequestModel::with(['user', 'assignedTo', 'requisitions'])
@@ -205,11 +236,29 @@ class ListRequisitionsAction
 
         $selectedTicketId = $httpRequest->query('request_id');
 
+        // Open requisitions (pending/approved) per ticket, for the proactive
+        // duplicate-parts guard on the Request Parts form.
+        $openRequisitions = Requisition::where('requested_by', $itUser->id)
+            ->whereIn('status', [
+                Requisition::STATUS_PENDING,
+                Requisition::STATUS_APPROVED,
+            ])
+            ->get(['id', 'request_id', 'status', 'items']);
+
         $partsStock = \App\Models\Part::where('is_active', true)
             ->when($itUser->region, fn ($q) => $q->where('region', $itUser->region))
             ->when($itUser->branch, fn ($q) => $q->where('branch', $itUser->branch))
             ->orderBy('item_name')
             ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
+
+        // Own purchase requests (PR document flow) for the "My Purchase Requests" strip.
+        $myPrs = \App\Models\PurchaseRequest::query()
+            ->where(function ($q) use ($itUser) {
+                $q->where('requested_by', $itUser->id)->orWhere('created_by', $itUser->id);
+            })
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
         return view('requisitions.it-index', compact(
             'activeTickets',
@@ -217,7 +266,9 @@ class ListRequisitionsAction
             'selectedTicketId',
             'partsStock',
             'historyStatus',
-            'historyQ'
+            'historyQ',
+            'openRequisitions',
+            'myPrs'
         ));
     }
 
@@ -249,11 +300,29 @@ class ListRequisitionsAction
 
         $selectedTicketId = $httpRequest->query('request_id');
 
+        // Open requisitions (pending/approved) per ticket, for the proactive
+        // duplicate-parts guard on the Request Parts form.
+        $openRequisitions = Requisition::where('requested_by', $superAdmin->id)
+            ->whereIn('status', [
+                Requisition::STATUS_PENDING,
+                Requisition::STATUS_APPROVED,
+            ])
+            ->get(['id', 'request_id', 'status', 'items']);
+
         $partsStock = \App\Models\Part::where('is_active', true)
             ->when($superAdmin->region, fn ($q) => $q->where('region', $superAdmin->region))
             ->when($superAdmin->branch, fn ($q) => $q->where('branch', $superAdmin->branch))
             ->orderBy('item_name')
             ->get(['id', 'item_name', 'unit', 'on_hand_qty']);
+
+        // Own purchase requests (PR document flow) for the "My Purchase Requests" strip.
+        $myPrs = \App\Models\PurchaseRequest::query()
+            ->where(function ($q) use ($superAdmin) {
+                $q->where('requested_by', $superAdmin->id)->orWhere('created_by', $superAdmin->id);
+            })
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get();
 
         return view('requisitions.it-index', compact(
             'activeTickets',
@@ -261,7 +330,9 @@ class ListRequisitionsAction
             'selectedTicketId',
             'partsStock',
             'historyStatus',
-            'historyQ'
+            'historyQ',
+            'openRequisitions',
+            'myPrs'
         ));
     }
 

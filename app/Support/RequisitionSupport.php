@@ -29,20 +29,33 @@ class RequisitionSupport
     public static function findExistingSubmission(
         RequestModel $ticket,
         User $itUser,
-        ?string $submissionId
+        ?string $submissionId,
+        array $validatedItems = []
     ): ?array {
-        $pending = Requisition::where('request_id', $ticket->id)
+        // Block only when the SAME ticket already has an OPEN (pending/approved)
+        // requisition carrying the SAME parts. Different parts on the same ticket,
+        // a different ticket, or a finished (issued/rejected) request all remain allowed.
+        $open = Requisition::where('request_id', $ticket->id)
             ->where('requested_by', $itUser->id)
-            ->where('status', Requisition::STATUS_PENDING)
-            ->first();
+            ->whereIn('status', [
+                Requisition::STATUS_PENDING,
+                Requisition::STATUS_APPROVED,
+            ])
+            ->orderByDesc('id')
+            ->get();
 
-        if ($pending) {
-            return [
-                'success' => true,
-                'message' => 'This ticket already has a pending request with Supply. Wait for their action before submitting again.',
-                'requisition_id' => $pending->id,
-                'already_submitted' => true,
-            ];
+        foreach ($open as $openReq) {
+            if (!empty($validatedItems) && self::sameParts($openReq->items ?? [], $validatedItems)) {
+                $waiting = $openReq->status === Requisition::STATUS_APPROVED
+                    ? 'approved and awaiting release'
+                    : 'pending with Supply';
+                return [
+                    'success' => true,
+                    'message' => "This ticket already has an ongoing parts request ({$waiting}) for the same items. Wait for it to be issued or rejected before requesting the same parts again.",
+                    'requisition_id' => $openReq->id,
+                    'already_submitted' => true,
+                ];
+            }
         }
 
         if (!self::hasSubmissionIdColumn() || !$submissionId) {
@@ -171,5 +184,39 @@ class RequisitionSupport
             Requisition::STATUS_REJECTED => 'Rejected',
             default => ucfirst($status),
         };
+    }
+
+    /**
+     * Compare two requisition "items" payloads by the parts they reference.
+     * Two submissions are considered "same parts" when the sorted set of
+     * part keys (part_id when from stock/spare, else trimmed description)
+     * is identical — line order and quantities are ignored.
+     */
+    public static function sameParts(array $a, array $b): bool
+    {
+        return self::partsFingerprint($a) === self::partsFingerprint($b);
+    }
+
+    /**
+     * Build a canonical, order-independent key for a list of items.
+     */
+    private static function partsFingerprint(array $items): string
+    {
+        $keys = [];
+        foreach ($items as $item) {
+            if (!is_array($item)) {
+                continue;
+            }
+            $source = (string) ($item['source'] ?? '');
+            $partId = $item['part_id'] ?? null;
+            if (in_array($source, ['parts-stock', 'spare'], true) && $partId !== null && $partId !== '') {
+                $keys[] = 'pid:' . (string) $partId;
+            } else {
+                $keys[] = 'dsc:' . mb_strtolower(trim((string) ($item['description'] ?? '')));
+            }
+        }
+        sort($keys, SORT_STRING);
+
+        return implode('|', $keys);
     }
 }

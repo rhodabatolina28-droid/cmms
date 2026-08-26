@@ -14,10 +14,6 @@
 <style nonce="{{ $cspNonce }}">
     .mb-18 { margin-bottom:18px; }
     .mt-18 { margin-top:18px; }
-    .panel-inventory { border-left:3px solid #10b981; }
-    .panel-head-green { background:#f0fdf4; }
-    .text-green-700 { color:#065f46; }
-    .icon-green { margin-right:6px; color:#10b981; }
     .text-green-800 { color:#047857; }
     .badge-sm { font-size:0.75rem; font-weight:600; }
     .panel-body-flush { padding:0; }
@@ -125,7 +121,68 @@
             </div>
             @endif
 
-            @include('requisitions.partials.pr-readonly', ['requisition' => $requisition])
+            {{-- ── Requested Items ── --}}
+            <div class="cmms-panel mt-18">
+                <div class="cmms-panel-head">
+                    <h2><i class="fa-solid fa-list-check mr-6" style="color:#0038A8;"></i>Requested Items</h2>
+                    <span class="badge-sm text-gray-400">{{ count($requisition->items ?? []) }} line item(s)</span>
+                </div>
+                <div class="cmms-panel-body panel-body-flush">
+                    <div style="overflow-x:auto;">
+                        <table class="cmms-official-table" style="table-layout:auto;">
+                            <colgroup>
+                                <col style="width:5%">
+                                <col>
+                                <col style="width:8%">
+                                <col style="width:10%">
+                                <col style="width:14%">
+                                <col style="width:14%">
+                            </colgroup>
+                            <thead>
+                                <tr>
+                                    <th class="col-num">No.</th>
+                                    <th style="text-align:left;">Description</th>
+                                    <th class="col-qty">Qty</th>
+                                    <th>Unit</th>
+                                    <th class="col-price">Unit Cost</th>
+                                    <th class="col-price">Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @forelse($requisition->items ?? [] as $i => $line)
+                                @php
+                                    $stockMatch = $partsStockMatches->get($i);
+                                    $matchPart = $stockMatch['part'] ?? null;
+                                    // Get unit cost from the part's latest tracked unit record
+                                    $unitCost = null;
+                                    if ($matchPart && $matchPart->requires_unit_tracking) {
+                                        $latestUnit = $matchPart->units()->whereNotNull('unit_value')->orderByDesc('created_at')->first();
+                                        $unitCost = $latestUnit?->unit_value;
+                                    }
+                                    $amount = $unitCost !== null ? ($line['quantity'] ?? 1) * (float)$unitCost : null;
+                                @endphp
+                                <tr>
+                                    <td class="col-num">{{ $i + 1 }}</td>
+                                    <td>{{ \Illuminate\Support\Str::limit($line['description'] ?? '', 80) }}</td>
+                                    <td class="col-qty">{{ $line['quantity'] ?? 1 }}</td>
+                                    <td>{{ $matchPart?->unit ?? '—' }}</td>
+                                    <td class="col-price">{{ $unitCost !== null ? '₱' . number_format((float) $unitCost, 2) : '—' }}</td>
+                                    <td class="col-price">{{ $amount !== null ? '₱' . number_format($amount, 2) : '—' }}</td>
+                                </tr>
+                                @empty
+                                <tr><td colspan="6" style="text-align:center;color:#94a3b8;padding:20px;">No line items.</td></tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                    @if($requisition->remarks)
+                    <div style="padding:14px 16px;border-top:1px solid #e2e8f0;">
+                        <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#94a3b8;">Purpose / Justification</div>
+                        <div style="font-size:13px;color:#1e293b;margin-top:4px;">{{ $requisition->remarks }}</div>
+                    </div>
+                    @endif
+                </div>
+            </div>
 
     @php
         // Only Spare units are releasable - Active/in-use copies never appear here,
@@ -136,9 +193,9 @@
     @endphp
     @if((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $spareInventoryMatches->isNotEmpty())
     {{-- ══ SUPPLY: Inventory Availability Check ══ --}}
-    <div class="cmms-panel mt-18 panel-inventory">
-        <div class="cmms-panel-head panel-head-green">
-            <h2 class="text-green-700"><i class="fa-solid fa-warehouse icon-green"></i>Inventory Availability Check</h2>
+    <div class="cmms-panel mt-18">
+        <div class="cmms-panel-head">
+            <h2><i class="fa-solid fa-warehouse mr-6" style="color:#0038A8;"></i>Inventory Availability Check</h2>
             <span class="badge-sm text-green-800">
                 {{ $spareInventoryMatches->count() }} of {{ count($requisition->items ?? []) }} item(s) have spare stock ready for issue
             </span>
@@ -204,7 +261,7 @@
 
     @if((Auth::user()->canProcessSupply() || Auth::user()->role === 'super_admin') && $partsStockMatches->isNotEmpty())
     {{-- ══ SUPPLY: Parts & Consumables Stock Availability ══ --}}
-    <div class="cmms-panel mt-18" style="border-left:3px solid #0038A8;">
+    <div class="cmms-panel mt-18">
         <div class="cmms-panel-head">
             <h2><i class="fa-solid fa-boxes mr-6" style="color:#0038A8;"></i>Parts &amp; Consumables Stock</h2>
             @php $okLines = $partsStockMatches->filter(fn ($m) => empty($m['deficit']))->count(); @endphp
@@ -248,7 +305,7 @@
             @if(Auth::user()->canProcessSupply() && $hasDeficit)
             <div class="info-bar" style="background:#fff7ed;color:#9a3412;border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
                 <span><i class="fa-solid fa-boxes-stacked icon-mr-4"></i>May kulang sa Parts Stock — gumawa ng Purchase Request.</span>
-                <button type="button" id="createPrBtn" class="cmms-btn-primary" style="padding:7px 14px;font-size:12px;">＋ Create Purchase Request</button>
+                <a href="{{ route('purchase_requests.create', ['requisition_id' => $requisition->id]) }}" class="cmms-btn-primary" style="padding:7px 14px;font-size:12px;text-decoration:none;">Create Purchase Request</a>
             </div>
             @endif
             @if($canReview && in_array($status, ['approved'], true))
@@ -456,47 +513,6 @@
             busy = false;
             document.querySelectorAll('.supply-action-btn').forEach(b => b.disabled = false);
         });
-    });
-})();
-</script>
-@endif
-@php $canCreatePr = Auth::user()->canProcessSupply(); @endphp
-@if($canCreatePr)
-<script nonce="{{ $cspNonce }}">
-(function () {
-    const btn = document.getElementById('createPrBtn');
-    if (!btn) return;
-    btn.addEventListener('click', async () => {
-        const confirm = await Swal.fire({
-            icon: 'question',
-            title: 'Create Purchase Request',
-            text: 'Gagawa ng PR para sa kulang na Parts Stock lines ng requisition na ito.',
-            showCancelButton: true,
-            confirmButtonColor: '#0038A8',
-            confirmButtonText: 'Create',
-        });
-        if (!confirm.isConfirmed) return;
-        try {
-            const res = await fetch(@json(route('purchase_requests.create', $requisition->id)), {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                    'Accept': 'application/json',
-                },
-            });
-            const data = await res.json();
-            if (data.success) {
-                await Swal.fire({ icon: 'success', title: 'Created', text: data.message, confirmButtonColor: '#0038A8' });
-                window.location.href = data.purchase_request_id
-                    ? '{{ url('purchase-requests') }}/' + data.purchase_request_id
-                    : '{{ url('purchase-requests') }}';
-                return;
-            }
-            Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Could not create.', confirmButtonColor: '#0038A8' });
-        } catch (e) {
-            Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
-        }
     });
 })();
 </script>

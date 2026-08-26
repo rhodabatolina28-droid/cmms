@@ -52,7 +52,8 @@ class StoreRequisitionAction
             $existing = RequisitionSupport::findExistingSubmission(
                 $ticket,
                 $user,
-                $validated['submission_id'] ?? null
+                $validated['submission_id'] ?? null,
+                $validated['items'] ?? []
             );
 
             if ($existing) {

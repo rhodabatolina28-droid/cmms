@@ -48,12 +48,15 @@
         @endif
     </td>
     <td data-label="Status">
-        <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
-        @if($quickActions && $isPending)
-            <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--review">Needs review</span></div>
-        @elseif($quickActions && $isApproved)
-            <div style="margin-top:4px;"><span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span></div>
-        @endif
+        <span class="cmms-status-badge cmms-status-{{ $statusKey }}">
+            @if($canQuick && $isPending)
+                Pending &middot; needs review
+            @elseif($canQuick && $isApproved)
+                Approved &middot; await issue
+            @else
+                {{ $req->status }}
+            @endif
+        </span>
     </td>
     <td data-label="Actions">
         <div class="row-actions">

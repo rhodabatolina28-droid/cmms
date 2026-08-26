@@ -28,7 +28,7 @@ class ExportPartsStockAction
         $parts = $query
             ->with([
                 'units.issuedTo:id,full_name',
-                'units.asset:id,item_name',
+                'units.asset:asset_id,item_name',
                 'units.request:id,request_number',
             ])
             ->orderBy('item_name')

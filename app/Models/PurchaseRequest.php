@@ -6,17 +6,36 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
- * Purchase Request (RA 9184) — procurement document for short parts stock.
+ * Purchase Request - PR document for parts procurement.
  * Table: purchase_requests
  *
- * Flow: pending → approved → received / cancelled.
+ * REVISED FLOW (2026-08-25): draft -> submitted -> finalized.
+ * The CMMS creates/prints/tracks the PR document only; actual procurement
+ * (bidding, supplier, delivery) happens outside the system (BAC/Procurement).
+ *
+ * Legacy statuses from the old internal workflow (pending / approved /
+ * received / cancelled) remain readable on old records, shown with a
+ * "(legacy)" tag. New documents never use them.
  */
 class PurchaseRequest extends Model
 {
+    // ---- Current flow statuses ------------------------------------------
+    public const STATUS_DRAFT = 'draft';
+    public const STATUS_SUBMITTED = 'submitted';
+    public const STATUS_FINALIZED = 'finalized';
+
+    // ---- Legacy statuses (old records only, read-only display) ----------
     public const STATUS_PENDING = 'pending';
     public const STATUS_APPROVED = 'approved';
     public const STATUS_RECEIVED = 'received';
     public const STATUS_CANCELLED = 'cancelled';
+
+    /** Statuses produced by the current document flow. */
+    public const CURRENT_STATUSES = [
+        self::STATUS_DRAFT,
+        self::STATUS_SUBMITTED,
+        self::STATUS_FINALIZED,
+    ];
 
     protected $table = 'purchase_requests';
 
@@ -25,21 +44,22 @@ class PurchaseRequest extends Model
         'requisition_id',
         'status',
         'items',
+        'purpose',
+        'total_amount',
+        'fund_cluster',
+        'responsibility_center',
+        'office_unit',
         'remarks',
         'requested_by',
-        'approved_by',
-        'approved_at',
-        'received_by',
-        'received_at',
-        'cancelled_by',
-        'cancelled_at',
+        'created_by',
+        'finalized_by',
+        'finalized_at',
     ];
 
     protected $casts = [
         'items' => 'array',
-        'approved_at' => 'datetime',
-        'received_at' => 'datetime',
-        'cancelled_at' => 'datetime',
+        'total_amount' => 'decimal:2',
+        'finalized_at' => 'datetime',
     ];
 
     // ---- Relationships -------------------------------------------------
@@ -49,30 +69,43 @@ class PurchaseRequest extends Model
         return $this->belongsTo(Requisition::class, 'requisition_id');
     }
 
+    /** Who needs the parts (IT requester or requisition requester). */
     public function requester(): BelongsTo
     {
         return $this->belongsTo(User::class, 'requested_by');
     }
 
-    public function approver(): BelongsTo
+    /** Who created the PR document in CMMS. */
+    public function creator(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'approved_by');
+        return $this->belongsTo(User::class, 'created_by');
     }
 
-    public function receiver(): BelongsTo
+    /** Supply officer who finalized the document (ready to print). */
+    public function finalizer(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'received_by');
+        return $this->belongsTo(User::class, 'finalized_by');
     }
 
     // ---- Flags ---------------------------------------------------------
 
-    public function isPending(): bool
+    public function isDraft(): bool
     {
-        return $this->status === self::STATUS_PENDING;
+        return $this->status === self::STATUS_DRAFT;
     }
 
-    public function isApproved(): bool
+    public function isSubmitted(): bool
     {
-        return $this->status === self::STATUS_APPROVED;
+        return $this->status === self::STATUS_SUBMITTED;
+    }
+
+    public function isFinalized(): bool
+    {
+        return $this->status === self::STATUS_FINALIZED;
+    }
+
+    public function isLegacyStatus(): bool
+    {
+        return ! in_array($this->status, self::CURRENT_STATUSES, true);
     }
 }

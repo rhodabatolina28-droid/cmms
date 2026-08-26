@@ -1427,3 +1427,15 @@
 
 /* IT Index dynamic asset/custodian row */
 #dynamicAssetRow { transition: all 0.2s ease; }
+
+/* ==============================================
+   Unified action buttons (PR forms & toolbars)
+   ============================================== */
+.cmms-action-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s, background .15s; text-decoration: none; border: 1px solid transparent; font-family: 'Segoe UI', Arial, sans-serif; }
+.cmms-action-btn i { font-size: 11px; }
+.cmms-action-btn--primary { background: #0038A8; color: #fff; box-shadow: 0 2px 8px rgba(0,56,168,.25); }
+.cmms-action-btn--primary:hover { background: #002d87; transform: translateY(-1px); box-shadow: 0 3px 12px rgba(0,56,168,.32); }
+.cmms-action-btn--success { background: #15803d; color: #fff; box-shadow: 0 2px 8px rgba(21,128,61,.28); }
+.cmms-action-btn--success:hover { background: #166534; transform: translateY(-1px); box-shadow: 0 3px 12px rgba(21,128,61,.35); }
+.cmms-action-btn--secondary { background: #fff; color: #374151; border-color: #cbd5e1; }
+.cmms-action-btn--secondary:hover { background: #eef2ff; border-color: #0038A8; color: #0038A8; }

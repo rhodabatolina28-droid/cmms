@@ -141,16 +141,16 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     });
 
     // ==========================================
-    // PURCHASE REQUESTS (RA 9184) — SUPPLY OFFICE
+    // PURCHASE REQUESTS — PR DOCUMENT FLOW (revised 2026-08-25)
+    // Supply Officer / Super Admin / IT — controller gates per action.
+    // Flow: form submit (submitted) -> Supply finalize -> print -> outside.
     // ==========================================
-    Route::middleware('role:admin')->group(function () {
-        Route::get('/purchase-requests', [PurchaseRequestController::class, 'index'])->name('purchase_requests.index');
-        Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase_requests.show');
-        Route::post('/requisitions/{requisition}/purchase-request', [PurchaseRequestController::class, 'create'])->name('purchase_requests.create')->middleware('throttle:30,1');
-        Route::post('/purchase-requests/{purchaseRequest}/approve', [PurchaseRequestController::class, 'approve'])->name('purchase_requests.approve')->middleware('throttle:30,1');
-        Route::post('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receive'])->name('purchase_requests.receive')->middleware('throttle:30,1');
-        Route::post('/purchase-requests/{purchaseRequest}/cancel', [PurchaseRequestController::class, 'cancel'])->name('purchase_requests.cancel')->middleware('throttle:30,1');
-    });
+    Route::get('/purchase-requests/create', [PurchaseRequestController::class, 'createForm'])->name('purchase_requests.create')->middleware('throttle:30,1');
+    Route::post('/purchase-requests', [PurchaseRequestController::class, 'store'])->name('purchase_requests.store')->middleware('throttle:30,1');
+    Route::get('/purchase-requests/{purchaseRequest}/edit', [PurchaseRequestController::class, 'edit'])->name('purchase_requests.edit')->middleware('throttle:30,1');
+    Route::post('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'update'])->name('purchase_requests.update')->middleware('throttle:30,1');
+    Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase_requests.show');
+    Route::post('/purchase-requests/{purchaseRequest}/finalize', [PurchaseRequestController::class, 'finalize'])->name('purchase_requests.finalize')->middleware('throttle:30,1');
 
     // ==========================================
     // ADMIN, SUPER ADMIN & SUPPLY — INVENTORY
@@ -330,7 +330,8 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::get('/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('super_admin.parts.movements');
         Route::get('/parts/{part}/units', [PartsStockController::class, 'units'])->name('super_admin.parts.units');
 
-        // Super Admin — READ-ONLY purchase requests
-        Route::get('/purchase-requests', [PurchaseRequestController::class, 'superAdminIndex'])->name('super_admin.purchase_requests');
+        // Super Admin — purchase requests history lives in Supply Workspace TAB 3
+        // (requisitions.index?view=purchase-requests); document views remain at
+        // /purchase-requests/{id}. No separate SA index route.
     });
 });

@@ -25,9 +25,22 @@
     .cmms-req-table td:first-child { border-left:3px solid transparent; }
     .cmms-req-table tr.cmms-req-row--needs-review td:first-child { border-left-color:#d97706; }
     .cmms-req-table tr.cmms-req-row--awaiting-issue td:first-child { border-left-color:#16a34a; }
+    .cmms-req-table tr.cmms-req-row { transition:background .12s ease; }
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }
     .cmms-req-table .right { text-align:right; }
+
+    /* PR queue — waiting visuals (Phase 2) */
+    .pr-wait-dot { display:inline-block; width:6px; height:6px; border-radius:50%; background:#d97706; margin-right:5px; vertical-align:middle; animation:prQueuePulse 1.6s ease-in-out infinite; }
+    @keyframes prQueuePulse { 0%,100% { opacity:1; } 50% { opacity:.25; } }
+    .pr-wait-badge { display:inline-block; margin-top:4px; padding:1px 8px; border-radius:10px; font-size:10px; font-weight:700; }
+    .pr-wait-badge.warn { background:#fef3c7; color:#92400e; }
+    .pr-wait-badge.urgent { background:#fee2e2; color:#b91c1c; }
+
+    /* PR records table — natural column sizing, horizontal scroll fallback */
+    .cmms-pr-table { min-width:900px; width:100%; }
+    .cmms-pr-table th, .cmms-pr-table td { vertical-align:middle; }
+    .cmms-pr-table .nowrap { white-space:nowrap; }
     /* Icon action buttons - same look as Parts & Consumables rows */
     .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
@@ -123,6 +136,9 @@
     .cmms-queue-toolbar form input[type="text"] { border:none !important; outline:none; box-shadow:none; flex:1; min-width:120px; font-size:13px; background:transparent; padding:0; margin:0; }
     .cmms-queue-toolbar form input[type="text"]:focus { border:none !important; }
     .cmms-queue-toolbar .cmms-filter-pill { white-space:nowrap; }
+    .cmms-filter-pill .chip-cnt { display:inline-block; margin-left:6px; padding:0 7px; border-radius:10px; background:#e2e8f0; color:#475569; font-size:10.5px; font-weight:800; }
+    .cmms-filter-pill.active .chip-cnt { background:#0038A8; color:#fff; }
+    .cmms-queue-toolbar.pr-chips { justify-content:flex-start; gap:8px; }
     .cmms-sort-toggle { display:inline-flex; border:1px solid var(--cmms-border); border-radius:8px; overflow:hidden; background:#fff; }
     .cmms-sort-toggle a { display:inline-flex; align-items:center; gap:6px; padding:8px 13px; font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#64748b; text-decoration:none; transition:all .15s; }
     .cmms-sort-toggle a + a { border-left:1px solid var(--cmms-border); }
@@ -177,6 +193,12 @@
                 </a>
                 <a href="{{ route('requisitions.index', $carryParams(['view' => 'tickets'])) }}" class="{{ $supplyView === 'tickets' ? 'active' : '' }}" @if($supplyView === 'tickets') aria-current="page" @endif>
                     JOB ORDERS
+                </a>
+                <a href="{{ route('requisitions.index', $carryParams(['view' => 'purchase-requests'])) }}" class="{{ $supplyView === 'purchase-requests' ? 'active' : '' }}" @if($supplyView === 'purchase-requests') aria-current="page" @endif>
+                    PURCHASE REQUESTS
+                    @if($supplyView !== 'purchase-requests' && isset($prCounts['submitted']) && $prCounts['submitted'] > 0)
+                        <span class="gov-badge">{{ $prCounts['submitted'] }}</span>
+                    @endif
                 </a>
             </div>
 
@@ -277,7 +299,7 @@
             <div class="cmms-pagination-bar">{{ $requisitions->links() }}</div>
             @endif
         </div>
-    @else
+    @elseif($supplyView === 'tickets')
         <div class="cmms-queue-toolbar">
             <form method="GET" action="{{ route('requisitions.index') }}" role="search">
                 <input type="hidden" name="view" value="tickets">
@@ -348,6 +370,116 @@
             </div>
             @if($ictTickets->hasPages())
             <div class="cmms-pagination-bar">{{ $ictTickets->links() }}</div>
+            @endif
+        </div>
+    @elseif($supplyView === 'purchase-requests')
+        {{-- ===== TAB 3: PURCHASE REQUESTS (PR document flow) ===== --}}
+        <div class="cmms-queue-toolbar pr-chips">
+            @php
+                $prFilter = request()->query('status', 'all');
+                $allPrCount = ($prCounts['submitted'] ?? 0) + ($prCounts['finalized'] ?? 0);
+                $prChips = [
+                    'all' => ['All', $allPrCount],
+                    'submitted' => ['Submitted', $prCounts['submitted'] ?? 0],
+                    'finalized' => ['Finalized', $prCounts['finalized'] ?? 0],
+                ];
+            @endphp
+            @foreach($prChips as $key => [$label, $cnt])
+                <a href="{{ route('requisitions.index', $carryParams(['view' => 'purchase-requests', 'status' => $key])) }}"
+                   class="cmms-filter-pill {{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized'], true))) ? 'active' : '' }}"
+                   aria-current="{{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized'], true))) ? 'page' : 'false' }}">
+                    {{ $label }}<span class="chip-cnt">{{ $cnt }}</span>
+                </a>
+            @endforeach
+        </div>
+
+        <div class="cmms-panel">
+            <div class="cmms-panel-head">
+                <h2>Purchase Requests</h2>
+                <span class="cmms-count-badge">{{ $requests->total() }} record(s)</span>
+            </div>
+            <div class="cmms-panel-body flush">
+                @if($requests->isEmpty())
+                    <div class="cmms-empty">
+                        <i class="fa-solid fa-folder-open cmms-empty-icon"></i>
+                        <p>
+                            @if($prFilter === 'finalized')
+                                No finalized purchase requests yet.
+                            @elseif($prFilter === 'submitted')
+                                No submitted purchase requests awaiting review.
+                            @else
+                                No purchase request records yet.
+                            @endif
+                        </p>
+                    </div>
+                @else
+                    <div class="table-wrap">
+                        <table class="cmms-official-table cmms-req-table cmms-pr-table">
+                            <thead>
+                                <tr>
+                                    <th>PR #</th><th>Requested by</th>
+                                    <th>Items</th><th>Total</th>
+                                    <th>Date submitted</th><th>Status</th><th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($requests as $pr)
+                                    @php
+                                        $firstItem = $pr->items[0]['description'] ?? '—';
+                                        $more = max(0, count($pr->items ?? []) - 1);
+                                        $isSubmitted = $pr->status === 'submitted';
+                                        $waitDays = ($isSubmitted && $pr->created_at)
+                                            ? (int) floor($pr->created_at->startOfDay()->diffInDays(now()->startOfDay()))
+                                            : 0;
+                                    @endphp
+                                    <tr>
+                                        <td class="cell-trim nowrap"><strong>{{ $pr->pr_number }}</strong></td>
+                                        <td class="cell-trim">{{ $pr->requester?->full_name ?? '—' }}</td>
+                                        <td class="cell-trim" style="min-width:180px;">
+                                            {{ $firstItem }}@if($more > 0) <em>+{{ $more }} more</em>@endif
+                                        </td>
+                                        <td class="nowrap" style="font-weight:700;color:#0038A8;">{{ $pr->total_amount !== null ? '₱' . number_format((float) $pr->total_amount, 2) : '—' }}</td>
+                                        <td class="nowrap">
+                                            {{ $pr->created_at?->format('M d, Y') }}
+                                            @if($isSubmitted && $waitDays > 0)
+                                                <div>
+                                                    <span class="pr-wait-badge {{ $waitDays >= 7 ? 'urgent' : 'warn' }}">
+                                                        ⏳ waiting {{ $waitDays }}d
+                                                    </span>
+                                                </div>
+                                            @endif
+                                        </td>
+                                        <td class="nowrap">
+                                            @if($pr->status === 'finalized')
+                                                <span class="req-pill cmms-status-issued">Finalized</span>
+                                            @else
+                                                <span class="req-pill cmms-status-pending">{{ ucfirst($pr->status) }}</span>
+                                            @endif
+                                        </td>
+                                        <td class="nowrap">
+                                            <div style="display:flex;align-items:center;gap:6px;">
+                                                <a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View {{ $pr->pr_number }} document" title="Open full document">
+                                                    <i class="fa-solid fa-eye"></i>&nbsp;View
+                                                </a>
+                                                @if($isSubmitted)
+                                                    <form method="POST" action="{{ route('purchase_requests.finalize', $pr->id) }}">
+                                                        @csrf
+                                                        <button type="submit" class="cmms-btn-primary pr-finalize-btn" data-pr="{{ $pr->pr_number }}" style="padding:5px 10px;font-size:11.5px;">
+                                                            Finalize &amp; Print
+                                                        </button>
+                                                    </form>
+                                                @endif
+                                            </div>
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @endif
+            </div>
+            @if($requests->hasPages())
+            <div class="cmms-pagination-bar">{{ $requests->links() }}</div>
             @endif
         </div>
     @endif
@@ -421,6 +553,22 @@
             btn.setAttribute('aria-expanded', open ? 'true' : 'false');
             if (open) panel.removeAttribute('hidden');
             else panel.setAttribute('hidden', '');
+        });
+    });
+    // PR finalize confirmation (Supply Workspace TAB 3)
+    document.querySelectorAll('.pr-finalize-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const form = btn.closest('form');
+            Swal.fire({
+                icon: 'question',
+                title: 'Finalize this Purchase Request?',
+                text: (btn.dataset.pr || '') + ' will be marked finalized and ready to print for physical submission to Procurement.',
+                showCancelButton: true,
+                confirmButtonText: 'Finalize',
+                confirmButtonColor: '#0038A8',
+                cancelButtonColor: '#64748b',
+            }).then((r) => { if (r.isConfirmed) form.submit(); });
         });
     });
 })();

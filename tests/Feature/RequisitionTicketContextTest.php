@@ -498,4 +498,110 @@ class RequisitionTicketContextTest extends TestCase
         $this->assertSame(Requisition::STATUS_ISSUED, $requisition->refresh()->status);
     }
 
+    // ── Duplicate-parts guard: block same ticket + same parts while open ──
+
+    /** Reuse the SAME Part instance so part_id matches across repeated submissions. */
+    private function submitPart(User $it, Ticket $ticket, Part $part): \Illuminate\Testing\TestResponse
+    {
+        return $this->actingAs($it)->postJson(route('requisitions.store', $ticket->id), $this->requestPayload($part));
+    }
+
+    private function makeStockPart(string $itemName): Part
+    {
+        return Part::create(['item_name' => $itemName, 'unit' => 'pcs', 'on_hand_qty' => 5]);
+    }
+
+    public function test_same_ticket_same_parts_with_pending_is_blocked(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $custodian = $this->makeUser();
+        $asset = InventoryAsset::create([
+            'category' => 'Desktop',
+            'item_name' => 'HP ProBook',
+            'assigned_to_user' => $custodian->id,
+            'region' => 'NCR',
+            'status' => 'Active',
+        ]);
+        $ticket = $this->makeTicket($it, $asset->asset_id);
+        $part = $this->makeStockPart('RAM 8GB DDR4');
+
+        $this->submitPart($it, $ticket, $part);
+        $this->assertSame(1, Requisition::where('request_id', $ticket->id)->count());
+
+        $this->submitPart($it, $ticket, $part)
+            ->assertOk()
+            ->assertJsonPath('already_submitted', true);
+
+        $this->assertSame(1, Requisition::where('request_id', $ticket->id)->count());
+    }
+
+    public function test_same_ticket_different_parts_is_allowed(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $custodian = $this->makeUser();
+        $asset = InventoryAsset::create([
+            'category' => 'Desktop',
+            'item_name' => 'HP ProBook',
+            'assigned_to_user' => $custodian->id,
+            'region' => 'NCR',
+            'status' => 'Active',
+        ]);
+        $ticket = $this->makeTicket($it, $asset->asset_id);
+
+        $this->submitPart($it, $ticket, $this->makeStockPart('RAM 8GB DDR4'));
+        $this->submitPart($it, $ticket, $this->makeStockPart('SSD 512GB'));
+        $this->submitPart($it, $ticket, $this->makeStockPart('Mouse'));
+
+        $this->assertSame(3, Requisition::where('request_id', $ticket->id)->count());
+    }
+
+    public function test_different_ticket_same_parts_is_allowed(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $custodian = $this->makeUser();
+
+        $mkTicket = function () use ($it, $custodian) {
+            $asset = InventoryAsset::create([
+                'category' => 'Desktop',
+                'item_name' => 'HP ProBook',
+                'assigned_to_user' => $custodian->id,
+                'region' => 'NCR',
+                'status' => 'Active',
+            ]);
+            return $this->makeTicket($it, $asset->asset_id);
+        };
+
+        $t1 = $mkTicket();
+        $t2 = $mkTicket();
+        $part = $this->makeStockPart('RAM 8GB DDR4');
+
+        $this->submitPart($it, $t1, $part);
+        $this->submitPart($it, $t2, $part);
+
+        $this->assertSame(1, Requisition::where('request_id', $t1->id)->count());
+        $this->assertSame(1, Requisition::where('request_id', $t2->id)->count());
+    }
+
+    public function test_same_ticket_same_parts_allowed_after_issued(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $custodian = $this->makeUser();
+        $asset = InventoryAsset::create([
+            'category' => 'Desktop',
+            'item_name' => 'HP ProBook',
+            'assigned_to_user' => $custodian->id,
+            'region' => 'NCR',
+            'status' => 'Active',
+        ]);
+        $ticket = $this->makeTicket($it, $asset->asset_id);
+        $part = $this->makeStockPart('RAM 8GB DDR4');
+
+        $this->submitPart($it, $ticket, $part);
+        Requisition::where('request_id', $ticket->id)->update(['status' => Requisition::STATUS_ISSUED]);
+
+        $this->submitPart($it, $ticket, $part)
+            ->assertJsonPath('success', true);
+
+        $this->assertSame(2, Requisition::where('request_id', $ticket->id)->count());
+    }
 }

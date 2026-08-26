@@ -614,7 +614,11 @@ Webcam         Spare (asset) 1     ✅ 1 SN   (existing Inventory panel)
 
 ## 11. Phase D Plan — Purchase Request (RA 9184)
 
-> Layunin: gawing totoong dokumento ang "Short — needs PR" — may PR number, approval flow, at kapag **PR Received** → awtomatikong **Stock In** (bumabalik ang on_hand).
+> ⚠️ **REVISED 2026-08-25 — ANG DALOY SA BABA AY SUPERSEDED.** Tingnan ang **Section 11-R** para sa bagong PR Document flow.
+>
+> **Bakit ni-revise:** Ang CMMS ay hindi procurement system. Sa totoong gobyerno process (RA 9184), ang aktwal na bidding/supplier/delivery ay nangyayari **sa labas** ng CMMS (BAC / Procurement Office). Ang lumang internal `pending → approved → received` workflow (kabilang ang auto-Stock-In sa "receive") ay mali — tinanggal ito at pinalitan ng **PR document creator + printer + history** na flow.
+
+> [SUPERSEDED] Layunin: gawing totoong dokumento ang "Short — needs PR" — may PR number, approval flow, at kapag **PR Received** → awtomatikong **Stock In** (bumabalik ang on_hand).
 
 ### D1 — Data model
 - Bagong table `purchase_requests` (o `prs`):
@@ -641,7 +645,112 @@ Webcam         Spare (asset) 1     ✅ 1 SN   (existing Inventory panel)
 ### D6 — Confirmation bago mag-code (LAHAT KUMPIRMADO 2026-08-13)
 - ✅ **Pangalan ng table:** `purchase_requests` · PR number format `PR-YYYY-xxxx`.
 - ✅ **Flow:** May approval step — `pending → approved → received / cancelled` (kumpleto RA 9184).
-- ✅ **Nav:** ilalagay sa ilalim ng Supply section (canProcessSupply) + Super Admin read-only link.
 
-> ✅ **DONE 2026-08-13** — na-implement at na-verify (tingnan ang STATUS sa itaas).
+---
+
+## 11-R. Phase D-R (REVISED) — PR Document Flow — CURRENT PLAN 2026-08-25
+
+> **Bagong pilosopiya:** Ang CMMS ay **PR document creator + printer + history tracker** lamang. Hindi nito hinahawak ang aktwal na procurement — iyon ay sa labas (BAC/Procurement Office).
+
+### Bagong daloy (UPDATED 2026-08-25 — contextual entry points):
+```
+IT / SUPER ADMIN — sa loob ng MY PARTS REQUESTS form:
+    Nagdagdag ng item na MANUAL INPUT (wala sa Parts Stock / Spare asset options)
+        ↓
+    Lumalabas ang contextual hint: "Wala sa stock — urgent?"
+        [📝 Create Purchase Request]
+        ↓
+    PR Form (prefilled na ang manual item) → SUBMIT
+        ↓
+    Status: submitted → mapupunta kay SUPPLY OFFICER
+
+SUPPLY OFFICER — sa loob ng SUPPLY WORKSPACE (TAB 3):
+    [TAB 1: Requisition Queue] [TAB 2: Job Orders] [TAB 3: PURCHASE REQUESTS]
+        ↓
+    TAB 3: Queue ng submitted PRs → Review → FINALIZE & PRINT
+           + History list ng lahat ng PRs (All/Submitted/Finalized/Legacy)
+        ↓
+    PRINT ang pormal na PR dokumento (gov format + signature lines)
+        ↓
+    IPAPASA nang pisikal sa Procurement (SA LABAS NG SYSTEM)
+        ↓
+    Kapag dumating ang mga bahagi → MANUAL Stock In sa CMMS
+```
+
+> **Nav desisyon:** Tatanggalin ang "Purchase Requests" sidebar entries (supply + super admin). Ang IT/SA ay makikita ang status ng sariling mga PR sa maliit na **"My Purchase Requests"** strip sa ibaba ng My Parts Requests page. Ang document/print view (`purchase-requests/{id}`) ay mananatiling reachable via links.
+
+
+### R1 — Data model changes (migration):
+| Dagdag | Layunin |
+|---|---|
+| `created_by` (nullable FK users) | Sino gumawa/ng-create ng PR document |
+| `finalized_by` + `finalized_at` | Kailan ni Supply na-finalize |
+| `purpose` (text nullable) | Kahilingan para saan |
+| `total_amount` (decimal) | Kabuuang halaga ng PR |
+
+- Bagong statuses: **`draft` → `submitted` → `finalized`**
+- Lumang statuses (`pending`/`approved`/`received`/`cancelled`) — display-only, may "(legacy)" tag; walang data migration.
+- Items JSON: dagdag `unit_cost` per line (lumang records walang nito — magdi-display ng `—`).
+- `requested_by` semantics: ang nag-request (IT user o requisition requester). `created_by`: ang gumawa ng dokumento.
+
+### R2 — Backend actions:
+| Action | Status |
+|---|---|
+| `CreatePurchaseRequestAction` | ✏️ REWRITE — standalone form submission O prefill mula requisition deficits; roles: super_admin / it / supply |
+| `FinalizePurchaseRequestAction` | 🆕 BAGO — supply lang; mark ready-to-print |
+| `ApprovePurchaseRequestAction` | ❌ DELETE |
+| `ReceivePurchaseRequestAction` | ❌ DELETE (Stock In is manual na via Stock In modal) |
+| `CancelPurchaseRequestAction` | ❌ DELETE (draft deletion na lang kung mayroon) |
+| `ListPurchaseRequestsAction` | ✏️ FIX scoping — standalone PRs (walang requisition) dapat kasama: creator org scope fallback |
+
+### R3 — Routes:
+```
+Mananatili:   GET  /purchase-requests            ← History list
+              GET  /purchase-requests/{id}       ← Document view (+ print)
+Bago:         GET  /purchase-requests/create     ← PR Form (IT/SA/Supply)
+              POST /purchase-requests             ← Submit to Supply
+              POST /purchase-requests/{id}/finalize ← Supply finalize
+Buburahin:    POST /requisitions/{req}/purchase-request (auto-create)
+              POST /{id}/approve · /receive · /cancel
+```
+
+### R4 — Access & scoping:
+| Role | Access |
+|---|---|
+| IT | Create form + sariling submitted PRs (history) |
+| Supply Officer (admin+can_supply) | Lahat ng PR sa region/branch scope + finalize + create |
+| Super Admin | Lahat ng PR (branch-wide) + create |
+
+### R5 — Printable document (gov format):
+- NCMB header · PR number · petsa · items table (qty/unit cost/TOTAL) · purpose
+- Signature lines: Requested by (IT) / Reviewed by (Supply) / Approved by (Head)
+- Browser print CSS — walang extra dependency
+
+### R6 — UI surfaces (UPDATED — contextual, walang bagong nav module):
+| Surface | Gagawin |
+|---|---|
+| **My Parts Requests (IT/SA)** | Sa item row: kapag MANUAL INPUT ang source → contextual "Create Purchase Request" affordance → bubukas ang PR form na prefilled |
+| **PR Form** | Hiwalay na page (`purchase-requests/create`): items + qty + unit cost + TOTAL + purpose → Submit to Supply |
+| **Supply Workspace TAB 3** | Bagong "PURCHASE REQUESTS" tab (`?view=purchase-requests`): submitted queue + Finalize & Print + history list (filters: All/Submitted/Finalized/Legacy) |
+| **Document view** | `purchase-requests/{id}` — printable gov format; reachable via links mula sa workspace tab at sa post-submit redirect |
+| **"My Purchase Requests" strip** | Sa ibaba ng My Parts Requests page (IT/SA): sariling PRs na may status badge → click = document view |
+| **Sidebar nav** | ❌ TANGGALIN ang "Purchase Requests" entries (supply L265 + super admin L239) |
+| **Requisition show** | `#createPrBtn` → link sa create form na may `?requisition_id=N` prefill (supply context) |
+
+> ⚠️ **BUG NOTE (nahuli sa review):** Ang unang draft ng `latestUnitCost()` ay nag-query ng hindi umiiral na `part_units` table — ang tamang table ay **`parts_stock_units`**. Aayusin bago ang anumang iba pa.
+
+### R7 — Verification:
+- Rewrite `PurchaseRequestTest`: IT submit ✓ · Supply finalize ✓ · regular user denied ✓ · standalone + requisition-linked scoping ✓ · legacy record display ✓
+- Full suite gate bawat phase.
+
+> ✅ **IMPLEMENTATION SEQUENCE (2026-08-25):**
+> 0. Ayusin ang `parts_stock_units` bug sa `latestUnitCost()` *(critical)*
+> 1. P1-fin — Routes update (tanggalin approve/receive/cancel/auto-create; add create/store/finalize/show)
+> 2. P2 — Supply Workspace TAB 3 "PURCHASE REQUESTS" (queue + finalize + history)
+> 3. P3 — Contextual Create PR sa My Parts Requests manual-input path + "My Purchase Requests" strip
+> 4. P4 — Printable document view (gov format)
+> 5. P5 — Cleanup: sidebar entries tanggal + retiro lumang index view + requisition show rewire
+> 6. P6 — Tests rewrite + full gate
+>
+> Bawat phase: test gate → hiwalay na commit.
 

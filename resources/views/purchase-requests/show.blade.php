@@ -1,169 +1,302 @@
 @extends('layouts.app')
 
-@section('title', $purchaseRequest->pr_number)
-@section('page-title', $purchaseRequest->pr_number)
-
-@php
-    $canWrite = auth()->user()->canProcessSupply();
-    $status = $purchaseRequest->status;
-@endphp
+@section('title', 'Purchase Request '.$purchaseRequest->pr_number)
+@section('page-title', 'Purchase Request')
 
 @section('styles')
 <style nonce="{{ $cspNonce }}">
-    .prx-container { width: 100%; margin-top: -10px; animation: fadeInSlide 0.4s ease-out; }
-    .prx-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden; }
-    .prx-head { padding: 18px 22px; border-bottom: 1px solid #e2e8f0; display: flex; flex-wrap: wrap; gap: 12px; align-items: center; justify-content: space-between; }
-    .prx-title { font-size: 20px; font-weight: 900; color: #0f172a; }
-    .p-badge { display: inline-block; padding: 4px 12px; border-radius: 20px; font-size: 12px; font-weight: 800; }
-    .p-pending { background: #fef3c7; color: #92400e; }
-    .p-approved { background: #dbeafe; color: #1e40af; }
-    .p-received { background: #dcfce7; color: #166534; }
-    .p-cancelled { background: #fee2e2; color: #991b1b; }
-    .prx-body { padding: 22px; display: grid; grid-template-columns: 1fr 320px; gap: 24px; }
-    .prx-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px; margin-bottom: 20px; }
-    .prx-meta { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 14px 16px; }
-    .prx-meta .k { font-size: 10.5px; font-weight: 800; text-transform: uppercase; letter-spacing: .5px; color: #64748b; }
-    .prx-meta .v { font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 3px; }
-    .prx-table { width: 100%; border-collapse: collapse; }
-    .prx-table th { text-align: left; padding: 11px 14px; font-size: 11px; text-transform: uppercase; letter-spacing: .5px; color: #64748b; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
-    .prx-table td { padding: 12px 14px; font-size: 13.5px; border-bottom: 1px solid #f1f5f9; }
-    .stripe { padding: 14px 18px; border-radius: 10px; font-size: 13px; font-weight: 700; margin-bottom: 12px; border: 1px solid; }
-    .stripe i { margin-right: 6px; }
-    .stripe-info { background: #eff6ff; color: #0038A8; border-color: #bfdbfe; }
-    .stripe-ok { background: #f0fdf4; color: #166534; border-color: #bbf7d0; }
-    .btn-navy { background: #0038A8; color: #fff; border: none; padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .btn-navy:hover { background: #002d8a; }
-    .btn-green { background: #15803d; color: #fff; border: none; padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .btn-red { background: #b91c1c; color: #fff; border: none; padding: 11px 16px; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; }
-    .btn-ghost { background: #fff; color: #334155; border: 1px solid #cbd5e1; padding: 10px 14px; border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer; text-decoration: none; display: inline-block; text-align: center; }
-    .btn-ghost:hover { border-color: #0038A8; color: #0038A8; }
-    @media (max-width: 900px) { .prx-body { grid-template-columns: 1fr; } }
+    .prd-wrap { width:100%; margin-top:-10px; }
+    .prd-toolbar { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; margin-bottom:14px; background:#fff; border:1px solid #e2e8f0; border-radius:12px; padding:11px 16px; }
+
+    /* ── Action buttons (screen only) ── */
+    .prd-actions { margin-left:auto; display:flex; align-items:center; gap:10px; flex-wrap:wrap; }
+    .prd-action-btn { display:inline-flex; align-items:center; gap:7px; padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; transition:transform .12s, box-shadow .12s, background .15s; text-decoration:none; border:1px solid transparent; }
+    .prd-action-btn i { font-size:11px; }
+    .prd-action-btn--primary { background:#0038A8; color:#fff; box-shadow:0 2px 8px rgba(0,56,168,.25); }
+    .prd-action-btn--primary:hover { background:#002d87; transform:translateY(-1px); box-shadow:0 3px 12px rgba(0,56,168,.32); }
+    .prd-action-btn--success { background:#15803d; color:#fff; box-shadow:0 2px 8px rgba(21,128,61,.28); }
+    .prd-action-btn--success:hover { background:#166534; transform:translateY(-1px); box-shadow:0 3px 12px rgba(21,128,61,.35); }
+    .prd-action-btn--secondary { background:#fff; color:#374151; border-color:#cbd5e1; }
+    .prd-action-btn--secondary:hover { background:#eef2ff; border-color:#0038A8; color:#0038A8; }
+    .prd-action-btn--locked { background:#f8fafc; color:#94a3b8; border-color:#e2e8f0; cursor:not-allowed; }
+    .prd-print-tip { flex-basis:100%; font-size:10px; color:#94a3b8; text-align:right; line-height:1.45; }
+
+    /* ── Status explainer pill (compact) ── */
+    .prd-status-box { display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:20px; font-size:11.5px; border:1px solid transparent; }
+    .prd-status-box .dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex:none; }
+    .prd-status-box .st-title { font-weight:800; font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; }
+    .prd-status-box .st-desc { font-size:11.5px; opacity:.85; }
+    .prd-status-box.submitted { background:#fefce8; border-color:#fde68a; color:#854d0e; }
+    .prd-status-box.submitted .dot { animation:prdPulse 1.6s ease-in-out infinite; }
+    .prd-status-box.finalized { background:#f0fdf4; border-color:#bbf7d0; color:#166534; }
+    .prd-status-box.draft { background:#f8fafc; border-color:#e2e8f0; color:#475569; }
+    @keyframes prdPulse { 0%,100% { opacity:1; } 50% { opacity:.3; } }
+    .prd-status-pill { display:inline-block; padding:3px 12px; border-radius:20px; font-size:11.5px; font-weight:800; }
+    .st-submitted { background:#fef3c7; color:#92400e; }
+    .st-finalized { background:#dcfce7; color:#166534; }
+    .st-draft { background:#e2e8f0; color:#334155; }
+    .prd-sheet { background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:28px 32px; max-width:830px; margin:0 auto; font-family:Arial, Helvetica, sans-serif; color:#111827; }
+    .prd-title { text-align:center; font-size:14px; font-weight:700; letter-spacing:2px; margin:2px 0 10px; }
+
+    /* ── Header field grid (first section of the sheet) ── */
+    .a60-hdr { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:12px; }
+    .a60-hdr td { padding:0; vertical-align:top; }
+    .a60-field { border:1px solid #374151; padding:4px 8px 3px; }
+    .a60-field-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:2px; }
+    .a60-field-val { font-weight:700; color:#111827; font-size:12.5px; }
+    .a60-field-val.accent { color:#0038A8; }
+    .a60-field-val.muted { color:#9ca3af; font-weight:400; font-style:italic; }
+
+    .prd-meta { display:grid; grid-template-columns:1fr 1fr; gap:6px 26px; font-size:12.5px; margin-bottom:16px; }
+    .prd-meta .k { color:#4b5563; }
+    .prd-meta .v { font-weight:600; }
+    .prd-table { width:100%; border-collapse:collapse; font-size:11px; margin-bottom:10px; table-layout:fixed; }
+    .prd-table th, .prd-table td { border:1px solid #374151; padding:4px 6px; text-align:left; vertical-align:top; word-break:break-word; }
+    .prd-table th { background:#f3f4f6; font-family:Arial, sans-serif; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; text-align:center; }
+    .prd-table .num { text-align:center; }
+    .prd-table .right { text-align:right; white-space:nowrap; }
+    .prd-total-row td { font-weight:800; background:#f9fafb; text-align:right; }
+    .prd-purpose { font-size:11.5px; margin-bottom:14px; padding:7px 10px; border:1px solid #374151; min-height:38px; }
+    .prd-purpose .k { font-weight:700; margin-right:6px; }
+
+    /* Signatures — one aligned grid: Requested | Approved side by side */
+    table.prd-signs { width:100%; border-collapse:collapse; margin-top:64px; font-size:11.5px; page-break-inside:avoid; }
+    .prd-signs td { padding:13px 8px; vertical-align:bottom; }
+    .prd-signs td.lbl { white-space:nowrap; width:16%; color:#374151; padding-left:0; }
+    .prd-signs td.val { border-bottom:1px solid #111827; text-align:center; font-weight:700; height:24px; width:26%; }
+    .prd-signs td.sig-space { height:54px; }
+    .prd-signs td.who { font-weight:800; padding-bottom:16px; padding-left:0; font-size:12px; }
+
+    @media print {
+        @page { size:A4 portrait; margin:12mm; }
+        body * { visibility:hidden; }
+        .prd-sheet, .prd-sheet * { visibility:visible; }
+        .prd-sheet { position:absolute; left:0; top:0; width:100%; border:none; border-radius:0; padding:0; max-width:none; }
+        .no-print { display:none !important; }
+        .prd-table tr { page-break-inside:avoid; }
+        .prd-signs { page-break-inside:avoid; }
+    }
 </style>
 @endsection
 
 @section('content')
-<div class="prx-container">
-    <div class="prx-card">
-        <div class="prx-head">
-            <div class="prx-title">{{ $purchaseRequest->pr_number }}</div>
-            <span class="p-badge p-{{ $status }}">{{ ucfirst($status) }}</span>
+<div class="prd-wrap">
+    <div class="prd-toolbar no-print">
+        <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary" aria-label="Back to requisitions page"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Back</a>
+
+        @php
+            $stClass = $purchaseRequest->status === 'finalized' ? 'finalized' : ($purchaseRequest->status === 'submitted' && ! $purchaseRequest->isLegacyStatus() ? 'submitted' : 'draft');
+        @endphp
+        <div class="prd-status-box {{ $stClass }}">
+            <span class="dot"></span>
+            <span class="st-title">
+                @if($purchaseRequest->isLegacyStatus())
+                    {{ ucfirst($purchaseRequest->status) }} (legacy)
+                @else
+                    {{ ucfirst($purchaseRequest->status) }}
+                @endif
+            </span>
+            <span class="st-desc">
+                @if($purchaseRequest->status === 'finalized')
+                    — Ready to print and submit to Procurement.
+                @elseif($purchaseRequest->status === 'submitted')
+                    — Waiting for Supply Officer review · printing unlocks once finalized.
+                @else
+                    — Not yet submitted · printing unavailable until it reaches Supply.
+                @endif
+            </span>
         </div>
 
-        <div class="prx-body">
-            <div>
-                @if($status === 'pending' && $canWrite)
-                    <div class="stripe stripe-info"><i class="fa-solid fa-hourglass-half"></i>Waiting for approval by Supply Office.</div>
-                @elseif($status === 'approved' && $canWrite)
-                    <div class="stripe stripe-info"><i class="fa-solid fa-circle-check"></i>Approved — pindutin ang <b>Receive</b> kapag dumating na ang parts para ma-stock-in.</div>
-                @elseif($status === 'received')
-                    <div class="stripe stripe-ok"><i class="fa-solid fa-box-open"></i>Received — ang on-hand ng parts ay na-update na (Stock In).</div>
-                @elseif($status === 'cancelled')
-                    <div class="stripe stripe-ok"><i class="fa-solid fa-ban"></i>Cancelled.</div>
-                @endif
+        <div class="prd-actions">
+            @php
+                $canEditPr = $purchaseRequest->status === \App\Models\PurchaseRequest::STATUS_SUBMITTED
+                    && (Auth::user()->canProcessSupply()
+                        || Auth::user()->role === 'super_admin'
+                        || (Auth::user()->role === 'it' && ($purchaseRequest->requested_by === Auth::id() || $purchaseRequest->created_by === Auth::id())));
+            @endphp
+            @if($canEditPr)
+                <a href="{{ route('purchase_requests.edit', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="Edit purchase request" title="Correct items, quantities, or header details">
+                    <i class="fa-solid fa-pen-to-square"></i>Edit
+                </a>
+            @endif
+            @if($purchaseRequest->status === 'submitted' && Auth::user()->canProcessSupply())
+                <form method="POST" action="{{ route('purchase_requests.finalize', $purchaseRequest->id) }}" style="display:inline;">
+                    @csrf
+                    <button type="submit" class="prd-action-btn prd-action-btn--success pr-finalize-btn" data-pr="{{ $purchaseRequest->pr_number }}" title="Lock this document and unlock official printing">
+                        <i class="fa-solid fa-stamp"></i>Finalize &amp; Print
+                    </button>
+                </form>
+            @elseif($purchaseRequest->status === 'finalized')
+                <button type="button" onclick="window.print()" class="prd-action-btn prd-action-btn--primary" aria-label="Print purchase request document">
+                    <i class="fa-solid fa-print"></i>Print document
+                </button>
+            @else
+                <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-lock"></i>Print locked</span>
+            @endif
+        </div>
+    </div>
 
-                <div class="prx-grid">
-                    <div class="prx-meta"><div class="k">Source requisition</div><div class="v">{{ $purchaseRequest->requisition?->ticket?->display_number ?? '—' }}</div></div>
-                    <div class="prx-meta"><div class="k">Requested by</div><div class="v">{{ $purchaseRequest->requester?->full_name ?? '—' }}</div></div>
-                    <div class="prx-meta"><div class="k">Date created</div><div class="v">{{ $purchaseRequest->created_at->format('M d, Y') }}</div></div>
-                    <div class="prx-meta"><div class="k">Approved by</div><div class="v">{{ $purchaseRequest->approver?->full_name ?? '—' }}@if($purchaseRequest->approved_at) · {{ $purchaseRequest->approved_at->format('M d, Y') }}@endif</div></div>
-                    <div class="prx-meta"><div class="k">Received by</div><div class="v">{{ $purchaseRequest->receiver?->full_name ?? '—' }}@if($purchaseRequest->received_at) · {{ $purchaseRequest->received_at->format('M d, Y g:i A') }}@endif</div></div>
-                    @if($status === 'cancelled')
-                    <div class="prx-meta"><div class="k">Cancelled by</div><div class="v">{{ $purchaseRequest->cancelled_by ? (\App\Models\User::find($purchaseRequest->cancelled_by)?->full_name ?? '—') : '—' }}@if($purchaseRequest->cancelled_at) · {{ $purchaseRequest->cancelled_at->format('M d, Y') }}@endif</div></div>
-                    @endif
-                </div>
+    <div class="prd-sheet">
+        <div class="prd-title">PURCHASE REQUEST</div>
 
-                <table class="prx-table">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Item</th>
-                            <th>Qty (to order)</th>
-                            <th>On-hand ngayon</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($purchaseRequest->items ?? [] as $i => $line)
-                        @php $sh = $stockHalves[$i] ?? null; $part = $sh['part'] ?? null; @endphp
-                        <tr>
-                            <td>{{ $i + 1 }}</td>
-                            <td>{{ $line['description'] ?? '' }}</td>
-                            <td>{{ $line['quantity'] ?? 1 }}</td>
-                            <td>{{ $part ? $part->on_hand_qty . ' ' . $part->unit : '—' }}</td>
-                        </tr>
-                        @empty
-                        <tr><td colspan="4" style="text-align:center;color:#64748b;">Walang items.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                @if($purchaseRequest->remarks)
-                <div class="prx-meta" style="margin-top:16px;"><div class="k">Remarks</div><div class="v">{{ $purchaseRequest->remarks }}</div></div>
+        <table class="a60-hdr" role="presentation" aria-label="Purchase request header fields">
+            <colgroup>
+                <col style="width:50%;">
+                <col style="width:25%;">
+                <col style="width:25%;">
+            </colgroup>
+            {{-- Row 1: Entity Name | Fund Cluster --}}
+            <tr>
+                <td class="a60-field" style="border-right:none;">
+                    <div class="a60-field-lbl">Entity Name</div>
+                    <div class="a60-field-val">National Conciliation and Mediation Board</div>
+                </td>
+                <td class="a60-field" colspan="2" style="border-left:1px solid #374151;">
+                    <div class="a60-field-lbl">Fund Cluster</div>
+                    <div class="a60-field-val {{ $purchaseRequest->fund_cluster ? '' : 'muted' }}">
+                        {{ $purchaseRequest->fund_cluster ?: '— not specified —' }}
+                    </div>
+                </td>
+            </tr>
+            {{-- Row 2: Office/Unit | PR No. | Date --}}
+            <tr>
+                <td class="a60-field" style="border-top:none;border-right:none;">
+                    <div class="a60-field-lbl">Office / Unit</div>
+                    <div class="a60-field-val {{ $purchaseRequest->office_unit ? '' : 'muted' }}">
+                        {{ $purchaseRequest->office_unit ?: '— not specified —' }}
+                    </div>
+                </td>
+                <td class="a60-field" style="border-top:none;border-left:1px solid #374151;border-right:none;">
+                    <div class="a60-field-lbl">PR No.</div>
+                    <div class="a60-field-val accent">{{ $purchaseRequest->pr_number }}</div>
+                </td>
+                <td class="a60-field" style="border-top:none;border-left:1px solid #374151;">
+                    <div class="a60-field-lbl">Date</div>
+                    <div class="a60-field-val">{{ $purchaseRequest->created_at?->format('F d, Y') }}</div>
+                </td>
+            </tr>
+            {{-- Row 3: Responsibility Center Code (full width) --}}
+            <tr>
+                <td class="a60-field" colspan="3" style="border-top:none;">
+                    <div class="a60-field-lbl">Responsibility Center Code</div>
+                    <div class="a60-field-val {{ $purchaseRequest->responsibility_center ? '' : 'muted' }}">
+                        {{ $purchaseRequest->responsibility_center ?: '— not specified —' }}
+                    </div>
+                </td>
+            </tr>
+        </table>
+
+        <table class="prd-table">
+            <thead>
+                <tr>
+                    <th style="width:14%;">Stock/Property No.</th>
+                    <th style="width:9%;">Unit</th>
+                    <th>Description / specification</th>
+                    <th style="width:8%;">Qty</th>
+                    <th style="width:15%;">Unit Cost</th>
+                    <th style="width:16%;">Total Cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach($purchaseRequest->items ?? [] as $i => $line)
+                    @php
+                        $qty = (int) ($line['quantity'] ?? 0);
+                        $cost = isset($line['unit_cost']) && $line['unit_cost'] !== null ? (float) $line['unit_cost'] : null;
+                        $amount = $cost !== null ? $qty * $cost : null;
+                    @endphp
+                    <tr>
+                        <td class="num">&nbsp;</td>
+                        <td class="num">@if(!empty($line['unit'])){{ $line['unit'] }}@else&nbsp;@endif</td>
+                        <td>@if(!empty($line['description'])){{ $line['description'] }}@else&nbsp;@endif</td>
+                        <td class="num">@if($qty > 0){{ $qty }}@else&nbsp;@endif</td>
+                        <td class="right">@if($cost !== null){{ number_format($cost, 2) }}@else&nbsp;@endif</td>
+                        <td class="right">@if($amount !== null){{ number_format($amount, 2) }}@else&nbsp;@endif</td>
+                    </tr>
+                @endforeach
+                {{-- Pad with blank rows so the printed sheet shows a full official grid --}}
+                @php $blankRows = max(0, 8 - count($purchaseRequest->items ?? [])); @endphp
+                @for($b = 0; $b < $blankRows; $b++)
+                    <tr>
+                        <td class="num">&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td class="num">&nbsp;</td>
+                        <td>&nbsp;</td>
+                        <td>&nbsp;</td>
+                    </tr>
+                @endfor
+                <tr class="prd-total-row">
+                    <td colspan="5" style="text-align:right;">TOTAL</td>
+                    <td>@if($purchaseRequest->total_amount !== null)&#8369; {{ number_format((float) $purchaseRequest->total_amount, 2) }}@else&nbsp;@endif</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="prd-purpose">
+            <span class="k">Purpose / justification:</span>
+            @php $purposeText = trim((string) ($purchaseRequest->purpose ?: $purchaseRequest->remarks)); @endphp
+            @if($purposeText !== '')
+                {{ $purposeText }}
+            @else
+                &nbsp;
+            @endif
+        </div>
+
+        @if($purchaseRequest->requisition)
+            <div style="font-size:11.5px;color:#4b5563;margin-bottom:20px;">
+                Requisition reference: {{ $purchaseRequest->requisition->display_number }}
+                @if($purchaseRequest->finalized_at)
+                    &middot; Finalized {{ $purchaseRequest->finalized_at->format('F d, Y') }}
+                    @if($purchaseRequest->finalizer) by {{ $purchaseRequest->finalizer->full_name }}@endif
                 @endif
             </div>
+        @endif
 
-            <aside>
-                @if($canWrite)
-                <div style="display:flex;flex-direction:column;gap:10px;">
-                    @if($status === 'pending')
-                        <button class="btn-navy prx-act" data-action="approve"><i class="fa-solid fa-check" style="margin-right:6px;"></i>Approve Purchase Request</button>
-                        <button class="btn-red prx-act" data-action="cancel"><i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel</button>
-                    @elseif($status === 'approved')
-                        <button class="btn-green prx-act" data-action="receive"><i class="fa-solid fa-box-open" style="margin-right:6px;"></i>Receive — Stock In</button>
-                        <button class="btn-red prx-act" data-action="cancel"><i class="fa-solid fa-xmark" style="margin-right:6px;"></i>Cancel</button>
-                    @endif
-                </div>
-                @endif
-
-                <div style="margin-top:14px;">
-                    <a href="{{ url('purchase-requests') }}" class="btn-ghost" style="width:100%;box-sizing:border-box;"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Return to list</a>
-                </div>
-            </aside>
-        </div>
+        <table class="prd-signs">
+            <tr>
+                <td class="who" colspan="2">Requested by:</td>
+                <td class="who" colspan="2">Approved by:</td>
+            </tr>
+            <tr>
+                <td class="lbl">Signature&nbsp;:</td>
+                <td class="val sig-space">&nbsp;</td>
+                <td class="lbl">&nbsp;</td>
+                <td class="val sig-space">&nbsp;</td>
+            </tr>
+            <tr>
+                <td class="lbl">Printed Name&nbsp;:</td>
+                <td class="val">@if(!empty($purchaseRequest->requester?->full_name)){{ $purchaseRequest->requester->full_name }}@else&nbsp;@endif</td>
+                <td class="lbl">&nbsp;</td>
+                <td class="val">@if(!empty($purchaseRequest->finalizer?->full_name)){{ $purchaseRequest->finalizer->full_name }}@else&nbsp;@endif</td>
+            </tr>
+            <tr>
+                <td class="lbl">Designation&nbsp;:</td>
+                <td class="val">@if(!empty($purchaseRequest->requester?->position)){{ $purchaseRequest->requester->position }}@else&nbsp;@endif</td>
+                <td class="lbl">&nbsp;</td>
+                <td class="val">@if(!empty($purchaseRequest->finalizer?->position)){{ $purchaseRequest->finalizer->position }}@else&nbsp;@endif</td>
+            </tr>
+        </table>
     </div>
 </div>
 @endsection
 
 @section('scripts')
-@if($canWrite && in_array($status, ['pending', 'approved'], true))
 <script nonce="{{ $cspNonce }}">
-    (function () {
-        document.querySelectorAll('.prx-act').forEach(btn => {
-            btn.addEventListener('click', async () => {
-                const action = btn.dataset.action;
-                const confirm = await Swal.fire({
-                    icon: 'question',
-                    title: 'Purchase Request — ' + action,
-                    text: 'Ito ay ire-record sa ilalim ng iyong supply account.',
-                    showCancelButton: true,
-                    confirmButtonColor: '#0038A8',
-                    confirmButtonText: 'Confirm',
-                });
-                if (!confirm.isConfirmed) return;
-
-                let r;
-                try {
-                    r = await fetch('{{ url('purchase-requests') }}/' + @json($purchaseRequest->id) + '/' + action, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                            'Accept': 'application/json',
-                        },
-                    });
-                } catch (e) {
-                    Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
-                    return;
-                }
-
-                const data = await r.json().catch(() => ({}));
-                if (data.success) {
-                    await Swal.fire({ icon: 'success', title: 'Done', text: data.message, confirmButtonColor: '#0038A8' });
-                    window.location.href = data.redirect || '{{ route('purchase_requests.show', $purchaseRequest->id) }}';
-                    return;
-                }
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message || 'Could not process.', confirmButtonColor: '#0038A8' });
-            });
+    // Finalize confirmation (Supply only; button renders for submitted PRs)
+    document.querySelectorAll('.pr-finalize-btn').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const form = btn.closest('form');
+            Swal.fire({
+                icon: 'question',
+                title: 'Finalize this Purchase Request?',
+                text: (btn.dataset.pr || '') + ' will be marked finalized — printing unlocks and it is ready for physical submission to Procurement.',
+                showCancelButton: true,
+                confirmButtonText: 'Finalize',
+                confirmButtonColor: '#0038A8',
+                cancelButtonColor: '#64748b',
+            }).then((r) => { if (r.isConfirmed) form.submit(); });
         });
-    })();
+    });
 </script>
-@endif
 @endsection

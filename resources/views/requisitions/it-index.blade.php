@@ -16,6 +16,24 @@
     .req-list-flush { padding:0; background:transparent; }
     .paginator-compact { padding:8px 0; }
     .pr-page-wrap { width:100%; }
+    .cell-trim { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cmms-official-table td, .cmms-official-table th { vertical-align:middle; }
+    /* Table polish - matched to Parts & Consumables */
+    .cmms-official-table { border-collapse:collapse; }
+    .cmms-official-table th {
+        padding:12px 14px; font-size:11px; font-weight:700; text-transform:uppercase;
+        letter-spacing:.5px; color:#64748b; background:#f8fafc;
+        border-bottom:2px solid #e2e8f0; text-align:center;
+    }
+    .cmms-official-table th:first-child { text-align:left; }
+    .cmms-official-table td {
+        padding:12px 14px; font-size:13px; color:#1e293b;
+        border-bottom:1px solid #f1f5f9; text-align:center;
+    }
+    .cmms-official-table td:first-child { text-align:left; }
+    .cmms-official-table tbody tr:hover td { background:#f8fafc; }
+    .cmms-official-table tbody tr:hover td:first-child { box-shadow:inset 3px 0 0 #0038A8; }
+    .cmms-status-badge { display:inline-block; padding:3px 10px; border-radius:99px; font-size:11px; font-weight:800; white-space:nowrap; }
     .cmms-history-toolbar { display:flex; flex-wrap:wrap; gap:10px; align-items:center; justify-content:space-between; margin-bottom:14px; }
     .cmms-history-toolbar form { display:flex; align-items:center; gap:9px; flex:1; min-width:220px; background:#fff; border:1px solid #e2e8f0; border-radius:8px; padding:8px 12px; }
     .cmms-history-toolbar form > i { color:#94a3b8; font-size:13px; }
@@ -82,12 +100,14 @@
                 @endif
             </div>
             <div class="cmms-page-card-body">
-                <div class="cmms-tabs" role="tablist">
-            <button type="button" class="cmms-tab active" data-target="tab-new" role="tab">Request Parts</button>
-            <button type="button" class="cmms-tab" data-target="tab-history" role="tab">History</button>
+                @php $isHistory = request('tab') === 'history' || request()->has('history_status') || request()->has('history_q'); $isMyPrs = request('tab') === 'myprs'; @endphp
+            <div class="cmms-tabs" role="tablist">
+            <button type="button" class="cmms-tab {{ ($isHistory || $isMyPrs) ? '' : 'active' }}" data-target="tab-new" role="tab">Request Parts</button>
+            <button type="button" class="cmms-tab {{ $isMyPrs ? 'active' : '' }}" data-target="tab-myprs" role="tab">Purchase Requests</button>
+            <button type="button" class="cmms-tab {{ $isHistory ? 'active' : '' }}" data-target="tab-history" role="tab">History</button>
         </div>
 
-        <div id="tab-new" class="cmms-tab-content active" role="tabpanel">
+        <div id="tab-new" class="cmms-tab-content {{ ($isHistory || $isMyPrs) ? '' : 'active' }}" role="tabpanel">
             @if($activeTickets->isEmpty())
                 <div class="cmms-panel">
                     <div class="cmms-panel-body cmms-empty">
@@ -177,9 +197,22 @@
                             <span id="ticketReqItemCount" class="cmms-item-count" aria-live="polite">1 line item</span>
                         </div>
 
+                        <div id="manualPrHint" style="display:none;margin-bottom:12px;padding:10px 14px;border:1px solid #fde68a;background:#fffbeb;border-radius:8px;align-items:center;gap:14px;flex-wrap:wrap;">
+                            <div style="flex:1;min-width:200px;font-size:11.5px;color:#92400e;">
+                                <span id="manualPrHintText">This item is not in Parts Stock — it can't be issued from existing inventory.</span>
+                            </div>
+                            <a id="manualPrLink" href="#" class="cmms-action-btn cmms-action-btn--primary" aria-label="Create Purchase Request for this manual item">
+                                Create Purchase Request<i class="fa-solid fa-arrow-right"></i>
+                            </a>
+                        </div>
+
                         <div class="cmms-pr-justification">
                             <div class="k">Purpose / justification</div>
                             <textarea id="ticketReqRemarks" class="cmms-pr-textarea" rows="3" placeholder="State the purpose of the request and relevant technical particulars."></textarea>
+                        </div>
+
+                        <div id="openReqWarning" style="display:none;margin-bottom:12px;padding:10px 14px;border:1px solid #fed7aa;border-left:3px solid #d97706;background:#fff7ed;border-radius:8px;font-size:12.5px;color:#92400e;">
+                            <i class="fa-solid fa-triangle-exclamation" style="margin-right:6px;"></i>This ticket already has an <strong>ongoing</strong> parts request for the same items. Wait for it to be issued or rejected before requesting the same parts again.
                         </div>
 
                         <div class="cmms-pr-footer">
@@ -197,18 +230,61 @@
             @endif
         </div>
 
-        <div id="tab-history" class="cmms-tab-content" role="tabpanel">
+        <div id="tab-myprs" class="cmms-tab-content {{ $isMyPrs ? 'active' : '' }}" role="tabpanel">
+            {{-- Purchase Requests — own PR documents status (PR document flow) --}}
+            <div class="cmms-panel">
+                <div class="cmms-panel-body flush">
+                    @if(isset($myPrs) && $myPrs->isNotEmpty())
+                        <div class="table-wrap">
+                            <table class="cmms-official-table cmms-req-table">
+                                <thead>
+                                    <tr>
+                                        <th style="text-align:left;">PR #</th><th>Total</th><th>Date submitted</th><th>Status</th><th></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($myPrs as $pr)
+                                        <tr>
+                                            <td style="text-align:left;"><strong>{{ $pr->pr_number }}</strong></td>
+                                            <td>{{ $pr->total_amount !== null ? '₱' . number_format((float) $pr->total_amount, 2) : '—' }}</td>
+                                            <td>{{ $pr->created_at?->format('M d, Y | h:i A') }}</td>
+                                            <td>
+                                                @if($pr->isLegacyStatus())
+                                                    <span class="req-pill">{{ ucfirst($pr->status) }} (legacy)</span>
+                                                @elseif($pr->status === 'finalized')
+                                                    <span class="req-pill cmms-status-issued">Finalized</span>
+                                                @elseif($pr->status === 'draft')
+                                                    <span class="req-pill">Draft</span>
+                                                @else
+                                                    <span class="req-pill cmms-status-pending">Submitted to Supply</span>
+                                                @endif
+                                            </td>
+                                            <td><a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;">View</a></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    @else
+                        <div class="cmms-empty">No purchase requests yet.</div>
+                    @endif
+                </div>
+            </div>
+        </div>
+
+        <div id="tab-history" class="cmms-tab-content {{ $isHistory ? 'active' : '' }}" role="tabpanel">
             <div class="cmms-history-toolbar">
                 <form method="GET" action="{{ route('requisitions.index') }}" role="search">
+                    <input type="hidden" name="tab" value="history">
                     <i class="fa-solid fa-magnifying-glass"></i>
                     <input type="text" name="history_q" value="{{ $historyQ }}" placeholder="Search REQ no / item / remarks..." maxlength="100" aria-label="Search requisition history">
                     @if($historyQ !== '')
-                        <a href="{{ route('requisitions.index') }}" class="pr-select" style="text-decoration:none;padding:6px 10px;" title="Clear search">&times; Clear</a>
+                        <a href="{{ route('requisitions.index', ['tab' => 'history', 'history_status' => $historyStatus]) }}" class="pr-select" style="text-decoration:none;padding:6px 10px;" title="Clear search">&times; Clear</a>
                     @endif
                 </form>
                 <div class="chips" role="group" aria-label="Filter by status">
                     @foreach([['all','All'],['pending','Pending'],['approved','Approved'],['issued','Issued'],['rejected','Rejected']] as [$k,$lbl])
-                    <a href="{{ route('requisitions.index', array_filter(['history_status'=>$k,'history_q'=>$historyQ], fn ($v) => $v !== '' && $v !== null)) }}" class="{{ $historyStatus === $k ? 'active' : '' }}">{{ $lbl }}</a>
+                    <a href="{{ route('requisitions.index', array_filter(['tab'=>'history','history_status'=>$k,'history_q'=>$historyQ], fn ($v) => $v !== '' && $v !== null)) }}" class="{{ $historyStatus === $k ? 'active' : '' }}">{{ $lbl }}</a>
                     @endforeach
                 </div>
             </div>
@@ -221,16 +297,70 @@
                     </div>
                 </div>
             @else
-                <div class="cmms-req-list req-list-flush">
-                    @foreach($requisitions as $req)
-                        <div class="req-card-hover">
-                            @include('requisitions.partials.req-card', [
-                                'req' => $req,
-                                'showTracker' => true,
-                                'actionLabel' => 'View',
-                            ])
-                        </div>
-                    @endforeach
+                <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                    <table class="cmms-official-table" style="table-layout:fixed;min-width:860px;">
+                        <colgroup>
+                            <col style="width:12%">
+                            <col style="width:7%">
+                            <col style="width:13%">
+                            <col style="width:15%">
+                            <col>
+                            <col style="width:14%">
+                            <col style="width:14%">
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th style="text-align:left;">REQ #</th>
+                                <th>Type</th>
+                                <th>Status</th>
+                                <th>Job order</th>
+                                <th>Items</th>
+                                <th>Date</th>
+                                <th>Completed</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach($requisitions as $req)
+                            @php
+                                $rNo = 'REQ-' . str_pad($req->id, 5, '0', STR_PAD_LEFT);
+                                $rSt = strtolower($req->status);
+                                $rItems = $req->items ?? [];
+                                $isIssued = $rSt === 'issued';
+                            @endphp
+                            <tr>
+                                <td style="text-align:left;">
+                                    <a href="{{ route('requisitions.show', $req->id) }}" style="font-weight:700;color:#0038A8;text-decoration:none;">
+                                        {{ $rNo }}
+                                    </a>
+                                </td>
+                                <td>
+                                    <span class="cmms-req-tag {{ $req->ticket?->type === 'Preventive Maintenance' ? 'cmms-req-tag--issue' : 'cmms-req-tag--review' }}">{{ $req->ticket?->type === 'Preventive Maintenance' ? 'PM' : 'ICT' }}</span>
+                                </td>
+                                <td>
+                                    <span class="cmms-status-badge cmms-status-{{ $rSt }}">{{ ucfirst($req->status) }}</span>
+                                </td>
+                                <td class="cell-trim" title="{{ $req->ticket?->display_number ?? $req->ticket?->request_number ?? '' }}">
+                                    {{ \Illuminate\Support\Str::limit($req->ticket?->display_number ?? $req->ticket?->request_number ?? '—', 28) }}
+                                </td>
+                                <td class="cell-trim">
+                                    @if(count($rItems))
+                                        {{ ($rItems[0]['quantity'] ?? 1) }}× {{ \Illuminate\Support\Str::limit($rItems[0]['description'] ?? '', 30) }}@if(count($rItems) > 1) <span style="color:#0038A8;font-weight:600;">+{{ count($rItems) - 1 }}</span>@endif
+                                    @else
+                                        &mdash;
+                                    @endif
+                                </td>
+                                <td data-label="Date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
+                                <td data-label="Completed">
+                                    @if($isIssued && $req->reviewed_at)
+                                        {{ $req->reviewed_at->format('M d, Y | h:i A') }}
+                                    @else
+                                        &mdash;
+                                    @endif
+                                </td>
+                            </tr>
+                            @endforeach
+                        </tbody>
+                    </table>
                 </div>
                 <div class="paginator-compact">{{ $requisitions->links() }}</div>
             @endif
@@ -245,7 +375,70 @@
 <script nonce="{{ $cspNonce }}">
 (function () {
     const esc = (s) => String(s ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
-    
+
+    // Open (pending/approved) requisitions per ticket — for the duplicate-parts guard.
+    const OPEN_REQS = @json($openRequisitions ?? collect());
+    const openByTicket = {};
+    (OPEN_REQS || []).forEach(r => { (openByTicket[r.request_id] = openByTicket[r.request_id] || []).push(r); });
+
+    // Mirror of RequisitionSupport::sameParts (part_id or trimmed description, order-independent).
+    function partsFingerprint(items) {
+        const keys = [];
+        (items || []).forEach(it => {
+            const source = it.source || '';
+            const pid = it.part_id ?? null;
+            if ((source === 'parts-stock' || source === 'spare') && pid !== null && pid !== '') {
+                keys.push('pid:' + String(pid));
+            } else {
+                keys.push('dsc:' + String(it.description || '').trim().toLowerCase());
+            }
+        });
+        keys.sort();
+        return keys.join('|');
+    }
+    function duplicatesOpenParts(ticketId, items) {
+        const open = openByTicket[ticketId] || [];
+        const fp = partsFingerprint(items);
+        if (!fp) return null;
+        const hit = open.find(r => partsFingerprint(r.items) === fp);
+        if (!hit) return null;
+        return {
+            status: hit.status === 'approved' ? 'approved and awaiting release' : 'pending with Supply',
+            requisitionId: hit.id,
+        };
+    }
+    const duplicateWarningEl = () => document.getElementById('openReqWarning');
+    function updateDuplicateGuard() {
+        const list = document.querySelectorAll('.ticket-req-row');
+        const items = [];
+        list.forEach(row => {
+            const desc = row.querySelector('.ticket-req-desc')?.value?.trim();
+            if (desc) items.push({
+                description: desc,
+                source: row.querySelector('.ticket-req-source-val')?.value || 'other',
+                part_id: row.querySelector('.ticket-req-part-id')?.value || null,
+            });
+        });
+        const reqId = document.getElementById('request_id')?.value;
+        const hit = reqId ? duplicatesOpenParts(reqId, items) : null;
+        const warn = duplicateWarningEl();
+        const btn = document.getElementById('ticketPartsSubmitBtn');
+        if (hit) {
+            if (warn) { warn.style.display = 'block'; }
+            if (btn) { btn.disabled = true; }
+        } else {
+            if (warn) { warn.style.display = 'none'; }
+            if (btn) { btn.disabled = false; }
+        }
+    }
+    const reqSelect = document.getElementById('request_id');
+    if (reqSelect) reqSelect.addEventListener('change', () => { updateTicketContext(); updateDuplicateGuard(); });
+    const reqItemsList = document.getElementById('ticketReqItemsList');
+    if (reqItemsList) {
+        reqItemsList.addEventListener('input', updateDuplicateGuard);
+        reqItemsList.addEventListener('change', updateDuplicateGuard);
+    }
+
     document.querySelectorAll('.cmms-tab').forEach(tab => {
         tab.addEventListener('click', function () {
             document.querySelectorAll('.cmms-tab').forEach(t => t.classList.remove('active'));
@@ -275,6 +468,7 @@
     };
     if (requestIdSelect) requestIdSelect.addEventListener('change', updateTicketContext);
     updateTicketContext();
+    updateDuplicateGuard();
 
     const ticketReqItemsList = document.getElementById('ticketReqItemsList');
     if (!ticketReqItemsList) return;
@@ -379,6 +573,18 @@
             return;
         }
 
+        // Final duplicate-parts safety (also enforced server-side in StoreRequisitionAction).
+        const dup = duplicatesOpenParts(reqId, items);
+        if (dup) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Ongoing request found',
+                text: 'This ticket already has an ongoing parts request for the same items. Wait for it to be issued or rejected before requesting again.',
+                confirmButtonColor: '#0038A8',
+            });
+            return;
+        }
+
         submitting = true;
         const btn = document.getElementById('ticketPartsSubmitBtn');
         const originalLabel = btn.textContent;
@@ -419,6 +625,69 @@
         btn.textContent = originalLabel;
         btn.disabled = false;
     });
+})();
+
+// Contextual "Create Purchase Request" hint for manual items (PR document flow)
+(function () {
+    const hint = document.getElementById('manualPrHint');
+    const link = document.getElementById('manualPrLink');
+    const list = document.getElementById('ticketReqItemsList');
+    if (!hint || !link || !list) return;
+
+    const createRoute = @json(route('purchase_requests.create'));
+
+    function firstManualRow() {
+        for (const row of list.querySelectorAll('.ticket-req-row')) {
+            const desc = row.querySelector('.ticket-req-desc')?.value.trim() || '';
+            const src = row.querySelector('.ticket-req-source')?.value || '';
+            if (desc !== '' && src === '') return row;
+        }
+        return null;
+    }
+
+    // Collect rows that have a typed description but no Parts Stock source.
+    function manualRows() {
+        return [...list.querySelectorAll('.ticket-req-row')].filter((row) => {
+            const desc = row.querySelector('.ticket-req-desc')?.value.trim() || '';
+            const src  = row.querySelector('.ticket-req-source')?.value || '';
+            return desc !== '' && src === '';
+        });
+    }
+
+    let hintTimer = null;
+    function scheduleHint() {
+        clearTimeout(hintTimer);
+        hintTimer = setTimeout(updateHint, 500); // wait for a typing pause
+    }
+
+    function updateHint() {
+        const rows = manualRows();
+        if (rows.length === 0) { hint.style.display = 'none'; return; }
+
+        // Prefill the Create Purchase Request link with the first manual item.
+        const row = rows[0];
+        const qty = parseInt(row.querySelector('.ticket-req-qty')?.value, 10) || 1;
+        const desc = encodeURIComponent(row.querySelector('.ticket-req-desc').value.trim());
+        link.href = createRoute + '?description=' + desc + '&quantity=' + qty;
+
+        const hintText = document.getElementById('manualPrHintText');
+        if (hintText) {
+            hintText.textContent = rows.length === 1
+                ? 'This item is not in Parts Stock — it can\'t be issued from existing inventory. Create a Purchase Request instead.'
+                : rows.length + ' items are not in Parts Stock — they can\'t be issued from existing inventory. Create a Purchase Request instead.';
+        }
+        hint.style.display = 'flex';
+    }
+
+    list.addEventListener('input', (e) => {
+        if (e.target.matches('.ticket-req-desc, .ticket-req-source')) scheduleHint();
+    });
+    list.addEventListener('change', (e) => {
+        if (e.target.matches('.ticket-req-source')) updateHint();
+    });
+
+    // Initial state (rows may be re-rendered with values after validation errors)
+    list.querySelectorAll('.ticket-req-row').forEach(() => updateHint());
 })();
 </script>
 @endsection

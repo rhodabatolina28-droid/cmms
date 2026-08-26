@@ -47,7 +47,7 @@
 
     .modal-overlay { position: fixed; inset: 0; background: rgba(15,23,42,.55); display: none; align-items: center; justify-content: center; z-index: 1000; padding: 16px; }
     .modal-overlay.open { display: flex; }
-    .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
+    .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
     .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; }
     .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
     .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; }
@@ -380,13 +380,14 @@
         <form id="partForm">
             <input type="hidden" name="_method" value="post" id="partMethod">
             <div class="modal-body">
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px;">Basic Info</div>
                 <div class="form-grid">
                     <div class="form-field full">
                         <label>Item name *</label>
                         <input type="text" name="item_name" id="p_item_name" maxlength="190">
                         <div class="form-err" id="err_item_name"></div>
                     </div>
-                                        <div class="form-field">
+                    <div class="form-field">
                         <label>Unit *</label>
                         <select name="unit" id="p_unit">
                             <option value="">Select unit</option>
@@ -401,31 +402,40 @@
                         </select>
                         <div class="form-err" id="err_unit"></div>
                     </div>
-                                        <div class="form-field">
+                    <div class="form-field">
                         <label>Category</label>
                         <select name="category" id="p_category">
                             <option value="">Select category</option>
-                            <option value="Memory">Memory</option>
-                            <option value="Storage">Storage</option>
-                            <option value="Print Consumable">Print Consumable</option>
-                            <option value="Power">Power</option>
-                            <option value="Peripheral">Peripheral</option>
-                            <option value="Hardware">Hardware</option>
-                            <option value="Network">Network</option>
-                            <option value="Other">Other</option>
+                            @foreach($categories as $cat)
+                                <option value="{{ $cat }}">{{ $cat }}</option>
+                            @endforeach
+                            @if(!in_array('Other', $categories->toArray()))
+                                <option value="Other">Other</option>
+                            @endif
                         </select>
                         <div class="form-err" id="err_category"></div>
                     </div>
+                </div>
+
+                <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin:14px 0 8px;">Stock Settings</div>
+                <div class="form-grid">
                     <div class="form-field" id="field_on_hand">
                         <label>On-hand (initial)</label>
                         <input type="number" name="on_hand_qty" id="p_on_hand" min="0" value="0">
                         <div class="form-err"></div>
                     </div>
-                    <div class="form-field full" style="display:flex;align-items:center;gap:8px;">
-                        <input type="checkbox" name="requires_unit_tracking" id="p_requires_unit_tracking" value="1" style="width:auto;">
-                        <label for="p_requires_unit_tracking" style="margin:0;">Track every unit (serial number, property number, and unit cost required)</label>
+                    <div class="form-field" style="display:flex;align-items:center;gap:6px;">
+                        <span style="font-size:11px;color:#94a3b8;">Preview:</span>
+                        <span class="badge badge-ok" id="statusPreviewBadge" style="display:none;"></span>
                     </div>
-                                        <div class="form-field">
+                    <div class="form-field full" style="display:flex;flex-direction:column;gap:4px;">
+                        <div style="display:flex;align-items:center;gap:8px;">
+                            <input type="checkbox" name="requires_unit_tracking" id="p_requires_unit_tracking" value="1" style="width:auto;">
+                            <label for="p_requires_unit_tracking" style="margin:0;">Track every unit (serialized)</label>
+                        </div>
+                        <span style="font-size:11px;color:#94a3b8;">Requires serial number, property number, and unit cost per piece. Stock must start at zero.</span>
+                    </div>
+                    <div class="form-field">
                         <label>Reorder level</label>
                         <input type="number" name="reorder_level" id="p_reorder" min="0" value="0">
                         <div class="form-err"></div>
@@ -456,8 +466,16 @@
                         <div class="form-err" id="err_qty"></div>
                     </div>
                     <div class="form-field full" id="stockSerialWrap">
-                        <label>Serial / Property numbers <span style="font-weight:400;color:#94a3b8;">(isa bawat linya: serial, property)</span></label>
-                        <textarea name="units" id="s_units" rows="3" style="width:100%; border:1px solid #cbd5e1; border-radius:8px; padding:9px 12px; font-size:13px; font-family:monospace;"></textarea>
+                        <label>Serialized units <span style="font-weight:400;color:#94a3b8;">(isa bawat hilera)</span></label>
+                        <div id="serialRows" style="display:flex;flex-direction:column;gap:6px;">
+                            <div class="serial-row" style="display:grid;grid-template-columns:1fr 1fr 100px 30px;gap:6px;align-items:center;">
+                                <input type="text" class="s-serial" placeholder="Serial number" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;font-family:monospace;">
+                                <input type="text" class="s-property" placeholder="Property number" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;font-family:monospace;">
+                                <input type="number" class="s-cost" placeholder="Cost" min="0" step="0.01" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;">
+                                <button type="button" class="remove-serial-row" style="width:28px;height:28px;border:none;background:#fee2e2;color:#b91c1c;border-radius:6px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;" title="Remove row">&times;</button>
+                            </div>
+                        </div>
+                        <button type="button" id="addSerialRow" style="margin-top:6px;padding:5px 12px;border:1px dashed #cbd5e1;border-radius:6px;background:#f8fafc;color:#475569;font-size:12px;cursor:pointer;">+ Add serial</button>
                         <div class="field-hint" id="unitsCountHint"></div>
                         <div class="form-err" id="err_units"></div>
                     </div>
@@ -862,24 +880,37 @@
 
     // ── Live hints: serial counter (Stock In) + issue destination (Stock Out) ──
     (function () {
-        const unitsEl = document.getElementById('s_units');
         const qtyEl = document.getElementById('s_qty');
         const unitsHint = document.getElementById('unitsCountHint');
 
+        function getSerialRows() {
+            return Array.from(document.querySelectorAll('#serialRows .serial-row'));
+        }
+
+        function collectUnits() {
+            return getSerialRows().map(row => ({
+                serial_number: row.querySelector('.s-serial')?.value?.trim() || '',
+                property_number: row.querySelector('.s-property')?.value?.trim() || '',
+                unit_value: row.querySelector('.s-cost')?.value || '',
+            })).filter(u => u.serial_number || u.property_number);
+        }
+
+    window.collectUnits = collectUnits;
+
         function serialCountHint() {
-            if (!unitsHint || !unitsEl || !qtyEl) return;
+            if (!unitsHint || !qtyEl) return;
             const wrapVisible = !!document.getElementById('stockSerialWrap')?.offsetParent;
             if (!wrapVisible) { unitsHint.textContent = ''; unitsHint.className = 'field-hint'; return; }
-            const lines = unitsEl.value.split('\n').map(l => l.trim()).filter(Boolean);
+            const filled = getSerialRows().filter(r => r.querySelector('.s-serial')?.value?.trim()).length;
             const qty = parseInt(qtyEl.value, 10) || 0;
-            if (!lines.length && !qty) { unitsHint.textContent = ''; unitsHint.className = 'field-hint'; return; }
+            if (!filled && !qty) { unitsHint.textContent = ''; unitsHint.className = 'field-hint'; return; }
             let cls = 'field-hint';
-            let msg = lines.length + ' serial line(s) entered · qty = ' + qty;
-            if (qty > 0 && lines.length > qty) {
+            let msg = filled + ' serial row(s) · qty = ' + qty;
+            if (qty > 0 && filled > qty) {
                 cls += ' warn';
-                msg += ' — more serial lines than qty.';
-            } else if (qty > 0 && lines.length < qty) {
-                msg += ' · ' + (qty - lines.length) + ' will be added as generic unit(s).';
+                msg += ' — more serial rows than qty.';
+            } else if (qty > 0 && filled < qty) {
+                msg += ' · ' + (qty - filled) + ' will be added as generic unit(s).';
             } else if (qty > 0) {
                 cls += ' ok';
                 msg += ' · matched.';
@@ -887,7 +918,28 @@
             unitsHint.textContent = msg;
             unitsHint.className = cls;
         }
-        unitsEl?.addEventListener('input', serialCountHint);
+
+        // Add / remove serial rows
+        document.getElementById('addSerialRow')?.addEventListener('click', () => {
+            const container = document.getElementById('serialRows');
+            if (!container) return;
+            const div = document.createElement('div');
+            div.className = 'serial-row';
+            div.style.cssText = 'display:grid;grid-template-columns:1fr 1fr 100px 30px;gap:6px;align-items:center;';
+            div.innerHTML =
+                '<input type="text" class="s-serial" placeholder="Serial number" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;font-family:monospace;">'
+                + '<input type="text" class="s-property" placeholder="Property number" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;font-family:monospace;">'
+                + '<input type="number" class="s-cost" placeholder="Cost" min="0" step="0.01" style="width:100%;border:1px solid #cbd5e1;border-radius:6px;padding:7px 10px;font-size:12.5px;">'
+                + '<button type="button" class="remove-serial-row" style="width:28px;height:28px;border:none;background:#fee2e2;color:#b91c1c;border-radius:6px;cursor:pointer;font-size:14px;display:inline-flex;align-items:center;justify-content:center;" title="Remove row">&times;</button>';
+            container.appendChild(div);
+            div.querySelector('.s-serial')?.focus();
+        });
+        document.getElementById('serialRows')?.addEventListener('click', (e) => {
+            if (!e.target.classList.contains('remove-serial-row')) return;
+            const rows = getSerialRows();
+            if (rows.length > 1) e.target.closest('.serial-row').remove();
+        });
+        document.getElementById('serialRows')?.addEventListener('input', serialCountHint);
         qtyEl?.addEventListener('input', serialCountHint);
 
         function destHint() {
@@ -922,6 +974,33 @@
 
     document.getElementById('partsCsvInput')?.addEventListener('change', importPartsCsv);
 
+    // ── Live status preview badge (Add/Edit Part modal) ──
+    (function () {
+        const onHandEl = document.getElementById('p_on_hand');
+        const reorderEl = document.getElementById('p_reorder');
+        const badge = document.getElementById('statusPreviewBadge');
+        if (!onHandEl || !reorderEl || !badge) return;
+
+        function preview() {
+            if (document.getElementById('partModal')?.style.display === 'none' || !document.getElementById('partModal')?.classList.contains('open')) return;
+            const qty = parseInt(onHandEl.value, 10) || 0;
+            const reorder = parseInt(reorderEl.value, 10) || 0;
+            if (qty <= 0) {
+                badge.textContent = 'CRITICAL';
+                badge.className = 'badge badge-critical';
+            } else if (reorder > 0 && qty < reorder) {
+                badge.textContent = 'LOW';
+                badge.className = 'badge badge-low';
+            } else {
+                badge.textContent = 'OK';
+                badge.className = 'badge badge-ok';
+            }
+            badge.style.display = 'inline-flex';
+        }
+        onHandEl.addEventListener('input', preview);
+        reorderEl.addEventListener('input', preview);
+    })();
+
     let partMode = 'add', editingId = null;
     let stockMode = 'in', stockPart = null;
 
@@ -939,6 +1018,8 @@
         document.getElementById('field_on_hand').style.display = mode === 'add' ? 'flex' : 'none';
         document.querySelectorAll('.form-err').forEach(e => e.textContent = '');
         document.getElementById('partModal').classList.add('open');
+        const submitBtn = document.querySelector('#partForm button[type="submit"]');
+        if (submitBtn) submitBtn.textContent = mode === 'add' ? 'Add Part' : 'Save Changes';
         document.getElementById('p_item_name').focus();
     }
 
@@ -953,7 +1034,7 @@
         document.getElementById('s_ref').value = '';
         document.getElementById('s_reason').value = '';
         // Serial UI — ipapakita ayon sa mode (Phase 1: visual; backend sa Phase 3).
-        document.getElementById('s_units').value = '';
+        document.querySelectorAll('#serialRows .s-serial, #serialRows .s-property, #serialRows .s-cost').forEach(e => e.value = '');
         document.getElementById('s_issued_to').value = '';
         document.getElementById('stockSerialWrap').style.display = mode === 'in' ? 'block' : 'none';
         document.getElementById('stockUnitsPickerWrap').style.display = mode === 'out' ? 'block' : 'none';
@@ -1168,12 +1249,9 @@
             reference_type: document.getElementById('s_ref').value
         };
         if (stockMode === 'in') {
-            const lines = (document.getElementById('s_units').value || '').split('\n').map(l => l.trim()).filter(l => l !== '');
-            if (lines.length) {
-                payload.units = lines.map(line => {
-                    const parts = line.split(',').map(x => x.trim());
-                    return { serial_number: parts[0] || '', property_number: parts[1] || '' };
-                });
+            const units = collectUnits();
+            if (units.length) {
+                payload.units = units;
             }
         } else {
             const sel = Array.from(document.querySelectorAll('.stock-unit-chk:checked')).map(c => parseInt(c.value, 10));

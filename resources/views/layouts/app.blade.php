@@ -228,7 +228,7 @@
                         <i class="fa-solid fa-clipboard-list"></i> <span>All Requests</span>
                     </a>
                     <div class="cmms-nav-group">
-                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('super_admin.inventory*', 'super_admin.parts', 'super_admin.purchase_requests*') ? 'active' : '' }}" aria-expanded="false">
+                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('super_admin.inventory*', 'super_admin.parts') ? 'active' : '' }}" aria-expanded="false">
                             <i class="fa-solid fa-boxes-stacked"></i>
                             <span>Inventory</span>
                             <i class="fa-solid fa-chevron-down cmms-nav-caret"></i>
@@ -236,7 +236,6 @@
                         <div class="cmms-nav-sub">
                             <a href="{{ route('super_admin.inventory') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.inventory*') ? 'active' : '' }}">Asset Registry</a>
                             <a href="{{ route('super_admin.parts') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.parts') ? 'active' : '' }}">Parts & Consumables</a>
-                            <a href="{{ route('super_admin.purchase_requests') }}" class="cmms-nav-sub-link {{ request()->routeIs('super_admin.purchase_requests*') ? 'active' : '' }}">Purchase Requests</a>
                         </div>
                     </div>
                     <a href="{{ route('requisitions.index') }}" class="nav-link {{ request()->routeIs('requisitions.*') ? 'active' : '' }}" data-tooltip="Parts Requests">
@@ -252,7 +251,7 @@
                     </a>
                     @if(Auth::user()->canProcessSupply())
                     <div class="cmms-nav-group">
-                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('inventory.*', 'physical-count.*', 'purchase_requests*') ? 'active' : '' }}" aria-expanded="false">
+                        <button type="button" class="cmms-nav-parent {{ request()->routeIs('inventory.*', 'physical-count.*') ? 'active' : '' }}" aria-expanded="false">
                             <i class="fa-solid fa-boxes-stacked"></i>
                             <span>Inventory</span>
                             <i class="fa-solid fa-chevron-down cmms-nav-caret"></i>
@@ -262,7 +261,6 @@
                             <a href="{{ route('inventory.parts') }}" class="cmms-nav-sub-link {{ request()->routeIs('inventory.parts*') ? 'active' : '' }}">Parts & Consumables</a>
                             <a href="{{ route('inventory.qr-batch') }}" class="cmms-nav-sub-link {{ request()->routeIs('inventory.qr-batch') ? 'active' : '' }}">Batch QR Sticker Print</a>
                             <a href="{{ route('physical-count.index') }}" class="cmms-nav-sub-link {{ request()->routeIs('physical-count.*') ? 'active' : '' }}">Physical Inventory Count</a>
-                            <a href="{{ route('purchase_requests.index') }}" class="cmms-nav-sub-link {{ request()->routeIs('purchase_requests*') ? 'active' : '' }}">Purchase Requests</a>
                         </div>
                     </div>
                     @endif
@@ -370,18 +368,6 @@
             </header>
 
             <div class="content-wrapper">
-                @if(session('success') && !str_contains(session('success'), 'Thank you for completing the survey') && !str_contains(session('success'), 'You have already submitted'))
-                    <div class="alert alert-success" id="globalAlertSuccess">
-                        {{ session('success') }}
-                    </div>
-                @endif
-
-                @if(session('error'))
-                    <div class="alert alert-error" id="globalAlertError">
-                        {{ session('error') }}
-                    </div>
-                @endif
-
                 @yield('content')
             </div>
         </main>

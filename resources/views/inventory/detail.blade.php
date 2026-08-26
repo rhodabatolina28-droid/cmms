@@ -330,10 +330,10 @@
         <div class="stat-card">
             <div class="stat-label">Acquisition Cost</div>
             <div class="stat-value">
-                {{ $asset->acquisition_cost ? 'â‚± ' . number_format($asset->acquisition_cost, 2) : 'N/A' }}
+                {{ $asset->acquisition_cost ? '₱ ' . number_format($asset->acquisition_cost, 2) : 'N/A' }}
             </div>
             @if($asset->total_maintenance_cost && $asset->total_maintenance_cost > 0)
-                <div class="stat-meta">Maintenance: â‚±{{ number_format($asset->total_maintenance_cost, 2) }}</div>
+                <div class="stat-meta">Maintenance: ₱{{ number_format($asset->total_maintenance_cost, 2) }}</div>
             @endif
         </div>
     </div>
@@ -366,7 +366,7 @@
                 </div>
                 <div class="field-row">
                     <span class="field-label">Acquisition Cost</span>
-                    <span class="field-value">{{ $asset->acquisition_cost ? 'â‚± ' . number_format($asset->acquisition_cost, 2) : 'N/A' }}</span>
+                    <span class="field-value">{{ $asset->acquisition_cost ? '₱ ' . number_format($asset->acquisition_cost, 2) : 'N/A' }}</span>
                 </div>
                 <div class="field-row">
                     <span class="field-label">Warranty Expiration</span>

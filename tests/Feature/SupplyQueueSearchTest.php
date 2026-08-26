@@ -215,16 +215,35 @@ class SupplyQueueSearchTest extends TestCase
         $filtered->assertDontSee($pendingNo);
     }
 
+    public function test_history_filter_keeps_the_history_tab_active(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $this->makeRequisition($it);
+
+        // Clicking a filter carries tab=history so the History panel stays open
+        $response = $this->actingAs($it)->get(route('requisitions.index', [
+            'tab' => 'history',
+            'history_status' => 'all',
+        ]));
+
+        $response->assertOk();
+        // History tab is marked active; Request Parts is not
+        $response->assertSee('class="cmms-tab active" data-target="tab-history"', false);
+    }
+
     public function test_it_history_search_matches_item_description(): void
     {
         $it = $this->makeUser(['role' => 'it']);
-        $this->makeRequisition($it, ['items' => [['description' => 'NVMe SSD 1TB', 'quantity' => 1]]]);
-        $this->makeRequisition($it, ['items' => [['description' => 'Mouse pad', 'quantity' => 1]]]);
+        $hit = $this->makeRequisition($it, ['items' => [['description' => 'NVMe SSD 1TB', 'quantity' => 1]]]);
+        $miss = $this->makeRequisition($it, ['items' => [['description' => 'Mouse pad', 'quantity' => 1]]]);
 
         $response = $this->actingAs($it)->get(route('requisitions.index', ['history_q' => 'NVMe']));
 
         $response->assertOk();
         $response->assertSee('NVMe SSD 1TB');
-        $response->assertDontSee('Mouse pad');
+        $hitNo = 'REQ-' . str_pad((string) $hit->id, 5, '0', STR_PAD_LEFT);
+        $missNo = 'REQ-' . str_pad((string) $miss->id, 5, '0', STR_PAD_LEFT);
+        $response->assertSee($hitNo);
+        $response->assertDontSee($missNo);
     }
 }
