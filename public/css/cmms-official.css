@@ -701,6 +701,7 @@
 .cmms-status-pending { border-color: #fed7aa; color: #92400e; background: #fff7ed; }
 .cmms-status-approved { border-color: #bfdbfe; color: #1e40af; background: #eff6ff; }
 .cmms-status-issued { border-color: #bbf7d0; color: #166534; background: #f0fdf4; }
+.cmms-status-received { border-color: #a7f3d0; color: #065f46; background: #ecfdf5; }
 .cmms-status-rejected { border-color: #fecaca; color: #b91c1c; background: #fef2f2; }
 
 .cmms-empty {

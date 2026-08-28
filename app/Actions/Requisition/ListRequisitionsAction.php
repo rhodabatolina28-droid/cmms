@@ -232,7 +232,7 @@ class ListRequisitionsAction
             Requisition::with(['ticket', 'requester', 'reviewer'])->where('requested_by', $itUser->id),
             $historyStatus,
             $historyQ
-        )->orderByDesc('created_at')->paginate(20)->withQueryString();
+        )->orderByDesc('created_at')->paginate(20)->withQueryString()->appends(['tab' => 'history']);
 
         $selectedTicketId = $httpRequest->query('request_id');
 
@@ -257,8 +257,9 @@ class ListRequisitionsAction
                 $q->where('requested_by', $itUser->id)->orWhere('created_by', $itUser->id);
             })
             ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
+            ->paginate(20)
+            ->withQueryString()
+            ->appends(['tab' => 'myprs']);
 
         return view('requisitions.it-index', compact(
             'activeTickets',
@@ -296,7 +297,7 @@ class ListRequisitionsAction
             Requisition::with(['ticket', 'requester', 'reviewer'])->where('requested_by', $superAdmin->id),
             $historyStatus,
             $historyQ
-        )->orderByDesc('created_at')->paginate(20)->withQueryString();
+        )->orderByDesc('created_at')->paginate(20)->withQueryString()->appends(['tab' => 'history']);
 
         $selectedTicketId = $httpRequest->query('request_id');
 
@@ -321,8 +322,9 @@ class ListRequisitionsAction
                 $q->where('requested_by', $superAdmin->id)->orWhere('created_by', $superAdmin->id);
             })
             ->orderByDesc('created_at')
-            ->limit(5)
-            ->get();
+            ->paginate(20)
+            ->withQueryString()
+            ->appends(['tab' => 'myprs']);
 
         return view('requisitions.it-index', compact(
             'activeTickets',
@@ -342,5 +344,220 @@ class ListRequisitionsAction
         \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($supply, $query);
 
         return $query->count();
+    }
+
+    /**
+     * AJAX data endpoint for the Supply Workspace Requisition Queue tab.
+     *
+     * Renders the queued rows (re-using the existing blade partial) plus the
+     * pagination bar and per-status counts as JSON, so the view can update
+     * in place without a full page reload — the same UX as Inventory/Parts.
+     */
+    public function queueData(Request $httpRequest)
+    {
+        $user = Auth::user();
+        if (! $user->canProcessSupply()) {
+            abort(403);
+        }
+
+        $filter = (string) $httpRequest->query('status', 'all');
+        $allowed = ['pending', 'approved', 'issued', 'rejected', 'all'];
+        if (! in_array($filter, $allowed, true)) {
+            $filter = 'all';
+        }
+
+        $q = trim((string) $httpRequest->query('q', ''));
+        $sort = (string) $httpRequest->query('sort', 'newest');
+        if (! in_array($sort, ['newest', 'oldest'], true)) {
+            $sort = 'newest';
+        }
+
+        $query = Requisition::with(['ticket.linkedAsset.assignedUser', 'requester', 'reviewer']);
+        \App\Support\RequestHelpers::scopeRequisitionsForSupplyOfficer($user, $query);
+
+        if ($filter !== 'all') {
+            $query->where('status', $filter);
+        }
+
+        if ($q !== '') {
+            $rawId = ctype_digit($q) ? (int) $q : null;
+            if (! $rawId && preg_match('/^req[-_ ]?0*(\d+)$/i', $q, $m)) {
+                $rawId = (int) $m[1];
+            }
+            $query->where(function ($w) use ($q, $rawId) {
+                if ($rawId !== null) {
+                    $w->orWhere('id', $rawId);
+                }
+                $w->orWhere(function ($s) use ($q) {
+                    $s->whereHas('requester', fn ($r) => $r->where('full_name', 'like', "%{$q}%"));
+                    $s->orWhereHas('ticket', fn ($t) => $t->where('request_number', 'like', "%{$q}%"));
+                    $s->orWhere('items', 'like', "%{$q}%");
+                    $s->orWhere('remarks', 'like', "%{$q}%");
+                });
+            });
+        }
+
+        $requisitions = $query
+            ->orderBy('created_at', $sort === 'oldest' ? 'asc' : 'desc')
+            ->paginate((int) $httpRequest->input('per_page', 20))
+            ->withQueryString();
+
+        $rowsHtml = '';
+        foreach ($requisitions as $req) {
+            $rowsHtml .= view('requisitions.partials.req-table-row', [
+                'req' => $req,
+                'showRequester' => true,
+                'quickActions' => true,
+            ])->render();
+        }
+
+        $paginationHtml = $requisitions->hasPages()
+            ? (string) $requisitions->links('vendor.pagination.parts')
+            : '';
+
+        $counts = [
+            'pending' => $this->supplyRequisitionCount($user, Requisition::STATUS_PENDING),
+            'approved' => $this->supplyRequisitionCount($user, Requisition::STATUS_APPROVED),
+            'issued' => $this->supplyRequisitionCount($user, Requisition::STATUS_ISSUED),
+            'rejected' => $this->supplyRequisitionCount($user, Requisition::STATUS_REJECTED),
+        ];
+
+        return response()->json([
+            'success' => true,
+            'rows' => $rowsHtml,
+            'pagination' => $paginationHtml,
+            'total' => $requisitions->total(),
+            'current_page' => $requisitions->currentPage(),
+            'last_page' => $requisitions->lastPage(),
+            'per_page' => $requisitions->perPage(),
+            'counts' => $counts,
+            'filter' => $filter,
+            'q' => $q,
+            'sort' => $sort,
+        ]);
+    }
+
+    /**
+     * AJAX data endpoint for the Supply Workspace Job Orders tab.
+     * Same pattern as queueData: renders ticket rows (re-using the existing
+     * markup via a partial) plus the pagination bar as JSON.
+     */
+    public function ticketsData(Request $httpRequest)
+    {
+        $user = Auth::user();
+        if (! $user->canProcessSupply()) {
+            abort(403);
+        }
+
+        $q = trim((string) $httpRequest->query('q', ''));
+
+        $ticketQuery = RequestModel::with(['user', 'assignedTo', 'requisitions'])
+            ->withCount('requisitions');
+        \App\Support\RequestHelpers::scopeIctTicketsForSupplyAdmin($user, $ticketQuery);
+
+        if ($q !== '') {
+            $ticketQuery->where(function ($w) use ($q) {
+                $w->where('request_number', 'like', "%{$q}%")
+                    ->orWhereHas('user', fn ($u) => $u->where('full_name', 'like', "%{$q}%"))
+                    ->orWhereHas('assignedTo', fn ($a) => $a->where('full_name', 'like', "%{$q}%"));
+            });
+        }
+
+        $ictTickets = $ticketQuery
+            ->orderByDesc('updated_at')
+            ->paginate((int) $httpRequest->input('per_page', 20))
+            ->withQueryString();
+
+        $rowsHtml = view('requisitions.partials.ticket-table-rows', [
+            'tickets' => $ictTickets,
+        ])->render();
+
+        $paginationHtml = $ictTickets->hasPages()
+            ? (string) $ictTickets->links('vendor.pagination.parts')
+            : '';
+
+        return response()->json([
+            'success' => true,
+            'rows' => $rowsHtml,
+            'pagination' => $paginationHtml,
+            'total' => $ictTickets->total(),
+            'current_page' => $ictTickets->currentPage(),
+            'last_page' => $ictTickets->lastPage(),
+            'per_page' => $ictTickets->perPage(),
+        ]);
+    }
+
+    /**
+     * AJAX data endpoint for the IT/SA History tab.
+     * Renders history rows (re-using the existing partial) plus pagination as JSON.
+     */
+    public function historyData(Request $httpRequest)
+    {
+        $user = Auth::user();
+        if (! in_array($user->role, ['it', 'admin', 'super_admin'], true)) {
+            abort(403);
+        }
+
+        [$historyStatus, $historyQ] = $this->historyFilters($httpRequest);
+
+        $requisitions = $this->applyHistoryFilters(
+            Requisition::with(['ticket', 'requester', 'reviewer'])->where('requested_by', $user->id),
+            $historyStatus,
+            $historyQ
+        )->orderByDesc('created_at')->paginate(20)->withQueryString()->appends(['tab' => 'history']);
+
+        $rowsHtml = view('requisitions.partials.history-rows', [
+            'requisitions' => $requisitions,
+        ])->render();
+
+        $paginationHtml = $requisitions->hasPages()
+            ? (string) $requisitions->links()
+            : '';
+
+        return response()->json([
+            'success' => true,
+            'rows' => $rowsHtml,
+            'pagination' => $paginationHtml,
+            'total' => $requisitions->total(),
+            'current_page' => $requisitions->currentPage(),
+            'last_page' => $requisitions->lastPage(),
+        ]);
+    }
+
+    /**
+     * AJAX data endpoint for the IT/SA Purchase Requests tab (own PRs).
+     */
+    public function myPrsData(Request $httpRequest)
+    {
+        $user = Auth::user();
+        if (! in_array($user->role, ['it', 'admin', 'super_admin'], true)) {
+            abort(403);
+        }
+
+        $myPrs = \App\Models\PurchaseRequest::query()
+            ->where(function ($q) use ($user) {
+                $q->where('requested_by', $user->id)->orWhere('created_by', $user->id);
+            })
+            ->orderByDesc('created_at')
+            ->paginate(20)
+            ->withQueryString()
+            ->appends(['tab' => 'myprs']);
+
+        $rowsHtml = view('requisitions.partials.my-pr-rows', [
+            'myPrs' => $myPrs,
+        ])->render();
+
+        $paginationHtml = $myPrs->hasPages()
+            ? (string) $myPrs->links()
+            : '';
+
+        return response()->json([
+            'success' => true,
+            'rows' => $rowsHtml,
+            'pagination' => $paginationHtml,
+            'total' => $myPrs->total(),
+            'current_page' => $myPrs->currentPage(),
+            'last_page' => $myPrs->lastPage(),
+        ]);
     }
 }

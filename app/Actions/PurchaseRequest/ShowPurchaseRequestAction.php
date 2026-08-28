@@ -28,6 +28,8 @@ class ShowPurchaseRequestAction
             'requester',
             'creator',
             'finalizer',
+            'deliverer',
+            'attachments.uploader',
         ])->findOrFail($id);
 
         // IT may only view their own requests.
@@ -39,6 +41,12 @@ class ShowPurchaseRequestAction
             }
         }
 
-        return view('purchase-requests.show', compact('purchaseRequest'));
+        // Phase C5 - Receive button context (form lives on its own page).
+        $canReceive = false;
+        if ($purchaseRequest->status === PurchaseRequest::STATUS_FINALIZED) {
+            $canReceive = (new ReceivePurchaseRequestAction)->canReceive($purchaseRequest, $user);
+        }
+
+        return view('purchase-requests.show', compact('purchaseRequest', 'canReceive'));
     }
 }

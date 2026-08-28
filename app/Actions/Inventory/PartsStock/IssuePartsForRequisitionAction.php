@@ -104,6 +104,22 @@ class IssuePartsForRequisitionAction
                                 'request_id' => $ticketId,
                                 'issued_at' => now(),
                             ]);
+
+                            // Lifecycle parity with the PR receive flow: every issued
+                            // unit must show up on the asset's Lifecycle History so
+                            // administrators can trace when the part was installed.
+                            if ($assetId) {
+                                \App\Models\InventoryHistory::create([
+                                    'asset_id' => $assetId,
+                                    'action' => 'Part Installed',
+                                    'performed_by' => $performedBy,
+                                    'new_user_id' => $custodianId ?: null,
+                                    'remarks' => 'Installed ' . $part->item_name
+                                        . (trim((string) ($unit->serial_number ?? '')) !== ''
+                                            ? ' (SN:' . $unit->serial_number . ')' : '')
+                                        . ' via ' . ($ticket?->request_number ?? ('REQ #' . $requisition->id)),
+                                ]);
+                            }
                         }
                     }
 

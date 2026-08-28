@@ -132,6 +132,7 @@
 
     <form method="POST" action="{{ route('purchase_requests.store') }}" id="prForm" novalidate aria-label="Appendix 60 purchase request form">
         @csrf
+        <input type="hidden" name="ticket" value="{{ old('ticket', $prefill['context_ticket'] ?? null) }}">
         @if($requisition)
             <input type="hidden" name="requisition_id" value="{{ $requisition->id }}">
             <input type="hidden" name="requested_by" value="{{ $requisition->requested_by }}">

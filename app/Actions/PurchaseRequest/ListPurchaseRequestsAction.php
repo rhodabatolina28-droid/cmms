@@ -118,4 +118,61 @@ class ListPurchaseRequestsAction
 
         return $query->count();
     }
+
+    /**
+     * AJAX data endpoint for the Supply Workspace Purchase Requests tab.
+     * Same pattern as queueData/ticketsData: renders PR rows (re-using the
+     * existing table markup via a partial) plus pagination + counts as JSON.
+     */
+    public function data(Request $request, User $user): array
+    {
+        $query = PurchaseRequest::with('requisition.ticket', 'requester', 'creator', 'finalizer');
+        $this->applyOrgScope($query, $user);
+
+        if ($user->role === 'it') {
+            $query->where(function ($q) use ($user) {
+                $q->where('requested_by', $user->id)
+                    ->orWhere('created_by', $user->id);
+            });
+        }
+
+        $filter = (string) $request->query('status', 'all');
+        if ($filter !== 'all') {
+            if (in_array($filter, PurchaseRequest::CURRENT_STATUSES, true)) {
+                $query->where('status', $filter);
+            } else {
+                $filter = 'all';
+            }
+        }
+
+        $requests = $query->orderByDesc('created_at')
+            ->paginate((int) $request->input('per_page', 20))
+            ->withQueryString();
+
+        $rowsHtml = view('purchase-requests.partials.pr-table-rows', [
+            'requests' => $requests,
+        ])->render();
+
+        $paginationHtml = $requests->hasPages()
+            ? (string) $requests->links('vendor.pagination.parts')
+            : '';
+
+        $counts = [];
+        foreach (PurchaseRequest::CURRENT_STATUSES as $key) {
+            $base = PurchaseRequest::query()->where('status', $key);
+            $counts[$key] = $this->countScoped($base, $user);
+        }
+
+        return [
+            'success' => true,
+            'rows' => $rowsHtml,
+            'pagination' => $paginationHtml,
+            'total' => $requests->total(),
+            'current_page' => $requests->currentPage(),
+            'last_page' => $requests->lastPage(),
+            'per_page' => $requests->perPage(),
+            'counts' => $counts,
+            'filter' => $filter,
+        ];
+    }
 }

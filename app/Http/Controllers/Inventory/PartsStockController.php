@@ -96,6 +96,11 @@ class PartsStockController extends Controller
                 'reason' => $m->reason,
                 'reference_type' => $m->reference_type,
                 'reference_id' => $m->reference_id,
+                // Resolve a human-readable number for purchase-request-linked
+                // movements so the History modal can show a clickable PR link.
+                'reference_number' => $m->reference_type === 'purchase_request'
+                    ? \App\Models\PurchaseRequest::whereKey($m->reference_id)->value('pr_number')
+                    : null,
                 'performed_by' => $m->performedBy?->full_name ?? 'System',
                 'created_at' => $m->created_at?->format('M d, Y g:i A'),
             ]);
@@ -135,6 +140,16 @@ class PartsStockController extends Controller
                 'issued_to' => $u->issuedTo?->full_name,
                 'issued_at' => $u->issued_at?->format('M d, Y'),
                 'created_at' => $u->created_at?->format('M d, Y'),
+                // Origin PR for units created during receiving (PartUnit.request_id
+                // is the job-order ticket; the PR itself is resolved via request_id too).
+                'via_pr' => $u->request_id
+                    ? \App\Models\PurchaseRequest::where('request_id', $u->request_id)
+                        ->latest('id')->value('pr_number')
+                    : null,
+                'via_pr_id' => $u->request_id
+                    ? \App\Models\PurchaseRequest::where('request_id', $u->request_id)
+                        ->latest('id')->value('id')
+                    : null,
             ]);
 
         return response()->json([

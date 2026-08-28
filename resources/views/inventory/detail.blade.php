@@ -572,6 +572,44 @@
                         </div>
                     @endforeach
                 @endif
+
+                {{-- Requested via Purchase Request (Phase B): PRs raised against this asset's job orders --}}
+                @php
+                    $assetPrs = \App\Models\PurchaseRequest::query()
+                        ->whereNotNull('request_id')
+                        ->whereIn('request_id', \App\Models\Request::query()->where('linked_asset_id', $asset->asset_id)->select('id'))
+                        ->whereIn('status', [\App\Models\PurchaseRequest::STATUS_SUBMITTED, \App\Models\PurchaseRequest::STATUS_FINALIZED])
+                        ->orderByDesc('created_at')
+                        ->get();
+                @endphp
+                @if($assetPrs->isNotEmpty())
+                    <div style="margin-top:14px; padding-top:10px; border-top:1px dashed #e2e8f0;">
+                        <div style="font-size:12px; font-weight:600; color:#475569; margin-bottom:6px;">
+                            <i class="fa-solid fa-cart-shopping" style="color:#b45309;"></i> Requested via Purchase Request
+                        </div>
+                        @foreach($assetPrs as $ppr)
+                            @php
+                                $firstDesc = collect($ppr->items ?? [])->first()['description'] ?? 'Item';
+                                $extraCount = max(count($ppr->items ?? []) - 1, 0);
+                            @endphp
+                            <div class="field-row" style="align-items:flex-start;">
+                                <span class="field-label">
+                                    <a href="{{ route('purchase_requests.show', $ppr->id) }}" style="color:#0038A8; font-weight:600;">{{ $ppr->pr_number }}</a>
+                                    · {{ $firstDesc }}@if($extraCount > 0) +{{ $extraCount }} more
+                                    @endif
+                                    <span class="status-pill {{ $ppr->status === 'finalized' ? 'sp-active' : 'sp-pending' }}">{{ \Illuminate\Support\Str::upper($ppr->status) }}</span>
+                                    <small style="display:block; margin-top:3px; color:#64748b;">
+                                        {{ optional($ppr->created_at)->format('M d, Y') }}
+                                        @if($ppr->total_amount !== null) · ₱{{ number_format((float) $ppr->total_amount, 2) }}
+                                        @endif
+                                        · {{ $ppr->requester?->full_name ?? '—' }}
+                                    </small>
+                                </span>
+                            </div>
+                        @endforeach
+                    </div>
+                @endif
+            </div>
             </div>
         </div>
 

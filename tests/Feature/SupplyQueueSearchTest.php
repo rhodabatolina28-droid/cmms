@@ -246,4 +246,166 @@ class SupplyQueueSearchTest extends TestCase
         $response->assertSee($hitNo);
         $response->assertDontSee($missNo);
     }
+
+    public function test_queue_data_endpoint_returns_rows_and_pagination(): void
+    {
+        $supply = $this->makeSupplyAdmin();
+        $requester = $this->makeUser(['role' => 'it']);
+        $made = $this->makeRequisition($requester);
+        $no = 'REQ-' . str_pad((string) $made->id, 5, '0', STR_PAD_LEFT);
+
+        $response = $this->actingAs($supply)->getJson(route('requisitions.queue.data'));
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+        $response->assertJsonStructure(['rows', 'pagination', 'total', 'current_page', 'last_page', 'counts']);
+        $response->assertJsonPath('total', 1);
+        // The rendered row HTML includes the requisition number
+        $this->assertStringContainsString($no, $response->json('rows'));
+    }
+
+    public function test_queue_data_endpoint_filters_by_status(): void
+    {
+        $supply = $this->makeSupplyAdmin();
+        $requester = $this->makeUser(['role' => 'it']);
+        $approved = $this->makeRequisition($requester, ['status' => Requisition::STATUS_APPROVED]);
+        $approvedNo = 'REQ-' . str_pad((string) $approved->id, 5, '0', STR_PAD_LEFT);
+
+        $response = $this->actingAs($supply)->getJson(route('requisitions.queue.data', ['status' => 'approved']));
+
+        $response->assertOk();
+        $response->assertJsonPath('filter', 'approved');
+        $this->assertStringContainsString($approvedNo, $response->json('rows'));
+    }
+
+    public function test_queue_data_endpoint_denies_non_supply(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $response = $this->actingAs($it)->getJson(route('requisitions.queue.data'));
+        $response->assertForbidden();
+    }
+
+    public function test_tickets_data_endpoint_returns_rows(): void
+    {
+        $supply = $this->makeSupplyAdmin();
+        $requester = $this->makeUser(['role' => 'it']);
+        $this->makeRequisition($requester); // creates a ticket
+
+        $response = $this->actingAs($supply)->getJson(route('requisitions.tickets.data'));
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+        $response->assertJsonStructure(['rows', 'pagination', 'total', 'current_page', 'last_page']);
+        $response->assertJsonPath('total', 1);
+    }
+
+    public function test_tickets_data_endpoint_denies_non_supply(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $response = $this->actingAs($it)->getJson(route('requisitions.tickets.data'));
+        $response->assertForbidden();
+    }
+
+    public function test_history_data_endpoint_returns_rows(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $made = $this->makeRequisition($it);
+        $no = 'REQ-' . str_pad((string) $made->id, 5, '0', STR_PAD_LEFT);
+
+        $response = $this->actingAs($it)->getJson(route('requisitions.history.data'));
+
+        $response->assertOk();
+        $response->assertJson(['success' => true]);
+        $response->assertJsonPath('total', 1);
+        $this->assertStringContainsString($no, $response->json('rows'));
+    }
+
+    public function test_history_data_endpoint_filters_by_status(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $issued = $this->makeRequisition($it, ['status' => Requisition::STATUS_ISSUED]);
+        $this->makeRequisition($it, ['status' => Requisition::STATUS_PENDING]);
+        $issuedNo = 'REQ-' . str_pad((string) $issued->id, 5, '0', STR_PAD_LEFT);
+
+        $response = $this->actingAs($it)->getJson(route('requisitions.history.data', ['history_status' => 'issued']));
+
+        $response->assertOk();
+        $response->assertJsonPath('total', 1);
+        $this->assertStringContainsString($issuedNo, $response->json('rows'));
+    }
+
+    public function test_history_data_endpoint_denies_regular_user(): void
+    {
+        $user = $this->makeUser(['role' => 'user']);
+        $response = $this->actingAs($user)->getJson(route('requisitions.history.data'));
+        $response->assertForbidden();
+    }
+
+    public function test_myprs_data_endpoint_returns_own_rows_only(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $other = $this->makeUser(['role' => 'it', 'full_name' => 'Other IT']);
+
+        \App\Models\PurchaseRequest::create([
+            'pr_number' => 'PR-2026-0101',
+            'requisition_id' => null,
+            'requested_by' => $it->id,
+            'created_by' => $it->id,
+            'status' => \App\Models\PurchaseRequest::STATUS_SUBMITTED,
+            'items' => [['description' => 'Mine', 'quantity' => 1]],
+            'total_amount' => 500,
+        ]);
+        \App\Models\PurchaseRequest::create([
+            'pr_number' => 'PR-2026-0102',
+            'requisition_id' => null,
+            'requested_by' => $other->id,
+            'created_by' => $other->id,
+            'status' => \App\Models\PurchaseRequest::STATUS_SUBMITTED,
+            'items' => [['description' => 'Theirs', 'quantity' => 1]],
+            'total_amount' => 500,
+        ]);
+
+        $response = $this->actingAs($it)->getJson(route('requisitions.myprs.data'));
+
+        $response->assertOk();
+        $response->assertJsonPath('total', 1);
+        $this->assertStringContainsString('PR-2026-0101', $response->json('rows'));
+        $this->assertStringNotContainsString('PR-2026-0102', $response->json('rows'));
+    }
+
+    public function test_myprs_data_endpoint_denies_regular_user(): void
+    {
+        $user = $this->makeUser(['role' => 'user']);
+        $response = $this->actingAs($user)->getJson(route('requisitions.myprs.data'));
+        $response->assertForbidden();
+    }
+
+    public function test_pr_index_page_renders_each_row_exactly_once(): void
+    {
+        // Regression guard: the PR rows partial loops internally, so the index
+        // view must include it once (not per row) or rows render N×N times.
+        $supply = $this->makeSupplyAdmin();
+        $requester = $this->makeUser(['role' => 'it']);
+
+        for ($i = 1; $i <= 3; $i++) {
+            \App\Models\PurchaseRequest::create([
+                'pr_number' => 'PR-2026-' . str_pad((string) $i, 4, '0', STR_PAD_LEFT),
+                'requisition_id' => null,
+                'requested_by' => $requester->id,
+                'created_by' => $requester->id,
+                'status' => \App\Models\PurchaseRequest::STATUS_SUBMITTED,
+                'items' => [['description' => 'Item ' . $i, 'quantity' => 1, 'unit_cost' => 100]],
+                'total_amount' => 100,
+            ]);
+        }
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', ['view' => 'purchase-requests']));
+
+        $response->assertOk();
+        $prNumbers = \App\Models\PurchaseRequest::pluck('pr_number')->all();
+        $this->assertCount(3, $prNumbers);
+        foreach ($prNumbers as $pn) {
+            $this->assertEquals(1, substr_count($response->getContent(), '<strong>' . $pn . '</strong>'), "Row {$pn} rendered more than once.");
+        }
+    }
 }

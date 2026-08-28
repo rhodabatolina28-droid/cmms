@@ -24,7 +24,10 @@ class ListPartsStockAction
             $query->where('region', $user->region);
         }
         if ($user->branch) {
-            $query->where('branch', $user->branch);
+            // Show branch-scoped parts AND region-wide parts whose branch is
+            // still null (e.g. parts registered during receiving before the
+            // branch value was persisted). They belong here too.
+            $query->where(fn ($q) => $q->where('branch', $user->branch)->orWhereNull('branch'));
         }
 
         return $query;
@@ -110,6 +113,10 @@ class ListPartsStockAction
         $query = $this->baseQuery($user);
         $this->applyFilters($query, $request);
 
+        // Stats ay dapat laging kumatawan sa buong (na-filter) na set, HINDI sa
+        // kasalukuyang pahina. Kaya kunin muna bago i-paginate ang $query.
+        $stats = $this->statsFor($query);
+
         $parts = $query->orderBy('item_name')->paginate(15)->withQueryString();
 
         // Category dropdown stays scoped (ignores keyword/status) so it never empties.
@@ -129,7 +136,7 @@ class ListPartsStockAction
                 'category' => $request->input('category'),
                 'status' => (string) $request->input('status'),
             ],
-        ], $this->statsFor($query));
+        ], $stats);
     }
 
     /**
@@ -141,6 +148,9 @@ class ListPartsStockAction
     {
         $query = $this->baseQuery($user);
         $this->applyFilters($query, $request);
+
+        // Kunin ang stats bago i-paginate para laging buong-set value (hindi per page).
+        $stats = $this->statsFor($query);
 
         $parts = $query->withCount('units')->withSum('units', 'unit_value')->orderBy('item_name')->paginate((int) $request->input('per_page', 15));
 
@@ -163,7 +173,7 @@ class ListPartsStockAction
             'current_page' => $parts->currentPage(),
             'last_page' => $parts->lastPage(),
             'per_page' => $parts->perPage(),
-            'stats' => $this->statsFor($query),
+            'stats' => $stats,
         ];
     }
 }

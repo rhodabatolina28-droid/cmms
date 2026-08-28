@@ -241,63 +241,53 @@
 
         <div class="cmms-panel">
             <div class="cmms-panel-head">
-                <h2>Parts requisition records <span style="font-size:12px;font-weight:700;color:#64748b;">&mdash; {{ $filterLabels[$filter] ?? ucfirst($filter) }}</span></h2>
-                <span class="cmms-count-badge">{{ $requisitions->total() }} record(s)</span>
+                <h2>Parts requisition records <span style="font-size:12px;font-weight:700;color:#64748b;">&mdash; <span id="queueFilterLabel">{{ $filterLabels[$filter] ?? ucfirst($filter) }}</span></span></h2>
+                <span class="cmms-count-badge"><span id="queueTotalCount">{{ $requisitions->total() }}</span> record(s)</span>
             </div>
-            <div class="cmms-panel-body flush">
-                @if($requisitions->isEmpty())
-                    <div class="cmms-empty">
-                        <i class="fa-solid fa-inbox cmms-empty-icon"></i>
-                        <h3 style="margin:0 0 6px;color:#475569;">No requisitions found</h3>
-                        <p>There are no
-                            @if($filter === 'pending') pending requisitions to review.
-                            @elseif($filter === 'approved') approved requisitions awaiting issue.
-                            @elseif($filter === 'issued') issued requisitions yet.
-                            @elseif($filter === 'rejected') rejected requisitions.
-                            @else requisitions under this classification.
-                            @endif
-                        </p>
-                    </div>
-                @else
-                    <div class="table-wrap">
-                        <table class="cmms-official-table cmms-ticket-table cmms-req-table">
-                            <colgroup>
-                                <col style="width:10%">
-                                <col style="width:13%">
-                                <col style="width:13%">
-                                <col style="width:20%">
-                                <col style="width:12%">
-                                <col style="width:13%">
-                                <col style="width:7%">
-                                <col>
-                            <thead>
-                                <tr>
-                                    <th>REQ #</th>
-                                    <th>Requester</th>
-                                    <th>Job order</th>
-                                    <th>Items</th>
-                                    <th>Date</th>
-                                    <th>Completed</th>
-                                    <th>Status</th>
-                                    <th>Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @foreach($requisitions as $req)
-                                    @include('requisitions.partials.req-table-row', [
-                                        'req' => $req,
-                                        'showRequester' => true,
-                                        'quickActions' => true,
-                                    ])
-                                @endforeach
-                            </tbody>
-                        </table>
-                    </div>
+            <div class="cmms-panel-body flush" id="queuePanelBody">
+                <div class="table-wrap">
+                    <table class="cmms-official-table cmms-ticket-table cmms-req-table">
+                        <colgroup>
+                            <col style="width:10%">
+                            <col style="width:13%">
+                            <col style="width:13%">
+                            <col style="width:20%">
+                            <col style="width:12%">
+                            <col style="width:13%">
+                            <col style="width:7%">
+                            <col>
+                        </colgroup>
+                        <thead>
+                            <tr>
+                                <th>REQ #</th>
+                                <th>Requester</th>
+                                <th>Job order</th>
+                                <th>Items</th>
+                                <th>Date</th>
+                                <th>Completed</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="queueTableBody">
+                            @forelse($requisitions as $req)
+                                @include('requisitions.partials.req-table-row', [
+                                    'req' => $req,
+                                    'showRequester' => true,
+                                    'quickActions' => true,
+                                ])
+                            @empty
+                                <tr><td colspan="8" style="text-align:center;padding:30px 16px;color:#64748b;">No requisitions under this classification.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div id="queuePagination" class="cmms-pagination-bar">
+                @if($requisitions->hasPages())
+                    {{ $requisitions->links('vendor.pagination.parts') }}
                 @endif
             </div>
-            @if($requisitions->hasPages())
-            <div class="cmms-pagination-bar">{{ $requisitions->links() }}</div>
-            @endif
         </div>
     @elseif($supplyView === 'tickets')
         <div class="cmms-queue-toolbar">
@@ -336,7 +326,7 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="ticketsTableBody">
                                 @foreach($ictTickets as $t)
                                 <tr>
                                     <td><strong>{{ $t->display_number ?? $t->request_number }}</strong></td>
@@ -368,26 +358,30 @@
                     </div>
                 @endif
             </div>
-            @if($ictTickets->hasPages())
-            <div class="cmms-pagination-bar">{{ $ictTickets->links() }}</div>
-            @endif
+            <div id="ticketsPagination" class="cmms-pagination-bar">
+                @if($ictTickets->hasPages())
+                    {{ $ictTickets->links('vendor.pagination.parts') }}
+                @endif
+            </div>
         </div>
     @elseif($supplyView === 'purchase-requests')
         {{-- ===== TAB 3: PURCHASE REQUESTS (PR document flow) ===== --}}
         <div class="cmms-queue-toolbar pr-chips">
             @php
                 $prFilter = request()->query('status', 'all');
-                $allPrCount = ($prCounts['submitted'] ?? 0) + ($prCounts['finalized'] ?? 0);
+                $allPrCount = ($prCounts['submitted'] ?? 0) + ($prCounts['finalized'] ?? 0) + ($prCounts['delivered'] ?? 0);
                 $prChips = [
                     'all' => ['All', $allPrCount],
                     'submitted' => ['Submitted', $prCounts['submitted'] ?? 0],
                     'finalized' => ['Finalized', $prCounts['finalized'] ?? 0],
+                    'delivered' => ['Delivered', $prCounts['delivered'] ?? 0],
                 ];
             @endphp
             @foreach($prChips as $key => [$label, $cnt])
                 <a href="{{ route('requisitions.index', $carryParams(['view' => 'purchase-requests', 'status' => $key])) }}"
-                   class="cmms-filter-pill {{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized'], true))) ? 'active' : '' }}"
-                   aria-current="{{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized'], true))) ? 'page' : 'false' }}">
+                   data-pr-status="{{ $key }}"
+                   class="cmms-filter-pill {{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized','delivered'], true))) ? 'active' : '' }}"
+                   aria-current="{{ ($prFilter === $key || ($key === 'all' && !in_array($prFilter, ['submitted','finalized','delivered'], true))) ? 'page' : 'false' }}">
                     {{ $label }}<span class="chip-cnt">{{ $cnt }}</span>
                 </a>
             @endforeach
@@ -396,7 +390,7 @@
         <div class="cmms-panel">
             <div class="cmms-panel-head">
                 <h2>Purchase Requests</h2>
-                <span class="cmms-count-badge">{{ $requests->total() }} record(s)</span>
+                <span class="cmms-count-badge"><span id="prTotalCount">{{ $requests->total() }}</span> record(s)</span>
             </div>
             <div class="cmms-panel-body flush">
                 @if($requests->isEmpty())
@@ -422,65 +416,18 @@
                                     <th>Date submitted</th><th>Status</th><th>Actions</th>
                                 </tr>
                             </thead>
-                            <tbody>
-                                @foreach($requests as $pr)
-                                    @php
-                                        $firstItem = $pr->items[0]['description'] ?? '—';
-                                        $more = max(0, count($pr->items ?? []) - 1);
-                                        $isSubmitted = $pr->status === 'submitted';
-                                        $waitDays = ($isSubmitted && $pr->created_at)
-                                            ? (int) floor($pr->created_at->startOfDay()->diffInDays(now()->startOfDay()))
-                                            : 0;
-                                    @endphp
-                                    <tr>
-                                        <td class="cell-trim nowrap"><strong>{{ $pr->pr_number }}</strong></td>
-                                        <td class="cell-trim">{{ $pr->requester?->full_name ?? '—' }}</td>
-                                        <td class="cell-trim" style="min-width:180px;">
-                                            {{ $firstItem }}@if($more > 0) <em>+{{ $more }} more</em>@endif
-                                        </td>
-                                        <td class="nowrap" style="font-weight:700;color:#0038A8;">{{ $pr->total_amount !== null ? '₱' . number_format((float) $pr->total_amount, 2) : '—' }}</td>
-                                        <td class="nowrap">
-                                            {{ $pr->created_at?->format('M d, Y') }}
-                                            @if($isSubmitted && $waitDays > 0)
-                                                <div>
-                                                    <span class="pr-wait-badge {{ $waitDays >= 7 ? 'urgent' : 'warn' }}">
-                                                        ⏳ waiting {{ $waitDays }}d
-                                                    </span>
-                                                </div>
-                                            @endif
-                                        </td>
-                                        <td class="nowrap">
-                                            @if($pr->status === 'finalized')
-                                                <span class="req-pill cmms-status-issued">Finalized</span>
-                                            @else
-                                                <span class="req-pill cmms-status-pending">{{ ucfirst($pr->status) }}</span>
-                                            @endif
-                                        </td>
-                                        <td class="nowrap">
-                                            <div style="display:flex;align-items:center;gap:6px;">
-                                                <a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View {{ $pr->pr_number }} document" title="Open full document">
-                                                    <i class="fa-solid fa-eye"></i>&nbsp;View
-                                                </a>
-                                                @if($isSubmitted)
-                                                    <form method="POST" action="{{ route('purchase_requests.finalize', $pr->id) }}">
-                                                        @csrf
-                                                        <button type="submit" class="cmms-btn-primary pr-finalize-btn" data-pr="{{ $pr->pr_number }}" style="padding:5px 10px;font-size:11.5px;">
-                                                            Finalize &amp; Print
-                                                        </button>
-                                                    </form>
-                                                @endif
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @endforeach
+                            <tbody id="prTableBody">
+                                @include('purchase-requests.partials.pr-table-rows')
                             </tbody>
                         </table>
                     </div>
                 @endif
             </div>
-            @if($requests->hasPages())
-            <div class="cmms-pagination-bar">{{ $requests->links() }}</div>
-            @endif
+            <div id="prPagination" class="cmms-pagination-bar">
+                @if($requests->hasPages())
+                    {{ $requests->links('vendor.pagination.parts') }}
+                @endif
+            </div>
         </div>
     @endif
         </div>
@@ -491,86 +438,269 @@
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
 (function () {
-    if (typeof Swal === 'undefined') return;
     const baseUrl = @json(url('requisitions'));
-    document.querySelectorAll('.supply-quick-btn').forEach(btn => {
-        btn.addEventListener('click', async () => {
-            const action = btn.dataset.action;
-            const id = btn.dataset.id;
-            const pr = btn.dataset.pr;
-            const isReject = action === 'reject';
-            const issueDestination = btn.dataset.issueDestination;
-            const labels = { approve: 'Approve', reject: 'Disapprove', issue: 'Issue to asset custodian' };
-            const { value: remarks, isConfirmed } = await Swal.fire({
-                title: labels[action] + ' ' + pr,
-                text: isReject
-                    ? 'Provide a reason for disapproval.'
-                    : action === 'issue' && issueDestination
-                        ? 'Issued units will be assigned to ' + issueDestination + '.'
-                        : 'Add an optional note, then confirm.',
-                input: isReject ? 'textarea' : 'text',
-                inputPlaceholder: isReject ? 'Reason for disapproval' : 'Optional note',
-                inputAttributes: { maxlength: '500' },
-                showCancelButton: true,
-                confirmButtonColor: '#0038A8',
-                confirmButtonText: 'Confirm',
-                inputValidator: (v) => {
-                    if (isReject && (!v || !v.trim())) return 'Please provide a reason for disapproval.';
-                },
+    const queueDataUrl = @json(route('requisitions.queue.data'));
+
+    // ── Queue AJAX loading (no full page reload — same UX as Inventory/Parts) ──
+    const queueFilterLabel = document.getElementById('queueFilterLabel');
+    const queueTotalCount = document.getElementById('queueTotalCount');
+    const queueTableBody = document.getElementById('queueTableBody');
+    const queuePagination = document.getElementById('queuePagination');
+
+    const FILTER_LABELS = { all: 'All records', pending: 'Pending review', approved: 'Ready to issue', issued: 'Issued', rejected: 'Rejected' };
+
+    function loadQueue(params) {
+        const qs = new URLSearchParams(params || {});
+        if (!qs.has('view')) qs.set('view', 'queue');
+        const sInput = document.querySelector('.cmms-queue-toolbar input[name="q"]');
+        const srt = document.querySelector('.cmms-sort-toggle a.active');
+        if (!qs.get('status')) qs.set('status', 'all');
+        if (sInput && sInput.value.trim()) qs.set('q', sInput.value.trim());
+
+        fetch(queueDataUrl + '?' + qs.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            if (queueTableBody) queueTableBody.innerHTML = data.rows;
+            if (queuePagination) queuePagination.innerHTML = data.pagination;
+            if (queueTotalCount) queueTotalCount.textContent = data.total;
+            if (queueFilterLabel) queueFilterLabel.textContent = FILTER_LABELS[data.filter] || data.filter;
+            bindQuickActions();
+        })
+        .catch(() => {});
+    }
+
+    function bindQuickActions() {
+        document.querySelectorAll('.cmms-req-details-btn').forEach(btn => {
+            if (btn._bound) return;
+            btn._bound = true;
+            btn.addEventListener('click', () => {
+                const panel = document.getElementById('req-details-' + btn.dataset.rid);
+                if (!panel) return;
+                const open = panel.hasAttribute('hidden');
+                btn.classList.toggle('is-open', open);
+                btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+                if (open) panel.removeAttribute('hidden');
+                else panel.setAttribute('hidden', '');
             });
-            if (!isConfirmed) return;
-            btn.disabled = true;
-            try {
-                const res = await fetch(baseUrl + '/' + id + '/review', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
-                        'Accept': 'application/json',
-                    },
-                    body: JSON.stringify({ action, remarks: remarks || '' }),
-                });
-                const data = await res.json();
-                if (data.success) {
-                    await Swal.fire({ icon: 'success', title: 'Recorded', text: data.message, confirmButtonColor: '#0038A8' });
-                    window.location.reload();
-                    return;
-                }
-                Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#0038A8' });
-            } catch (e) {
-                Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
+        });
+
+        document.querySelectorAll('.supply-quick-btn').forEach(btn => {
+            if (btn._bound) return;
+            btn._bound = true;
+            btn.addEventListener('click', async () => {
+                await runQuickAction(btn);
+            });
+        });
+    }
+
+    async function runQuickAction(btn) {
+        if (!window.Swal) return;
+        const action = btn.dataset.action;
+        const id = btn.dataset.id;
+        const pr = btn.dataset.pr;
+        const isReject = action === 'reject';
+        const issueDestination = btn.dataset.issueDestination;
+        const labels = { approve: 'Approve', reject: 'Disapprove', issue: 'Issue to asset custodian' };
+        const { value: remarks, isConfirmed } = await window.Swal.fire({
+            title: labels[action] + ' ' + pr,
+            text: isReject
+                ? 'Provide a reason for disapproval.'
+                : action === 'issue' && issueDestination
+                    ? 'Issued units will be assigned to ' + issueDestination + '.'
+                    : 'Add an optional note, then confirm.',
+            input: isReject ? 'textarea' : 'text',
+            inputPlaceholder: isReject ? 'Reason for disapproval' : 'Optional note',
+            inputAttributes: { maxlength: '500' },
+            showCancelButton: true,
+            confirmButtonColor: '#0038A8',
+            confirmButtonText: 'Confirm',
+            inputValidator: (v) => {
+                if (isReject && (!v || !v.trim())) return 'Please provide a reason for disapproval.';
+            },
+        });
+        if (!isConfirmed) return;
+        btn.disabled = true;
+        try {
+            const res = await fetch(baseUrl + '/' + id + '/review', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content,
+                    'Accept': 'application/json',
+                },
+                body: JSON.stringify({ action, remarks: remarks || '' }),
+            });
+            const data = await res.json();
+            if (data.success) {
+                if (window.Swal) await window.Swal.fire({ icon: 'success', title: 'Recorded', text: data.message, confirmButtonColor: '#0038A8' });
+                loadQueue();
+                return;
             }
-            btn.disabled = false;
+            if (window.Swal) window.Swal.fire({ icon: 'error', title: 'Error', text: data.message, confirmButtonColor: '#0038A8' });
+        } catch (e) {
+            if (window.Swal) window.Swal.fire({ icon: 'error', title: 'Network error', confirmButtonColor: '#0038A8' });
+        }
+        btn.disabled = false;
+    }
+    // ── Pagination links → AJAX (no reload) ──
+    function bindQueuePagination() {
+        if (!queuePagination) return;
+        queuePagination.querySelectorAll('a').forEach(a => {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const href = a.getAttribute('href');
+                if (href) {
+                    const params = Object.fromEntries(new URLSearchParams(href.split('?')[1] || ''));
+                    loadQueue(params);
+                }
+            });
+        });
+    }
+
+    // ── Queue search / sort / stat-card filters → AJAX (no reload) ──
+    const queueSearchForm = document.querySelector('.cmms-queue-toolbar form');
+    if (queueSearchForm) {
+        queueSearchForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const fd = new FormData(queueSearchForm);
+            loadQueue({ status: fd.get('status') || 'all', q: fd.get('q') || '' });
+        });
+    }
+    document.querySelectorAll('.cmms-sort-toggle a').forEach(a => {
+        a.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isOldest = a.textContent.includes('Oldest');
+            const fd = queueSearchForm ? new FormData(queueSearchForm) : new FormData();
+            loadQueue({ status: fd.get('status') || 'all', q: fd.get('q') || '', sort: isOldest ? 'oldest' : 'newest' });
         });
     });
 
-    document.querySelectorAll('.cmms-req-details-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            const panel = document.getElementById('req-details-' + btn.dataset.rid);
-            if (!panel) return;
-            const open = panel.hasAttribute('hidden');
-            btn.classList.toggle('is-open', open);
-            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
-            if (open) panel.removeAttribute('hidden');
-            else panel.setAttribute('hidden', '');
+
+    // Initial bindings for server-rendered queue
+    bindQuickActions();
+    bindQueuePagination();
+    // ── Job Orders tab AJAX (no reload) ──
+    const ticketsTableBody = document.getElementById('ticketsTableBody');
+    const ticketsPagination = document.getElementById('ticketsPagination');
+    const ticketsSearchForm = document.querySelector('.cmms-queue-toolbar form input[name="view"][value="tickets"]')?.closest('form');
+
+    function loadTickets(page) {
+        const params = new URLSearchParams();
+        params.set('view', 'tickets');
+        if (ticketsSearchForm) {
+            const qVal = ticketsSearchForm.querySelector('input[name="q"]').value.trim();
+            if (qVal) params.set('q', qVal);
+        }
+        if (page) params.set('page', page);
+
+        fetch(@json(route('requisitions.tickets.data')) + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            if (ticketsTableBody) ticketsTableBody.innerHTML = data.rows;
+            if (ticketsPagination) ticketsPagination.innerHTML = data.pagination;
+            bindTicketsPagination();
+        })
+        .catch(() => {});
+    }
+
+    function bindTicketsPagination() {
+        if (!ticketsPagination) return;
+        ticketsPagination.querySelectorAll('a').forEach(a => {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = new URLSearchParams(a.getAttribute('href').split('?')[1] || '').get('page');
+                loadTickets(page);
+            });
         });
-    });
-    // PR finalize confirmation (Supply Workspace TAB 3)
-    document.querySelectorAll('.pr-finalize-btn').forEach(btn => {
-        btn.addEventListener('click', (e) => {
+    }
+
+    if (ticketsTableBody && ticketsSearchForm) {
+        ticketsSearchForm.addEventListener('submit', (e) => {
             e.preventDefault();
-            const form = btn.closest('form');
-            Swal.fire({
-                icon: 'question',
-                title: 'Finalize this Purchase Request?',
-                text: (btn.dataset.pr || '') + ' will be marked finalized and ready to print for physical submission to Procurement.',
-                showCancelButton: true,
-                confirmButtonText: 'Finalize',
-                confirmButtonColor: '#0038A8',
-                cancelButtonColor: '#64748b',
-            }).then((r) => { if (r.isConfirmed) form.submit(); });
+            loadTickets(1);
+        });
+        bindTicketsPagination();
+    }
+
+    // ── Purchase Requests tab AJAX (no reload) ──
+    const prTableBody = document.getElementById('prTableBody');
+    const prPagination = document.getElementById('prPagination');
+    const prTotalCount = document.getElementById('prTotalCount');
+
+    function loadPr(status, page) {
+        const params = new URLSearchParams();
+        params.set('status', status || 'all');
+        if (page) params.set('page', page);
+
+        fetch(@json(route('requisitions.pr.data')) + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            if (prTableBody) prTableBody.innerHTML = data.rows;
+            if (prPagination) prPagination.innerHTML = data.pagination;
+            if (prTotalCount) prTotalCount.textContent = data.total;
+            bindPrPagination();
+            bindPrFinalize();
+        })
+        .catch(() => {});
+    }
+
+    function bindPrPagination() {
+        if (!prPagination) return;
+        prPagination.querySelectorAll('a').forEach(a => {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = new URLSearchParams(a.getAttribute('href').split('?')[1] || '').get('page');
+                loadPr(null, page);
+            });
+        });
+    }
+
+    function bindPrFinalize() {
+        document.querySelectorAll('.pr-finalize-btn').forEach(btn => {
+            if (btn._bound) return;
+            btn._bound = true;
+            btn.addEventListener('click', (e) => {
+                e.preventDefault();
+                const form = btn.closest('form');
+                if (!window.Swal) { form.submit(); return; }
+                Swal.fire({
+                    icon: 'question',
+                    title: 'Finalize this Purchase Request?',
+                    text: (btn.dataset.pr || '') + ' will be marked finalized and ready to print for physical submission to Procurement.',
+                    showCancelButton: true,
+                    confirmButtonText: 'Finalize',
+                    confirmButtonColor: '#0038A8',
+                    cancelButtonColor: '#64748b',
+                }).then((r) => { if (r.isConfirmed) form.submit(); });
+            });
+        });
+    }
+
+    // PR filter chips → AJAX
+    document.querySelectorAll('.cmms-filter-pill[data-pr-status]').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            loadPr(chip.dataset.prStatus, 1);
         });
     });
+
+    bindPrPagination();
+    bindPrFinalize();
 })();
 </script>
 @endsection

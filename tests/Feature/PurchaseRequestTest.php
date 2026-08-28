@@ -264,4 +264,565 @@ class PurchaseRequestTest extends TestCase
         $response->assertSee($own->pr_number);
         $response->assertDontSee($other->pr_number);
     }
+
+
+    /** Phase A: PR raised from a requisition silently inherits its job order ticket. */
+    public function test_pr_created_from_requisition_inherits_job_order_link(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'REQ-NCR-JOLINK-1',
+            'type' => 'ICT',
+            'requestor_name' => 'End User',
+            'description' => 'Test repair for linkage',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => 'NCR',
+        ]);
+
+        $requisition = Requisition::create([
+            'request_id' => $ticket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_APPROVED,
+            'items' => [
+                ['description' => 'RX 6700 XT AMD', 'quantity' => 1, 'source' => 'manual'],
+            ],
+        ]);
+
+        $pr = $this->makePr($it, ['requisition_id' => $requisition->id]);
+
+        $this->assertSame($ticket->id, $pr->request_id);
+        $this->assertSame($ticket->id, $pr->request?->id); // relation resolves to same ticket
+    }
+
+    /** Phase A: manual PRs (no requisition) stay unlinked - null request_id. */
+    public function test_manual_pr_without_requisition_has_no_job_order_link(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makePr($it);
+
+        $this->assertNull($pr->request_id);
+        $this->assertNull($pr->request?->id);
+    }
+
+    /** Phase B helper: minimal inventory asset inside the supply scope (NCR). */
+    private function makeAsset(string $suffix): \App\Models\InventoryAsset
+    {
+        return \App\Models\InventoryAsset::create([
+            'category' => 'Desktop',
+            'item_name' => 'Workstation ' . $suffix,
+            'serial_number' => 'SN-' . $suffix,
+            'property_number' => 'PN-' . $suffix,
+            'region' => 'NCR',
+            'branch' => 'Main Office',
+            'office' => 'Administrative Division',
+            'status' => 'Active',
+        ]);
+    }
+
+    /** Phase B: a PR raised against an asset's job order shows on that asset's profile. */
+    public function test_pr_appears_on_linked_asset_profile(): void
+    {
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        $it = $this->makeUser(['role' => 'it']);
+
+        $asset = $this->makeAsset('PRVIS1');
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'REQ-NCR-PRVIS-1',
+            'type' => 'ICT',
+            'requestor_name' => 'End User',
+            'description' => 'Repair job for visibility test',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => 'NCR',
+            'linked_asset_id' => $asset->asset_id,
+        ]);
+
+        $requisition = Requisition::create([
+            'request_id' => $ticket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_APPROVED,
+            'items' => [
+                ['description' => 'RX 6700 XT AMD', 'quantity' => 1, 'source' => 'manual'],
+            ],
+        ]);
+
+        $pr = $this->makePr($it, ['requisition_id' => $requisition->id]);
+
+        $response = $this->actingAs($supply)->get(route('inventory.detail', $asset->asset_id));
+        $response->assertOk();
+        $response->assertSee($pr->pr_number);      // PR document link surfaces on the asset card
+        $response->assertSee('SSD 512GB SATA');     // item summary visible
+        $response->assertSee('Requested via Purchase Request');
+    }
+
+    /** Phase B: the same PR must NOT surface on unrelated assets. */
+    public function test_pr_does_not_appear_on_unrelated_asset_profile(): void
+    {
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        $it = $this->makeUser(['role' => 'it']);
+
+        $assetA = $this->makeAsset('PRVISA');
+        $assetB = $this->makeAsset('PRVISB');
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'REQ-NCR-PRVIS-2',
+            'type' => 'ICT',
+            'requestor_name' => 'End User',
+            'description' => 'Repair job scoped to asset A',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => 'NCR',
+            'linked_asset_id' => $assetA->asset_id,
+        ]);
+
+        $requisition = Requisition::create([
+            'request_id' => $ticket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_APPROVED,
+            'items' => [
+                ['description' => 'RX 6700 XT AMD', 'quantity' => 1, 'source' => 'manual'],
+            ],
+        ]);
+
+        $pr = $this->makePr($it, ['requisition_id' => $requisition->id]);
+
+        // Asset A shows it...
+        $this->actingAs($supply)->get(route('inventory.detail', $assetA->asset_id))
+            ->assertOk()
+            ->assertSee($pr->pr_number);
+
+        // ...asset B does not.
+        $this->get(route('inventory.detail', $assetB->asset_id))
+            ->assertOk()
+            ->assertDontSee($pr->pr_number);
+    }
+
+    // ------------------------------------------------------------------
+    // Phase C4 - Receive authorization (₱10k threshold rule)
+    // ------------------------------------------------------------------
+
+    private function makeFinalizedPr(User $creator, float $total): PurchaseRequest
+    {
+        $pr = $this->makePr($creator, [
+            'items' => [
+                ['description' => 'RX 6700 XT AMD', 'quantity' => 1, 'unit_cost' => $total],
+            ],
+        ]);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        (new \App\Actions\PurchaseRequest\FinalizePurchaseRequestAction)->execute($pr, $supply);
+        $pr = $pr->fresh();
+
+        // Default C6 receipt so threshold tests isolate the auth rule, not
+        // the receipt gate (the gate has its own dedicated tests).
+        if ($total < 10000) {
+            \App\Models\PrAttachment::create([
+                'purchase_request_id' => $pr->id,
+                'filename'            => 'receipt.pdf',
+                'filepath'            => "pr-attachments/{$pr->id}/receipt-test.pdf",
+                'filetype'            => 'application/pdf',
+                'label'               => 'Official receipt',
+                'uploaded_by'         => $creator->id,
+            ]);
+        }
+
+        return $pr;
+    }
+
+    public function test_below_threshold_owner_can_receive_finalized_pr(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        // ₱2,750 < ₱10k → fast track.
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $it);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $this->assertSame(PurchaseRequest::STATUS_DELIVERED, $pr->fresh()->status);
+        $this->assertSame($it->id, $pr->fresh()->delivered_by);
+        $this->assertNotNull($pr->fresh()->delivered_at);
+    }
+
+    public function test_at_or_above_threshold_owner_cannot_receive(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        // ₱17,999 ≥ ₱10k → Procurement track, Supply Officer only.
+        $pr = $this->makeFinalizedPr($it, 17999.96);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $it);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('Supply Officer', $result['message']);
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+    }
+
+    public function test_non_owner_it_cannot_receive_even_small_pr(): void
+    {
+        $owner = $this->makeUser(['role' => 'it']);
+        $otherIt = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($owner, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $otherIt);
+
+        $this->assertFalse($result['success']);
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+    }
+
+    public function test_receive_requires_finalized_status(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makePr($it); // still submitted
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $it);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('finalized', $result['message']);
+        $this->assertSame(PurchaseRequest::STATUS_SUBMITTED, $pr->fresh()->status);
+    }
+
+    public function test_supply_receives_large_pr(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        // ₱45,000 ≥ ₱10k → only Supply can receive.
+        $pr = $this->makeFinalizedPr($it, 45000.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $supply);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $this->assertSame(PurchaseRequest::STATUS_DELIVERED, $pr->fresh()->status);
+        $this->assertSame($supply->id, $pr->fresh()->delivered_by);
+    }
+
+    public function test_received_pr_cannot_be_received_again(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $first = $action->execute($pr, $it);
+        $this->assertTrue($first['success']);
+
+        // Second attempt: status is now delivered, no longer finalized.
+        $second = $action->execute($pr->fresh(), $it);
+        $this->assertFalse($second['success']);
+    }
+
+    public function test_small_pr_receive_blocked_without_receipt(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $pr->attachments()->delete(); // strip the default receipt
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $it);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('receipt', strtolower($result['message']));
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+    }
+
+    public function test_large_pr_receive_does_not_require_receipt(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        // ≥10k: receipt optional (procurement keeps paper trail outside).
+        $pr = $this->makeFinalizedPr($it, 45000.00);
+        $pr->attachments()->delete();
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr, $supply);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $this->assertSame(PurchaseRequest::STATUS_DELIVERED, $pr->fresh()->status);
+    }
+
+    public function test_receipt_cannot_be_uploaded_after_delivery(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $action->execute($pr, $it);
+        $pr = $pr->fresh();
+
+        $uploader = new \App\Actions\PurchaseRequest\UploadPrAttachmentAction;
+        $this->assertFalse($uploader->canUpload($pr->fresh(), $it));
+    }
+
+    // ------------------------------------------------------------------
+    // Phase C5 - per-line destination handling (stock-in / direct-asset)
+    // ------------------------------------------------------------------
+
+    private function makePart(array $attrs = []): Part
+    {
+        return Part::create(array_merge([
+            'item_name' => 'RX 6700 XT AMD',
+            'unit' => 'pcs',
+            'on_hand_qty' => 0,
+            'reorder_level' => 0,
+            'requires_unit_tracking' => false,
+            'region' => 'NCR',
+        ], $attrs));
+    }
+
+    public function test_stock_in_path_increments_on_hand_and_records_movement(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $part = $this->makePart(['item_name' => 'SSD 512GB SATA']);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => $part->id,
+            'destination' => 'stock-in',
+            'units' => [],
+        ]]);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $part->refresh();
+        $this->assertSame(1, (int) $part->on_hand_qty);
+
+        $movement = \App\Models\PartMovement::where('reference_type', 'purchase_request')
+            ->where('reference_id', $pr->id)
+            ->first();
+        $this->assertNotNull($movement);
+        $this->assertSame(1, (int) $movement->qty_change);
+    }
+
+    public function test_direct_to_asset_creates_issued_units_visible_on_asset_card(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $asset = $this->makeAsset('PRCVDIR');
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'REQ-NCR-PRCVDIR-1',
+            'type' => 'ICT',
+            'requestor_name' => 'Custodian User',
+            'description' => 'GPU replacement job',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => 'NCR',
+            'linked_asset_id' => $asset->asset_id,
+        ]);
+
+        $pr = $this->makePr($it);
+        $pr->update(['request_id' => $ticket->id]);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+        (new \App\Actions\PurchaseRequest\FinalizePurchaseRequestAction)->execute($pr, $supply);
+        \App\Models\PrAttachment::create([
+            'purchase_request_id' => $pr->id,
+            'filename' => 'receipt.pdf',
+            'filepath' => "pr-attachments/{$pr->id}/r.pdf",
+            'filetype' => 'application/pdf',
+            'uploaded_by' => $it->id,
+        ]);
+        $custodianId = $asset->assigned_to_user;
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => $this->makePart()->id,
+            'destination' => 'direct-asset',
+            'units' => [
+                ['serial_number' => 'SN-DIR-001', 'property_number' => 'PN-DIR-001'],
+            ],
+        ]]);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+
+        $unit = \App\Models\PartUnit::where('serial_number', 'SN-DIR-001')->first();
+        $this->assertNotNull($unit);
+        $this->assertSame('issued', $unit->status);
+        $this->assertSame((int) $asset->asset_id, (int) $unit->asset_id);
+        if ($custodianId) {
+            $this->assertSame((int) $custodianId, (int) $unit->issued_to);
+        }
+
+        // Phase 4: the asset's Lifecycle History records the install.
+        $history = \App\Models\InventoryHistory::where('asset_id', $asset->asset_id)
+            ->where('action', 'Part Installed')
+            ->first();
+        $this->assertNotNull($history);
+        $this->assertStringContainsString('SN-DIR-001', (string) $history->remarks);
+        $this->assertStringContainsString($pr->pr_number, (string) $history->remarks);
+
+        // Phase 5: the PR unit cost flows into the unit's value, and a
+        // parts movement entry exists so the History modal is not empty.
+        $this->assertNotNull($unit->unit_value);
+        $this->assertSame(2750.0, (float) $unit->unit_value);
+        $movement = \App\Models\PartMovement::where('part_id', $unit->part_id)
+            ->where('reference_type', 'purchase_request')
+            ->where('reference_id', $pr->id)
+            ->first();
+        $this->assertNotNull($movement);
+        $this->assertSame(0, (int) $movement->qty_change); // never entered stock
+    }
+
+    public function test_tracked_part_requires_serial_per_quantity(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $tracked = $this->makePart(['requires_unit_tracking' => true]);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => $tracked->id,
+            'destination' => 'stock-in',
+            'units' => [
+                ['serial_number' => 'SN-A', 'property_number' => 'PN-A'],
+            ], // qty is 1 but the tracked rule needs exactly 1 - ok, so remove to force block
+        ]]);
+
+        // qty 1 with 1 unit passes; verify success then test under-supply separately.
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+
+        $pr2 = $this->makeFinalizedPr($it, 3000.00);
+        $result2 = $action->execute($pr2->fresh(), $it, [[
+            'part_id' => $tracked->id,
+            'destination' => 'stock-in',
+            'units' => [],
+        ]]);
+        $this->assertFalse($result2['success']);
+        $this->assertStringContainsString('serial', strtolower($result2['message']));
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr2->fresh()->status);
+    }
+
+    public function test_duplicate_serial_against_existing_stock_rejected(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $tracked = $this->makePart(['requires_unit_tracking' => true]);
+        \App\Models\PartUnit::create([
+            'part_id' => $tracked->id,
+            'serial_number' => 'SN-DUP',
+            'property_number' => 'PN-OLD',
+            'status' => 'in_stock',
+        ]);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => $tracked->id,
+            'destination' => 'stock-in',
+            'units' => [
+                ['serial_number' => 'SN-DUP', 'property_number' => 'PN-N1'],
+            ],
+        ]]);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('already exists', $result['message']);
+        // Nothing half-applied: status unchanged, on-hand untouched.
+        $this->assertSame(0, (int) $tracked->fresh()->on_hand_qty);
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+    }
+
+    public function test_full_receive_via_http_records_audit_log(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $part = $this->makePart();
+
+        $response = $this->actingAs($it)
+            ->post(route('purchase_requests.receive', $pr), [
+                'lines' => [
+                    ['part_id' => $part->id, 'destination' => 'stock-in', 'units' => []],
+                ],
+            ]);
+
+        $response->assertRedirect();
+        $pr->refresh();
+        $this->assertSame(PurchaseRequest::STATUS_DELIVERED, $pr->status);
+
+        $log = \App\Models\AuditLog::where('action', 'Received Purchase Request')
+            ->orderByDesc('id')
+            ->first();
+        $this->assertNotNull($log);
+        $this->assertStringContainsString($pr->pr_number, (string) $log->details);
+    }
+
+    // ------------------------------------------------------------------
+    // Create-new-part on the fly (not in Parts list)
+    // ------------------------------------------------------------------
+
+    public function test_receive_creates_new_part_when_not_in_parts_list(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => 'new',
+            'new_part_name' => 'RTX 4060 Ti Special',
+            'new_part_unit' => 'pcs',
+            'destination' => 'stock-in',
+            'units' => [
+                ['serial_number' => 'SN-NEW-1', 'property_number' => 'PN-NEW-1'],
+            ],
+        ]]);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+
+        $part = \App\Models\Part::where('item_name', 'RTX 4060 Ti Special')->first();
+        $this->assertNotNull($part);
+        $this->assertSame(1, (int) $part->on_hand_qty);
+
+        $unit = \App\Models\PartUnit::where('part_id', $part->id)->first();
+        $this->assertNotNull($unit);
+        $this->assertSame('SN-NEW-1', $unit->serial_number);
+
+        // Audit trail records the on-the-fly creation.
+        $createdLog = \App\Models\AuditLog::where('action', 'Part Created During Receiving')->first();
+        $this->assertNotNull($createdLog);
+    }
+
+    public function test_create_new_part_blocked_on_duplicate_name(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $existing = $this->makePart(['item_name' => 'RX 6700 XT AMD']);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => 'new',
+            'new_part_name' => 'rx 6700 xt amd', // case-insensitive duplicate
+            'new_part_unit' => 'pcs',
+            'destination' => 'stock-in',
+            'units' => [],
+        ]]);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('already exists', $result['message']);
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+        // No accidental second record.
+        $this->assertSame(1, \App\Models\Part::whereRaw('LOWER(item_name) = ?', ['rx 6700 xt amd'])->count());
+    }
+
+    public function test_created_serialized_new_part_requires_serial(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        // New parts are always accountable: no serial supplied -> blocked.
+        $result = $action->execute($pr->fresh(), $it, [[
+            'part_id' => 'new',
+            'new_part_name' => 'Brand New Board',
+            'new_part_unit' => 'pcs',
+            'destination' => 'stock-in',
+            'units' => [], // missing serial/property
+        ]]);
+
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('serial', strtolower($result['message']));
+    }
 }

@@ -239,32 +239,15 @@
                             <table class="cmms-official-table cmms-req-table">
                                 <thead>
                                     <tr>
-                                        <th style="text-align:left;">PR #</th><th>Total</th><th>Date submitted</th><th>Status</th><th></th>
+                                        <th style="text-align:left;">PR #</th><th>Total</th><th>Date submitted</th><th>Status</th><th style="text-align:left;">Action</th>
                                     </tr>
                                 </thead>
-                                <tbody>
-                                    @foreach($myPrs as $pr)
-                                        <tr>
-                                            <td style="text-align:left;"><strong>{{ $pr->pr_number }}</strong></td>
-                                            <td>{{ $pr->total_amount !== null ? '₱' . number_format((float) $pr->total_amount, 2) : '—' }}</td>
-                                            <td>{{ $pr->created_at?->format('M d, Y | h:i A') }}</td>
-                                            <td>
-                                                @if($pr->isLegacyStatus())
-                                                    <span class="req-pill">{{ ucfirst($pr->status) }} (legacy)</span>
-                                                @elseif($pr->status === 'finalized')
-                                                    <span class="req-pill cmms-status-issued">Finalized</span>
-                                                @elseif($pr->status === 'draft')
-                                                    <span class="req-pill">Draft</span>
-                                                @else
-                                                    <span class="req-pill cmms-status-pending">Submitted to Supply</span>
-                                                @endif
-                                            </td>
-                                            <td><a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;">View</a></td>
-                                        </tr>
-                                    @endforeach
+                                <tbody id="myPrsTableBody">
+                                    @include('requisitions.partials.my-pr-rows')
                                 </tbody>
                             </table>
                         </div>
+                        <div id="myPrsPagination" class="paginator-compact">{{ $myPrs->links() }}</div>
                     @else
                         <div class="cmms-empty">No purchase requests yet.</div>
                     @endif
@@ -319,50 +302,12 @@
                                 <th>Completed</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @foreach($requisitions as $req)
-                            @php
-                                $rNo = 'REQ-' . str_pad($req->id, 5, '0', STR_PAD_LEFT);
-                                $rSt = strtolower($req->status);
-                                $rItems = $req->items ?? [];
-                                $isIssued = $rSt === 'issued';
-                            @endphp
-                            <tr>
-                                <td style="text-align:left;">
-                                    <a href="{{ route('requisitions.show', $req->id) }}" style="font-weight:700;color:#0038A8;text-decoration:none;">
-                                        {{ $rNo }}
-                                    </a>
-                                </td>
-                                <td>
-                                    <span class="cmms-req-tag {{ $req->ticket?->type === 'Preventive Maintenance' ? 'cmms-req-tag--issue' : 'cmms-req-tag--review' }}">{{ $req->ticket?->type === 'Preventive Maintenance' ? 'PM' : 'ICT' }}</span>
-                                </td>
-                                <td>
-                                    <span class="cmms-status-badge cmms-status-{{ $rSt }}">{{ ucfirst($req->status) }}</span>
-                                </td>
-                                <td class="cell-trim" title="{{ $req->ticket?->display_number ?? $req->ticket?->request_number ?? '' }}">
-                                    {{ \Illuminate\Support\Str::limit($req->ticket?->display_number ?? $req->ticket?->request_number ?? '—', 28) }}
-                                </td>
-                                <td class="cell-trim">
-                                    @if(count($rItems))
-                                        {{ ($rItems[0]['quantity'] ?? 1) }}× {{ \Illuminate\Support\Str::limit($rItems[0]['description'] ?? '', 30) }}@if(count($rItems) > 1) <span style="color:#0038A8;font-weight:600;">+{{ count($rItems) - 1 }}</span>@endif
-                                    @else
-                                        &mdash;
-                                    @endif
-                                </td>
-                                <td data-label="Date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
-                                <td data-label="Completed">
-                                    @if($isIssued && $req->reviewed_at)
-                                        {{ $req->reviewed_at->format('M d, Y | h:i A') }}
-                                    @else
-                                        &mdash;
-                                    @endif
-                                </td>
-                            </tr>
-                            @endforeach
+                        <tbody id="historyTableBody">
+                            @include('requisitions.partials.history-rows')
                         </tbody>
                     </table>
                 </div>
-                <div class="paginator-compact">{{ $requisitions->links() }}</div>
+                <div id="historyPagination" class="paginator-compact">{{ $requisitions->links() }}</div>
             @endif
         </div>
             </div>
@@ -664,11 +609,15 @@
         const rows = manualRows();
         if (rows.length === 0) { hint.style.display = 'none'; return; }
 
-        // Prefill the Create Purchase Request link with the first manual item.
+        // Prefill the Create Purchase Request link with the first manual item,
+        // carrying the selected job order ticket so the PR silently links to
+        // the asset (Phase A invisible linkage).
         const row = rows[0];
         const qty = parseInt(row.querySelector('.ticket-req-qty')?.value, 10) || 1;
         const desc = encodeURIComponent(row.querySelector('.ticket-req-desc').value.trim());
-        link.href = createRoute + '?description=' + desc + '&quantity=' + qty;
+        const sel = document.getElementById('request_id');
+        const tid = sel && sel.value ? '&ticket=' + encodeURIComponent(sel.value) : '';
+        link.href = createRoute + '?description=' + desc + '&quantity=' + qty + tid;
 
         const hintText = document.getElementById('manualPrHintText');
         if (hintText) {
@@ -688,6 +637,109 @@
 
     // Initial state (rows may be re-rendered with values after validation errors)
     list.querySelectorAll('.ticket-req-row').forEach(() => updateHint());
+})();
+
+// ── History tab AJAX (no reload) ──
+(function () {
+    const historyTableBody = document.getElementById('historyTableBody');
+    const historyPagination = document.getElementById('historyPagination');
+    if (!historyTableBody) return;
+
+    function loadHistory(status, q, page) {
+        const params = new URLSearchParams();
+        params.set('tab', 'history');
+        params.set('history_status', status || 'all');
+        if (q) params.set('history_q', q);
+        if (page) params.set('page', page);
+
+        fetch(@json(route('requisitions.history.data')) + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            historyTableBody.innerHTML = data.rows;
+            if (historyPagination) historyPagination.innerHTML = data.pagination;
+            bindHistoryPagination();
+        })
+        .catch(() => {});
+    }
+
+    function bindHistoryPagination() {
+        if (!historyPagination) return;
+        historyPagination.querySelectorAll('a').forEach(a => {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const sp = new URLSearchParams(a.getAttribute('href').split('?')[1] || '');
+                loadHistory(sp.get('history_status') || 'all', sp.get('history_q') || '', sp.get('page'));
+            });
+        });
+    }
+
+    const historyForm = document.querySelector('.cmms-history-toolbar form');
+    if (historyForm) {
+        historyForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const status = new URLSearchParams(window.location.search).get('history_status') || 'all';
+            loadHistory(status, historyForm.querySelector('input[name="history_q"]').value.trim(), 1);
+        });
+        historyForm.querySelector('input[name="history_q"]').addEventListener('input', () => {
+            clearTimeout(window._hQTimer);
+            window._hQTimer = setTimeout(() => {
+                const status = new URLSearchParams(window.location.search).get('history_status') || 'all';
+                loadHistory(status, historyForm.querySelector('input[name="history_q"]').value.trim(), 1);
+            }, 400);
+        });
+    }
+    document.querySelectorAll('.cmms-history-toolbar .chips a').forEach(chip => {
+        chip.addEventListener('click', (e) => {
+            e.preventDefault();
+            const sp = new URLSearchParams(chip.getAttribute('href').split('?')[1] || '');
+            loadHistory(sp.get('history_status') || 'all', sp.get('history_q') || '', 1);
+        });
+    });
+    bindHistoryPagination();
+})();
+
+// ── Purchase Requests tab AJAX (no reload) ──
+(function () {
+    const myPrsTableBody = document.getElementById('myPrsTableBody');
+    const myPrsPagination = document.getElementById('myPrsPagination');
+    if (!myPrsTableBody) return;
+
+    function loadMyPrs(page) {
+        const params = new URLSearchParams();
+        params.set('tab', 'myprs');
+        if (page) params.set('page', page);
+
+        fetch(@json(route('requisitions.myprs.data')) + '?' + params.toString(), {
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.success) return;
+            myPrsTableBody.innerHTML = data.rows;
+            if (myPrsPagination) myPrsPagination.innerHTML = data.pagination;
+            bindMyPrsPagination();
+        })
+        .catch(() => {});
+    }
+
+    function bindMyPrsPagination() {
+        if (!myPrsPagination) return;
+        myPrsPagination.querySelectorAll('a').forEach(a => {
+            if (a._bound) return;
+            a._bound = true;
+            a.addEventListener('click', (e) => {
+                e.preventDefault();
+                const page = new URLSearchParams(a.getAttribute('href').split('?')[1] || '').get('page');
+                loadMyPrs(page);
+            });
+        });
+    }
+    bindMyPrsPagination();
 })();
 </script>
 @endsection

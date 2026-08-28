@@ -94,6 +94,7 @@ class CreatePurchaseRequestAction
             $purchaseRequest = PurchaseRequest::create([
                 'pr_number' => $this->nextPrNumber(),
                 'requisition_id' => $data['requisition_id'] ?? null,
+                'request_id' => $requisition?->request_id,
                 'status' => PurchaseRequest::STATUS_SUBMITTED,
                 'items' => $items,
                 'purpose' => $data['purpose'] ?? null,

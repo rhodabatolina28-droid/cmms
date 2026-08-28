@@ -75,6 +75,8 @@
     .movement-body { flex: 1; }
     .movement-reason { font-weight: 600; color: #1e293b; font-size: 13px; }
     .movement-meta { font-size: 11.5px; color: #64748b; margin-top: 2px; }
+    .pr-ref-link { color: #0038A8; font-weight: 700; text-decoration: none; }
+    .pr-ref-link:hover { text-decoration: underline; }
 
     .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
     .empty-state .big { font-size: 40px; margin-bottom: 8px; }
@@ -1158,7 +1160,7 @@
         const pill = (text, bg, fg) => '<span style="background:' + bg + ';color:' + fg + ';padding:2px 9px;border-radius:6px;font-weight:700;font-size:11px;">' + text + '</span>';
         const total = units.reduce((s, u) => s + (Number(u.unit_value) || 0), 0);
         body.innerHTML = '<div style="overflow-x:auto;"><table class="parts-table" style="table-layout:auto;width:100%;">'
-            + '<thead><tr><th>Serial</th><th>Property No</th><th>Unit Value</th><th>Status</th><th>Custodian</th></tr></thead><tbody>'
+            + '<thead><tr><th>Serial</th><th>Property No</th><th>Unit Value</th><th>Status</th><th>Custodian</th><th>Source</th></tr></thead><tbody>'
             + units.map(u => {
                 const st = u.status === 'issued'
                     ? pill('Issued', '#dbeafe', '#1e40af')
@@ -1169,9 +1171,10 @@
                     + '<td>' + fmtMoney(u.unit_value) + '</td>'
                     + '<td>' + st + '</td>'
                     + '<td>' + esc(u.issued_to || '—') + '</td>'
+                    + '<td>' + (u.via_pr ? '<a href="/purchase-requests/' + (u.via_pr_id || '') + '" class="pr-ref-link">via ' + esc(u.via_pr) + '</a>' : '—') + '</td>'
                     + '</tr>';
             }).join('')
-            + '<tr class="units-total-row"><td colspan="2">TOTAL</td><td>' + fmtMoney(total) + '</td><td colspan="2"></td></tr>'
+            + '<tr class="units-total-row"><td colspan="2">TOTAL</td><td>' + fmtMoney(total) + '</td><td colspan="3"></td></tr>'
             + '</tbody></table></div>';
     }
 
@@ -1286,14 +1289,22 @@
         api(PARTS_MOVEMENTS_PREFIX.replace('PART_ID', id), 'GET').then(({ ok, data }) => {
             if (!ok || !data.movements) { body.innerHTML = '<div class="empty-state">Unable to load.</div>'; return; }
             if (data.movements.length === 0) { body.innerHTML = '<div class="empty-state">No stock movements yet.</div>'; return; }
-            body.innerHTML = data.movements.map(m => `
+            body.innerHTML = data.movements.map(m => {
+                const ref = m.reference_type === 'purchase_request' && m.reference_number
+                    ? ' · <a href="/purchase-requests/' + m.reference_id + '" class="pr-ref-link">via ' + m.reference_number + '</a>'
+                    : (m.reference_type ? ' · ' + m.reference_type : '');
+                const reasonHtml = m.reference_type === 'purchase_request'
+                    ? m.reason.replace(m.reference_number || '', m.reference_number || '')
+                    : m.reason;
+                return `
                 <div class="movement-item">
                     <div class="movement-qty ${m.qty_change >= 0 ? 'mov-qty-in' : 'mov-qty-out'}">${m.qty_change >= 0 ? '+' : ''}${m.qty_change}</div>
                     <div class="movement-body">
-                        <div class="movement-reason">${m.reason}</div>
-                        <div class="movement-meta">${m.performed_by} · ${m.created_at}${m.reference_type ? ' · ' + m.reference_type : ''}</div>
+                        <div class="movement-reason">${reasonHtml}</div>
+                        <div class="movement-meta">${m.performed_by} · ${m.created_at}${ref}</div>
                     </div>
-                </div>`).join('');
+                </div>`;
+            }).join('');
         });
     }
 

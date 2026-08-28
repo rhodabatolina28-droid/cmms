@@ -498,11 +498,25 @@ class PMFlowTest extends TestCase
 
         $this->assertNotNull($divRecord->next_scheduled_at, 'next_scheduled_at must be set');
 
-        $expectedNext = Carbon::parse($divRecord->last_completed_at)->addMonths(3)->toDateString();
-        $this->assertEquals(
-            $expectedNext,
-            $divRecord->next_scheduled_at->toDateString(),
-            'Quarterly next_scheduled_at should be completed_date + 3 months'
+        // Expected: completed_date + 3 months, but the service skips weekends
+        // (government offices are closed Sat/Sun), so the next date may roll
+        // forward to the next weekday.
+        $completed = Carbon::parse($divRecord->last_completed_at);
+        $expectedBase = $completed->copy()->addMonths(3);
+        $next = $divRecord->next_scheduled_at;
+
+        $this->assertTrue(
+            $next->greaterThanOrEqualTo($expectedBase->startOfDay()),
+            'next_scheduled_at must be at least completed_date + 3 months'
+        );
+        $this->assertFalse(
+            $next->isWeekend(),
+            'next_scheduled_at must not fall on a weekend (weekday skip rule)'
+        );
+        // It must never roll more than 2 days forward (Sat -> Mon)
+        $this->assertTrue(
+            $next->lessThanOrEqualTo($expectedBase->copy()->addDays(2)->endOfDay()),
+            'next_scheduled_at rolled too far beyond completed_date + 3 months'
         );
     }
 }

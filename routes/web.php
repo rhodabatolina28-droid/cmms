@@ -113,6 +113,21 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::get('/requisitions', [RequisitionController::class, 'index'])
         ->middleware('role:it,admin,super_admin')
         ->name('requisitions.index');
+    Route::get('/requisitions/queue/data', [RequisitionController::class, 'queueData'])
+        ->middleware('role:admin,super_admin')
+        ->name('requisitions.queue.data');
+    Route::get('/requisitions/tickets/data', [RequisitionController::class, 'ticketsData'])
+        ->middleware('role:admin,super_admin')
+        ->name('requisitions.tickets.data');
+    Route::get('/requisitions/pr/data', [RequisitionController::class, 'prData'])
+        ->middleware('role:admin,super_admin')
+        ->name('requisitions.pr.data');
+    Route::get('/requisitions/history/data', [RequisitionController::class, 'historyData'])
+        ->middleware('role:it,admin,super_admin')
+        ->name('requisitions.history.data');
+    Route::get('/requisitions/myprs/data', [RequisitionController::class, 'myPrsData'])
+        ->middleware('role:it,admin,super_admin')
+        ->name('requisitions.myprs.data');
     Route::get('/requisitions/{id}', [RequisitionController::class, 'show'])
         ->middleware('role:it,admin,super_admin')
         ->name('requisitions.show');
@@ -151,6 +166,13 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
     Route::post('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'update'])->name('purchase_requests.update')->middleware('throttle:30,1');
     Route::get('/purchase-requests/{purchaseRequest}', [PurchaseRequestController::class, 'show'])->name('purchase_requests.show');
     Route::post('/purchase-requests/{purchaseRequest}/finalize', [PurchaseRequestController::class, 'finalize'])->name('purchase_requests.finalize')->middleware('throttle:30,1');
+
+    // Phase C - receiving + receipts (threshold rules enforced in the action).
+    Route::get('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receiveForm'])->name('purchase_requests.receiveForm');
+    Route::post('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receive'])->name('purchase_requests.receive')->middleware('throttle:30,1');
+    Route::post('/purchase-requests/{purchaseRequest}/attachments', [PurchaseRequestController::class, 'uploadAttachment'])->name('purchase_requests.attachments.store')->middleware('throttle:30,1');
+    Route::get('/pr-attachments/{attachment}/download', [PurchaseRequestController::class, 'downloadAttachment'])->name('purchase_requests.attachments.download');
+    Route::delete('/pr-attachments/{attachment}', [PurchaseRequestController::class, 'deleteAttachment'])->name('purchase_requests.attachments.destroy');
 
     // ==========================================
     // ADMIN, SUPER ADMIN & SUPPLY — INVENTORY

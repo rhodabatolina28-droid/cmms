@@ -67,6 +67,27 @@
     .prd-signs td.sig-space { height:54px; }
     .prd-signs td.who { font-weight:800; padding-bottom:16px; padding-left:0; font-size:12px; }
 
+    /* Phase C - delivered status + receive panel + receipts (screen only) */
+    .prd-status-box.sp-status-delivered { background:#ecfdf5; border-color:#10b981; }
+    .prd-status-box.sp-status-delivered .dot { background:#059669; }
+    .rx-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:16px 18px; margin-top:12px; }
+    .rx-panel h3 { margin:0 0 4px; font-size:15px; font-weight:800; color:#111827; }
+    .rx-panel .rx-hint { font-size:12px; color:#6b7280; margin-bottom:12px; }
+    .rx-line { border:1px solid #f3f4f6; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
+    .rx-line-head { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .rx-line-desc { flex:1 1 220px; font-size:13px; font-weight:600; color:#111827; }
+    .rx-line select, .rx-line input[type=text] { padding:6px 8px; border:1px solid #d1d5db; border-radius:6px; font-size:12.5px; }
+    .rx-unit-grid { display:grid; grid-template-columns:1fr 1fr; gap:6px 10px; margin-top:8px; }
+    .rx-unit-grid input[type=text] { width:100%; }
+    .rx-unit-grid label { font-size:11px; color:#374151; display:block; margin-bottom:2px; }
+    @media print { .rx-panel, .pr-attach-card { display:none !important; } }
+
+    .pr-attach-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px 18px; margin-top:14px; }
+    .pr-attach-card h3 { margin:0 0 8px; font-size:14px; font-weight:800; color:#111827; }
+    .pr-attach-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f3f4f6; font-size:12.5px; flex-wrap:wrap; }
+    .pr-attach-row:last-of-type { border-bottom:none; }
+    .pr-attach-meta { color:#6b7280; font-size:11.5px; }
+
     @media print {
         @page { size:A4 portrait; margin:12mm; }
         body * { visibility:hidden; }
@@ -85,7 +106,8 @@
         <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary" aria-label="Back to requisitions page"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Back</a>
 
         @php
-            $stClass = $purchaseRequest->status === 'finalized' ? 'finalized' : ($purchaseRequest->status === 'submitted' && ! $purchaseRequest->isLegacyStatus() ? 'submitted' : 'draft');
+            $stClass = $purchaseRequest->status === 'finalized' || $purchaseRequest->status === 'delivered' ? 'finalized' : ($purchaseRequest->status === 'submitted' && ! $purchaseRequest->isLegacyStatus() ? 'submitted' : 'draft');
+            if ($purchaseRequest->status === 'delivered') { $stClass = 'sp-status-delivered'; }
         @endphp
         <div class="prd-status-box {{ $stClass }}">
             <span class="dot"></span>
@@ -97,7 +119,9 @@
                 @endif
             </span>
             <span class="st-desc">
-                @if($purchaseRequest->status === 'finalized')
+                @if($purchaseRequest->status === 'delivered')
+                    — Goods received {{ optional($purchaseRequest->delivered_at)->format('M d, Y') }} by {{ $purchaseRequest->deliverer?->full_name ?? 'Supply Officer' }}.
+                @elseif($purchaseRequest->status === 'finalized')
                     — Ready to print and submit to Procurement.
                 @elseif($purchaseRequest->status === 'submitted')
                     — Waiting for Supply Officer review · printing unlocks once finalized.
@@ -130,11 +154,19 @@
                 <button type="button" onclick="window.print()" class="prd-action-btn prd-action-btn--primary" aria-label="Print purchase request document">
                     <i class="fa-solid fa-print"></i>Print document
                 </button>
+                @if(!empty($canReceive))
+                    <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--success" aria-label="Record the delivery of purchased goods" title="Goods arrived? Record what arrived and where it went">
+                        <i class="fa-solid fa-box-open"></i>Record delivery
+                    </a>
+                @endif
+            @elseif($purchaseRequest->status === 'delivered')
+                <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-circle-check"></i>Delivered</span>
             @else
                 <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-lock"></i>Print locked</span>
             @endif
         </div>
     </div>
+
 
     <div class="prd-sheet">
         <div class="prd-title">PURCHASE REQUEST</div>

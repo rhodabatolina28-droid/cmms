@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Purchase Request - PR document for parts procurement.
@@ -23,6 +24,8 @@ class PurchaseRequest extends Model
     public const STATUS_DRAFT = 'draft';
     public const STATUS_SUBMITTED = 'submitted';
     public const STATUS_FINALIZED = 'finalized';
+    /** Goods physically received & recorded (stock-in or direct-to-asset). NB: NOT the legacy 'received'. */
+    public const STATUS_DELIVERED = 'delivered';
 
     // ---- Legacy statuses (old records only, read-only display) ----------
     public const STATUS_PENDING = 'pending';
@@ -35,6 +38,7 @@ class PurchaseRequest extends Model
         self::STATUS_DRAFT,
         self::STATUS_SUBMITTED,
         self::STATUS_FINALIZED,
+        self::STATUS_DELIVERED,
     ];
 
     protected $table = 'purchase_requests';
@@ -42,6 +46,7 @@ class PurchaseRequest extends Model
     protected $fillable = [
         'pr_number',
         'requisition_id',
+        'request_id',
         'status',
         'items',
         'purpose',
@@ -54,12 +59,15 @@ class PurchaseRequest extends Model
         'created_by',
         'finalized_by',
         'finalized_at',
+        'delivered_by',
+        'delivered_at',
     ];
 
     protected $casts = [
         'items' => 'array',
         'total_amount' => 'decimal:2',
         'finalized_at' => 'datetime',
+        'delivered_at' => 'datetime',
     ];
 
     // ---- Relationships -------------------------------------------------
@@ -69,6 +77,11 @@ class PurchaseRequest extends Model
         return $this->belongsTo(Requisition::class, 'requisition_id');
     }
 
+    /** Job order ticket this PR was raised against (asset + custodian traceability). */
+    public function request(): BelongsTo
+    {
+        return $this->belongsTo(Request::class, 'request_id');
+    }
     /** Who needs the parts (IT requester or requisition requester). */
     public function requester(): BelongsTo
     {
@@ -87,6 +100,17 @@ class PurchaseRequest extends Model
         return $this->belongsTo(User::class, 'finalized_by');
     }
 
+    /** User who recorded physical receipt of the purchased goods. */
+    public function deliverer(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'delivered_by');
+    }
+
+    public function attachments(): HasMany
+    {
+        return $this->hasMany(PrAttachment::class, 'purchase_request_id');
+    }
+
     // ---- Flags ---------------------------------------------------------
 
     public function isDraft(): bool
@@ -102,6 +126,23 @@ class PurchaseRequest extends Model
     public function isFinalized(): bool
     {
         return $this->status === self::STATUS_FINALIZED;
+    }
+
+    public function isDelivered(): bool
+    {
+        return $this->status === self::STATUS_DELIVERED;
+    }
+
+    /** ₱10k threshold: below = IT/SuperAdmin fast track (they buy & receive); at/above = Supply/Procurement. */
+    public function isSmallPurchase(): bool
+    {
+        return (float) $this->total_amount < 10000;
+    }
+
+    /** Did this user originate this PR (requester or document creator)? */
+    public function isOwnedBy(User $user): bool
+    {
+        return in_array($user->id, array_filter([$this->requested_by, $this->created_by]), true);
     }
 
     public function isLegacyStatus(): bool
