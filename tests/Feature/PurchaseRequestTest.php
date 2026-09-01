@@ -1132,4 +1132,24 @@ class PurchaseRequestTest extends TestCase
         );
         $this->assertStringContainsString('View delivery', $response->getContent());
     }
+
+    public function test_super_admin_my_prs_table_shows_view_delivery_for_delivered(): void
+    {
+        $sa = $this->makeUser(['role' => 'super_admin']);
+        $pr = $this->makeFinalizedPr($sa, 2750.00);
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $action->execute($pr->fresh(), $sa, [
+            ['part_id' => $this->makePart()->id, 'destination' => 'stock-in', 'units' => [['serial_number' => 'RX-MYPR-01', 'property_number' => 'PN-MYPR-01']]],
+        ]);
+        $pr = $pr->fresh();
+
+        // The "My Purchase Requests" strip on My Parts Requisitions (super admin).
+        $response = $this->actingAs($sa)->get(route('requisitions.index', ['tab' => 'myprs']));
+        $response->assertOk();
+        $this->assertStringContainsString(
+            route('purchase_requests.receiveForm', $pr->id),
+            $response->getContent()
+        );
+        $this->assertStringContainsString('View delivery', $response->getContent());
+    }
 }

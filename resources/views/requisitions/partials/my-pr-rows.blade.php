@@ -19,7 +19,11 @@
     <td class="nowrap" style="text-align:left;">
         <div style="display:flex;align-items:center;gap:6px;">
             <a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 12px;font-size:11.5px;">View</a>
-            @if($pr->status === 'finalized' && $pr->isSmallPurchase())
+            @if($pr->status === 'delivered')
+                <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 12px;font-size:11.5px;" aria-label="View delivery record for {{ $pr->pr_number }}" title="View what arrived, where it went, and the proof of purchase">
+                    <i class="fa-solid fa-receipt"></i>&nbsp;View delivery
+                </a>
+            @elseif($pr->status === 'finalized' && $pr->isSmallPurchase())
                 <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-primary" style="padding:5px 12px;font-size:11.5px;" aria-label="Record delivery for {{ $pr->pr_number }}" title="You bought this yourself (under ₱10k) — log the delivery here">
                     Record delivery
                 </a>
