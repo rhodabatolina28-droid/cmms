@@ -825,4 +825,92 @@ class PurchaseRequestTest extends TestCase
         $this->assertFalse($result['success']);
         $this->assertStringContainsString('serial', strtolower($result['message']));
     }
+
+    public function test_create_form_prefills_from_part_id(): void
+    {
+        $supply = $this->makeUser(['role' => 'supply_officer']);
+        $part = Part::create([
+            'item_name' => 'RX 6700 XT AMD',
+            'unit' => 'pcs',
+            'on_hand_qty' => 0,
+            'reorder_level' => 2,
+        ]);
+        \App\Models\PartUnit::create([
+            'part_id' => $part->id,
+            'serial_number' => 'RX-0001',
+            'property_number' => 'NONE-1',
+            'unit_value' => 17999.96,
+            'status' => 'issued',
+        ]);
+
+        $response = $this->actingAs($supply)->get(route('purchase_requests.create', ['part_id' => $part->id]));
+
+        $response->assertOk();
+        // The page embeds the prefill items as JSON supplied to the JS row builder.
+        $body = $response->getContent();
+        $this->assertStringContainsString('RX 6700 XT AMD', $body);
+        $this->assertStringContainsString('17999.96', $body);
+        $this->assertStringContainsString('"part_id":' . $part->id, $body);
+        // Suggested qty = reorder (2) - on_hand (0) = 2
+        $json = json_decode(substr($body, strpos($body, 'const prefillItems')), true);
+        // Extract the blade @json literal to confirm quantity.
+        $this->assertMatchesRegularExpression('/"quantity":2/', $body);
+    }
+
+    public function test_part_id_lands_in_stored_pr_items(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $part = Part::create([
+            'item_name' => 'SSD 1TB NVMe',
+            'unit' => 'pcs',
+            'on_hand_qty' => 0,
+        ]);
+
+        $pr = $this->makePr($it, [
+            'items' => [[
+                'description' => 'SSD 1TB NVMe',
+                'quantity' => 1,
+                'unit_cost' => 3500.00,
+                'part_id' => $part->id,
+            ]],
+        ]);
+
+        $stored = $pr->refresh()->items;
+        $this->assertSame((int) $stored[0]['part_id'], (int) $part->id);
+    }
+
+    public function test_submit_notifies_supply_users_excluding_creator(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR', 'branch' => 'RCMB', 'full_name' => 'Supply One']);
+        $otherSupply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR', 'branch' => 'RCMB', 'full_name' => 'Supply Two']);
+
+        // IT outside NCR should not be notified as supply.
+        $this->makeUser(['role' => 'supply_officer', 'region' => 'Region IV-A', 'full_name' => 'Other Supply']);
+
+        $pr = $this->makePr($it);
+
+        $rows = \App\Models\Notification::where('user_id', $supply->id)->get();
+        $this->assertCount(1, $rows);
+        $this->assertSame('PR Submitted', $rows->first()->type);
+        $this->assertStringContainsString($pr->pr_number, $rows->first()->message);
+
+        // The other same-region supply user is notified too.
+        $this->assertCount(1, \App\Models\Notification::where('user_id', $otherSupply->id)->get());
+        // The creator (IT) gets no PR-submitted notification.
+        $this->assertCount(0, \App\Models\Notification::where('user_id', $it->id)->where('type', 'PR Submitted')->get());
+    }
+
+    public function test_finalize_notifies_requester(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer']);
+        $pr = $this->makePr($it);
+
+        (new \App\Actions\PurchaseRequest\FinalizePurchaseRequestAction)->execute($pr->fresh(), $supply);
+
+        $rows = \App\Models\Notification::where('user_id', $it->id)->where('type', 'PR Finalized')->get();
+        $this->assertCount(1, $rows);
+        $this->assertStringContainsString($pr->pr_number, $rows->first()->message);
+    }
 }

@@ -92,7 +92,22 @@
                                 <textarea name="disposal_reason" rows="3" class="minimal-input">{{ $maintenance->disposal_reason ?? '' }}</textarea>
                             </div>
                             <div class="checkbox-group-minimal checkbox-group-mt">
-                                <label><input type="checkbox" name="for_repair" value="YES" {{ ($maintenance->for_repair ?? '') == 'YES' ? 'checked' : '' }}> FOR REPAIR</label>
+                                <label><input type="checkbox" name="for_repair" id="forRepairCheck" value="YES" {{ ($maintenance->for_repair ?? '') == 'YES' ? 'checked' : '' }}> FOR REPAIR</label>
+                            </div>
+                            <div id="repairAssetSelector" class="input-group" style="display: {{ ($maintenance->for_repair ?? '') == 'YES' ? 'block' : 'none' }};">
+                                <label>SELECT ASSET TO REPAIR</label>
+                                <select name="repair_asset_id" class="minimal-input">
+                                    <option value="">-- Select Asset --</option>
+                                    @foreach($myAssets ?? [] as $asset)
+                                        <option value="{{ $asset->asset_id }}"
+                                            data-name="{{ $asset->item_name }}"
+                                            data-sn="{{ $asset->serial_number }}"
+                                            {{ ($maintenance->repair_asset_id ?? '') == $asset->asset_id ? 'selected' : '' }}>
+                                            {{ $asset->item_name }} ({{ $asset->serial_number }})
+                                        </option>
+                                    @endforeach
+                                </select>
+                                <div class="hint">Select the specific asset to be repaired — it saves automatically and links the asset to this PM ticket so parts can be requested from the Parts Requisition page.</div>
                             </div>
                             <div class="input-group">
                                 <label>PARTS FOR REPAIR/REPLACEMENT</label>

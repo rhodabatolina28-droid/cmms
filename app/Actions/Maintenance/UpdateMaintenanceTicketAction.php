@@ -68,6 +68,19 @@ class UpdateMaintenanceTicketAction
                 }
             }
 
+            if (($mappedData['for_repair'] ?? null) === 'YES') {
+                $mappedData['repair_asset_id'] = ($mappedData['repair_asset_id'] ?? null)
+                    ?: $maintenance->repair_asset_id;
+
+                if (empty($mappedData['repair_asset_id'])) {
+                    DB::rollBack();
+                    return response()->json([
+                        'success' => false,
+                        'message' => 'Please select the specific asset to tag for repair.',
+                    ], 422);
+                }
+            }
+
             // Handle signatures if provided
             $techSigData = $data['technicianSignature'] ?? $data['technician_signature'] ?? '';
             $userSigData = $data['endUserSignature'] ?? $data['end_user_signature'] ?? '';
@@ -105,6 +118,27 @@ class UpdateMaintenanceTicketAction
             }
 
             $maintenance->update($mappedData);
+
+            // REPAIR LINKAGE: keep the ticket's linked asset in sync with the
+            // selected repair asset so the PM ticket becomes parts-requestable
+            // in the Material Requisition flow.
+            if (($mappedData['for_repair'] ?? null) === 'YES'
+                && !empty($mappedData['repair_asset_id'])
+                && (int) $trackingRequest->linked_asset_id !== (int) $mappedData['repair_asset_id']) {
+                $previousLinkedId = $trackingRequest->linked_asset_id;
+                $trackingRequest->linked_asset_id = $mappedData['repair_asset_id'];
+                $trackingRequest->save();
+
+                $repairAsset = \App\Models\InventoryAsset::find($mappedData['repair_asset_id']);
+                \App\Models\AuditLog::log(
+                    'Linked Repair Asset (PM)',
+                    'Requests',
+                    'Linked asset ' . ($repairAsset?->property_number ?? $mappedData['repair_asset_id'])
+                        . ' for repair via PM request ' . $trackingRequest->request_number
+                        . ' (previous linked asset: ' . ($previousLinkedId ?? 'none') . ')',
+                    $trackingRequest->office
+                );
+            }
 
             // DISPOSAL LOGIC: If for_disposal is checked and an asset is selected, mark it as For Disposal
             if (!empty($mappedData['for_disposal']) && $mappedData['for_disposal'] === 'YES') {
@@ -189,7 +223,7 @@ class UpdateMaintenanceTicketAction
             // Shared completion: update asset PM dates when status becomes COMPLETED
             if ($newStatus === RequestModel::STATUS_COMPLETED) {
 
-                // --- Manual PM: single linked asset ---
+                // --- Repair-linked asset (e.g., picked via FOR REPAIR) ---
                 if ($trackingRequest->linked_asset_id) {
                     $asset = \App\Models\InventoryAsset::find($trackingRequest->linked_asset_id);
                     if ($asset) {
@@ -200,12 +234,16 @@ class UpdateMaintenanceTicketAction
                 }
 
                 // --- Auto-generated (bundled) PM: update ALL active assets assigned to user ---
-                // Auto-generated PMs have linked_asset_id = null because one PM covers all assets.
-                // We query all active assets for the user and stamp them with PM dates.
-                elseif ($trackingRequest->is_auto_generated && $trackingRequest->user_id) {
+                // Auto-generated PMs cover all of a user's assets. A repair-linked
+                // asset does not cancel that coverage - the other assets still
+                // need their PM dates stamped on completion.
+                if ($trackingRequest->is_auto_generated && $trackingRequest->user_id) {
                     $nextDate   = $this->resolveNextPmDate($trackingRequest);
+                    // Include assets still "Under Maintenance" at completion time
+                    // (the status restore runs after this stamp) and skip only
+                    // disposal/scrapped equipment.
                     $userAssets = \App\Models\InventoryAsset::where('assigned_to_user', $trackingRequest->user_id)
-                        ->where('status', 'Active')
+                        ->whereNotIn('status', ['For Disposal', 'Scrapped'])
                         ->get();
 
                     foreach ($userAssets as $asset) {
@@ -323,6 +361,7 @@ class UpdateMaintenanceTicketAction
 
             // Recommendations
             'disposal_asset_id', 'disposalAssetId',
+            'repair_asset_id', 'repairAssetId',
             'disposal_reason', 'disposalReason',
             'repair_parts', 'repairParts',
             'for_disposal', 'forDisposal',
@@ -528,6 +567,13 @@ class UpdateMaintenanceTicketAction
             $mapped['disposal_asset_id'] = $data['disposal_asset_id'];
         } elseif (array_key_exists('disposalAssetId', $data)) {
             $mapped['disposal_asset_id'] = $data['disposalAssetId'];
+        }
+
+        // Map repair_asset_id directly
+        if (array_key_exists('repair_asset_id', $data)) {
+            $mapped['repair_asset_id'] = $data['repair_asset_id'] ?: null;
+        } elseif (array_key_exists('repairAssetId', $data)) {
+            $mapped['repair_asset_id'] = $data['repairAssetId'] ?: null;
         }
 
         return $mapped;

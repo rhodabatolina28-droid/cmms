@@ -326,3 +326,55 @@ PMFlowTest quarterly (weekday-aware): 1 passed
 Working tree clean after commits.
 ```
 
+---
+
+## 8. Planned — Create PR from Parts & Consumables + Notifications
+
+> **Status:** Planned (implementing phase-by-phase). Sections below are the
+> agreed design before any code changed — updated after each phase lands.
+> **PA + PB both IMPLEMENTED** (see status notes below).
+
+### 8.1 Phase PA — "Create PR" entry points + `part_id` submit fix
+
+| # | Change | File |
+|---|---|---|
+| PA.1 | Per-row **Create PR** icon button in the Parts table — visible **only for critical rows** (`statusLevel() === 'critical'`) **and** supply-writable views (`PARTS_CAN_WRITE`). Links to `purchase_requests.create?part_id={id}`. | `resources/views/inventory/parts.blade.php` (JS `renderPartsTable`) |
+| PA.2 | Toolbar **Create PR** button (supply-only) → plain `purchase_requests.create` for brand-new (unlisted) items. | `parts.blade.php` toolbar |
+| PA.3 | **`?part_id=N` prefill**: `createForm()` looks up part → `prefill.items[0]` = `{ description: item_name, unit, unit_cost: latestUnitCost(partId), quantity: deficit, part_id }` where deficit = `max(1, reorder_level − on_hand_qty)` when reorder > 0 else 1. | `PurchaseRequestController::createForm()` |
+| PA.4 | **Hidden `items[N][part_id]` input** in `rowHtml()` — fixes the existing gap where `tr.dataset.partId` was never submitted, breaking future inventory-match on receive. | `purchase-requests/create.blade.php` JS |
+| PA.5 | Clear stale `tr.dataset.partId` when a description no longer matches the catalog. | create form JS |
+
+**Status: IMPLEMENTED.** Per-row `Create PR` (critical only, supply-writable),
+toolbar `Create PR` for new items, `?part_id=N` prefill (description/unit/latest
+cost/deficit qty), hidden `items[N][part_id]` input submitted to the server, and
+stale-partId clearing. Tests: `test_create_form_prefills_from_part_id` +
+`test_part_id_lands_in_stored_pr_items` (+ 2 notification tests in PB).
+
+**Gate:** `view:cache` + PartsStockTest + PurchaseRequestTest + new tests
+(critical-only visibility, prefill correctness, part_id survives submit).
+
+### 8.2 Phase PB — PR workflow notifications (in-app + email via existing pipeline)
+
+| Event | Recipients | Type string |
+|---|---|---|
+| Submitted | Supply users in creator's region/branch (exclude creator) | `PR Submitted` |
+| Finalized | Requester + creator (dedupe, exclude self) | `PR Finalized` |
+| Delivered | Requester + creator | `PR Delivered` |
+
+- `Notification::send(userId, null, type, message)` — `request_id` stays null
+  (PRs are not `requests`; the PR number is part of the message text).
+- Built-in safety pipeline reused: super-admins in-app only; alias emails
+  skipped in production; local dev writes a log preview.
+
+**Status: IMPLEMENTED.** New service
+`app/Services/PurchaseRequestNotificationService.php` (notifySubmitted/
+notifyFinalized/notifyDelivered + supplyUsers region/branch query). Wired
+into `CreatePurchaseRequestAction`, `FinalizePurchaseRequestAction`, and
+`ReceivePurchaseRequestAction`. Gate: full PR/parts/requisition suites green
+(35 PR + 58 parts/requisition + 15 parts stock).
+
+### 8.3 Explicit non-goals
+- No schema change (no new columns/tables).
+- No changes to receiving, Lifecycle History, or existing ICT/PM notifications.
+- Parts catalog in PR form stays global (matches receive matching); noted only.
+

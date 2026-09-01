@@ -330,7 +330,8 @@
             '<td><input type="text" name="' + n('description') + '" class="cell-input pr-desc" value="' + (item.description || '') + '" maxlength="255" aria-label="Item description and specification"></td>' +
             '<td class="num-cell"><input type="number" name="' + n('quantity') + '" class="cell-input pr-qty" min="1" step="1" value="' + (item.quantity ?? '') + '" style="text-align:center;" aria-label="Quantity"></td>' +
             '<td class="right-cell"><input type="number" name="' + n('unit_cost') + '" class="cell-input pr-cost" min="0" step="0.01" value="' + (item.unit_cost ?? '') + '" style="text-align:right;" aria-label="Unit cost in Philippine peso"></td>' +
-            '<td class="right-cell pr-amount" style="font-weight:bold;position:relative;">—<button type="button" class="pr-x" title="Remove row" aria-label="Remove this item row" tabindex="-1">×</button></td>';
+            '<td class="right-cell pr-amount" style="font-weight:bold;position:relative;">—<button type="button" class="pr-x" title="Remove row" aria-label="Remove this item row" tabindex="-1">×</button>' +
+            '<input type="hidden" name="' + n('part_id') + '" class="pr-part-id" value="' + (item.part_id || '') + '"></td>';
         return tr;
     }
 
@@ -378,10 +379,18 @@
                     if (hit && hit.unit) {
                         unitInput.value = hit.unit;
                         tr.dataset.partId = hit.id;
+                        const hiddenPart = tr.querySelector('.pr-part-id');
+                        if (hiddenPart) hiddenPart.value = String(hit.id);
                         unitInput.classList.remove('flash-now');
                         void unitInput.offsetWidth;
                         unitInput.classList.add('flash-now');
                         setTimeout(() => unitInput.classList.remove('flash-now'), 950);
+                    } else {
+                        // No catalog match — clear any stale part linkage so the
+                        // submitted row never carries a wrong part_id.
+                        tr.dataset.partId = '';
+                        const hiddenPart = tr.querySelector('.pr-part-id');
+                        if (hiddenPart) hiddenPart.value = '';
                     }
                 }
                 const qtyInput = tr?.querySelector('.pr-qty');

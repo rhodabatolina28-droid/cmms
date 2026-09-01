@@ -20,7 +20,7 @@
             @php $latest = $t->requisitions->sortByDesc('created_at')->first(); @endphp
             <a href="{{ route('requisitions.show', $latest->id) }}" class="cmms-btn-secondary">Latest REQ</a>
         @endif
-        <a href="{{ route('ict.show', $t->id) }}" class="cmms-btn-secondary" target="_blank">Job order</a>
+        <a href="{{ $t->type === 'Preventive Maintenance' ? route('maintenance.show', $t->id) : route('ict.show', $t->id) }}" class="cmms-btn-secondary" target="_blank">Job order</a>
     </td>
 </tr>
 @endforeach

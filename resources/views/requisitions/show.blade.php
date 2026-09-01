@@ -320,7 +320,7 @@
 
             <div class="cmms-toolbar">
                 @if($ticket)
-                    <a href="{{ route('ict.show', $ticket->id) }}" class="cmms-btn-secondary" target="_blank">Job order record</a>
+                    <a href="{{ $ticket->type === 'Preventive Maintenance' ? route('maintenance.show', $ticket->id) : route('ict.show', $ticket->id) }}" class="cmms-btn-secondary" target="_blank">Job order record</a>
                     @if($isIT)
                         <a href="{{ route('ict.ticket', $ticket->id) }}" class="cmms-btn-secondary">Parts register</a>
                     @endif

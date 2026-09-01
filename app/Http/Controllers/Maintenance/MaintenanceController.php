@@ -56,6 +56,16 @@ class MaintenanceController extends Controller
         return (new ShowMaintenanceRequestAction)->execute($id);
     }
 
+    /**
+     * Save only the FOR REPAIR recommendation (checkbox + repair asset +
+     * parts notes) without requiring the full PM form / signatures, so the
+     * PM ticket becomes parts-requestable right away.
+     */
+    public function saveRepairRecommendation(Request $request, $id)
+    {
+        return (new \App\Actions\Maintenance\SaveRepairRecommendationAction)->execute($request, $id);
+    }
+
     public function edit($id)
     {
         return (new EditMaintenanceRequestAction)->execute($id);

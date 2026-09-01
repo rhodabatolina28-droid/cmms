@@ -83,6 +83,18 @@
                 });
             }
 
+            // FOR REPAIR checkbox toggle
+            const forRepairCheck = document.getElementById('forRepairCheck');
+            const repairAssetSelector = document.getElementById('repairAssetSelector');
+            if (forRepairCheck && repairAssetSelector) {
+                forRepairCheck.addEventListener('change', function() {
+                    repairAssetSelector.style.display = this.checked ? 'block' : 'none';
+                    if (!this.checked) {
+                        document.querySelector('[name="repair_asset_id"]').value = '';
+                    }
+                });
+            }
+
             // AJAX Form Submission
             const form = document.getElementById('pmForm');
             if (form) {
@@ -653,4 +665,98 @@
             });
         }
 
+    </script>
+
+    {{-- Standalone: FOR REPAIR auto-save (works independently of the main handler).
+         Clicking FOR REPAIR auto-saves the recommendation; selecting the repair
+         asset auto-saves too. No signature needed for this part. --}}
+    <script nonce="{{ $cspNonce }}">
+        @if(isset($request) && $request && empty($viewMode) && in_array(Auth::user()->role, ['it', 'super_admin']))
+        window.PM_REPAIR_SAVE_URL = '{{ route('maintenance.repair-recommendation', $request->id) }}';
+        @endif
+
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.PM_REPAIR_SAVE_URL) return;
+
+            var saveInFlight = false;
+            var pendingSave = false;
+
+            function saveRepairRecommendation(isChecked) {
+                if (saveInFlight) { pendingSave = true; return; }
+                saveInFlight = true;
+
+                var sel = document.querySelector('[name="repair_asset_id"]');
+                var parts = document.querySelector('[name="repair_parts"]');
+
+                fetch(window.PM_REPAIR_SAVE_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Accept': 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify({
+                        for_repair: isChecked ? 'YES' : 'NO',
+                        repair_asset_id: isChecked && sel ? (sel.value || null) : null,
+                        repair_parts: parts ? parts.value : null
+                    })
+                })
+                .then(function (r) { return r.json(); })
+                .then(function (data) {
+                    saveInFlight = false;
+                    if (data.success) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: isChecked ? 'FOR REPAIR saved' : 'FOR REPAIR cleared',
+                            text: data.message,
+                            timer: 2200,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: data.message || 'Could not save the repair selection.',
+                            confirmButtonColor: '#0038A8'
+                        });
+                    }
+                    if (pendingSave) { pendingSave = false; saveRepairRecommendation(isChecked); }
+                })
+                .catch(function () {
+                    saveInFlight = false;
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
+                        text: 'Could not save the repair selection.',
+                        confirmButtonColor: '#0038A8'
+                    });
+                });
+            }
+
+            // Auto-save when the FOR REPAIR checkbox is clicked.
+            var forRepairCheck = document.getElementById('forRepairCheck');
+            if (forRepairCheck) {
+                forRepairCheck.addEventListener('change', function () {
+                    var sel = document.querySelector('[name="repair_asset_id"]');
+                    // Uncheck always saves (clears). Check saves right away when
+                    // an asset is already selected; otherwise it saves as soon
+                    // as the user picks one from the dropdown below.
+                    if (!this.checked || (sel && sel.value)) {
+                        saveRepairRecommendation(this.checked);
+                    }
+                });
+            }
+
+            // Auto-save when an asset is picked from the dropdown.
+            var repairAssetSelect = document.querySelector('[name="repair_asset_id"]');
+            if (repairAssetSelect) {
+                repairAssetSelect.addEventListener('change', function () {
+                    var cb = document.getElementById('forRepairCheck');
+                    if (cb && cb.checked && this.value) {
+                        saveRepairRecommendation(true);
+                    }
+                });
+            }
+        });
     </script>

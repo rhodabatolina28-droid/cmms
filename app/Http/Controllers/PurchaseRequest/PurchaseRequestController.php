@@ -57,6 +57,22 @@ class PurchaseRequestController extends Controller
                 'unit' => null,
             ]];
             $prefill['context_ticket'] = old('ticket', $this->validatedContextTicketId($user, $request->integer('ticket')));
+        } elseif ($request->filled('part_id')) {
+            // Coming from Parts & Consumables "Create PR": prefill from the part's
+            // catalog data + latest unit cost + suggested deficit quantity.
+            $part = Part::find($request->integer('part_id'));
+            if ($part) {
+                $suggestedQty = $part->reorder_level && $part->reorder_level > 0
+                    ? max(1, $part->reorder_level - max(0, (int) $part->on_hand_qty))
+                    : 1;
+                $prefill['items'] = [[
+                    'description' => $part->item_name,
+                    'unit' => $part->unit,
+                    'quantity' => $suggestedQty,
+                    'unit_cost' => \App\Actions\PurchaseRequest\CreatePurchaseRequestAction::latestUnitCost($part->id),
+                    'part_id' => $part->id,
+                ]];
+            }
         }
 
         // Parts catalog for the manual item picker (id + name + unit).

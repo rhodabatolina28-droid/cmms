@@ -420,8 +420,6 @@
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .icon-box-blue { margin-right: 10px; color: #0038A8; }
         .btn-group { display: flex; gap: 8px; }
-        .btn-qr { background: #f5f3ff; color: #6d28d9; border: 1px solid #c4b5fd; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
-        .btn-pc { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; text-decoration: none; }
         .btn-import { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-import:hover { background: #dcfce7; }
         .btn-add { background: #0038A8; color: white; border: none; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
@@ -490,13 +488,13 @@
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
             .filter-ribbon .ribbon-input,
             .filter-ribbon .search-wrapper,
-            .filter-ribbon .btn-export-ribbon { width: 100% !important; min-width: 0 !important; }
+            .filter-ribbon .btn-export-ribbon,
+            .filter-ribbon .btn-import { width: 100% !important; min-width: 0 !important; }
             .ribbon-input { min-height: 48px !important; font-size: 15px !important; padding: 12px !important; }
             .search-input { padding-left: 38px !important; }
             .search-icon { font-size: 14px !important; left: 14px !important; }
             .btn-export-ribbon { min-height: 48px !important; justify-content: center !important; }
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
-            .card-header-accent .btn-qr,
             .card-header-accent a,
             .card-header-accent .btn-add { width: 100% !important; text-align: center !important; justify-content: center !important; }
             .card-title { font-size: 16px !important; }
@@ -577,16 +575,6 @@
             @if($canWriteInventory)
                 <div class="btn-group">
                     @if(empty($isSuperAdminView))
-                    <a href="{{ route('inventory.qr-batch') }}" class="btn-qr" title="Print QR stickers for multiple assets at once">
-                        <i class="fa-solid fa-qrcode"></i> Print QR Stickers
-                    </a>
-                    <a href="{{ route('physical-count.index') }}" class="btn-pc">
-                        <i class="fa-solid fa-clipboard-check"></i> Physical Count
-                    </a>
-                    <button id="importCsvBtn" class="btn-import" type="button">
-                        <i class="fa-solid fa-file-csv"></i> Import CSV
-                    </button>
-                    <input type="file" id="inventoryCsvInput" accept=".csv,text/csv" class="d-none">
                     <button id="addAssetBtn" class="btn-add">
                         <i class="fa-solid fa-plus"></i> Register Asset
                     </button>
@@ -667,6 +655,12 @@
                 <a href="#" id="exportInvLink" class="btn-export-ribbon" title="Export to CSV">
                     <i class="fa-solid fa-download"></i> Export
                 </a>
+                @if($canWriteInventory && empty($isSuperAdminView))
+                <button id="importCsvBtn" class="btn-import" type="button" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;color:#0038a8;border:1px solid #0038a8;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">
+                    <i class="fa-solid fa-file-csv"></i> Import CSV
+                </button>
+                <input type="file" id="inventoryCsvInput" accept=".csv,text/csv" class="d-none">
+                @endif
             </div>
 
             <div class="overflow-x-auto">

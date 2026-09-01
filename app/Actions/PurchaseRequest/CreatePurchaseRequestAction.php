@@ -114,6 +114,8 @@ class CreatePurchaseRequestAction
                     ($total > 0 ? number_format($total, 2) : 'N/A') . ')'
             );
 
+            \App\Services\PurchaseRequestNotificationService::notifySubmitted($purchaseRequest);
+
             return $purchaseRequest;
         });
     }

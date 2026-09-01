@@ -307,6 +307,7 @@
                     <button type="button" class="btn-ghost" onclick="document.getElementById('partsCsvInput').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
                     <input type="file" id="partsCsvInput" accept=".csv" style="display:none;">
                     <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
+                    <a class="btn-ghost" href="{{ route('purchase_requests.create') }}" title="Create a Purchase Request for a new item not yet in stock"><i class="fa-solid fa-file-invoice"></i> Create PR</a>
                 @endif
             </div>
         </div>
@@ -606,6 +607,7 @@
     const PARTS_IMPORT_PREVIEW_URL = '{{ route('inventory.parts.import.preview') }}';
     const PARTS_IMPORT_COMMIT_URL = '{{ route('inventory.parts.import.commit') }}';
     const PARTS_STOCK_OUT_CONTEXT_URL = '{{ route('inventory.parts.stock-out-context') }}';
+    const PARTS_PR_CREATE_PREFIX = '{{ route('purchase_requests.create') }}?part_id=';
 
     // ── Live filters (Ajax) — gaya ng inventory, inu-update ang stats cards + table pag nag-filter ──
     (function () {
@@ -828,6 +830,9 @@
                 actions += '<button class="act-btn" title="Edit part" onclick="openPartModal(\'edit\', partsById[' + p.id + '])"><i class="fa-solid fa-pen"></i></button>';
                 actions += '<button class="act-btn in" title="Stock In" onclick="openStockModal(\'in\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-down"></i></button>';
                 actions += '<button class="act-btn out' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '" title="Stock Out"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-up"></i></button>';
+                if (level === 'critical') {
+                    actions += '<a class="act-btn" title="Out of stock? Create a Purchase Request for this item" href="' + PARTS_PR_CREATE_PREFIX + p.id + '"><i class="fa-solid fa-file-invoice"></i></a>';
+                }
             }
             actions += '<button class="act-btn" title="View history" onclick="openHistory(' + p.id + ')"><i class="fa-solid fa-clock-rotate-left"></i></button>';
             actions += '<button class="act-btn" title="View units (serial / property)" onclick="openUnitsModal(' + p.id + ')"><i class="fa-solid fa-list-ul"></i></button>';

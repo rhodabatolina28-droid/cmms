@@ -80,6 +80,14 @@ class CreateMaintenanceTicketAction
                 'service_request_no' => $requestNumber
             ]);
 
+            // REPAIR LINKAGE: when IT marks the PM FOR REPAIR and selects the
+            // asset to repair, link that asset to the ticket so parts can be
+            // requested for it via the Material Requisition flow.
+            $linkedAssetId = $request->input('linked_asset_id');
+            if (($mappedData['for_repair'] ?? null) === 'YES' && !empty($mappedData['repair_asset_id'])) {
+                $linkedAssetId = $mappedData['repair_asset_id'];
+            }
+
             // Create tracking request
             $trackingRequest = RequestModel::create([
                 'user_id' => Auth::id(),
@@ -92,7 +100,7 @@ class CreateMaintenanceTicketAction
                 'office' => $user->office ?? $data['end_user_division'] ?? $data['endUserDivision'] ?? '',
                 'status' => RequestModel::STATUS_SCHEDULED,
                 'detail_id' => $maintenance->id,
-                'linked_asset_id' => $request->input('linked_asset_id'),
+                'linked_asset_id' => $linkedAssetId,
             ]);
 
             // Notify Super Admins directly for PMs (bypassing Division Admin review)
@@ -148,6 +156,7 @@ class CreateMaintenanceTicketAction
             // Recommendations
             'disposal_asset_id', 'disposalAssetId',
             'disposal_reason', 'disposalReason',
+            'repair_asset_id', 'repairAssetId',
             'repair_parts', 'repairParts',
             'for_disposal', 'forDisposal',
             'for_repair', 'forRepair',
@@ -243,7 +252,7 @@ class CreateMaintenanceTicketAction
     {
         $adminKeys = [
             'technician_name', 'technician_date', 'problem_description', 'diagnosis',
-            'for_disposal', 'disposal_reason', 'for_repair', 'repair_parts',
+            'for_disposal', 'disposal_reason', 'for_repair', 'repair_parts', 'repair_asset_id',
             'desktop_brand', 'desktop_model', 'desktop_pno', 'desktop_computer_name',
             'monitor1_pno', 'monitor1_brand', 'monitor1_model',
             'monitor2_pno', 'monitor2_brand', 'monitor2_model',
@@ -381,6 +390,13 @@ class CreateMaintenanceTicketAction
             $mapped['disposal_asset_id'] = $data['disposal_asset_id'];
         } elseif (array_key_exists('disposalAssetId', $data)) {
             $mapped['disposal_asset_id'] = $data['disposalAssetId'];
+        }
+
+        // Map repair_asset_id directly
+        if (array_key_exists('repair_asset_id', $data)) {
+            $mapped['repair_asset_id'] = $data['repair_asset_id'] ?: null;
+        } elseif (array_key_exists('repairAssetId', $data)) {
+            $mapped['repair_asset_id'] = $data['repairAssetId'] ?: null;
         }
 
         return $mapped;

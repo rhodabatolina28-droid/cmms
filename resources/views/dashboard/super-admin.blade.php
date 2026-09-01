@@ -31,7 +31,6 @@
         }
         .stat-overdue-alert {
             animation: pulseRed 2s infinite;
-            border: 1px solid #ef4444 !important;
         }
         
         /* CSS BAR CHART */
@@ -177,24 +176,14 @@
         }
 
         .stat-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
+            content: none;
         }
 
         /* Stat Colors */
-        .stat-total::before { background: #0038A8; }
         .stat-total .stat-bg-icon { color: #0038A8; }
-        .stat-pending::before { background: #f59e0b; }
         .stat-pending .stat-bg-icon { color: #f59e0b; }
-        .stat-ongoing::before { background: #3b82f6; }
         .stat-ongoing .stat-bg-icon { color: #3b82f6; }
-        .stat-assets::before { background: #10b981; }
         .stat-assets .stat-bg-icon { color: #10b981; }
-        .stat-overdue::before { background: #ef4444; }
         .stat-overdue .stat-bg-icon { color: #ef4444; }
 
         .stat-label {

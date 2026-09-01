@@ -42,12 +42,35 @@ class BuildMaintenanceFormViewDataAction
 
         $endUser = User::find($requestorId);
 
+        // Parts requisition context: assigned IT/Super Admin can request parts
+        // for a PM ticket once a repair asset is linked (FOR REPAIR selection).
+        $ticketRequisitions = collect();
+        $canRequestPartsOnTicket = false;
+        $hasMyPendingParts = false;
+        if (in_array($user->role, ['it', 'super_admin'], true)) {
+            $ticketRequisitions = \App\Models\Requisition::with(['requester', 'reviewer'])
+                ->where('request_id', $trackingRequest->id)
+                ->orderByDesc('created_at')
+                ->get();
+
+            $hasMyPendingParts = $ticketRequisitions->contains(
+                fn ($r) => $r->status === \App\Models\Requisition::STATUS_PENDING
+                    && (int) $r->requested_by === (int) $user->id
+            );
+
+            $canRequestPartsOnTicket = \App\Support\RequisitionSupport::canItSubmitForTicket($user, $trackingRequest)
+                && !$hasMyPendingParts;
+        }
+
         $data = array_merge([
             'request'    => $trackingRequest,
             'maintenance' => $maintenance,
             'myAssets'   => $myAssets,
             'linkedPmAsset' => $linkedPmAsset,
             'endUser'    => $endUser,
+            'ticketRequisitions' => $ticketRequisitions,
+            'canRequestPartsOnTicket' => $canRequestPartsOnTicket,
+            'hasMyPendingParts' => $hasMyPendingParts,
         ], $flags);
 
         if (!empty($flags['canAssignIt'])) {

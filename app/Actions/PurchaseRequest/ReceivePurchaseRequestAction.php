@@ -73,6 +73,8 @@ class ReceivePurchaseRequestAction
             return ['success' => false, 'message' => $e->getMessage()];
         }
 
+        \App\Services\PurchaseRequestNotificationService::notifyDelivered($purchaseRequest->fresh());
+
         return [
             'success' => true,
             'message' => "{$purchaseRequest->pr_number} marked as delivered.",

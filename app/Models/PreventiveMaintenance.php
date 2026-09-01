@@ -31,6 +31,7 @@ class PreventiveMaintenance extends Model
         'for_disposal',
         'disposal_reason',
         'for_repair',
+        'repair_asset_id',
         'repair_parts',
         'desktop_brand',
         'desktop_model',
@@ -112,6 +113,11 @@ class PreventiveMaintenance extends Model
     public function request()
     {
         return $this->hasOne(Request::class, 'detail_id');
+    }
+
+    public function repairAsset()
+    {
+        return $this->belongsTo(InventoryAsset::class, 'repair_asset_id', 'asset_id');
     }
 
     // Helpers

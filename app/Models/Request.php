@@ -258,8 +258,24 @@ class Request extends Model
                 
                 if ($request->linked_asset_id) {
                     $asset = \App\Models\InventoryAsset::find($request->linked_asset_id);
-                    if ($asset && (int) $asset->assigned_to_user === (int) $request->user_id) {
+                    if ($asset) {
+                        // Always include the linked asset (e.g., the asset picked
+                        // via FOR REPAIR) so its status is restored on completion
+                        // even if its custodian differs from the ticket's end user.
                         $assetsToUpdate->push($asset);
+                    }
+
+                    // Bundled (auto-generated) PMs cover ALL of the user's assets.
+                    // A repair-linked asset must not stop the rest from being
+                    // restored on completion - previously the bundled branch was
+                    // skipped once a linked asset existed, leaving the other
+                    // assets stuck at "Under Maintenance" after completion.
+                    if ($request->type === 'Preventive Maintenance' && $request->is_auto_generated && $request->user_id) {
+                        \App\Models\InventoryAsset::where('assigned_to_user', $request->user_id)
+                            ->get()
+                            ->each(function ($a) use ($assetsToUpdate) {
+                                $assetsToUpdate->push($a);
+                            });
                     }
                 } elseif ($request->type === 'Preventive Maintenance' && $request->is_auto_generated && $request->user_id) {
                     $assets = \App\Models\InventoryAsset::where('assigned_to_user', $request->user_id)->get();
@@ -267,6 +283,8 @@ class Request extends Model
                         $assetsToUpdate->push($a);
                     }
                 }
+
+                $assetsToUpdate = $assetsToUpdate->unique('asset_id');
 
                 if ($assetsToUpdate->isNotEmpty()) {
                     $oldStatus = $request->getOriginal('status');

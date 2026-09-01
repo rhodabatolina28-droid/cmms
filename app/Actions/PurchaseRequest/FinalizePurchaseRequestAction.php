@@ -45,6 +45,8 @@ class FinalizePurchaseRequestAction
             );
         });
 
+        \App\Services\PurchaseRequestNotificationService::notifyFinalized($purchaseRequest->fresh());
+
         return [
             'success' => true,
             'message' => "{$purchaseRequest->pr_number} finalized — ready to print.",
