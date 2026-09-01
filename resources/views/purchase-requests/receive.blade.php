@@ -118,28 +118,40 @@
 </div>
 
 <script>
-function rxToggleUnits(sel) {
-    var line = sel.closest('.rx-line');
-    var grid = line && line.querySelector('[data-units]');
-    if (grid) { grid.classList.toggle('show', sel.value === 'direct-asset'); }
+// The serial/property grid must appear for ANY destination when the selected
+// part is serialized (requires_unit_tracking) — stock-in included. Backend
+// validation enforces one serial + property per quantity for tracked parts.
+function rxPartTracked(sel) {
+    if (!sel || !sel.value) return false;
+    if (sel.value === 'new') return true; // new parts are always serialized
+    var opt = sel.options[sel.selectedIndex];
+    return !!(opt && opt.dataset.tracked === '1');
+}
+function rxSyncUnits(line) {
+    if (!line) return;
+    var grid = line.querySelector('[data-units]');
+    var sel = line.querySelector('select[name$="[part_id]"]');
+    if (grid) { grid.classList.toggle('show', rxPartTracked(sel)); }
 }
 function rxPartChoice(sel) {
     var line = sel.closest('.rx-line');
     var box = line && line.querySelector('[data-newpart]');
     if (box) { box.hidden = sel.value !== 'new'; }
+    rxSyncUnits(line);
 }
 document.addEventListener('change', function (e) {
     if (e.target.matches('input[name$="[destination]"]')) {
         e.target.closest('.rx-dest').querySelectorAll('label').forEach(function (l) {
             l.classList.toggle('is-checked', l.contains(e.target));
         });
-        rxToggleUnits(e.target);
+        rxSyncUnits(e.target.closest('.rx-line'));
     }
 });
 document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.rx-dest input:checked').forEach(function (r) {
-        r.closest('label').classList.add('is-checked');
-        rxToggleUnits(r);
+    document.querySelectorAll('.rx-line').forEach(function (line) {
+        rxSyncUnits(line);
+        var checked = line.querySelector('.rx-dest input:checked');
+        if (checked) checked.closest('label').classList.add('is-checked');
     });
     document.querySelectorAll('[data-newpart]').forEach(function (b) {
         var sel = b.closest('.rx-line')?.querySelector('select[name$="[part_id]"]');

@@ -991,4 +991,31 @@ class PurchaseRequestTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertStringContainsString($pr->pr_number, $rows->first()->message);
     }
+
+    public function test_receive_form_marks_serialized_parts_for_the_units_grid(): void
+    {
+        // Regression: the Record Delivery page used to show the serial/property
+        // grid only for direct-to-asset, so "Add to inventory" submissions for
+        // tracked parts failed backend validation ("needs one serial + property
+        // number per quantity"). Each part option now carries data-tracked and
+        // the grid shows for any destination when the part is serialized.
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        Part::create([
+            'item_name' => 'SSD 1TB M.2 NVMe',
+            'unit' => 'pcs',
+            'on_hand_qty' => 0,
+            'requires_unit_tracking' => true,
+        ]);
+
+        $response = $this->actingAs($it)->get(route('purchase_requests.receiveForm', $pr));
+
+        $response->assertOk();
+        $body = $response->getContent();
+        $this->assertStringContainsString('data-tracked="1"', $body);
+        $this->assertStringContainsString('SSD 1TB M.2 NVMe', $body);
+        // Grid visibility is driven by part tracking, not destination.
+        $this->assertStringContainsString('rxSyncUnits', $body);
+        $this->assertStringNotContainsString("sel.value === 'direct-asset'", $body);
+    }
 }

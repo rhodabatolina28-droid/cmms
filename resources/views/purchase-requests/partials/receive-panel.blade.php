@@ -27,9 +27,9 @@
                         <select id="part-{{ $idx }}" class="rx-input" name="lines[{{ $idx }}][part_id]" required aria-label="Match part for line {{ $idx + 1 }}" onchange="rxPartChoice(this)">
                             <option value="">&mdash; select from Parts list &mdash;</option>
                             @foreach(($partsList ?? []) as $p)
-                                <option value="{{ $p['id'] }}">{{ $p['item_name'] }} ({{ $p['unit'] }}){{ $p['requires_unit_tracking'] ? ' &middot; serialized' : '' }}</option>
+                                <option value="{{ $p['id'] }}" data-tracked="{{ !empty($p['requires_unit_tracking']) ? '1' : '0' }}">{{ $p['item_name'] }} ({{ $p['unit'] }}){{ $p['requires_unit_tracking'] ? ' &middot; serialized' : '' }}</option>
                             @endforeach
-                                <option value="new">Not in the list? Create new&hellip;</option>
+                                <option value="new" data-tracked="1">Not in the list? Create new&hellip;</option>
                         </select>
                         <div class="rx-newpart" data-newpart hidden>
                             <div class="rx-field-label" style="margin-top:8px;">New item details</div>
