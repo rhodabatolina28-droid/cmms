@@ -63,6 +63,37 @@ class ReceivePurchaseRequestAction
                     'delivered_at' => now(),
                 ]);
 
+                // When the parts on a PR tied to a requisition arrive, the
+                // requisition is fulfilled — reflect that in the Supply Officer
+                // → Requisition Review by marking it issued (so it no longer
+                // waits in the queue and the IT requester is notified).
+                $source = $purchaseRequest->requisition;
+                if ($source && in_array($source->status, [
+                    \App\Models\Requisition::STATUS_PENDING,
+                    \App\Models\Requisition::STATUS_APPROVED,
+                ], true)) {
+                    $source->update([
+                        'status' => \App\Models\Requisition::STATUS_ISSUED,
+                        'reviewed_by' => $user->id,
+                        'reviewed_at' => now(),
+                        'remarks' => trim((string) $source->remarks)
+                            . (trim((string) $source->remarks) !== '' ? ' ' : '')
+                            . "Auto-issued from delivered {$purchaseRequest->pr_number}.",
+                    ]);
+
+                    \App\Models\AuditLog::log(
+                        'Reviewed Requisition',
+                        'Requisitions',
+                        "Issue requisition #{$source->id} for {$purchaseRequest->pr_number} (auto, on delivery).",
+                        $purchaseRequest->request?->region ?? $source->ticket?->region ?? $user->region
+                    );
+
+                    // Notify the IT requester that the parts are now issued.
+                    if ($source->requested_by) {
+                        \App\Services\RequestNotificationService::notifyItOfRequisitionAction($source, 'issued');
+                    }
+                }
+
                 AuditLog::log(
                     'Received Purchase Request',
                     'Purchase Request',

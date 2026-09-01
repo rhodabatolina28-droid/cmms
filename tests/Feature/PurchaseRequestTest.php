@@ -297,6 +297,53 @@ class PurchaseRequestTest extends TestCase
         $this->assertSame($ticket->id, $pr->request?->id); // relation resolves to same ticket
     }
 
+    public function test_receiving_pr_auto_issues_linked_requisition(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'REQ-NCR-AUTOISSUE-1',
+            'type' => 'ICT',
+            'requestor_name' => 'End User',
+            'description' => 'Parts will arrive via PR',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => 'NCR',
+        ]);
+
+        $requisition = Requisition::create([
+            'request_id' => $ticket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_APPROVED,
+            'items' => [
+                ['description' => 'SSD 512GB', 'quantity' => 1, 'source' => 'parts-stock', 'part_id' => $this->makePart()->id],
+            ],
+        ]);
+
+        $pr = $this->makeFinalizedPr($it, 45000.00);
+        $pr->update(['requisition_id' => $requisition->id, 'request_id' => $ticket->id]);
+
+        $this->actingAs($supply);
+
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $supply, []);
+
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+
+        // The linked requisition must now show as issued in the Supply
+        // Officer → Requisition Review queue (previously stayed pending/approved).
+        $this->assertSame(Requisition::STATUS_ISSUED, $requisition->fresh()->status);
+        $this->assertSame($supply->id, $requisition->fresh()->reviewed_by);
+
+        // The IT requester is notified that parts are now issued.
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $it->id,
+            'type' => 'Parts Request — Issued',
+        ]);
+    }
+
     /** Phase A: manual PRs (no requisition) stay unlinked - null request_id. */
     public function test_manual_pr_without_requisition_has_no_job_order_link(): void
     {
@@ -877,6 +924,37 @@ class PurchaseRequestTest extends TestCase
 
         $stored = $pr->refresh()->items;
         $this->assertSame((int) $stored[0]['part_id'], (int) $part->id);
+    }
+
+    public function test_supply_officer_can_store_pr_with_catalog_part_id(): void
+    {
+        // Regression: the store() validation used `exists:parts,id`, but the
+        // parts catalog lives in `parts_stock`. Submitting a PR line with a
+        // part_id therefore threw a QueryException (missing `parts` table) -> 500.
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true, 'region' => 'NCR']);
+        $part = Part::create([
+            'item_name' => 'SSD 512GB SATA',
+            'unit' => 'pcs',
+            'on_hand_qty' => 0,
+        ]);
+
+        $response = $this->actingAs($supply)->post(route('purchase_requests.store'), [
+            'items' => [[
+                'description' => 'SSD 512GB SATA',
+                'quantity' => 2,
+                'unit_cost' => 3500.00,
+                'part_id' => $part->id,
+            ]],
+            'purpose' => 'Ongoing GPU replacement.',
+        ]);
+
+        // Must NOT be a 500; should redirect with a success flash.
+        $response->assertRedirect();
+
+        $pr = PurchaseRequest::first();
+        $this->assertNotNull($pr);
+        $this->assertEquals(2, (int) $pr->items[0]['quantity']);
+        $this->assertSame((int) $part->id, (int) $pr->items[0]['part_id']);
     }
 
     public function test_submit_notifies_supply_users_excluding_creator(): void

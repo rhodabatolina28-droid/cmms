@@ -116,3 +116,34 @@ Artisan command: `php artisan maintenance:fix-stuck-assets` (may `--dry-run`).
 - completing PM stamps PM dates for repair-linked **and** other assets
 
 Full suite: **195 passed (745 assertions)** — green.
+
+## Phase PR-FIX — Supply Officer PR fixes (2026-09-01)
+
+### 1. 500 error sa PR submission na may catalog part_id
+**Root cause:** ang `store()`/`update()` validation ay `exists:parts,id` — pero ang
+parts catalog ay nasa `parts_stock` table (tingnan ang `Part` model). Kapag may
+`part_id` ang item line, nag-query ang validator sa walang `parts` table →
+QueryException → 500.
+**Fix:** pinalitan ng `exists:parts_stock,id` ang parehong rules (kaparehas ng
+`StoreRequisitionRequest`). Regression test: supply officer stores a PR with
+part_id via the store route.
+
+### 2. Auto-issue ng linked requisition kapag na-deliver ang PR
+**Gap:** kapag ang PR ay ginawa mula sa isang requisition (deficit lines,
+`requisition_id` link), ang requisition ay nananatiling pending/approved sa
+**Supply Office → Requisition Review** kahit na-deliver na ang PR — manual pa
+ang pag-issue.
+**Fix (ReceivePurchaseRequestAction):** kapag na-deliver ang PR at may linked
+requisition na nasa pending/approved:
+- awtomatikong ginagawang **issued** ang requisition (reviewed_by/reviewed_at
+  = user na nag-receive, may "Auto-issued from delivered PR-x" remarks)
+- audit log entry ("Issue requisition #N ... auto, on delivery")
+- notification sa IT requester: "Parts Request — Issued" ("Parts were issued
+  for {request_number}. You may continue repair work.")
+Nasa loob ng receive transaction para atomic.
+
+### Tests (+2)
+- supply_officer_can_store_pr_with_catalog_part_id (dating 500, ngayon OK)
+- receiving_pr_auto_issues_linked_requisition (status issued + notification)
+
+Full suite: **197 passed (753 assertions)** — green.
