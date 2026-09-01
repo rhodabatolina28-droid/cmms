@@ -172,6 +172,7 @@ Route::post('/requests/maintenance/{id}/repair-recommendation', [MaintenanceCont
     // Phase C - receiving + receipts (threshold rules enforced in the action).
     Route::get('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receiveForm'])->name('purchase_requests.receiveForm');
     Route::post('/purchase-requests/{purchaseRequest}/receive', [PurchaseRequestController::class, 'receive'])->name('purchase_requests.receive')->middleware('throttle:30,1');
+Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [PurchaseRequestController::class, 'deliveryConfirmationPdf'])->name('purchase_requests.delivery_confirmation.pdf')->middleware('throttle:30,1');
     Route::post('/purchase-requests/{purchaseRequest}/attachments', [PurchaseRequestController::class, 'uploadAttachment'])->name('purchase_requests.attachments.store')->middleware('throttle:30,1');
     Route::get('/pr-attachments/{attachment}/download', [PurchaseRequestController::class, 'downloadAttachment'])->name('purchase_requests.attachments.download');
     Route::delete('/pr-attachments/{attachment}', [PurchaseRequestController::class, 'deleteAttachment'])->name('purchase_requests.attachments.destroy');

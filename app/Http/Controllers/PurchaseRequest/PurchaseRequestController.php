@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\PurchaseRequest;
 
 use App\Actions\PurchaseRequest\CreatePurchaseRequestAction;
+use App\Actions\PurchaseRequest\DownloadDeliveryConfirmationPdfAction;
 use App\Actions\PurchaseRequest\FinalizePurchaseRequestAction;
 use App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
 use App\Actions\PurchaseRequest\ShowPurchaseRequestAction;
@@ -316,6 +317,18 @@ class PurchaseRequestController extends Controller
             'linkedAsset' => $linkedAsset,
             'viewOnly' => $viewOnly,
         ]);
+    }
+
+    /**
+     * Formal "Delivery Confirmation" PDF — PR header, received items with
+     * per-piece serial/property numbers, destinations, proof of purchase,
+     * and signature lines. Delivered PRs only; same audience as the
+     * view-only delivery record.
+     */
+    public function deliveryConfirmationPdf(PurchaseRequest $purchaseRequest)
+    {
+        return (new DownloadDeliveryConfirmationPdfAction)
+            ->download($purchaseRequest, Auth::user());
     }
 
     /**

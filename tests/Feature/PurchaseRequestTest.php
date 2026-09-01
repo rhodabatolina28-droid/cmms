@@ -1152,4 +1152,46 @@ class PurchaseRequestTest extends TestCase
         );
         $this->assertStringContainsString('View delivery', $response->getContent());
     }
+
+    public function test_delivered_pr_delivery_confirmation_pdf(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $action->execute($pr->fresh(), $it, [
+            ['part_id' => $this->makePart()->id, 'destination' => 'stock-in', 'units' => [['serial_number' => 'RX-PDF-01', 'property_number' => 'PN-PDF-01']]],
+        ]);
+        $pr = $pr->fresh();
+
+        $response = $this->actingAs($it)->get(route('purchase_requests.delivery_confirmation.pdf', $pr));
+        $response->assertOk();
+        $response->assertHeader('content-type', 'application/pdf');
+        $content = $response->getContent();
+        $this->assertStringStartsWith('%PDF', $content);
+        // The delivery confirmation must fit on exactly one A4 page.
+        $this->assertMatchesRegularExpression('/\/Count 1[^\d]/', $content);
+    }
+
+    public function test_delivery_confirmation_pdf_redirects_before_delivery(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00); // finalized, not yet delivered
+
+        $response = $this->actingAs($it)->get(route('purchase_requests.delivery_confirmation.pdf', $pr));
+        $response->assertRedirect(route('purchase_requests.show', $pr->id));
+    }
+
+    public function test_delivery_confirmation_pdf_denied_for_non_owner(): void
+    {
+        $owner = $this->makeUser(['role' => 'it']);
+        $other = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($owner, 2750.00);
+        (new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction)->execute($pr->fresh(), $owner, [
+            ['part_id' => $this->makePart()->id, 'destination' => 'stock-in', 'units' => [['serial_number' => 'RX-PDF-02', 'property_number' => 'PN-PDF-02']]],
+        ]);
+        $pr = $pr->fresh();
+
+        $response = $this->actingAs($other)->get(route('purchase_requests.delivery_confirmation.pdf', $pr));
+        $response->assertRedirect(route('purchase_requests.show', $pr->id));
+    }
 }

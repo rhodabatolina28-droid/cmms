@@ -88,7 +88,14 @@
         <a href="{{ route('purchase_requests.show', $purchaseRequest->id) }}" class="rx-back" aria-label="Back to purchase request document">
             <i class="fa-solid fa-arrow-left"></i>Back to document
         </a>
-        <div class="rx-crumb">Purchase Request <i class="fa-solid fa-angle-right"></i> <b>{{ $purchaseRequest->pr_number }}</b> <i class="fa-solid fa-angle-right"></i> Record delivery</div>
+        <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
+            <div class="rx-crumb">Purchase Request <i class="fa-solid fa-angle-right"></i> <b>{{ $purchaseRequest->pr_number }}</b> <i class="fa-solid fa-angle-right"></i> Record delivery</div>
+            @if(!empty($viewOnly))
+                <a href="{{ route('purchase_requests.delivery_confirmation.pdf', $purchaseRequest->id) }}" class="rxb rxb-white rxb-sm" aria-label="Download the formal delivery confirmation PDF for {{ $purchaseRequest->pr_number }}" title="Formal A4 document: items, serial/property numbers, destinations, and proof of purchase">
+                    <i class="fa-solid fa-file-pdf"></i>Delivery Confirmation PDF
+                </a>
+            @endif
+        </div>
     </div>
 
     <div class="rx-hero">
