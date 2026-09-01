@@ -49,6 +49,10 @@
                     <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-primary" style="padding:5px 10px;font-size:11.5px;" aria-label="Record delivery for {{ $pr->pr_number }}" title="Goods arrived? Log items, serials, and destination">
                         Record delivery
                     </a>
+                @elseif($pr->status === 'delivered')
+                    <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View delivery record for {{ $pr->pr_number }}" title="View what arrived, where it went, and the proof of purchase">
+                        <i class="fa-solid fa-receipt"></i>&nbsp;View delivery
+                    </a>
                 @endif
             </div>
         </td>

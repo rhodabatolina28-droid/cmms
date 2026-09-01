@@ -7,7 +7,7 @@
     <div class="rx-step-head">
         <div>
             <h2 style="font-size:15.5px; font-weight:800; color:#111827; margin:0;">Proof of purchase</h2>
-            <span class="st-sub">Official receipt or invoice &mdash; required under &#8369;10,000, recommended for everything else</span>
+            <span class="st-sub">Official receipt or invoice &mdash; <b>required for every purchase, any amount</b> (PDF / JPG / PNG)</span>
         </div>
     </div>
 
@@ -24,7 +24,7 @@
         </div>
     @empty
         <p style="font-size:12.5px; color:#6b7280; margin:0 0 12px;">
-            Nothing uploaded yet.@if($purchaseRequest->isSmallPurchase() && ! $purchaseRequest->isDelivered()) Delivery cannot be confirmed without at least one receipt.@endif
+            Nothing uploaded yet.@if(! $purchaseRequest->isDelivered()) Delivery cannot be confirmed without at least one receipt.@endif
         </p>
     @endforelse
 
