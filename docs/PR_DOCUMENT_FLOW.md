@@ -1,6 +1,6 @@
 ﻿# Purchase Request â€” Document Flow & Asset Traceability
 
-> **Last Updated:** August 26, 2026
+> **Last Updated:** September 1, 2026
 > **Branch:** `develop`
 > **Status:** Core flow complete; asset traceability planned (see Â§4)
 
@@ -377,4 +377,67 @@ into `CreatePurchaseRequestAction`, `FinalizePurchaseRequestAction`, and
 - No schema change (no new columns/tables).
 - No changes to receiving, Lifecycle History, or existing ICT/PM notifications.
 - Parts catalog in PR form stays global (matches receive matching); noted only.
+
+---
+
+## 9. Receive / Record Delivery — September 1, 2026 session
+
+> Detailed root-cause notes (Taglish) live in `docs/PM_REPAIR_PARTS_REQUISITION.md`
+> Phase PR-RECV. Summary below.
+
+### 9.1 Receiving flow (current state)
+```
+finalized PR ──► Record Delivery (receiveForm, canReceive() = supply/SA or
+                   below-threshold owner; receipt required for ANY amount)
+                   ├─ per-line: match part (catalog / "Create new…")
+                   ├─ destination: Add to inventory (stock-in) | Install on asset
+                   ├─ tracked part → one serial + property per quantity
+                   │   (grid appears for BOTH destinations — part-driven,
+                   │    data-tracked flag on the part <option>)
+                   └─ Confirm delivery ──► STATUS: delivered
+                         ├─ stock-in:      PartMovement + PartUnit(in_stock)
+                         ├─ direct-asset:  PartUnit(issued → asset/custodian)
+                         │                 + InventoryHistory "Part Installed"
+                         ├─ linked requisition (requisition_id) → auto-ISSUED
+                         │   + AuditLog + IT notification
+                         └─ PR Delivered notification (requester + creator)
+```
+
+### 9.2 Schema (new in this session)
+| Column | Table | Purpose |
+|---|---|---|
+| `purchase_request_id` *(nullable FK)* | `parts_stock_units` | Links every received physical unit back to its PR — enables per-piece serial/property display on the delivery record. Backfilled for pre-existing rows (installed via `request_id`; stock-in via PR movement ±3s match). |
+
+### 9.3 View-only Delivery Record (delivered PRs)
+- New gate `ReceivePurchaseRequestAction::canViewDelivery()` — delivered PR:
+  supply/super-admin or PR owner may VIEW (never re-receive).
+- `receiveForm` renders view-only for delivered PRs: delivery summary
+  (received at/by), **Received items with per-piece destination badge, unit
+  cost, "Tracked pieces N of Q", and serial/property grid**, plus the
+  **Proof of purchase** card (read-only; PDF/JPG/PNG download).
+- Entry points: PR document action area **"🧾 View delivery"** button (delivered
+  status) and the **same button on each delivered PR row** in the Supply table.
+- Receipt hint: **required for every purchase, any amount** (₱10k exemption removed).
+
+### 9.4 Supply PR list visibility
+- Supply officers / super-admin run the procurement desk: no org-narrowing in
+  `ListPurchaseRequestsAction` — they see own-created, requisition-origin, and
+  PM-origin PRs regardless of region.
+- Auto-generated bundled PM tickets now carry `region` from the end user
+  (fallback: actor) — legacy NULL-region PM rows were backfilled.
+
+### 9.5 Artisan maintenance commands (this flow)
+| Command | Purpose |
+|---|---|
+| `php artisan requisitions:fix-stuck-issued` | Marks pending/approved requisitions as issued when their linked PR is already delivered (pre-auto-issue backlog). `--dry-run` supported. |
+| `php artisan maintenance:fix-stuck-assets` | Restores "Under Maintenance" assets with no active ticket to Active (bundled-PM completion backlog). `--dry-run` supported. |
+
+### 9.6 Test gate (end of session)
+```
+Full suite: 202 passed (781 assertions)
+PurchaseRequestTest: 42 passed (165 assertions)
+PmRepairPartsRequestTest: 10 passed (44 assertions)
+Blade view:cache compile: OK
+```
+
 

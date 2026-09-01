@@ -158,3 +158,115 @@ ay nakatengga pa rin sa pending/approved. Bagong artisan command:
   delivered_at) + AuditLog + notification sa IT requester
 - Run noong 2026-09-01: **1 requisition restored** (#13, PM-NCR-RCMB-2026-0003,
   fulfilled by PR-2026-0006).
+
+## Phase PR-RECV — Record Delivery overhaul (2026-09-01, hapon)
+
+> Saklaw: serial/property grid sa "Add to inventory", supply PR visibility,
+> view-only delivery record + proof of purchase, per-piece serial/property
+> detail, PR table "View delivery" button, receipt-required-for-any-amount.
+
+### 1. Serial/property grid lumalabas na sa "Add to inventory" din
+**Bug:** sa Record Delivery form, ang serial/property grid ay `direct-asset`
+lang ang nagpapakita (`sel.value === 'direct-asset'` sa JS) — pero ang backend
+validation ay nangangailangan ng isang serial + property kada quantity para sa
+tracked parts (hal. `SSD 1TB M.2 NVMe`) **kahit stock-in**. Kaya: pumili ng
+"Add to inventory" → walang fields → submit → error na walang paraan ayusin.
+**Fix:** ang part `<option>` ay may `data-tracked="1"` flag kapag
+`requires_unit_tracking` ("Create new…" ay laging tracked), at ang grid
+visibility (`rxSyncUnits`) ay base na sa **part**, hindi sa destination.
+
+### 2. Supply Workspace → PURCHASE REQUESTS: hindi nakikita ang PRs
+Dalawang root cause:
+1. **Auto-generated PM tickets ay walang `region`** — `GeneratePMScheduleService`
+   ay walang `region` key sa bundled PM creation (lahat ng 6 PM tickets sa DB:
+   `region=NULL`) → hindi tumutugma ang PR-origin filter
+   (`requests.region = 'NCR'`) → nakatago ang PM-origin PRs.
+   **Fix:** generator ay kumukuha na ng region mula sa end user (fallback:
+   actor). Data backfill: 6 PM tickets inayos via `UPDATE ... JOIN users`.
+2. **Supply officer ay fini-filter sa sariling org scope** — ang
+   `ListPurchaseRequestsAction::applyOrgScope` ay nag-ni-narrow kahit sa mga PR
+   na si supply mismo ang gumawa. **Fix:** supply officers (+ super_admin) ang
+   nagpapatakbo ng **procurement desk** — walang org-narrowing, kita nila ang
+   lahat ng PR na kailangan nilang finalize/receive.
+Tests: `supply_sees_own_created_and_pm_origin_prs` + PM generation asserts
+region on auto-PM tickets.
+
+### 3. View-only Delivery Record + Proof of Purchase access
+**Gap:** ang Record Delivery page ay guarded ng `canReceive()` na **false na
+agad kapag delivered** — walang paraan para makita ang delivery record at ang
+**Proof of purchase** (receipt/invoice) pagkatapos ma-deliver. Sa PR document
+page, `delivered` = locked "Delivered" badge lang.
+**Fix:**
+- Bagong gate `ReceivePurchaseRequestAction::canViewDelivery()`: delivered PR →
+  supply/super-admin o PR owner (IT requester) ay puwedeng **makakita**;
+  finalized → `canReceive()` pa rin (edit mode).
+- `receiveForm`: kapag delivered → view-only mode (walang form/radios/units
+  grid/submit; may delivery summary, sino nag-receive, received items, at ang
+  Proof of purchase card na read-only — automatic na dahil `canUploadReceipt`
+  ay false kapag delivered).
+- PR document action area: `delivered` → aktibong **"🧾 View delivery"** button
+  + locked Delivered badge.
+- **Blade 500 bug:** ang `@if(!empty($viewOnly))Delivery record@else ...@endif`
+  sa `receive.blade.php` ay may **naka-dikit na directives** (`record@else`,
+  `delivery@endif`) — hindi kinilala ng Blade compiler, naging PHP parse error
+  ("expecting elseif/else/endif") → 500. Pinalitan ng ternary
+  (`{{ $viewOnly ? '...' : '...' }}`) ang lahat ng ganitong pattern
+  (receive.blade.php + receive-panel.blade.php) — bulletproof na.
+
+### 4. Per-piece serial/property detail sa "Received items"
+**Gap:** ang view-only "Received items" ay PR-items listahan lang — walang
+serial/property kada pcs at walang destination kada line.
+**Fix (3 layers):**
+1. **Migration** `2026_09_01_150000_add_purchase_request_id_to_parts_stock_units.php`
+   — nullable `purchase_request_id` FK → `purchase_requests` (+ index) sa
+   `parts_stock_units`. May **backfill**: installed units via `request_id` →
+   `purchase_requests.request_id`; stock-in units via PR
+   `parts_stock_movements` entry (same part, ±3s window). DB dump bago:
+   `storage/ux_backup/cmms_pre_pr_units_20260901_1439.sql`. Run: **151 units,
+   30 naka-link** (totoong data, hal. PR-2026-0006 SSD
+   `XPG-SX8200-26-073814` / `NCMB-RID-IT-2026-0049`).
+2. **Receive action** — `applyLines()` nagsta-stamp na ng `purchase_request_id`
+   sa bawat bagong PartUnit, **stock-in man o install-on-asset**.
+3. **View** — bawat item line sa delivery record ay may: **destination badge**
+   ("Installed on asset · {asset_code}" o "Add to inventory (stock)"),
+   **unit cost**, **"Tracked pieces: N of QTY recorded"**, at **per-piece
+   serial/property grid**. May warning kapag may pcs na walang serial
+   ("N piece(s) were recorded without serial/property details") at note kapag
+   walang units (consumable / pre-tracking receipt).
+   **Matching:** units ay hinahanap muna via `items[N][part_id]`, fallback via
+   part `item_name` === item description (para sa lumang PRs / "create new").
+   **Key decision:** ang grid ay lumalabas **kapag may naitalang units, anuman
+   ang `requires_unit_tracking` flag** — ang naitalang serial/property ang truth.
+Tests: delivery record asserts VISIBLE ang serial (RX-VIEW-01) at property
+(PN-VIEW-01) kada pcs.
+
+### 5. PR table "View delivery" button + receipt rule
+- `purchase-requests/partials/pr-table-rows.blade.php`: kapag `delivered` ang
+  PR row sa Supply table → **"🧾 View delivery"** secondary button (bukod sa
+  mismong form/show page).
+- `attachments-card.blade.php`: ang receipt hint ay
+  **"required for every purchase, any amount (PDF / JPG / PNG)"** na — tanggal
+  ang dating "required under ₱10,000" exemption; ang empty-state warning ay
+  para na sa **lahat** ng undelivered PRs (hindi lang small purchase).
+
+### Test gate (final, buong session)
+```
+PurchaseRequestTest: 42 passed (165 assertions)
+PmRepairPartsRequestTest: 10 passed (44 assertions)
+Full suite: 202 passed (781 assertions) — green
+view:cache compile — OK
+```
+
+### Commits (session, 2026-09-01)
+| Sha | Saklaw |
+|---|---|
+| `72ed529` | Squash ng 9 commits: PA/PB, dashboard colors, PM repair flow, auto-save, Job Orders fix, stuck assets, inventory toolbar |
+| `bd320b0` | part_id validation 500 fix + auto-issue linked requisition on delivery |
+| `81f442c` | `requisitions:fix-stuck-issued` cleanup command |
+| `5769ef4` | serial/property grid sa Add to inventory din |
+| `dd0250b` | supply PR visibility (region + org scope) |
+| `9608d75` | view-only delivery record + View delivery button + blade 500 fix |
+| `cbb1a67` | per-piece serial/property detail (migration + backfill + view) |
+| `1311fe1` | PR table View delivery action + receipt-required-any-amount hint |
+
+Lahat ay naka-push sa `origin/develop` (= `HEAD` = `1311fe1`).
