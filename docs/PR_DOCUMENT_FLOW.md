@@ -2,7 +2,7 @@
 
 > **Last Updated:** September 1, 2026
 > **Branch:** `develop`
-> **Status:** Core flow complete; asset traceability planned (see Â§4)
+> **Status:** Core flow complete; + My Parts Requisitions "View delivery" action (IT/Super Admin) + one-page Delivery Confirmation PDF (see sections 9.7-9.8.**
 
 ---
 
@@ -434,10 +434,91 @@ finalized PR ──► Record Delivery (receiveForm, canReceive() = supply/SA or
 
 ### 9.6 Test gate (end of session)
 ```
-Full suite: 202 passed (781 assertions)
-PurchaseRequestTest: 42 passed (165 assertions)
+Full suite: 206 passed (793 assertions) — two-batch split (93 + 113)
+PurchaseRequestTest: 46 passed (+4 new this session: My PRs View delivery, Delivery PDF, pre-delivery redirect, non-owner denial)
 PmRepairPartsRequestTest: 10 passed (44 assertions)
 Blade view:cache compile: OK
 ```
 
 
+### 9.7 My Parts Requisitions (IT / Super Admin) — "View delivery" action
+
+> Commit: `8b72685` — `fix(pr): show View delivery action on My Parts Requisitions table for delivered PRs`
+
+**Gap fixed.** The PR rows in the "My Purchase Requests" strip (IT / Super Admin view of `requisitions.index`, tab `myprs`, partial `resources/views/requisitions/partials/my-pr-rows.blade.php`) previously showed only a "View" action for delivered PRs — the "View delivery" button existed only on the Supply table (`purchase-requests/partials/pr-table-rows.blade.php`) and on the PR document page. Now:
+
+- **Delivered** PR row → extra **[View delivery]** button (secondary style) → opens the same view-only delivery record (`purchase_requests.receiveForm`): received-at/by summary, per-piece serial/property grid, destination badges, Proof of purchase card (read-only).
+- Branch order in the action `<td>` block:
+  1. `@if($pr->status === 'delivered')` → **[View delivery]** (secondary) — NEW branch
+  2. `@elseif($pr->status === 'finalized' && $pr->isSmallPurchase())` → **[Record delivery]** (primary — < ₱10k owner fast-track)
+  3. `@elseif($pr->status === 'finalized')` → "With Procurement" hint (≥ ₱10k — Supply Officer receives)
+- Same intent as the Supply table: IT officers / Super Admins track their own PRs and now also see the delivery record nang direkta mula sa list.
+
+
+
+**Test:** `test_super_admin_my_prs_table_shows_view_delivery_for_delivered` — super_admin opens `requisitions.index?tab=myprs` → asserts the `receiveForm` route link and the string "View delivery" appear for the delivered PR row. (3 assertions)
+
+---
+
+### 9.8 Delivery Confirmation PDF — one-page formal bundle (delivered PRs
+
+> Commits: `d921fde` — `feat(pr): formal one-page Delivery Confirmation PDF...`; `7f8ac44` — `fix(pr): Delivery Confirmation PDF fits exactly one A4 page (sakto, hindi sobra o kulang) + proper page-count assertion`
+
+**What it is.** A formal, print/archive-grade A4 PDF for a delivered PR — PR header in the same bordered Appendix-60 style as the official PR document (Entity Name = "National Conciliation and Mediation Board", fund cluster, office/unit, PR No., PR date, responsibility center, received by, date & time received, purpose/justification box), a received-items table, a serial/property register, a proof-of-purchase register, certification paragraph, at Prepared/Received signature grid(`same alignment style as the PR document's Requested/Approved grid`. Exactly ONE page ("sakto lang" per user feedback — hindi sobra, hindi kulang.
+
+**Route / controller / action**
+
+| Layer | File | Details |
+|---|---|---|
+| Route | `routes/web.php` | `GET /purchase-requests/{purchaseRequest}/delivery-confirmation.pdf` → name `purchase_requests.delivery_confirmation.pdf` (throttle:30,1) |
+| Controller | `PurchaseRequestController::deliveryConfirmationPdf()` | One-liner → `DownloadDeliveryConfirmationPdfAction` |
+| Action | `app/Actions/PurchaseRequest/DownloadDeliveryConfirmationPdfAction.php` | Gate + data assembly + DomPDF output |
+**Access gate** — same audience as the view-only delivery record, plus an explicit delivered-only rule:
+- `isDelivered()` AND `ReceivePurchaseRequestAction::canViewDelivery($pr, $user)` — delivered PR: supply / super-admin or PR owner; a merely-**finalized** PR → redirect back to `purchase_requests.show` with the standard denial reason (walang recorded delivery pa na puwedeng i-certify).
+
+**Data assembled** (in the action):
+- PR eager-loads `requester, creator, finalizer, deliverer, attachments.uploader`.
+- Units: same query as the view-only delivery panel — `PartUnit::where('purchase_request_id', $pr->id)` grouped by `part_id`; per-line match via `part_id` (fallback: item-name match for older / "create new" lines). Per line extracts serial/property numbers, recorded count, at destination label ("Installed on asset {code}" via an `issued` unit; "Add to inventory (stock)" via an `in_stock` unit).
+- Render: `Pdf::loadView('pdf.delivery-confirmation', ['pr' => ..., 'lines' => ...])->setPaper('a4', 'portrait')`; response inline `Content-Disposition`, filename `{pr_number}-Delivery-Confirmation.pdf`.
+
+**PDF layout** — `resources/views/pdf/delivery-confirmation.blade.php`:
+1. **Title** — centered "DELIVERY CONFIRMATION" (PR-form look).
+2. **Header grid** — bordered `a60-field` boxes mirroringthe official PR form: Entity Name, Fund Cluster, Office/Unit, PR No., PR Date, Responsibility Center Code, Received By, Date & Time Received, Purpose / justification box (3-row main blocks to conserve vertical space).
+3. **Items Purchased** — bordered official grid: Unit | Description / specification | Qty | Unit Cost | Total Cost + TOTAL row with `PHP {amount}`. **No blank padding rows** — ang PR form's 8 blank-row padding ay nagtulak sa PDF sa 2 pages, kaya tinanggal dito.
+.
+4. **Serial / Property Register** — bordered table: No., Item, Serial No., Property No., Destination ("Installed on asset {asset_code}" o "Add to inventory (stock)"); walang units/consumable → "No individual units were recorded..." note.
+5. **Proof of Purchase** — bordered register: No., Label, File Name, Uploaded By, Date Uploaded( PDF receipts listed as text metadata; JPG/PNG image embedding = Phase 2 planned). "No proof of purchase on record." note kapag wala.
+6. **Certification + Signatures** — maikling certification paragraph + "Prepared by" (requester — signature line, printed name, date) at "Received by" (deliverer — designation: "Requester / End User" for small purchases, otherwise "Supply Officer"; signature line, printed name, date).
+7. **Footer** — PR number · Delivery Confirmation · generated timestamp · CMMS.
+
+**Entry point** — `resources/views/purchase-requests/receive.blade.php` topbar: kapag `$viewOnly` (delivered, may "Delivery Confirmation PDF" button (`.rxb.rxb-white.rxb-sm`) → inline-download ang PDF. Finalized PRs — walang PDF button (walang recorded delivery pa to certify.
+
+
+
+**Bug fixes folded in** (mula sa user feedback sa totoong output):
+- "TOTAL ? 20,000.00" → "TOTAL PHP 20,000.00" — DomPDF ay hindi kayang i-render ang ₱ glyph; ginamit ang formal ISO-style "PHP" prefix (no more "?" artifact).
+- Literal na "&nbsp;" sa Purpose / justification box → fixed via raw output (`{!! ... !!}`).
+- Tinanggal ang"Stock/Property No." column sa items table — hindi ito kopya ng PR form: delivery items ay Unit | Description | Qty | Unit Cost | Total Cost lang; ang serial/property numbers ay nasa Serial / Property Register sa ibaba** (correct per user: "kinopya mo lang ang PR form — hindi dapat").
+- Inalis din ang 8 blank padding rows mula sa items grid(ang pangunahing dahilan ng 2-page overflow).
+**One-page calibration ("sakto lang")** — sinukat gamit ang real page-count harness (`/Type /Page` token count sa DomPDF output), stress-tested na may 3 items × (5+4+2 = 11 tracked units), 2 receipts, full header + items + register + proof + signatures:
+- Page margins 10mm (top/bottom), 12mm (sides); body 11px / `line-height:1.26` — ang 1.27 ay sumasabog sa 2 pages, kaya 1.26 ang pinakamalaking kasya; title 14px; header grid 3-row; table cell paddingdown to 1.5px; compact certification/signature block; in-flow footer (no fixed-position overflow).
+- Pinakamalaking komportableng laki na kasya pa rin sa 1 page — "sakto lang" per user (hindi sobra, hindi kulang.
+- Result: **1 page** sa lahat ng stress variants (FULL / no-signs / no-signs-cert / no-signs-cert-register / only-header-items — lahat 1).
+
+**Regression protection** — `test_delivered_pr_delivery_confirmation_pdf` now asserts **exactly one A4 page**: `preg_match_all('/\/Type\s*\/Page[^s]/', $content) === 1` — huhulihin nito ang "2 papers" na regression sa hinaharap.
+
+**Tests (3 bago sa `tests/Feature/PurchaseRequestTest.php`:**
+1. `test_delivered_pr_delivery_confirmation_pdf` — delivered PR → 200, `application/pdf`, starts `%PDF`, exactly 1 page.
+2. `test_delivery_confirmation_pdf_redirects_before_delivery` — finalized (hindi pa delivered) → redirect back to the document.
+3. `test_delivery_confirmation_pdf_denied_for_non_owner` — ibang IT officer (di-owner, di-supply, di-SA) → redirect back to the document.
+
+**File map additions**
+
+| File | Role |
+|---|---|
+| `app/Actions/PurchaseRequest/DownloadDeliveryConfirmationPdfAction.php` | Gate + data assembly + DomPDF output (`view: pdf.delivery-confirmation`) |
+| `resources/views/pdf/delivery-confirmation.blade.php` | One-page A4 formal layout (PR-form bordered look) |
+| `routes/web.php` | `purchase_requests.delivery_confirmation.pdf` route |
+| `resources/views/purchase-requests/receive.blade.php` | View-delivery topbar button (when `$viewOnly`) |
+
+**Next phase (planned):** **Phase 2** — i-embed ang JPG/PNG receipt images nang direkta sa PDF (base64 `data:image/...;base64,...` src via `Storage::disk('public')->get($att->filepath)`; PDF receipts stay listed as text metadata). Same one-page constraint applies — babalikin ang page-count harness para i-verify na kasya pa rin sa 1 page ang naka-embed na receipt (images will likely need width limits (e.g. max ~120mm) at possible compression/scale para manatili ang one-page guarantee).
