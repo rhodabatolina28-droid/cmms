@@ -71,8 +71,14 @@ class ListPurchaseRequestsAction
 
     private function applyOrgScope($query, User $user): void
     {
-        if ($user->role === 'super_admin') {
-            return; // branch-wide visibility
+        // Supply officers (and Super Admin) run the procurement desk: they must
+        // see every PR they have to finalize/receive. Narrowing by the linked
+        // ticket's region/branch hid real PRs — auto-generated PM tickets
+        // historically carried no region (and sometimes no branch), and PRs
+        // created by the supply officer themselves could fall outside the
+        // creator-org filter.
+        if ($user->role === 'super_admin' || $user->canProcessSupply()) {
+            return; // procurement-wide visibility
         }
 
         $query->where(function ($q) use ($user) {

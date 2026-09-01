@@ -171,6 +171,7 @@ class GeneratePMScheduleService
                     'requestor_name'              => $endUserName,
                     'type'                        => 'Preventive Maintenance',
                     'status'                      => RequestModel::STATUS_SCHEDULED,
+                    'region'                      => $user?->region ?? $actor?->region ?? null,
                     'linked_asset_id'             => null, // Bundled workstation PM
                     'assigned_to'                 => $schedule->assigned_it_id, // Auto-assign to schedule's IT
                     'office'                      => $endUserDiv,

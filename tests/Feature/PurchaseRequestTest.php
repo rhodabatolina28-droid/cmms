@@ -1018,4 +1018,47 @@ class PurchaseRequestTest extends TestCase
         $this->assertStringContainsString('rxSyncUnits', $body);
         $this->assertStringNotContainsString("sel.value === 'direct-asset'", $body);
     }
+
+    public function test_supply_sees_own_created_and_pm_origin_prs(): void
+    {
+        // Regression: the Supply Workspace PURCHASE REQUESTS tab hid (a) PRs
+        // created by the supply officer themselves and (b) PRs raised from PM
+        // tickets, because auto-generated PM tickets historically carry no
+        // region (and sometimes no branch) so the ticket-based org filter
+        // excluded them. Supply runs the procurement desk: no narrowing.
+        $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true, 'region' => 'NCR', 'branch' => 'RCMB']);
+        $it = $this->makeUser(['role' => 'it', 'region' => 'NCR']);
+
+        $ticket = \App\Models\Request::create([
+            'user_id' => $it->id,
+            'assigned_to' => $it->id,
+            'request_number' => 'PM-NCR-NULLREG-1',
+            'type' => 'Preventive Maintenance',
+            'requestor_name' => 'PM End User',
+            'description' => 'Bundled PM',
+            'status' => \App\Models\Request::STATUS_ONGOING,
+            'region' => null,
+            'branch' => null,
+            'is_auto_generated' => true,
+        ]);
+        $requisition = Requisition::create([
+            'request_id' => $ticket->id,
+            'requested_by' => $it->id,
+            'status' => Requisition::STATUS_APPROVED,
+            'items' => [['description' => 'SSD', 'quantity' => 1, 'source' => 'manual']],
+        ]);
+
+        $ownPr = $this->makePr($supply); // standalone, created by supply
+        $pmPr = $this->makePr($it, ['requisition_id' => $requisition->id]); // PM-origin
+
+        $data = (new \App\Actions\PurchaseRequest\ListPurchaseRequestsAction)
+            ->execute(new \Illuminate\Http\Request(), $supply);
+
+        $ids = $data['requests']->getCollection()->pluck('id')->all();
+        $this->assertContains($ownPr->id, $ids, 'Supply officer must see PRs they created.');
+        $this->assertContains($pmPr->id, $ids, 'Supply officer must see PRs raised from PM tickets.');
+
+        // Status counts are scoped the same way.
+        $this->assertGreaterThan(0, $data['counts']['submitted']);
+    }
 }

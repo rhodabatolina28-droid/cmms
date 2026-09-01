@@ -69,6 +69,7 @@ class PMFlowTest extends TestCase
             'password'   => bcrypt('password'),
             'role'       => 'user',
             'is_active'  => true,
+            'region'     => 'NCR',
             'office'     => null,
             'department' => null,
             'branch'     => null,
@@ -135,6 +136,14 @@ class PMFlowTest extends TestCase
             'is_auto_generated'=> 1,
             'status'           => 'Scheduled',
             'pm_schedule_id'   => $this->schedule->id,
+        ]);
+        // Regression: auto-PM tickets must carry the end user's region so
+        // region-scoped queries (PR visibility in Supply Workspace) work.
+        $this->assertDatabaseHas('requests', [
+            'type'             => 'Preventive Maintenance',
+            'is_auto_generated'=> 1,
+            'pm_schedule_id'   => $this->schedule->id,
+            'region'           => 'NCR',
         ]);
     }
 
