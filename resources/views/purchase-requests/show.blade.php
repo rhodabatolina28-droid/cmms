@@ -160,6 +160,9 @@
                     </a>
                 @endif
             @elseif($purchaseRequest->status === 'delivered')
+                <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="View the delivery record and proof of purchase" title="View delivery record, recorded items, and proof of purchase">
+                    <i class="fa-solid fa-receipt"></i>View delivery
+                </a>
                 <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-circle-check"></i>Delivered</span>
             @else
                 <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-lock"></i>Print locked</span>

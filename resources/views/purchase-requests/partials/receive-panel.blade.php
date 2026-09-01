@@ -8,10 +8,36 @@
     <div class="rx-step-head">
 
         <div>
-            <h2 id="rx-title">Log items &amp; destinations</h2>
-            <span class="st-sub">Match each purchased line to an inventory item and say where it went</span>
+            <h2 id="rx-title">{{ !empty($viewOnly) ? 'Received items' : 'Log items & destinations' }}</h2>
+            <span class="st-sub">{{ !empty($viewOnly) ? 'Items that arrived and their destination on this delivery' : 'Match each purchased line to an inventory item and say where it went' }}</span>
         </div>
     </div>
+
+    @if(!empty($viewOnly))
+        {{-- Read-only: the PR items that were received. --}}
+        <div style="display:flex; flex-direction:column; gap:10px;">
+            @foreach($purchaseRequest->items ?? [] as $idx => $item)
+                @php $qty = max(1, (int)($item['quantity'] ?? 1)); @endphp
+                <div class="rx-line" style="margin:0;">
+                    <div class="rx-line-top">
+                        <span class="rx-line-no">{{ $idx + 1 }}</span>
+                        <span class="rx-line-desc">{{ $item['description'] ?? ('Item ' . ($idx + 1)) }} <em>&times;{{ $qty }}</em></span>
+                    </div>
+                    @if(!empty($item['unit']))
+                        <div class="rx-cols" style="margin-top:8px;">
+                            <div><span class="rx-field-label">Unit</span><span class="rx-view-val">{{ $item['unit'] }}</span></div>
+                            @if(isset($item['unit_cost']) && $item['unit_cost'] !== null)
+                                <div><span class="rx-field-label">Unit cost</span><span class="rx-view-val">&#8369; {{ number_format((float) $item['unit_cost'], 2) }}</span></div>
+                            @endif
+                        </div>
+                    @endif
+                </div>
+            @endforeach
+        </div>
+        @if(empty($purchaseRequest->items))
+            <p class="rx-hint">No items were recorded on this purchase request.</p>
+        @endif
+    @else
     <form method="POST" action="{{ route('purchase_requests.receive', $purchaseRequest->id) }}">
         @csrf
         @foreach($purchaseRequest->items as $idx => $item)
@@ -74,4 +100,5 @@
             </button>
         </div>
     </form>
+    @endif
 </div>

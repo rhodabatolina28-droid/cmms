@@ -1061,4 +1061,53 @@ class PurchaseRequestTest extends TestCase
         // Status counts are scoped the same way.
         $this->assertGreaterThan(0, $data['counts']['submitted']);
     }
+
+    public function test_delivered_pr_receive_form_opens_view_only_with_proof(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        // Get a received (delivered) PR. Receive requires a finalized PR first;
+        // below-threshold owner may receive it.
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $result = $action->execute($pr->fresh(), $it, [
+            ['part_id' => $this->makePart()->id, 'destination' => 'stock-in', 'units' => [['serial_number' => 'RX-VIEW-01', 'property_number' => 'PN-VIEW-01']]],
+        ]);
+        $this->assertTrue($result['success'], $result['message'] ?? '');
+        $pr = $pr->fresh();
+        $this->assertTrue($pr->isDelivered());
+
+        // canViewDelivery is true for the owner on a delivered PR.
+        $this->assertFalse($action->canReceive($pr, $it));
+        $this->assertTrue($action->canViewDelivery($pr, $it));
+
+        // The receiveForm renders in read-only mode (no form/confirm button),
+        // while still exposing the Proof of purchase card.
+        $response = $this->actingAs($it)->get(route('purchase_requests.receiveForm', $pr));
+        $response->assertOk();
+        $body = $response->getContent();
+        $this->assertStringContainsString('Delivery record', $body);
+        $this->assertStringContainsString('Proof of purchase', $body);
+        $this->assertStringNotContainsString('Confirm delivery', $body);
+        $this->assertStringNotContainsString('name="lines[0][destination]"', $body);
+    }
+
+    public function test_delivered_pr_show_has_view_delivery_action(): void
+    {
+        $it = $this->makeUser(['role' => 'it']);
+        $pr = $this->makeFinalizedPr($it, 2750.00);
+        $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
+        $action->execute($pr->fresh(), $it, [
+            ['part_id' => $this->makePart()->id, 'destination' => 'stock-in', 'units' => [['serial_number' => 'RX-VIEW-02', 'property_number' => 'PN-VIEW-02']]],
+        ]);
+        $pr = $pr->fresh();
+
+        $response = $this->actingAs($it)->get(route('purchase_requests.show', $pr));
+        $response->assertOk();
+        // The action bar now links to the (view-only) delivery record.
+        $this->assertStringContainsString(
+            route('purchase_requests.receiveForm', $pr->id),
+            $response->getContent()
+        );
+        $this->assertStringContainsString('View delivery', $response->getContent());
+    }
 }

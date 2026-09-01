@@ -292,10 +292,14 @@ class PurchaseRequestController extends Controller
         $user = Auth::user();
         $action = new ReceivePurchaseRequestAction;
 
-        if (! $action->canReceive($purchaseRequest, $user)) {
+        // Delivered PRs open in a read-only "View delivery" mode (proof of
+        // purchase + recorded lines). Finalized PRs use the receive (edit) flow.
+        $viewOnly = $purchaseRequest->isDelivered();
+
+        if (! $action->canViewDelivery($purchaseRequest, $user)) {
             return redirect()
                 ->route('purchase_requests.show', $purchaseRequest->id)
-                ->withErrors(['receive' => $action->denialReason($purchaseRequest, $user)]);
+                ->withErrors(['receive' => $action->viewDenialReason($purchaseRequest, $user)]);
         }
 
         $partsList = \App\Models\Part::query()
@@ -310,6 +314,7 @@ class PurchaseRequestController extends Controller
             'purchaseRequest' => $purchaseRequest,
             'partsList' => $partsList,
             'linkedAsset' => $linkedAsset,
+            'viewOnly' => $viewOnly,
         ]);
     }
 

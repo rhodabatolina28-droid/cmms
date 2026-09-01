@@ -256,6 +256,42 @@ class ReceivePurchaseRequestAction
     }
 
     /**
+     * May this user OPEN the Record Delivery screen at all?
+     *
+     *  - Finalized  → the receive (edit) flow: same rules as canReceive().
+     *  - Delivered  → read-only view (proof of purchase + recorded lines),
+     *    open to the procurement desk (supply / super admin) and the owner.
+     *
+     * @return bool
+     */
+    public function canViewDelivery(PurchaseRequest $purchaseRequest, User $user): bool
+    {
+        if ($purchaseRequest->status === PurchaseRequest::STATUS_FINALIZED) {
+            return $this->canReceive($purchaseRequest, $user);
+        }
+
+        if ($purchaseRequest->status === PurchaseRequest::STATUS_DELIVERED) {
+            return $user->canProcessSupply()
+                || $user->role === 'super_admin'
+                || $purchaseRequest->isOwnedBy($user);
+        }
+
+        return false;
+    }
+
+    /**
+     * Human-readable explanation when canViewDelivery() fails.
+     */
+    public function viewDenialReason(PurchaseRequest $purchaseRequest, User $user): string
+    {
+        if ($purchaseRequest->status === PurchaseRequest::STATUS_DELIVERED) {
+            return 'Only the request owner or the Supply Officer can view this delivery.';
+        }
+
+        return $this->denialReason($purchaseRequest, $user);
+    }
+
+    /**
      * Register a brand-new part during receiving ("Not in the list? Create
      * new..."). Duplicate protection: case-insensitive exact-name match is
      * rejected with guidance toward the existing record. Region inherited

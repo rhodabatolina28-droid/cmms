@@ -92,14 +92,21 @@
     </div>
 
     <div class="rx-hero">
-        <h1>Record delivery</h1>
+        <h1>{{ !empty($viewOnly) ? 'Delivery record' : 'Record delivery' }}</h1>
         <p class="rx-sub">
-            The goods for <b>{{ $purchaseRequest->pr_number }}</b> have physically arrived.
-            Log what was purchased and where each piece went — this closes the purchase request.
+            @if(!empty($viewOnly))
+                <b class="rx-hero-delivered">{{ $purchaseRequest->pr_number }}</b> was received {{ optional($purchaseRequest->delivered_at)->format('M d, Y h:i A') }} by {{ $purchaseRequest->deliverer?->full_name ?? 'Supply Officer' }}. View the proof of purchase and recorded items below.
+            @else
+                The goods for <b>{{ $purchaseRequest->pr_number }}</b> have physically arrived.
+                Log what was purchased and where each piece went — this closes the purchase request.
+            @endif
         </p>
         <div class="rx-hero-meta">
             <div class="rx-stat"><div class="k">Items</div><div class="v">{{ count($purchaseRequest->items ?? []) }}</div></div>
             <div class="rx-stat"><div class="k">Total cost</div><div class="v">{{ $purchaseRequest->total_amount !== null ? '₱' . number_format((float) $purchaseRequest->total_amount, 2) : '—' }}</div></div>
+            @if($purchaseRequest->isDelivered())
+                <div class="rx-stat"><div class="k">Status</div><div class="v" style="color:#15803d;">Delivered</div></div>
+            @endif
             @if($linkedAsset)
                 <div class="rx-stat"><div class="k">Target asset</div><div class="v">{{ $linkedAsset->asset_code ?? ('#' . $linkedAsset->asset_id) }}</div></div>
             @endif
