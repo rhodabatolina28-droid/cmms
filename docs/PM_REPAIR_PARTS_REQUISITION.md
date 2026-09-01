@@ -147,3 +147,14 @@ Nasa loob ng receive transaction para atomic.
 - receiving_pr_auto_issues_linked_requisition (status issued + notification)
 
 Full suite: **197 passed (753 assertions)** — green.
+
+### 3. Cleanup — mga requisition na naiwang "need issue" kahit na-deliver na ang PR
+Ang mga requisition na na-fulfill ng PR **bago pa maidagdag ang auto-issue fix**
+ay nakatengga pa rin sa pending/approved. Bagong artisan command:
+`php artisan requisitions:fix-stuck-issued` (may `--dry-run`).
+- Hinahanap ang pending/approved requisitions na may **delivered** na linked PR
+  (finalized-but-not-delivered ay hindi binibilang — legit na naghihintay pa)
+- Markahang **issued** (reviewed_by = PR delivered_by, reviewed_at = PR
+  delivered_at) + AuditLog + notification sa IT requester
+- Run noong 2026-09-01: **1 requisition restored** (#13, PM-NCR-RCMB-2026-0003,
+  fulfilled by PR-2026-0006).
