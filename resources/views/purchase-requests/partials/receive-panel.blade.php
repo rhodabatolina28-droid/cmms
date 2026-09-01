@@ -1,7 +1,7 @@
 {{-- Phase C5 - receive form (rendered on the dedicated "Record Delivery" page;
      access is guarded by PurchaseRequestController::receiveForm()). --}}
 @php
-    $needsReceipt = $purchaseRequest->isSmallPurchase()
+    $needsReceipt = ! $purchaseRequest->isDelivered()
         && $purchaseRequest->attachments()->doesntExist();
 @endphp
 <div id="receive-panel" class="rx-panel" role="region" aria-labelledby="rx-title">
@@ -14,22 +14,77 @@
     </div>
 
     @if(!empty($viewOnly))
-        {{-- Read-only: the PR items that were received. --}}
+        {{-- Read-only: what actually arrived, per physical piece — serial +
+            property numbers come from parts_stock_units (linked to this PR),
+            so both stock-in and installed-on-asset pieces are shown. --}}
+        @php
+            $unitsByPart = \App\Models\PartUnit::query()
+                ->where('purchase_request_id', $purchaseRequest->id)
+                ->with(['part', 'asset'])
+                ->get()
+                ->groupBy('part_id');
+        @endphp
         <div style="display:flex; flex-direction:column; gap:10px;">
             @foreach($purchaseRequest->items ?? [] as $idx => $item)
-                @php $qty = max(1, (int)($item['quantity'] ?? 1)); @endphp
+                @php
+                    $qty = max(1, (int)($item['quantity'] ?? 1));
+                    // Units recorded for this line: prefer the stored part_id
+                    // on the item; fall back to matching by item name for
+                    // older PRs (or "create new" lines).
+                    $units = collect();
+                    if (!empty($item['part_id']) && isset($unitsByPart[$item['part_id']])) {
+                        $units = $unitsByPart[$item['part_id']]->values();
+                    } else {
+                        $matchName = trim((string)($item['description'] ?? ''));
+                        if ($matchName !== '') {
+                            $units = $unitsByPart
+                                ->first(fn ($group) => optional($group->first()->part)->item_name === $matchName, collect())
+                                ->values();
+                        }
+                    }
+                    $installed = $units->firstWhere('status', 'issued');
+                    $stocked = $units->firstWhere('status', 'in_stock');
+                    $destLabel = $installed
+                        ? 'Installed on asset' . ($installed->asset ? ' · ' . ($installed->asset->asset_code ?? ('#' . $installed->asset->asset_id)) : '')
+                        : ($stocked ? 'Add to inventory (stock)' : null);
+                    // Show the per-piece grid whenever individual units (serial
+                    // + property) were actually recorded — regardless of the
+                    // part's tracking flag, the recorded numbers are the truth.
+                    $hasUnits = $units->isNotEmpty();
+                @endphp
                 <div class="rx-line" style="margin:0;">
                     <div class="rx-line-top">
                         <span class="rx-line-no">{{ $idx + 1 }}</span>
-                        <span class="rx-line-desc">{{ $item['description'] ?? ('Item ' . ($idx + 1)) }} <em>&times;{{ $qty }}</em></span>
+                        <span class="rx-line-desc">{{ $item['description'] ?? ('Item ' . ($idx + 1)) }} <em>&times;{{ $qty }} {{ $item['unit'] ?? '' }}</em></span>
+                        @if($destLabel)
+                            <span style="font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:{{ $installed ? '#eff6ff' : '#f0fdf4' }}; color:{{ $installed ? '#0038A8' : '#15803d' }}; border-radius:999px; padding:3px 10px; flex:none;">
+                                <i class="fa-solid {{ $installed ? 'fa-screwdriver-wrench' : 'fa-boxes-stacked' }}" style="margin-right:4px;"></i>{{ $destLabel }}
+                            </span>
+                        @endif
                     </div>
-                    @if(!empty($item['unit']))
-                        <div class="rx-cols" style="margin-top:8px;">
-                            <div><span class="rx-field-label">Unit</span><span class="rx-view-val">{{ $item['unit'] }}</span></div>
-                            @if(isset($item['unit_cost']) && $item['unit_cost'] !== null)
-                                <div><span class="rx-field-label">Unit cost</span><span class="rx-view-val">&#8369; {{ number_format((float) $item['unit_cost'], 2) }}</span></div>
+                    <div class="rx-cols" style="margin-top:8px;">
+                        @if(isset($item['unit_cost']) && $item['unit_cost'] !== null && $item['unit_cost'] !== '')
+                            <div><span class="rx-field-label">Unit cost</span><span class="rx-view-val">&#8369; {{ number_format((float) $item['unit_cost'], 2) }}</span></div>
+                        @endif
+                        @if($hasUnits)
+                            <div><span class="rx-field-label">Tracked pieces</span><span class="rx-view-val">{{ $units->count() }} of {{ $qty }} recorded</span></div>
+                        @endif
+                    </div>
+                    @if($hasUnits)
+                        <div class="rx-unit-grid show" style="margin-top:10px;">
+                            <div class="rx-unit-title"><i class="fa-solid fa-barcode" style="margin-right:5px;"></i>Serial / property numbers per piece ({{ $units->count() }}/{{ $qty }})</div>
+                            @foreach($units as $u)
+                                <div class="rx-unit-row">
+                                    <div class="rx-unit-cell"><span class="rx-field-label">Serial no.</span><span class="rx-view-val">{{ $u->serial_number ?: '—' }}</span></div>
+                                    <div class="rx-unit-cell"><span class="rx-field-label">Property no.</span><span class="rx-view-val">{{ $u->property_number ?: '—' }}</span></div>
+                                </div>
+                            @endforeach
+                            @if($units->count() < $qty)
+                                <p class="note" style="color:#b45309;">{{ $qty - $units->count() }} piece(s) were recorded without serial/property details.</p>
                             @endif
                         </div>
+                    @elseif($units->isEmpty() && $installed === null && $stocked === null)
+                        <p class="note" style="margin-top:8px;">No individual units were recorded for this line (consumable or received before unit tracking).</p>
                     @endif
                 </div>
             @endforeach

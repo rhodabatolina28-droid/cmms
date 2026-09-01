@@ -16,8 +16,8 @@ use Illuminate\Support\Facades\DB;
  *    system and may receive their own PR (Supply Officer remains a backup).
  *  - total >= 10,000 : Procurement track - only the Supply Officer receives.
  *
- * Every receive below the threshold additionally requires at least one
- * uploaded receipt attachment (checked in execute(); see Phase C6 gate).
+ * Every receive additionally requires at least one uploaded receipt
+ * attachment (checked in execute(); see Phase C6 gate) — for ANY amount.
  */
 class ReceivePurchaseRequestAction
 {
@@ -38,11 +38,11 @@ class ReceivePurchaseRequestAction
             ];
         }
 
-        // C6 - proof-of-purchase gate: a sub-threshold purchase was made by
-        // the requester outside the system; the receipt file is the only
-        // check-and-balance. No receipt -> no receive.
-        if ($purchaseRequest->isSmallPurchase()
-            && ! $purchaseRequest->attachments()->exists()) {
+        // C6 - proof-of-purchase gate: the purchase was made outside the
+        // system and the receipt file is the only check-and-balance.
+        // Required for ANY amount (not just sub-threshold buys).
+        // No receipt -> no receive.
+        if (! $purchaseRequest->attachments()->exists()) {
             return [
                 'success' => false,
                 'message' => 'Upload at least one receipt (PDF/JPG/PNG) before receiving this purchase.',
@@ -367,6 +367,7 @@ class ReceivePurchaseRequestAction
                         'part_id' => $locked->id,
                         'unit_value' => $unitValue,
                         'status' => 'in_stock',
+                        'purchase_request_id' => $purchaseRequest->id,
                     ]);
                 }
 
@@ -390,6 +391,7 @@ class ReceivePurchaseRequestAction
                         'issued_to' => $custodianId,
                         'asset_id' => $assetId,
                         'request_id' => $ticketId,
+                        'purchase_request_id' => $purchaseRequest->id,
                         'issued_at' => now(),
                     ]);
 

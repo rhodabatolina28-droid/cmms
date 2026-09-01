@@ -25,6 +25,7 @@ class PartUnit extends Model
         'issued_to',
         'asset_id',
         'request_id',
+        'purchase_request_id',
         'issued_at',
     ];
 
@@ -56,5 +57,10 @@ class PartUnit extends Model
     public function request(): BelongsTo
     {
         return $this->belongsTo(Request::class, 'request_id');
+    }
+
+    public function purchaseRequest(): BelongsTo
+    {
+        return $this->belongsTo(PurchaseRequest::class, 'purchase_request_id');
     }
 }

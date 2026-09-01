@@ -466,17 +466,16 @@ class PurchaseRequestTest extends TestCase
         $pr = $pr->fresh();
 
         // Default C6 receipt so threshold tests isolate the auth rule, not
-        // the receipt gate (the gate has its own dedicated tests).
-        if ($total < 10000) {
-            \App\Models\PrAttachment::create([
-                'purchase_request_id' => $pr->id,
-                'filename'            => 'receipt.pdf',
-                'filepath'            => "pr-attachments/{$pr->id}/receipt-test.pdf",
-                'filetype'            => 'application/pdf',
-                'label'               => 'Official receipt',
-                'uploaded_by'         => $creator->id,
-            ]);
-        }
+        // the receipt gate (the gate has its own dedicated tests). The
+        // receipt is required for ANY amount now, so always attach it.
+        \App\Models\PrAttachment::create([
+            'purchase_request_id' => $pr->id,
+            'filename'            => 'receipt.pdf',
+            'filepath'            => "pr-attachments/{$pr->id}/receipt-test.pdf",
+            'filetype'            => 'application/pdf',
+            'label'               => 'Official receipt',
+            'uploaded_by'         => $creator->id,
+        ]);
 
         return $pr;
     }
@@ -579,19 +578,38 @@ class PurchaseRequestTest extends TestCase
         $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
     }
 
-    public function test_large_pr_receive_does_not_require_receipt(): void
+    public function test_large_pr_receive_also_requires_receipt(): void
     {
         $it = $this->makeUser(['role' => 'it']);
         $supply = $this->makeUser(['role' => 'supply_officer', 'can_supply' => true]);
-        // ≥10k: receipt optional (procurement keeps paper trail outside).
+        // Any amount: receipt is mandatory before delivery can be confirmed.
         $pr = $this->makeFinalizedPr($it, 45000.00);
         $pr->attachments()->delete();
 
         $action = new \App\Actions\PurchaseRequest\ReceivePurchaseRequestAction;
         $result = $action->execute($pr, $supply);
 
+        $this->assertFalse($result['success']);
+        $this->assertStringContainsString('receipt', strtolower($result['message']));
+        $this->assertSame(PurchaseRequest::STATUS_FINALIZED, $pr->fresh()->status);
+
+        // Attach the receipt -> receive succeeds.
+        \App\Models\PrAttachment::create([
+            'purchase_request_id' => $pr->id,
+            'filename'            => 'receipt-large.pdf',
+            'filepath'            => "pr-attachments/{$pr->id}/receipt-large.pdf",
+            'label'               => 'Official receipt',
+        ]);
+        $result = $action->execute($pr->fresh(), $supply);
         $this->assertTrue($result['success'], $result['message'] ?? '');
         $this->assertSame(PurchaseRequest::STATUS_DELIVERED, $pr->fresh()->status);
+    }
+
+    public function test_receipt_upload_accepts_pdf(): void
+    {
+        // Regression: proof of purchase must accept PDF (not just images).
+        $rules = (new \App\Http\Requests\UploadPrAttachmentRequest)->rules();
+        $this->assertStringContainsString('pdf', (string) $rules['file']);
     }
 
     public function test_receipt_cannot_be_uploaded_after_delivery(): void
@@ -1081,12 +1099,16 @@ class PurchaseRequestTest extends TestCase
         $this->assertTrue($action->canViewDelivery($pr, $it));
 
         // The receiveForm renders in read-only mode (no form/confirm button),
-        // while still exposing the Proof of purchase card.
+        // while still exposing the Proof of purchase card AND the per-piece
+        // serial / property detail of what arrived.
         $response = $this->actingAs($it)->get(route('purchase_requests.receiveForm', $pr));
         $response->assertOk();
         $body = $response->getContent();
         $this->assertStringContainsString('Delivery record', $body);
         $this->assertStringContainsString('Proof of purchase', $body);
+        $this->assertStringContainsString('Serial / property numbers per piece', $body);
+        $this->assertStringContainsString('RX-VIEW-01', $body, 'The received serial number must be visible on the delivery record.');
+        $this->assertStringContainsString('PN-VIEW-01', $body, 'The received property number must be visible on the delivery record.');
         $this->assertStringNotContainsString('Confirm delivery', $body);
         $this->assertStringNotContainsString('name="lines[0][destination]"', $body);
     }
