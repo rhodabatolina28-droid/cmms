@@ -1169,7 +1169,11 @@ class PurchaseRequestTest extends TestCase
         $content = $response->getContent();
         $this->assertStringStartsWith('%PDF', $content);
         // The delivery confirmation must fit on exactly one A4 page.
-        $this->assertMatchesRegularExpression('/\/Count 1[^\d]/', $content);
+        $this->assertSame(
+            1,
+            preg_match_all('/\/Type\s*\/Page[^s]/', $content),
+            'Delivery Confirmation PDF must fit on exactly one A4 page.'
+        );
     }
 
     public function test_delivery_confirmation_pdf_redirects_before_delivery(): void

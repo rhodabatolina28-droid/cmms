@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <title>Delivery Confirmation &middot; {{ $pr->pr_number }}</title>
     <style nonce="{{ $cspNonce }}">
-        @page { size: A4 portrait; margin: 10mm 12mm 12mm 12mm; }
+        @page { size: A4 portrait; margin: 10mm 12mm 10mm 12mm; }
         body {
             font-family: "DejaVu Sans", Arial, Helvetica, sans-serif;
-            font-size: 12px;
+            font-size: 11px;
             color: #111827;
             margin: 0;
             padding: 0;
-            line-height: 1.4;
+            line-height: 1.26;
         }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; padding: 0; }
@@ -22,22 +22,22 @@
             font-size: 14px;
             font-weight: 700;
             letter-spacing: 2px;
-            margin: 2px 0 10px 0;
+            margin: 0 0 5px 0;
         }
 
         /* Bordered header field grid (mirrors the PR form) */
-        .a60-hdr { margin-bottom: 10px; font-size: 12px; }
+        .a60-hdr { margin-bottom: 6px; font-size: 11px; }
         .a60-hdr td { padding: 0; vertical-align: top; }
-        .a60-field { border: 1px solid #374151; padding: 3px 8px 2px; }
-        .a60-field-lbl { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 2px; }
-        .a60-field-val { font-weight: 700; color: #111827; font-size: 12.5px; }
+        .a60-field { border: 1px solid #374151; padding: 1.5px 7px; }
+        .a60-field-lbl { font-size: 8px; font-weight: 700; text-transform: uppercase; letter-spacing: .5px; color: #6b7280; margin-bottom: 1px; }
+        .a60-field-val { font-weight: 700; color: #111827; font-size: 10.5px; }
         .a60-field-val.accent { color: #0038A8; }
         .a60-field-val.muted { color: #9ca3af; font-weight: 400; font-style: italic; }
 
         /* Bordered items table (mirrors the PR form) */
-        .prd-table { margin-bottom: 8px; table-layout: fixed; }
-        .prd-table th, .prd-table td { border: 1px solid #374151; padding: 3px 6px; text-align: left; vertical-align: top; word-break: break-word; }
-        .prd-table th { background: #f3f4f6; font-size: 9.5px; text-transform: uppercase; letter-spacing: .4px; text-align: center; }
+        .prd-table { margin-bottom: 6px; table-layout: fixed; }
+        .prd-table th, .prd-table td { border: 1px solid #374151; padding: 1.5px 6px; text-align: left; vertical-align: top; word-break: break-word; }
+        .prd-table th { background: #f3f4f6; font-size: 8.5px; text-transform: uppercase; letter-spacing: .4px; text-align: center; }
         .prd-table .num { text-align: center; }
         .prd-table .right { text-align: right; white-space: nowrap; }
         .prd-total-row td { font-weight: 800; background: #f9fafb; text-align: right; }
@@ -45,22 +45,22 @@
         .muted { color: #9ca3af; font-style: italic; }
 
         /* Section labels — plain bold small caps like the PR form */
-        .sec-label { font-size: 11px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin: 10px 0 4px 0; }
+        .sec-label { font-size: 10px; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; margin: 6px 0 2px 0; }
 
         /* Purpose box */
-        .prd-purpose { font-size: 11.5px; margin: 2px 0 10px 0; padding: 5px 10px; border: 1px solid #374151; min-height: 24px; }
+        .prd-purpose { font-size: 10.5px; margin: 1px 0 6px 0; padding: 3px 10px; border: 1px solid #374151; min-height: 16px; }
         .prd-purpose .k { font-weight: 700; margin-right: 6px; }
 
         /* Certification + signatures (same grid as PR document) */
-        .cert { font-size: 10px; color: #374151; text-align: justify; margin: 6px 0 2px 0; }
-        table.prd-signs { margin-top: 18px; font-size: 11.5px; page-break-inside: avoid; }
-        .prd-signs td { padding: 10px 8px; vertical-align: bottom; }
+        .cert { font-size: 8.5px; color: #374151; text-align: justify; margin: 2px 0 0 0; }
+        table.prd-signs { margin-top: 4px; font-size: 10.5px; page-break-inside: avoid; }
+        .prd-signs td { padding: 3px 8px; vertical-align: bottom; }
         .prd-signs td.lbl { white-space: nowrap; width: 16%; color: #374151; padding-left: 0; }
-        .prd-signs td.val { border-bottom: 1px solid #111827; text-align: center; font-weight: 700; height: 24px; width: 26%; }
-        .prd-signs td.sig-space { height: 30px; }
-        .prd-signs td.who { font-weight: 800; padding-bottom: 12px; padding-left: 0; font-size: 12px; }
+        .prd-signs td.val { border-bottom: 1px solid #111827; text-align: center; font-weight: 700; height: 14px; width: 26%; }
+        .prd-signs td.sig-space { height: 14px; }
+        .prd-signs td.who { font-weight: 800; padding-bottom: 5px; padding-left: 0; font-size: 11px; }
 
-        .footer { text-align: center; font-size: 8px; color: #9ca3af; margin-top: 8px; border-top: 1px solid #d1d5db; padding-top: 3px; }
+        .footer { text-align: center; font-size: 8px; color: #9ca3af; margin-top: 2px; border-top: 1px solid #d1d5db; padding-top: 2px; }
     </style>
 </head>
 <body>
@@ -108,13 +108,9 @@
                 <div class="a60-field-lbl">Received By</div>
                 <div class="a60-field-val">{{ $pr->deliverer?->full_name ?? '—' }}</div>
             </td>
-            <td class="a60-field" style="border-top:none;border-left:1px solid #374151;">
+            <td class="a60-field" colspan="2" style="border-top:none;border-left:1px solid #374151;">
                 <div class="a60-field-lbl">Date &amp; Time Received</div>
                 <div class="a60-field-val">{{ optional($pr->delivered_at)->format('F d, Y h:i A') }}</div>
-            </td>
-            <td class="a60-field" style="border-top:none;border-left:1px solid #374151;">
-                <div class="a60-field-lbl">Requester</div>
-                <div class="a60-field-val">{{ $pr->requester?->full_name ?? '—' }}</div>
             </td>
         </tr>
     </table>
@@ -141,17 +137,6 @@
                     <td class="right">{{ $line['total'] !== null ? number_format((float) $line['total'], 2) : '' }}</td>
                 </tr>
             @endforeach
-            {{-- Pad with blank rows so the printed sheet shows a full official grid --}}
-            @php $blankRows = max(0, 8 - count($lines)); @endphp
-            @for($b = 0; $b < $blankRows; $b++)
-                <tr>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td class="num">&nbsp;</td>
-                    <td>&nbsp;</td>
-                    <td>&nbsp;</td>
-                </tr>
-            @endfor
             <tr class="prd-total-row">
                 <td colspan="4" style="text-align:right;">TOTAL</td>
                 <td>@if($pr->total_amount !== null)PHP {{ number_format((float) $pr->total_amount, 2) }}@else&nbsp;@endif</td>
@@ -223,9 +208,9 @@
 
     {{-- ── Certification + signatures (same grid as the PR document) ── --}}
     <p class="cert">
-        I hereby certify that the items listed above were inspected, physically received in good condition,
-        and recorded in the CMMS, and that the proof(s) of purchase enumerated above support this purchase
-        request ({{ $pr->pr_number }}).
+        I hereby certify that the items listed above were received in good condition and recorded in the
+        CMMS, with the proof(s) of purchase enumerated above supporting this purchase request
+        ({{ $pr->pr_number }}).
     </p>
     <table class="prd-signs">
         <tr>
@@ -233,7 +218,7 @@
             <td class="who" colspan="2">Received by:</td>
         </tr>
         <tr>
-            <td class="lbl">Signature&nbsp;:</td>
+            <td class="lbl">&nbsp;</td>
             <td class="val sig-space">&nbsp;</td>
             <td class="lbl">&nbsp;</td>
             <td class="val sig-space">&nbsp;</td>
