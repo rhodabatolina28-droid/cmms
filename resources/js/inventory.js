@@ -382,24 +382,24 @@ function renderPagination(totalFiltered) {
     html += `<span style="font-size:12px;color:#64748b;">Showing ${Math.min((currentPage-1)*perPage+1, totalFiltered)}–${Math.min(currentPage*perPage, totalFiltered)} of ${totalFiltered}</span>`;
     html += '<div style="display:flex;gap:4px;">';
 
-    html += `<button onclick="goToPage(${currentPage - 1})" style="width:auto;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage <= 1 ? '#f1f5f9' : 'white'};color:${currentPage <= 1 ? '#94a3b8' : '#1e293b'};cursor:${currentPage <= 1 ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
+    html += `<button onclick="goToPage(${currentPage - 1})" style="width:auto !important;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage <= 1 ? '#f1f5f9' : 'white'};color:${currentPage <= 1 ? '#94a3b8' : '#1e293b'};cursor:${currentPage <= 1 ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage <= 1 ? 'disabled' : ''}>&lsaquo; Prev</button>`;
 
     let startPage = Math.max(1, currentPage - 2);
     let endPage = Math.min(lastPage, currentPage + 2);
     if (startPage > 1) {
-        html += `<button onclick="goToPage(1)" style="width:auto;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">1</button>`;
+        html += `<button onclick="goToPage(1)" style="width:auto !important;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">1</button>`;
         if (startPage > 2) html += '<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
     }
     for (let i = startPage; i <= endPage; i++) {
         const active = i === currentPage;
-        html += `<button onclick="goToPage(${i})" style="width:auto;padding:5px 10px;border:1px solid ${active ? '#0038A8' : '#cbd5e1'};border-radius:4px;background:${active ? '#0038A8' : 'white'};color:${active ? 'white' : '#1e293b'};cursor:pointer;font-size:12px;font-weight:700;">${i}</button>`;
+        html += `<button onclick="goToPage(${i})" style="width:auto !important;padding:5px 10px;border:1px solid ${active ? '#0038A8' : '#cbd5e1'};border-radius:4px;background:${active ? '#0038A8' : 'white'};color:${active ? 'white' : '#1e293b'};cursor:pointer;font-size:12px;font-weight:700;">${i}</button>`;
     }
     if (endPage < lastPage) {
         if (endPage < lastPage - 1) html += '<span style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
-        html += `<button onclick="goToPage(${lastPage})" style="width:auto;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">${lastPage}</button>`;
+        html += `<button onclick="goToPage(${lastPage})" style="width:auto !important;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:white;color:#1e293b;cursor:pointer;font-size:12px;font-weight:700;">${lastPage}</button>`;
     }
 
-    html += `<button onclick="goToPage(${currentPage + 1})" style="width:auto;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage >= lastPage ? '#f1f5f9' : 'white'};color:${currentPage >= lastPage ? '#94a3b8' : '#1e293b'};cursor:${currentPage >= lastPage ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage >= lastPage ? 'disabled' : ''}>Next &rsaquo;</button>`;
+    html += `<button onclick="goToPage(${currentPage + 1})" style="width:auto !important;padding:5px 10px;border:1px solid #cbd5e1;border-radius:4px;background:${currentPage >= lastPage ? '#f1f5f9' : 'white'};color:${currentPage >= lastPage ? '#94a3b8' : '#1e293b'};cursor:${currentPage >= lastPage ? 'default' : 'pointer'};font-size:12px;font-weight:700;" ${currentPage >= lastPage ? 'disabled' : ''}>Next &rsaquo;</button>`;
 
     html += '</div></div>';
     container.innerHTML = html;
