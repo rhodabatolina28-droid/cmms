@@ -332,11 +332,6 @@
                 <h3 class="h3-title">{{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Personnel Registry</h3>
                 <p class="p-subtitle">Manage user access, roles, and account status within your jurisdiction.</p>
             </div>
-            @if(Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer')
-            <button id="addPersonnelBtn" class="btn-primary-solid">
-                <i class="fa-solid fa-user-plus"></i> Add New Personnel
-            </button>
-            @endif
         </div>
 
         <div class="card-body-content">
@@ -373,6 +368,12 @@
                     <option value="active">Active Accounts</option>
                     <option value="inactive">Inactive Accounts</option>
                 </select>
+
+                @if(Auth::user()->role === 'super_admin' || Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer')
+                <button id="addPersonnelBtn" class="btn-primary-solid" style="margin-left:auto;">
+                    <i class="fa-solid fa-user-plus"></i> Add New Personnel
+                </button>
+                @endif
             </div>
 
             <div class="table-wrap">

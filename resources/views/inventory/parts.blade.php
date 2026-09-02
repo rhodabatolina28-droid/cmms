@@ -97,6 +97,8 @@
         .parts-header { flex-direction: column; align-items: stretch; }
         .parts-search { flex-direction: column; align-items: stretch; }
         .parts-search input, .parts-search select { width: 100%; }
+        .parts-toolbar { width: 100%; flex-direction: column; align-items: stretch; }
+        .parts-toolbar .btn-ghost, .parts-toolbar .btn-navy { width: 100% !important; text-align: center; }
         .parts-table th, .parts-table td { padding: 10px 12px; }
     }
 
@@ -310,15 +312,6 @@
                 <h3><i class="fa-solid fa-boxes-stacked"></i> Parts &amp; Consumables</h3>
                 <p id="partsHeadSub">Supplies ledger — {{ $totalParts }} item(s) · {{ $totalOnHand }} total on-hand{!! !empty($isSuperAdminView) ? ' · Read-only' : '' !!}</p>
             </div>
-            <div class="parts-toolbar">
-                <a class="btn-ghost" href="#" onclick="event.preventDefault(); exportPartsCsv();"><i class="fa-solid fa-download"></i> Export CSV</a>
-                @if($canWriteInventory)
-                    <button type="button" class="btn-ghost" onclick="document.getElementById('partsCsvInput').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
-                    <input type="file" id="partsCsvInput" accept=".csv" style="display:none;">
-                    <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
-                    <a class="btn-ghost" href="{{ route('purchase_requests.create') }}" title="Create a Purchase Request for a new item not yet in stock"><i class="fa-solid fa-file-invoice"></i> Create PR</a>
-                @endif
-            </div>
         </div>
         <div class="parts-body">
             <div class="parts-stats">
@@ -344,6 +337,15 @@
                     <option value="critical" @selected($filters['status'] === 'critical')>Critical</option>
                 </select>
             </form>
+            <div class="parts-toolbar">
+                <a class="btn-ghost" href="#" onclick="event.preventDefault(); exportPartsCsv();"><i class="fa-solid fa-download"></i> Export CSV</a>
+                @if($canWriteInventory)
+                    <button type="button" class="btn-ghost" onclick="document.getElementById('partsCsvInput').click()"><i class="fa-solid fa-file-import"></i> Import CSV</button>
+                    <input type="file" id="partsCsvInput" accept=".csv" style="display:none;">
+                    <button class="btn-navy" onclick="openPartModal('add')">＋ Add Part</button>
+                    <a class="btn-ghost" href="{{ route('purchase_requests.create') }}" title="Create a Purchase Request for a new item not yet in stock"><i class="fa-solid fa-file-invoice"></i> Create PR</a>
+                @endif
+            </div>
         </div>
 
         <div style="overflow-x:auto;">

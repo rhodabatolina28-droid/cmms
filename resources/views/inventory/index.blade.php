@@ -489,11 +489,13 @@
             .filter-ribbon .ribbon-input,
             .filter-ribbon .search-wrapper,
             .filter-ribbon .btn-export-ribbon,
-            .filter-ribbon .btn-import { width: 100% !important; min-width: 0 !important; }
+            .filter-ribbon .btn-import,
+            .filter-ribbon .btn-add { width: 100% !important; min-width: 0 !important; }
             .ribbon-input { min-height: 48px !important; font-size: 15px !important; padding: 12px !important; }
             .search-input { padding-left: 38px !important; }
             .search-icon { font-size: 14px !important; left: 14px !important; }
             .btn-export-ribbon { min-height: 48px !important; justify-content: center !important; }
+            .filter-ribbon .btn-add { min-height: 48px !important; justify-content: center !important; }
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
             .card-header-accent a,
             .card-header-accent .btn-add { width: 100% !important; text-align: center !important; justify-content: center !important; }
@@ -572,16 +574,7 @@
                     @endif
                 </p>
             </div>
-            @if($canWriteInventory)
-                <div class="btn-group">
-                    @if(empty($isSuperAdminView))
-                    <button id="addAssetBtn" class="btn-add">
-                        <i class="fa-solid fa-plus"></i> Register Asset
-                    </button>
-                    @endif
-                </div>
-
-            @else
+            @if(!$canWriteInventory)
                 <span class="btn-viewonly">
                     <i class="fa-solid fa-eye"></i> View-only Registry
                 </span>
@@ -655,6 +648,11 @@
                 <a href="#" id="exportInvLink" class="btn-export-ribbon" title="Export to CSV">
                     <i class="fa-solid fa-download"></i> Export
                 </a>
+                @if($canWriteInventory && empty($isSuperAdminView))
+                <button id="addAssetBtn" class="btn-add" type="button">
+                    <i class="fa-solid fa-plus"></i> Register Asset
+                </button>
+                @endif
                 @if($canWriteInventory && empty($isSuperAdminView))
                 <button id="importCsvBtn" class="btn-import" type="button" style="display:inline-flex;align-items:center;gap:6px;padding:8px 16px;background:#fff;color:#0038a8;border:1px solid #0038a8;border-radius:8px;font-size:13px;font-weight:700;cursor:pointer;transition:all .2s;">
                     <i class="fa-solid fa-file-csv"></i> Import CSV

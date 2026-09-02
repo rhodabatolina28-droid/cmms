@@ -279,7 +279,50 @@ class PartsStockTest extends TestCase
 
         $resp->assertOk();
     }
-public function test_parts_data_endpoint_returns_filtered_rows_and_stats()
+public function test_parts_index_places_toolbar_buttons_inside_header(): void
+    {
+        $this->actingAs($this->supplyOfficer());
+
+        $resp = $this->get(route('inventory.parts'));
+        $resp->assertOk();
+
+        $html = $resp->getContent();
+
+        // The action buttons must live inside the search header row, not in the
+        // card head. Assert the parts-header div contains the toolbar.
+        $this->assertMatchesRegularExpression(
+            '/<div class="parts-header">.*<div class="parts-toolbar">.*Export CSV.*Create PR.*<\/div>.*<\/div>/s',
+            $html
+        );
+
+        // Export CSV is always visible; the write-only actions are gated.
+        $this->assertStringContainsString('Export CSV', $html);
+        $this->assertStringContainsString('Import CSV', $html);
+        $this->assertStringContainsString('Add Part', $html);
+        $this->assertStringContainsString('Create PR', $html);
+    }
+
+    public function test_super_admin_readonly_index_hides_write_buttons(): void
+    {
+        $this->actingAs($this->makeUser(['role' => 'super_admin']));
+
+        $resp = $this->get(route('super_admin.parts'));
+        $resp->assertOk();
+
+        $html = $resp->getContent();
+
+        // Export CSV stays; the write-only toolbar actions are hidden for super admin.
+        // (Check only the toolbar div — the JS modal-title string "Add Part" lives
+        // outside it, so a page-wide assertStringNotContainsString would false-fail.)
+        preg_match('/<div class="parts-toolbar">(.*?)<\/div>/s', $html, $m);
+        $this->assertNotEmpty($m, 'parts-toolbar div not found');
+        $this->assertStringContainsString('Export CSV', $m[1]);
+        $this->assertStringNotContainsString('Import CSV', $m[1]);
+        $this->assertStringNotContainsString('Add Part', $m[1]);
+        $this->assertStringNotContainsString('Create PR', $m[1]);
+    }
+
+    public function test_parts_data_endpoint_returns_filtered_rows_and_stats()
     {
         $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR']);
 
