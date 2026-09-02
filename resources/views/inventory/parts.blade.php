@@ -99,7 +99,20 @@
         .parts-search input, .parts-search select { width: 100%; }
         .parts-toolbar { width: 100%; flex-direction: column; align-items: stretch; }
         .parts-toolbar .btn-ghost, .parts-toolbar .btn-navy { width: 100% !important; text-align: center; }
-        .parts-table th, .parts-table td { padding: 10px 12px; }
+        /* Mobile: gaya ng inventory — mananatiling table (hindi stacked), 
+           content-based column widths (iwas sa naipit na fixed colgroup), 
+           nag-horizontal scroll lang kung hindi kasya */
+        .parts-table { table-layout: auto !important; min-width: 640px !important; }
+        .parts-table th, .parts-table td { white-space: nowrap !important; }
+        .parts-table th, .parts-table td { padding: 12px 10px; }
+        /* Manatiling round/compact actions (iwas sa global full-width button rule) */
+        .parts-table .act-btn { width: 42px !important; height: 42px !important; flex-shrink: 0 !important; }
+        /* Pagination — centered, inline-wrap (gaya ng inventory) */
+        .parts-pagination { justify-content: center !important; }
+        .parts-pag-info { text-align: center !important; }
+        .parts-pag-btns a, .parts-pag-btns button, .parts-pag-btns .active {
+            width: auto !important; min-width: 40px !important; min-height: 40px !important;
+        }
     }
 
 </style>
