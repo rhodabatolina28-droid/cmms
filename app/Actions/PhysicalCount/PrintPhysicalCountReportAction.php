@@ -5,18 +5,23 @@ namespace App\Actions\PhysicalCount;
 use App\Models\InventoryAsset;
 use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCountSession;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class PrintPhysicalCountReportAction
 {
+    use Concerns\BuildsCustodianGroups;
+
     /**
      * Print a physical count report view.
      *
      * @param  int  $id
+     * @param  Request|null  $request  supports ?group=custodian for PAR-based printing
      * @return \Illuminate\Contracts\View\View
      */
-    public function execute($id)
+    public function execute($id, ?Request $request = null)
     {
+        $request = $request ?: request();
         $user = Auth::user();
         if (!$user->canProcessSupply()) {
             abort(403);
@@ -44,8 +49,19 @@ class PrintPhysicalCountReportAction
             'damaged' => $session->counts->where('status', 'Damaged')->count(),
         ];
 
-        $grouped = $allAssets->groupBy('category')->sortKeys();
+        $groupBy = $request->input('group') === 'custodian' ? 'custodian' : 'category';
+        $custodianGroups = null;
 
-        return view('inventory.physical-count-print', compact('session', 'allAssets', 'summary', 'grouped'));
+        if ($groupBy === 'custodian') {
+            $custodianGroups = $this->buildCustodianGroups($allAssets, $session->counts);
+            // Reuse the category-grouped table markup, keyed by custodian label
+            $grouped = $custodianGroups->mapWithKeys(fn ($g) => [
+                $g['name'] . ($g['par'] ? ' — PAR: ' . $g['par'] : '') . ' (' . $g['counted'] . ' of ' . $g['total'] . ' counted)' => $g['assets'],
+            ]);
+        } else {
+            $grouped = $allAssets->groupBy('category')->sortKeys();
+        }
+
+        return view('inventory.physical-count-print', compact('session', 'allAssets', 'summary', 'grouped', 'groupBy', 'custodianGroups'));
     }
 }

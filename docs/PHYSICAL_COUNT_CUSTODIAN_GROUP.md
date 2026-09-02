@@ -85,6 +85,19 @@ Feature is confined to the Supply Office workflow — no other role sees any cha
 - Duplicate `data-id` attribute removed from row template
 - **Full regression suite: 222 passed, 857 assertions, 0 failures**
 
+### Phase 4-6: Gap closure — main table, print report, export — ✅ TESTED
+**Gap A:** Main table sa show page ay **grouped by custodian na** (accordion-style blocks: name + PAR + counted X/Y + per-group "Mark all Present" button sa header, 10 groups/page). assets grouped via shared `Concerns\BuildsCustodianGroups` trait; "Assigned To" column pinalitan ng "Category" (redundant na sa group header).
+**Gap B:** **Print by Custodian** option (`?group=custodian`) — divider rows per custodian na may PAR + counted counts, plus **Custodian Conforme** signature section (certification text + signature line per custodian na may PAR). Default print (`?group=category`) unchanged — backward compatible.
+**Gap C:** Per-custodian "Mark all Present" sa main view (hindi lang sa search) — reuses `markMany()`.
+**Bonus:** CSV Export may **"Assigned To"** column na (PAR reconciliation).
+
+Tests (`PhysicalCountGroupTest` — **12 passed, 42 assertions**):
+- ✓ Show page renders custodian grouped table (+ Unassigned/Spare last group)
+- ✓ Print by custodian: "Grouped by Custodian" + custodian name + PAR + conforme signatures
+- ✓ Default print keeps category grouping (no conforme block)
+- ✓ Export CSV includes "Assigned To" column (via `streamedContent()`)
+- **Full suite: 225 passed (113 + 112 across two runs), 0 failures**
+
 ## 7. Known Limits / Follow-ups
 
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.

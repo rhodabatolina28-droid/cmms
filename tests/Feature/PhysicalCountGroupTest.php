@@ -211,6 +211,54 @@ class PhysicalCountGroupTest extends TestCase
             ->assertSee('counted');
     }
 
+    public function test_print_report_by_custodian_includes_conforme(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply10@test.com', 'full_name' => 'Supply Officer Ten']);
+        $custodian = $this->user(['full_name' => 'Maria Santos']);
+        $this->asset(['assigned_to_user' => $custodian->id, 'status' => 'Active', 'par_number' => 'PAR-2026-0500']);
+        $session = $this->startCountSession($supply);
+
+        $this->actingAs($supply)
+            ->get(route('physical-count.print', ['sessionId' => $session->id, 'group' => 'custodian']))
+            ->assertOk()
+            ->assertSee('Grouped by Custodian')
+            ->assertSee('Maria Santos')
+            ->assertSee('PAR-2026-0500')
+            ->assertSee('Custodian Conforme')
+            ->assertSee('Signature over Printed Name');
+    }
+
+    public function test_print_report_default_keeps_category_grouping(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply11@test.com', 'full_name' => 'Supply Officer Eleven']);
+        $custodian = $this->user(['full_name' => 'Maria Santos']);
+        $this->asset(['assigned_to_user' => $custodian->id, 'status' => 'Active']);
+        $session = $this->startCountSession($supply);
+
+        $res = $this->actingAs($supply)
+            ->get(route('physical-count.print', $session->id))
+            ->assertOk();
+
+        $this->assertStringNotContainsString('Custodian Conforme', $res->getContent());
+    }
+
+    public function test_export_includes_assigned_to_column(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply12@test.com', 'full_name' => 'Supply Officer Twelve']);
+        $custodian = $this->user(['full_name' => 'Maria Santos']);
+        $this->asset(['assigned_to_user' => $custodian->id, 'status' => 'Active']);
+        $session = $this->startCountSession($supply);
+
+        $response = $this->actingAs($supply)
+            ->get(route('physical-count.export', $session->id))
+            ->assertOk();
+
+        // CSV is a StreamedResponse — inspect via streamedContent()
+        $content = $response->streamedContent();
+        $this->assertStringContainsString('Assigned To', $content);
+        $this->assertStringContainsString('Maria Santos', $content);
+    }
+
     public function test_qr_batch_page_loads_with_paged_loader_for_supply_role(): void
     {
         $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply8@test.com', 'full_name' => 'Supply Officer Eight']);

@@ -126,6 +126,20 @@
             text-transform: uppercase;
         }
 
+        /* Custodian conforme section (group=custodian mode) */
+        .conforme-section { page-break-inside: avoid; margin-top: 10px; }
+        .conforme-title {
+            font-size: 9pt; font-weight: 800; text-transform: uppercase;
+            border-bottom: 2px solid #0038A8; padding-bottom: 3px; margin-bottom: 6px;
+        }
+        .conforme-note { font-size: 6.5pt; color: #555; margin-bottom: 8px; font-style: italic; }
+        .conforme-grid { display: flex; flex-wrap: wrap; gap: 8px 16px; }
+        .conforme-item { flex: 1 1 30%; min-width: 28%; text-align: center; page-break-inside: avoid; }
+        .conforme-item .sig-line { border-top: 1px solid #000; margin-top: 34px; padding-top: 3px; }
+        .conforme-item .conforme-name { font-weight: 700; font-size: 7.5pt; }
+        .conforme-item .conforme-par { font-size: 6.5pt; font-family: 'Courier New', monospace; }
+        .conforme-item .conforme-sub { font-size: 6.5pt; color: #555; }
+
         /* Checkbox column */
         .chk { width: 20px; text-align: center; }
 
@@ -215,7 +229,7 @@
         <div class="repub">Republic of the Philippines</div>
         <div class="agency">National Conciliation and Mediation Board</div>
         <div class="title">Physical Inventory Count Report</div>
-        <div class="sub">Session #{{ $session->id }} &middot; {{ now()->format('F j, Y') }}</div>
+        <div class="sub">Session #{{ $session->id }} &middot; {{ now()->format('F j, Y') }}@if($groupBy === 'custodian') &middot; Grouped by Custodian @endif</div>
     </div>
 
     <div class="session-bar">
@@ -314,6 +328,23 @@
             @endforelse
         </tbody>
     </table>
+
+    @if($groupBy === 'custodian' && $custodianGroups)
+    <div class="conforme-section">
+        <div class="conforme-title">Custodian Conforme</div>
+        <div class="conforme-note">I hereby certify that the properties listed under my accountability were physically counted and verified, and the reported conditions are correct.</div>
+        <div class="conforme-grid">
+            @foreach($custodianGroups->where('key', '!=', 0) as $group)
+            <div class="conforme-item">
+                <div class="sig-line"></div>
+                <div class="conforme-name">{{ $group['name'] }}</div>
+                @if($group['par'])<div class="conforme-par">PAR No: {{ $group['par'] }}</div>@endif
+                <div class="conforme-sub">Custodian — Signature over Printed Name — Date</div>
+            </div>
+            @endforeach
+        </div>
+    </div>
+    @endif
 
     <div class="signatures">
         <div class="sig">

@@ -67,7 +67,7 @@ class ExportPhysicalCountAction
             fputcsv($output, ['Damaged', $counted->where('status', 'Damaged')->count()]);
             fputcsv($output, []);
 
-            fputcsv($output, ['Asset ID', 'Item Name', 'Serial Number', 'PAR Number', 'Property Number', 'Category', 'Count Status', 'Counted By', 'Counted At', 'Remarks']);
+            fputcsv($output, ['Asset ID', 'Item Name', 'Serial Number', 'PAR Number', 'Property Number', 'Category', 'Assigned To', 'Count Status', 'Counted By', 'Counted At', 'Remarks']);
 
             $countedByAsset = $session->counts->keyBy('asset_id');
 
@@ -80,6 +80,7 @@ class ExportPhysicalCountAction
                     $asset->par_number ?? '',
                     $asset->property_number ?? '',
                     $asset->category ?? '',
+                    $asset->assignedUser ? ($asset->assignedUser->full_name ?? $asset->assignedUser->name ?? '') : '',
                     $c ? $c->status : 'Not Counted',
                     $c ? ($c->countedBy->full_name ?? $c->countedBy->name ?? '') : '',
                     $c ? $c->counted_at->format('Y-m-d H:i:s') : '',

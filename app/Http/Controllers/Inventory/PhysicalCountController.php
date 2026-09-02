@@ -52,8 +52,8 @@ class PhysicalCountController extends Controller
         return (new ExportPhysicalCountAction)->execute($id);
     }
 
-    public function printReport($id)
+    public function printReport(Request $request, $id)
     {
-        return (new PrintPhysicalCountReportAction)->execute($id);
+        return (new PrintPhysicalCountReportAction)->execute($id, $request);
     }
 }
