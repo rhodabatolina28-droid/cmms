@@ -6,6 +6,7 @@ use App\Models\InventoryAsset;
 use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCount;
 use App\Models\PhysicalCountSession;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -61,7 +62,10 @@ class SearchPhysicalCountAssetAction
                 $qry->whereRaw('LOWER(item_name) LIKE ?', ["%{$q}%"])
                     ->orWhereRaw('LOWER(serial_number) LIKE ?', ["%{$q}%"])
                     ->orWhereRaw('LOWER(par_number) LIKE ?', ["%{$q}%"])
-                    ->orWhereRaw('LOWER(property_number) LIKE ?', ["%{$q}%"]);
+                    ->orWhereRaw('LOWER(property_number) LIKE ?', ["%{$q}%"])
+                    ->orWhereHas('assignedUser', function ($uq) use ($q) {
+                        $uq->whereRaw('LOWER(full_name) LIKE ?', ["%{$q}%"]);
+                    });
             });
         }
 
@@ -77,13 +81,41 @@ class SearchPhysicalCountAssetAction
             $scannedAsset = InventoryAsset::find($assetId);
             if ($scannedAsset && $scannedAsset->assigned_to_user) {
                 $scannedUserId = $scannedAsset->assigned_to_user;
-                $userAssets = InventoryAsset::with('assignedUser')
+                $userAssetsQuery = InventoryAsset::with('assignedUser')
                     ->where('assigned_to_user', $scannedUserId)
                     ->where('asset_id', '!=', $assetId)
-                    ->whereNotIn('status', ['For Disposal', 'Scrapped'])
-                    ->orderBy('category')
+                    ->whereNotIn('status', ['For Disposal', 'Scrapped']);
+                InventoryScope::scopeAssetsToActor($userAssetsQuery, $user);
+                $userAssets = $userAssetsQuery->orderBy('category')
                     ->orderBy('item_name')
                     ->get();
+            }
+        }
+
+        // Custodian group: text query matching exactly ONE user's full name
+        // returns that user's whole assigned set (assigned-only, scope-checked,
+        // no For Disposal/Scrapped). Multiple matches → null (flat list only,
+        // prevents wrong bulk marking).
+        $custodianGroup = null;
+        if (!$assetId && strlen($q) >= 1) {
+            $matchingUsers = User::whereRaw('LOWER(full_name) LIKE ?', ['%' . strtolower($q) . '%'])->get();
+
+            if ($matchingUsers->count() === 1) {
+                $groupUser = $matchingUsers->first();
+                $groupQuery = InventoryAsset::with('assignedUser')
+                    ->where('assigned_to_user', $groupUser->id)
+                    ->whereNotIn('status', ['For Disposal', 'Scrapped']);
+                InventoryScope::scopeAssetsToActor($groupQuery, $user);
+                $groupAssets = $groupQuery->orderBy('category')
+                    ->orderBy('item_name')
+                    ->get();
+
+                $custodianGroup = [
+                    'user_id'   => $groupUser->id,
+                    'full_name' => $groupUser->full_name,
+                    'total'     => $groupAssets->count(),
+                    'assets'    => $groupAssets,
+                ];
             }
         }
 
@@ -93,6 +125,7 @@ class SearchPhysicalCountAssetAction
             'counted_ids' => $countedIds,
             'user_assets' => $userAssets,
             'scanned_user_id' => $scannedUserId,
+            'custodian_group' => $custodianGroup,
         ]);
     }
 }

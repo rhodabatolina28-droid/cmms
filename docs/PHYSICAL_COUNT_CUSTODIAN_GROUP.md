@@ -67,7 +67,20 @@ Feature is confined to the Supply Office workflow — no other role sees any cha
 - `ShowPhysicalCountAction` — live totals already correct.
 - Route middleware — `role:admin` semantics preserved.
 
-## 6. Known Limits / Follow-ups
+## 6. Verification (phase-by-phase)
+
+### Phase 1-2: Backend group search + Count page UI — ✅ TESTED
+`tests/Feature/PhysicalCountGroupTest.php` — **7 passed, 23 assertions**:
+- ✓ Unique custodian name match returns group (assigned-only, no For Disposal/Spare/Scrapped)
+- ✓ Multiple name matches → no group (flat list only)
+- ✓ Group is scoped to actor branch (cross-branch assets excluded)
+- ✓ Plain asset search → no group
+- ✓ Search requires `canProcessSupply` (end user → 403)
+- ✓ Mark-then-remark rejected (422) — bulk skip semantics verified
+- ✓ Completed session rejects search (422)
+- Blade compiles clean (`view:cache`), zero-width char scan: 0
+
+## 7. Known Limits / Follow-ups
 
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.
 - Search throttle (`throttle:30,1`) applies as before; bulk marking posts sequentially to `/mark` under the same throttle.

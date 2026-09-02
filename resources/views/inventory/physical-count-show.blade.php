@@ -28,6 +28,9 @@
     .search-input-wrap input:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,0.1); }
     .search-results { margin-top: 12px; display: none; }
     .search-result-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; }
+        .search-group-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; }
+        .search-group-header .group-count { font-size: 11px; font-weight: 800; color: #0038A8; background: white; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 99px; }
+        .search-custodian { font-size: 11px; color: #64748b; margin-top: 2px; }
     .search-result-item:last-child { margin-bottom: 0; }
 
     .mark-btn { padding: 6px 14px; border-radius: 4px; font-size: 11px; font-weight: 800; border: none; cursor: pointer; }
@@ -326,6 +329,13 @@ async function searchAsset(q) {
         const data = await res.json();
         if (!data.success) return;
 
+        // Custodian group: text matched exactly one user → their whole assigned set
+        if (data.custodian_group) {
+            renderCustodianGroup(data.custodian_group, data.counted_ids);
+            container.style.display = 'block';
+            return;
+        }
+
         if (data.assets.length === 0) {
             container.innerHTML = '<div class="search-no-result">No matching assets found.</div>';
             container.style.display = 'block';
@@ -338,6 +348,7 @@ async function searchAsset(q) {
                 <div>
                     <strong>${a.item_name}</strong>
                     <span class="search-sn">SN: ${a.serial_number || 'N/A'}</span>
+                    ${a.assigned_user ? `<div class="search-custodian"><i class="fa-solid fa-user"></i> ${a.assigned_user.full_name}</div>` : ''}
                     ${counted ? '<span class="already-counted-sm"><i class="fa-solid fa-check"></i> Already Counted</span>' : ''}
                 </div>
                 <div>
@@ -357,6 +368,83 @@ async function searchAsset(q) {
 function clearSearch() {
     document.getElementById('scanSearchInput').value = '';
     document.getElementById('searchResults').style.display = 'none';
+}
+
+function renderCustodianGroup(group, countedIds) {
+    const container = document.getElementById('searchResults');
+    const pending = group.assets.filter(a => !countedIds.includes(a.asset_id));
+
+    let html = '<div class="search-group-header">'
+        + '<div><i class="fa-solid fa-layer-group"></i> Assets of <strong>' + group.full_name + '</strong>'
+        + ' <span class="group-count">' + group.total + (group.total === 1 ? ' item' : ' items') + '</span></div>'
+        + (pending.length > 0
+            ? '<button type="button" class="mark-btn mark-operational" data-action="mark-all-group" data-ids="' + pending.map(a => a.asset_id).join(',') + '">Mark all Present (' + pending.length + ')</button>'
+            : '<span class="counted-text"><i class="fa-solid fa-check"></i> All Counted</span>')
+        + '</div>';
+
+    html += group.assets.map(a => {
+        const counted = countedIds.includes(a.asset_id);
+        return '<div class="search-result-item">'
+            + '<div><strong>' + a.item_name + '</strong>'
+            + '<span class="search-sn">SN: ' + (a.serial_number || 'N/A') + '</span>'
+            + (counted ? '<span class="already-counted-sm"><i class="fa-solid fa-check"></i> Already Counted</span>' : '')
+            + '</div>'
+            + '<div>'
+            + (counted
+                ? '<span class="counted-text"><i class="fa-solid fa-check"></i> Counted</span>'
+                : '<button data-action="mark-asset" data-asset-id="' + a.asset_id + '" data-status="Present" class="mark-btn mark-operational">Operational</button>'
+                + '<button data-action="mark-asset" data-asset-id="' + a.asset_id + '" data-status="Missing" class="mark-btn mark-non-ops">Non-Operational</button>')
+            + '</div></div>';
+    }).join('');
+
+    container.innerHTML = html;
+}
+
+async function markMany(ids) {
+    if (isMarking || !ids.length) return;
+    isMarking = true;
+    const total = ids.length;
+    let marked = 0, skipped = 0;
+
+    Swal.fire({
+        title: 'Marking assets...',
+        html: '0 of ' + total,
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        showConfirmButton: false,
+        didOpen: () => { Swal.showLoading(); }
+    });
+
+    for (let i = 0; i < ids.length; i++) {
+        try {
+            const formData = new FormData();
+            formData.set('asset_id', ids[i]);
+            formData.set('status', 'Present');
+
+            const res = await fetch(MARK_URL, {
+                method: 'POST',
+                headers: {
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                    'Accept': 'application/json',
+                },
+                body: formData,
+            });
+            const data = await res.json();
+            if (data.success) { marked++; } else { skipped++; }
+        } catch (e) {
+            skipped++;
+        }
+        const box = Swal.getHtmlContainer();
+        if (box) box.textContent = (marked + skipped) + ' of ' + total;
+    }
+
+    await Swal.fire({
+        icon: 'success',
+        title: 'Done',
+        text: marked + ' marked as Present, ' + skipped + ' skipped (already counted).',
+        confirmButtonColor: '#0038A8',
+    });
+    location.reload();
 }
 
 let isMarking = false;
@@ -556,9 +644,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 });
 document.addEventListener('click', function(e) {
-    var btn = e.target.closest('[data-action="mark-asset"]');
-    if (btn) {
-        markAsset(parseInt(btn.dataset.assetId), btn.dataset.status, btn);
+    var markBtn = e.target.closest('[data-action="mark-asset"]');
+    if (markBtn) {
+        markAsset(parseInt(markBtn.dataset.assetId), markBtn.dataset.status, markBtn);
+        return;
+    }
+    var allBtn = e.target.closest('[data-action="mark-all-group"]');
+    if (allBtn) {
+        var ids = allBtn.dataset.ids.split(',').map(x => parseInt(x, 10)).filter(Boolean);
+        markMany(ids);
     }
 });
 </script>
