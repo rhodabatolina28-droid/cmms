@@ -98,6 +98,15 @@ Tests (`PhysicalCountGroupTest` — **12 passed, 42 assertions**):
 - ✓ Export CSV includes "Assigned To" column (via `streamedContent()`)
 - **Full suite: 225 passed (113 + 112 across two runs), 0 failures**
 
+### Phase 7: Mobile walk-around UX (count show page) — ✅ TESTED
+Mobile-only (`max-width: 767px` media query) — **desktop view untouched**:
+- **Asset cards:** custodian table rows become stacked cards (thead hidden, `data-label` + `td::before` labels: SN/PAR/Property/Category) — **no horizontal scroll** (600px min-width overridden for custodian tables only)
+- Counted rows: green/red card tint for instant visual state
+- **Custodian header:** stacks; "Mark all Present" full-width 44px touch target
+- **Sticky search/scan bar** — pinned below the sticky topbar (top: 58px), always reachable while walking
+- **Scroll retention:** `markAsset`/`markMany` save `scrollY` to `sessionStorage`; restored on `DOMContentLoaded` — user stays at the group they were counting after reload
+- Verified: blade compiles, zero-width chars 0, PhysicalCountGroupTest 12/12 passed
+
 ## 7. Known Limits / Follow-ups
 
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.

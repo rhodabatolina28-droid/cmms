@@ -155,6 +155,27 @@
         .back-link { display: block !important; width: 100% !important; text-align: center !important; padding: 10px !important; border: 1px solid #cbd5e1 !important; border-radius: 6px !important; background: white !important; }
         input[type="checkbox"] { display: none !important; }
         .asset-table { min-width: 600px !important; }
+
+        /* ── Custodian asset cards — walk-around mobile UX (desktop unaffected) ── */
+        .custodian-block table { min-width: 0 !important; }
+        .custodian-block table thead { display: none !important; }
+        .custodian-block table,
+        .custodian-block tbody,
+        .custodian-block tr,
+        .custodian-block td { display: block !important; width: 100% !important; }
+        .custodian-block tr { border: 1px solid #e2e8f0 !important; border-radius: 8px !important; padding: 10px 12px !important; margin-bottom: 10px !important; background: white !important; }
+        .custodian-block tr.counted-operational { background: #f0fdf4 !important; border-color: #bbf7d0 !important; }
+        .custodian-block tr.counted-non-ops { background: #fef2f2 !important; border-color: #fecaca !important; }
+        .custodian-block td { padding: 2px 0 !important; border: none !important; font-size: 12px; }
+        .custodian-block td[data-label]::before { content: attr(data-label) ": "; font-weight: 800; color: #94a3b8; font-size: 10px; text-transform: uppercase; letter-spacing: 0.3px; }
+        .custodian-block td.td-bold { font-size: 14px !important; }
+        .custodian-block td.td-mono { font-size: 11px !important; }
+        .custodian-block td[data-label="Status"]::before { content: none !important; }
+        .custodian-header { flex-direction: column !important; align-items: stretch !important; }
+        .custodian-header .mark-btn { width: 100% !important; min-height: 44px !important; font-size: 13px !important; }
+
+        /* Sticky search/scan bar — always reachable while walking (below sticky topbar) */
+        .search-area { position: sticky !important; top: 58px !important; z-index: 80; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
     }
 </style>
 @endsection
@@ -282,18 +303,18 @@
                                         $pillClass = $count ? ($count->status === 'Present' ? 'pill-operational' : 'pill-non-ops') : '';
                                     @endphp
                                     <tr class="{{ $rowClass }}">
-                                        <td>
+                                        <td data-label="Status">
                                             @if($count)
                                                 <span class="status-pill-small {{ $pillClass }}">{{ $displayStatus }}</span>
                                             @else
                                                 <span class="not-counted-text">Not Counted</span>
                                             @endif
                                         </td>
-                                        <td class="td-bold">{{ $asset->item_name }}</td>
-                                        <td class="td-mono">{{ $asset->serial_number ?? '—' }}</td>
-                                        <td>{{ $asset->par_number ?? '—' }}</td>
-                                        <td class="td-mono">{{ $asset->property_number ?? '—' }}</td>
-                                        <td>{{ $asset->category ?? '—' }}</td>
+                                        <td class="td-bold" data-label="Item">{{ $asset->item_name }}</td>
+                                        <td class="td-mono" data-label="Serial">{{ $asset->serial_number ?? '—' }}</td>
+                                        <td data-label="PAR">{{ $asset->par_number ?? '—' }}</td>
+                                        <td class="td-mono" data-label="Property">{{ $asset->property_number ?? '—' }}</td>
+                                        <td data-label="Category">{{ $asset->category ?? '—' }}</td>
                                         @if($session->status === 'Ongoing')
                                         <td class="td-actions">
                                             <div class="action-btn-group">
@@ -433,6 +454,7 @@ async function markMany(ids) {
     isMarking = true;
     const total = ids.length;
     let marked = 0, skipped = 0;
+    const scrollYAtStart = window.scrollY;
 
     Swal.fire({
         title: 'Marking assets...',
@@ -472,6 +494,7 @@ async function markMany(ids) {
         text: marked + ' marked as Present, ' + skipped + ' skipped (already counted).',
         confirmButtonColor: '#0038A8',
     });
+    sessionStorage.setItem('pcScroll', String(scrollYAtStart));
     location.reload();
 }
 
@@ -496,6 +519,7 @@ async function markAsset(assetId, status, btn) {
         });
         const data = await res.json();
         if (data.success) {
+            sessionStorage.setItem('pcScroll', String(window.scrollY));
             location.reload();
         } else {
             Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Failed to mark asset.', confirmButtonColor: '#0038A8' });
@@ -632,6 +656,13 @@ function showScanResult(data, userAssets) {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Restore scroll position after mark-triggered reload (mobile walk-around UX)
+    const savedPcScroll = sessionStorage.getItem('pcScroll');
+    if (savedPcScroll) {
+        window.scrollTo(0, parseInt(savedPcScroll, 10) || 0);
+        sessionStorage.removeItem('pcScroll');
+    }
+
     var alertBox = document.querySelector('.alert-success');
     if (alertBox) {
         var msg = alertBox.textContent.trim();
