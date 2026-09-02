@@ -214,6 +214,10 @@
 @section('content')
 <div class="profile-container">
 
+    @if (session('success'))
+        <div id="globalAlertSuccess" style="display:none">{{ session('success') }}</div>
+    @endif
+
     <div class="profile-layout">
         
         <!-- LEFT COLUMN: AVATAR CARD -->
