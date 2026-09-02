@@ -12,7 +12,7 @@ class DownloadDeliveryConfirmationPdfAction
     /**
      * Formal one-page "Delivery Confirmation" PDF for a delivered purchase
      * request: document header, received items with per-piece serial /
-     * property numbers and destinations, the proof-of-purchase register,
+     * property numbers and destinations,
      * and signature lines. Available to the same audience as the view-only
      * delivery record (owner, Supply Officer, Super Admin).
      */
@@ -29,7 +29,7 @@ class DownloadDeliveryConfirmationPdfAction
                 ->withErrors(['receive' => $gate->viewDenialReason($purchaseRequest, $user)]);
         }
 
-        $purchaseRequest->load(['requester', 'creator', 'finalizer', 'deliverer', 'attachments.uploader']);
+        $purchaseRequest->load(['requester', 'creator', 'finalizer', 'deliverer']);
 
         // Same unit query as the view-only delivery panel — the recorded
         // pieces (serial + property) are the source of truth.

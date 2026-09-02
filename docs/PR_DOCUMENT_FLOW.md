@@ -1,4 +1,4 @@
-﻿# Purchase Request â€” Document Flow & Asset Traceability
+# Purchase Request â€” Document Flow & Asset Traceability
 
 > **Last Updated:** September 1, 2026
 > **Branch:** `develop`
@@ -464,7 +464,7 @@ Blade view:cache compile: OK
 
 > Commits: `d921fde` — `feat(pr): formal one-page Delivery Confirmation PDF...`; `7f8ac44` — `fix(pr): Delivery Confirmation PDF fits exactly one A4 page (sakto, hindi sobra o kulang) + proper page-count assertion`
 
-**What it is.** A formal, print/archive-grade A4 PDF for a delivered PR — PR header in the same bordered Appendix-60 style as the official PR document (Entity Name = "National Conciliation and Mediation Board", fund cluster, office/unit, PR No., PR date, responsibility center, received by, date & time received, purpose/justification box), a received-items table, a serial/property register, a proof-of-purchase register, certification paragraph, at Prepared/Received signature grid(`same alignment style as the PR document's Requested/Approved grid`. Exactly ONE page ("sakto lang" per user feedback — hindi sobra, hindi kulang.
+**What it is.** A formal, print/archive-grade A4 PDF for a delivered PR — PR header in the same bordered Appendix-60 style as the official PR document (Entity Name = "National Conciliation and Mediation Board", fund cluster, office/unit, PR No., PR date, responsibility center, received by, date & time received), a received-items table, a serial/property register, certification paragraph, at Prepared/Received signature grid(`same alignment style as the PR document's Requested/Approved grid`. Exactly ONE page ("sakto lang" per user feedback — hindi sobra, hindi kulang.
 
 **Route / controller / action**
 
@@ -477,19 +477,18 @@ Blade view:cache compile: OK
 - `isDelivered()` AND `ReceivePurchaseRequestAction::canViewDelivery($pr, $user)` — delivered PR: supply / super-admin or PR owner; a merely-**finalized** PR → redirect back to `purchase_requests.show` with the standard denial reason (walang recorded delivery pa na puwedeng i-certify).
 
 **Data assembled** (in the action):
-- PR eager-loads `requester, creator, finalizer, deliverer, attachments.uploader`.
+- PR eager-loads `requester, creator, finalizer, deliverer` (attachments load inalis na — no proof-of-purchase section).
 - Units: same query as the view-only delivery panel — `PartUnit::where('purchase_request_id', $pr->id)` grouped by `part_id`; per-line match via `part_id` (fallback: item-name match for older / "create new" lines). Per line extracts serial/property numbers, recorded count, at destination label ("Installed on asset {code}" via an `issued` unit; "Add to inventory (stock)" via an `in_stock` unit).
 - Render: `Pdf::loadView('pdf.delivery-confirmation', ['pr' => ..., 'lines' => ...])->setPaper('a4', 'portrait')`; response inline `Content-Disposition`, filename `{pr_number}-Delivery-Confirmation.pdf`.
 
 **PDF layout** — `resources/views/pdf/delivery-confirmation.blade.php`:
 1. **Title** — centered "DELIVERY CONFIRMATION" (PR-form look).
-2. **Header grid** — bordered `a60-field` boxes mirroringthe official PR form: Entity Name, Fund Cluster, Office/Unit, PR No., PR Date, Responsibility Center Code, Received By, Date & Time Received, Purpose / justification box (3-row main blocks to conserve vertical space).
+2. **Header grid** — bordered `a60-field` boxes mirroringthe official PR form: Entity Name, Fund Cluster, Office/Unit, PR No., PR Date, Responsibility Center Code, Received By, Date & Time Received (3-row main blocks to conserve vertical space).
 3. **Items Purchased** — bordered official grid: Unit | Description / specification | Qty | Unit Cost | Total Cost + TOTAL row with `PHP {amount}`. **No blank padding rows** — ang PR form's 8 blank-row padding ay nagtulak sa PDF sa 2 pages, kaya tinanggal dito.
 .
 4. **Serial / Property Register** — bordered table: No., Item, Serial No., Property No., Destination ("Installed on asset {asset_code}" o "Add to inventory (stock)"); walang units/consumable → "No individual units were recorded..." note.
-5. **Proof of Purchase** — bordered register: No., Label, File Name, Uploaded By, Date Uploaded( PDF receipts listed as text metadata; JPG/PNG image embedding = Phase 2 planned). "No proof of purchase on record." note kapag wala.
-6. **Certification + Signatures** — maikling certification paragraph + "Prepared by" (requester — signature line, printed name, date) at "Received by" (deliverer — designation: "Requester / End User" for small purchases, otherwise "Supply Officer"; signature line, printed name, date).
-7. **Footer** — PR number · Delivery Confirmation · generated timestamp · CMMS.
+5. **Certification + Signatures** — maikling certification paragraph + "Prepared by" (requester — signature line, printed name, date) at "Received by" (deliverer — designation: "Requester / End User" for small purchases, otherwise "Supply Officer"; signature line, printed name, date).
+
 
 **Entry point** — `resources/views/purchase-requests/receive.blade.php` topbar: kapag `$viewOnly` (delivered, may "Delivery Confirmation PDF" button (`.rxb.rxb-white.rxb-sm`) → inline-download ang PDF. Finalized PRs — walang PDF button (walang recorded delivery pa to certify.
 
@@ -500,8 +499,9 @@ Blade view:cache compile: OK
 - Literal na "&nbsp;" sa Purpose / justification box → fixed via raw output (`{!! ... !!}`).
 - Tinanggal ang"Stock/Property No." column sa items table — hindi ito kopya ng PR form: delivery items ay Unit | Description | Qty | Unit Cost | Total Cost lang; ang serial/property numbers ay nasa Serial / Property Register sa ibaba** (correct per user: "kinopya mo lang ang PR form — hindi dapat").
 - Inalis din ang 8 blank padding rows mula sa items grid(ang pangunahing dahilan ng 2-page overflow).
-**One-page calibration ("sakto lang")** — sinukat gamit ang real page-count harness (`/Type /Page` token count sa DomPDF output), stress-tested na may 3 items × (5+4+2 = 11 tracked units), 2 receipts, full header + items + register + proof + signatures:
-- Page margins 10mm (top/bottom), 12mm (sides); body 11px / `line-height:1.26` — ang 1.27 ay sumasabog sa 2 pages, kaya 1.26 ang pinakamalaking kasya; title 14px; header grid 3-row; table cell paddingdown to 1.5px; compact certification/signature block; in-flow footer (no fixed-position overflow).
+- **Rev 2 (user feedback):** inalis ang Purpose/justification box, Proof of Purchase register, at footer — mas malinis na one-pager; certification reworded (tanggal ang "proof(s) of purchase enumerated above"); sizes re-calibrated — body 12px / `line-height:1.54` (ang 1.56 ay sumasabog sa stress case), title 15px, mas malalaking paddings — sakto sa A4.
+**One-page calibration ("sakto lang")** — sinukat gamit ang real page-count harness (`/Type /Page` token count sa DomPDF output), stress-tested na may 3 items × (5+4+2 = 11 tracked units), full header + items + register + signatures (walang proof section pagkatapos ng Rev 2):
+- Page margins 10mm (top/bottom), 12mm (sides); body 12px / `line-height:1.54` pagkatapos ng Rev 2 (ang 1.56 ay sumasabog sa stress case) — dati 11px / 1.26; title 15px; header grid 3-row; table cell paddingdown to 1.5px; compact certification/signature block; in-flow footer (no fixed-position overflow).
 - Pinakamalaking komportableng laki na kasya pa rin sa 1 page — "sakto lang" per user (hindi sobra, hindi kulang.
 - Result: **1 page** sa lahat ng stress variants (FULL / no-signs / no-signs-cert / no-signs-cert-register / only-header-items — lahat 1).
 
