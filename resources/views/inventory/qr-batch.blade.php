@@ -402,19 +402,31 @@
     let allAssets = [];
     let selectedIds = new Set();
 
-    // Fetch all assets
-    fetch('{{ route('inventory.data') }}')
-        .then(r => r.json())
-        .then(data => {
-            if (data.success) {
-                allAssets = data.assets;
-                renderTable(allAssets);
+    // Fetch ALL assets — endpoint is paginated (50/100 per page), so loop
+    // through every page to make the selection list complete.
+    async function loadAllAssets() {
+        const tbody = document.getElementById('tableBody');
+        let collected = [];
+        let page = 1;
+        try {
+            while (true) {
+                const res = await fetch('{{ route('inventory.data') }}?per_page=100&page=' + page);
+                const data = await res.json();
+                if (!data.success) throw new Error('Asset load failed');
+                collected = collected.concat(data.assets);
+                const lastPage = Math.max(data.last_page, 1);
+                tbody.innerHTML = '<tr><td colspan="7" class="loading-row"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading assets... page ' + page + ' of ' + lastPage + '</td></tr>';
+                if (!data.assets.length || page >= lastPage) break;
+                page++;
             }
-        })
-        .catch(() => {
-            document.getElementById('tableBody').innerHTML =
+            allAssets = collected;
+            renderTable(allAssets);
+        } catch (e) {
+            tbody.innerHTML =
                 '<tr><td colspan="7" class="error-row">Failed to load assets. Please refresh.</td></tr>';
-        });
+        }
+    }
+    loadAllAssets();
 
     function renderTable(assets) {
         const tbody = document.getElementById('tableBody');
@@ -432,8 +444,7 @@
             return `
                 <tr class="${rowClass} asset-row row-pointer tr-hover-row" id="row-${a.asset_id}" data-id="${a.asset_id}">
                     <td class="cb-col">
-                        <input type="checkbox" class="asset-checkbox" data-id="${a.asset_id}"
-                            ${checked} data-id="${a.asset_id}">
+                        <input type="checkbox" class="asset-checkbox" data-id="${a.asset_id}" ${checked}>
                     </td>
                     <td><span class="id-monospace">#${a.asset_id}</span></td>
                     <td class="name-bold">${escHtml(a.item_name)}</td>

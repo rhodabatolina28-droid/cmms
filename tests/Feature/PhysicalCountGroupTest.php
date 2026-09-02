@@ -191,4 +191,15 @@ class PhysicalCountGroupTest extends TestCase
             ->postJson(route('physical-count.search', $session->id), ['q' => 'x'])
             ->assertStatus(422);
     }
+
+    public function test_qr_batch_page_loads_with_paged_loader_for_supply_role(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply8@test.com', 'full_name' => 'Supply Officer Eight']);
+
+        $this->actingAs($supply)
+            ->get(route('inventory.qr-batch'))
+            ->assertOk()
+            ->assertSee('loadAllAssets', false)
+            ->assertSee('per_page=100', false);
+    }
 }

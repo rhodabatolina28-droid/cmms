@@ -80,6 +80,11 @@ Feature is confined to the Supply Office workflow — no other role sees any cha
 - ✓ Completed session rejects search (422)
 - Blade compiles clean (`view:cache`), zero-width char scan: 0
 
+### Phase 3: QR Batch pagination fix — ✅ TESTED
+- `test_qr_batch_page_loads_with_paged_loader_for_supply_role` — batch page renders with paged loader (`per_page=100` loop)
+- Duplicate `data-id` attribute removed from row template
+- **Full regression suite: 222 passed, 857 assertions, 0 failures**
+
 ## 7. Known Limits / Follow-ups
 
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.
