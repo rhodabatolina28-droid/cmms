@@ -107,6 +107,19 @@ Mobile-only (`max-width: 767px` media query) — **desktop view untouched**:
 - **Scroll retention:** `markAsset`/`markMany` save `scrollY` to `sessionStorage`; restored on `DOMContentLoaded` — user stays at the group they were counting after reload
 - Verified: blade compiles, zero-width chars 0, PhysicalCountGroupTest 12/12 passed
 
+### Phase 9: Button polish + pagination split (user feedback) — ✅ TESTED
+- **Scan QR:** "Scan QR Sticker" → **"Scan QR"** (button, modal title, placeholder); 50px height, radius 10
+- **Complete Session:** walang icon, inalis ang inline styles — **eksaktong kapareho ng Scan QR button** (full-width, 50px, 15px font) sa mobile (`.btn-complete-session` + form `display:block` fix)
+- **Pagination split:** desktop = standard Laravel links (pareho ng Inventory/Parts pages); mobile = Prev / Page X of Y / Next bar (`.pag-desktop-links` hidden sa mobile, `.pag-mobile-bar` hidden sa desktop)
+- Verified: blade compiles, zero-width chars 0, PhysicalCountGroupTest 12/12 passed
+
+### Phase 10-11: Desktop pagination + search bar redesign (user feedback) — ✅ TESTED
+- **Desktop pagination:** custom styled (Parts-page look) — `Showing 1 to 10 of 32 custodians` + `‹ Prev [1] [2] [3] Next ›` navy active pill. Reason: `links()` Tailwind classes walang silbi (no Tailwind sa app). Mobile bar (Prev / Page X of Y / Next) — mobile only pa rin.
+- **Search bar redesign (mobile + desktop):** search icon **sa loob ng input** (kaliwa), **X clear button sa loob din** (kanan) na lalabas lang kapag may typed text (typing/backspace aware), tinanggal ang hiwalay na "Clear" button
+- **Complete Session:** walang icon, eksaktong kapareho ng Scan QR button (full-width, 50px) sa mobile; `form { display:block }` fix
+- **Scan QR:** "Scan QR Sticker" → "Scan QR" (button, modal title, placeholder)
+- Verified: blade compiles, PhysicalCountGroupTest 12/12 passed
+
 ## 7. Known Limits / Follow-ups
 
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.

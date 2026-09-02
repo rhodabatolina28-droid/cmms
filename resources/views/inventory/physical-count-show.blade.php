@@ -26,6 +26,18 @@
     .search-input-wrap { display: flex; gap: 10px; align-items: center; }
     .search-input-wrap input { flex: 1; padding: 10px 14px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
     .search-input-wrap input:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,0.1); }
+    .search-field { position: relative; flex: 1; display: flex; align-items: center; }
+    .search-field input { width: 100%; padding-left: 38px; padding-right: 40px; }
+    .search-icon-inside { position: absolute; left: 12px; color: #94a3b8; pointer-events: none; font-size: 14px; }
+    .clear-x-btn {
+        position: absolute; right: 8px;
+        width: 26px; height: 26px; border: none; border-radius: 50%;
+        background: #e2e8f0; color: #475569; cursor: pointer;
+        display: none; align-items: center; justify-content: center;
+        font-size: 12px; padding: 0; line-height: 1;
+    }
+    .clear-x-btn:hover { background: #cbd5e1; }
+    .clear-x-btn.visible { display: flex; }
     .search-results { margin-top: 12px; display: none; }
     .search-result-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; }
     .custodian-block { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
@@ -132,6 +144,29 @@
     .profile-serial { font-size:11px;color:#64748b; }
     .counted-box { text-align:center;padding:12px;background:#f0fdf4;border-radius:6px;color:#166534;font-weight:700;font-size:13px; }
     .mark-btn-flex { flex:1;padding:12px;font-size:14px; }
+
+    /* ── Pagination: Prev / Page X of Y / Next bar — MOBILE ONLY; desktop uses custom links ── */
+    .custodian-pagination { margin-top: 14px; }
+    .pag-mobile-bar { display: none; }
+    .pag-desktop { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+    .pag-desktop .pag-info { flex: 0 0 auto; }
+    .pag-btns { display: flex; gap: 5px; flex-wrap: wrap; }
+    .pag-active { background: #0038A8 !important; color: white !important; border-color: #0038A8 !important; }
+    .pag-mobile { display: flex; align-items: stretch; gap: 8px; }
+    .pag-btn {
+        display: inline-flex; align-items: center; justify-content: center; gap: 6px;
+        min-width: 84px; min-height: 46px; padding: 10px 14px;
+        border: 1px solid #cbd5e1; background: white; border-radius: 10px;
+        font-size: 13px; font-weight: 800; color: #1e293b; text-decoration: none;
+    }
+    a.pag-btn:hover { background: #f1f5f9; }
+    a.pag-btn:active { background: #e2e8f0; }
+    .pag-btn.pag-disabled { opacity: 0.35; }
+    .pag-info {
+        flex: 1; display: flex; align-items: center; justify-content: center;
+        background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
+        font-size: 12px; font-weight: 700; color: #475569; padding: 10px 8px;
+    }
     @media (max-width: 767px) {
         .stats-bar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
         input[type="checkbox"] { display: none !important; }
@@ -172,10 +207,91 @@
         .custodian-block td.td-mono { font-size: 11px !important; }
         .custodian-block td[data-label="Status"]::before { content: none !important; }
         .custodian-header { flex-direction: column !important; align-items: stretch !important; }
-        .custodian-header .mark-btn { width: 100% !important; min-height: 44px !important; font-size: 13px !important; }
+        .custodian-header .mark-btn { width: 100% !important; min-height: 46px !important; border-radius: 10px !important; font-size: 14px !important; }
 
         /* Sticky search/scan bar — always reachable while walking (below sticky topbar) */
         .search-area { position: sticky !important; top: 58px !important; z-index: 80; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+
+        /* Complete Session — same length/height as Scan QR button */
+        /* Scan QR — bigger touch target, consistent rounding */
+        .btn-scan { border-radius: 10px !important; min-height: 50px !important; font-size: 15px !important; }
+
+        /* ── Compact stats chips — single row, less scroll to reach the list ── */
+        .show-stats-grid {
+            display: grid !important;
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 0 !important;
+            background: white !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 10px !important;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.04);
+        }
+        .show-stats-grid > div {
+            padding: 10px 4px !important;
+            border-radius: 0 !important;
+            border: none !important;
+            border-right: 1px solid #f1f5f9 !important;
+            min-width: 0 !important;
+        }
+        .show-stats-grid > div:last-child { border-right: none !important; }
+        .show-stats-grid p { font-size: 8px !important; letter-spacing: 0.3px !important; }
+        .show-stats-grid h3 { font-size: 17px !important; margin-top: 2px !important; }
+
+        /* ── Header buttons — stacked full-width touch targets ── */
+        .card-header-accent > div:first-child { flex-direction: column !important; align-items: stretch !important; }
+        .card-header-accent > div:first-child > div {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 6px !important;
+        }
+        .card-header-accent .btn-secondary-sm {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            min-height: 44px !important;
+            border-radius: 8px !important;
+            font-size: 12px !important;
+        }
+
+        /* ── Mark buttons side-by-side inside asset cards (less vertical bulk) ── */
+        .action-btn-group { display: grid !important; grid-template-columns: 1fr 1fr !important; gap: 6px !important; }
+        .action-btn-group .mark-btn {
+            width: 100% !important;
+            min-height: 46px !important;
+            border-radius: 10px !important;
+            font-size: 13px !important;
+            padding: 10px 4px !important;
+        }
+
+        /* ── Pagination — visible, centered, 44px touch targets ── */
+        /* Pagination switch: mobile bar visible, standard links hidden */
+        .pag-desktop-links { display: none !important; }
+        .pag-mobile-bar { display: block !important; }
+
+        /* Complete Session — exact match of Scan QR button (length + height) */
+        .search-input-wrap form { width: 100% !important; display: block !important; }
+        .search-input-wrap .btn-complete-session {
+            width: 100% !important;
+            min-height: 50px !important;
+            border-radius: 10px !important;
+            font-size: 15px !important;
+            font-weight: 800 !important;
+            padding: 14px 20px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+        /* Scan QR — bigger touch target, consistent rounding */
+        .btn-scan {
+            border-radius: 10px !important;
+            min-height: 50px !important;
+            font-size: 15px !important;
+            margin-top: 8px !important;
+        }
     }
 </style>
 @endsection
@@ -208,7 +324,7 @@
                 </div>
                 @endif
             </div>
-            <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
+            <div class="show-stats-grid" style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
                 <div style="background:#f8fafc;border:1px solid #e2e8f0;border-radius:8px;padding:10px;text-align:center;">
                     <p style="margin:0;font-size:10px;font-weight:800;color:#64748b;text-transform:uppercase;letter-spacing:0.3px;">Total Assets</p>
                     <h3 style="margin:4px 0 0;font-size:24px;font-weight:800;color:#1e293b;">{{ $summary['total'] }}</h3>
@@ -231,16 +347,18 @@
             @if($session->status === 'Ongoing')
             <div class="search-area">
                 <div class="search-input-wrap">
-                    <i class="fa-solid fa-magnifying-glass search-icon-gray"></i>
-                    <input type="text" id="scanSearchInput" placeholder="Search or scan QR sticker..." autocomplete="off">
-                    <button id="clearSearchBtn" class="btn-secondary"><i class="fa-solid fa-times"></i> Clear</button>
+                    <div class="search-field">
+                        <i class="fa-solid fa-magnifying-glass search-icon-inside"></i>
+                        <input type="text" id="scanSearchInput" placeholder="Search or scan QR..." autocomplete="off">
+                        <button type="button" id="clearSearchBtn" class="clear-x-btn" aria-label="Clear search"><i class="fa-solid fa-xmark"></i></button>
+                    </div>
                     <form id="completeSessionForm" method="POST" action="{{ route('physical-count.complete', $session->id) }}" class="inline-form" style="margin:0;">
                         @csrf
-                        <button type="submit" class="btn-success" style="padding:8px 18px;font-size:12px;"><i class="fa-solid fa-check"></i> Complete Session</button>
+                        <button type="submit" class="btn-success btn-complete-session">Complete Session</button>
                     </form>
                 </div>
                 <button id="openScannerBtn" class="btn-scan">
-                    <i class="fa-solid fa-camera"></i> Scan QR Sticker
+                    <i class="fa-solid fa-camera"></i> Scan QR
                 </button>
                 <div id="scanResultCard" class="profile-card hidden-display"></div>
                 <div id="searchResults" class="search-results"></div>
@@ -249,7 +367,7 @@
             <div id="scannerModalOverlay" class="scanner-modal-overlay hidden-display">
                 <div class="scanner-modal">
                     <div class="scanner-modal-header">
-                        <h4><i class="fa-solid fa-camera"></i> Scan QR Sticker</h4>
+                        <h4><i class="fa-solid fa-camera"></i> Scan QR</h4>
                         <button class="close-scanner-btn scanner-modal-close">&times;</button>
                     </div>
                     <div class="scanner-modal-body">
@@ -332,8 +450,46 @@
                     <div class="empty-table">No assets found in your scope.</div>
                 @endforelse
             </div>
-            <div style="margin-top:16px;">
-                {{ $custodianGroups->links() }}
+            <div class="custodian-pagination">
+                <div class="pag-desktop-links">
+                    @if($custodianGroups->lastPage() > 1)
+                    <div class="pag-desktop">
+                        <span class="pag-info">Showing {{ $custodianGroups->firstItem() }} to {{ $custodianGroups->lastItem() }} of {{ $custodianGroups->total() }} custodians</span>
+                        <div class="pag-btns">
+                            @if($custodianGroups->currentPage() > 1)
+                            <a href="{{ $custodianGroups->previousPageUrl() }}" class="pag-btn">&lsaquo; Prev</a>
+                            @endif
+                            @foreach($custodianGroups->getUrlRange(1, $custodianGroups->lastPage()) as $p => $url)
+                                @if($p == $custodianGroups->currentPage())
+                                <span class="pag-btn pag-active">{{ $p }}</span>
+                                @else
+                                <a href="{{ $url }}" class="pag-btn">{{ $p }}</a>
+                                @endif
+                            @endforeach
+                            @if($custodianGroups->hasMorePages())
+                            <a href="{{ $custodianGroups->nextPageUrl() }}" class="pag-btn">Next &rsaquo;</a>
+                            @endif
+                        </div>
+                    </div>
+                    @endif
+                </div>
+                <div class="pag-mobile-bar">
+                    @if($custodianGroups->lastPage() > 1)
+                    <div class="pag-mobile">
+                        @if($custodianGroups->currentPage() > 1)
+                        <a href="{{ $custodianGroups->previousPageUrl() }}" class="pag-btn"><i class="fa-solid fa-chevron-left"></i> Prev</a>
+                        @else
+                        <span class="pag-btn pag-disabled"><i class="fa-solid fa-chevron-left"></i> Prev</span>
+                        @endif
+                        <span class="pag-info">Page {{ $custodianGroups->currentPage() }} of {{ $custodianGroups->lastPage() }}</span>
+                        @if($custodianGroups->hasMorePages())
+                        <a href="{{ $custodianGroups->nextPageUrl() }}" class="pag-btn">Next <i class="fa-solid fa-chevron-right"></i></a>
+                        @else
+                        <span class="pag-btn pag-disabled">Next <i class="fa-solid fa-chevron-right"></i></span>
+                        @endif
+                    </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -354,6 +510,8 @@ let searchTimeout;
 document.getElementById('scanSearchInput')?.addEventListener('input', function() {
     clearTimeout(searchTimeout);
     const q = this.value.trim();
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.classList.toggle('visible', q.length > 0);
     if (q.length < 1) {
         document.getElementById('searchResults').style.display = 'none';
         return;
@@ -417,6 +575,8 @@ async function searchAsset(q) {
 function clearSearch() {
     document.getElementById('scanSearchInput').value = '';
     document.getElementById('searchResults').style.display = 'none';
+    const clearBtn = document.getElementById('clearSearchBtn');
+    if (clearBtn) clearBtn.classList.remove('visible');
 }
 
 function renderCustodianGroup(group, countedIds) {
