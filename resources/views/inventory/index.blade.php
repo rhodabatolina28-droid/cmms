@@ -504,6 +504,9 @@
             .gov-table-premium th,
             .gov-table-premium td { padding: 10px 10px !important; font-size: 12px !important; }
             .gov-table-premium tr:active td { background: #f1f5f9 !important; }
+            /* Pagination — same look as desktop, wraps instead of clipping on small screens */
+            #inventoryPagination > div { flex-wrap: wrap !important; gap: 8px !important; }
+            #inventoryPagination > div > div { flex-wrap: wrap !important; }
             .modal-card { width: 95vw !important; max-width: 95vw !important; }
             .modal-body { padding: 14px !important; }
             .modal-footer { flex-direction: column !important; gap: 10px !important; }
