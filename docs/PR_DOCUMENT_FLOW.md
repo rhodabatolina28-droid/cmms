@@ -229,13 +229,13 @@ Scope cuts removed from earlier drafts: editable actual-cost field on receive (r
 
 | Item | Notes |
 |---|---|
-| Supply Officer standalone PRs (no job order) | User-requested; deferred until receiving flow lands. Would relax job-order requirement for supply creators. |
+| ~~Supply Officer standalone PRs (no job order)~~ | RESOLVED Sep 2, 2026: the Supply Officer can already create standalone PRs without a job order — the Parts & Consumables toolbar "Create PR" button (brand-new items) and the per-row critical-part Create PR icon both work without any ticket; `store()` accepts `requisition_id`/`ticket` as nullable. The old "deferred until receiving flow lands" note is obsolete. |
 | ~~Legacy PR records~~ | RESOLVED Aug 27, 2026: all 16 pre-revamp test/scratch PR records deleted at user request; sequence reset (next = PR-2026-0001). No orphaned rows remain. |
 | Retro-filling costs on old PRs | Moot after the deletion above; all future PRs capture costs at creation. |
 | Mid-flight price drift (small PR actual > 10k) | No role-switch handling; surfaces via audit data later. |
 | Notifications (delivered / awaiting review) | Deferred polish. |
 | Consumable-only receive (no serial) | Current "Create new..." flow always marks the part serialized/accountable (requires_unit_tracking=true). True non-serialized consumables (thermal paste, cables) still must be pre-registered via Parts & Consumables before receiving, or delivered as existing parts. Deferred by design to keep every PR-received unit accountable. |
-| Parts & Consumables PR visibility (next) | Movements table records reference_type=purchase_request but History modal does not yet render PR number as clickable; Units modal does not yet show "via PR-xxxx" per unit; no in-row badge for in-flight PRs on a parts row. All data exists server-side - UI surfacing planned. |
+| ~~Parts & Consumables PR visibility~~ | RESOLVED Sep 2, 2026 — all three surfacing items are DONE: (1) History modal renders `reference_type=purchase_request` movements with a clickable PR-number link; (2) Units modal shows "via PR-xxxx" per unit (resolved via `request_id`); (3) Parts rows now show an in-flight PR chip (submitted/finalized, not yet delivered) that links to the PR show page. Data source: `ListPartsStockAction::data()` → `in_flight_prs`. |
 
 ## 6. File Map (PR flow)
 

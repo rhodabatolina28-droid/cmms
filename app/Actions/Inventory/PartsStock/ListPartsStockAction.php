@@ -3,6 +3,7 @@
 namespace App\Actions\Inventory\PartsStock;
 
 use App\Models\Part;
+use App\Models\PurchaseRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 
@@ -154,6 +155,12 @@ class ListPartsStockAction
 
         $parts = $query->withCount('units')->withSum('units', 'unit_value')->orderBy('item_name')->paginate((int) $request->input('per_page', 15));
 
+        // In-flight PRs (submitted/finalized, not yet delivered) that reference
+        // any part on this page — one query for the whole page, keyed by part id.
+        $inFlightByPart = $this->inFlightPrsByPartId(
+            collect($parts->items())->pluck('id')->all()
+        );
+
         return [
             'success' => true,
             'parts' => collect($parts->items())->map(fn (Part $part) => [
@@ -168,6 +175,7 @@ class ListPartsStockAction
                 'unit_count' => (int) $part->units_count,
                 'unit_value' => $part->units_count > 0 ? round((float) $part->units_sum_unit_value / $part->units_count, 2) : null,
                 'total_cost' => $part->units_count > 0 ? round((float) $part->units_sum_unit_value, 2) : null,
+                'in_flight_prs' => $inFlightByPart[$part->id] ?? [],
             ])->all(),
             'total' => $parts->total(),
             'current_page' => $parts->currentPage(),
@@ -175,5 +183,41 @@ class ListPartsStockAction
             'per_page' => $parts->perPage(),
             'stats' => $stats,
         ];
+    }
+
+    /**
+     * Map ng in-flight PRs per part id — PRs na submitted o finalized (nag-aantay
+     * pa ng procurement/delivery) at ang items JSON ay nagre-reference sa part na
+     * ito. Draft (hindi pa isinusumite) at delivered (natanggap na) ay HINDI
+     * "in-flight" — hindi na sila nirereport dito.
+     *
+     * @param  list<int>  $partIds
+     * @return array<int, list<array{id: int, pr_number: string}>>
+     */
+    protected function inFlightPrsByPartId(array $partIds): array
+    {
+        if (! $partIds) {
+            return [];
+        }
+
+        $map = [];
+
+        PurchaseRequest::whereIn('status', [
+            PurchaseRequest::STATUS_SUBMITTED,
+            PurchaseRequest::STATUS_FINALIZED,
+        ])->get(['id', 'pr_number', 'items'])
+            ->each(function (PurchaseRequest $pr) use (&$map) {
+                foreach ((array) ($pr->items ?? []) as $line) {
+                    $partId = (int) ($line['part_id'] ?? 0);
+                    if ($partId > 0) {
+                        $map[$partId][] = [
+                            'id' => $pr->id,
+                            'pr_number' => $pr->pr_number,
+                        ];
+                    }
+                }
+            });
+
+        return $map;
     }
 }

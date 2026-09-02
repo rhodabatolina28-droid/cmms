@@ -77,6 +77,15 @@
     .movement-meta { font-size: 11.5px; color: #64748b; margin-top: 2px; }
     .pr-ref-link { color: #0038A8; font-weight: 700; text-decoration: none; }
     .pr-ref-link:hover { text-decoration: underline; }
+    .item-pr { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .pr-chip {
+        display: inline-flex; align-items: center; gap: 5px;
+        background: #eff6ff; color: #1d4ed8;
+        border: 1px solid #bfdbfe; border-radius: 999px;
+        padding: 2px 9px; font-size: 10.5px; font-weight: 700;
+        text-decoration: none; white-space: nowrap;
+    }
+    .pr-chip:hover { background: #dbeafe; }
 
     .empty-state { text-align: center; padding: 60px 20px; color: #64748b; }
     .empty-state .big { font-size: 40px; margin-bottom: 8px; }
@@ -608,6 +617,7 @@
     const PARTS_IMPORT_COMMIT_URL = '{{ route('inventory.parts.import.commit') }}';
     const PARTS_STOCK_OUT_CONTEXT_URL = '{{ route('inventory.parts.stock-out-context') }}';
     const PARTS_PR_CREATE_PREFIX = '{{ route('purchase_requests.create') }}?part_id=';
+    const PR_SHOW_PREFIX = '{{ route('purchase_requests.show', ['purchaseRequest' => 'PR_ID']) }}';
 
     // ── Live filters (Ajax) — gaya ng inventory, inu-update ang stats cards + table pag nag-filter ──
     (function () {
@@ -824,6 +834,9 @@
             const badge = level === 'critical'
                 ? '<span class="badge badge-critical">CRITICAL</span>'
                 : (level === 'low' ? '<span class="badge badge-low">LOW</span>' : '<span class="badge badge-ok">OK</span>');
+            const prChips = (p.in_flight_prs || []).map((pr) =>
+                '<a class="pr-chip" href="' + PR_SHOW_PREFIX.replace('PR_ID', pr.id) + '" title="In-flight purchase request — hinihintay ang delivery"><i class="fa-solid fa-truck-fast"></i>' + esc(pr.pr_number) + '</a>'
+            ).join('');
 
             let actions = '<div class="row-actions">';
             if (canWrite) {
@@ -839,7 +852,7 @@
             actions += '</div>';
 
             return '<tr class="' + rowCls + '">'
-                + '<td><div class="item-name">' + esc(p.item_name) + '</div><div class="item-sub">' + esc(p.category || 'Uncategorized') + '</div></td>'
+                + '<td><div class="item-name">' + esc(p.item_name) + '</div><div class="item-sub">' + esc(p.category || 'Uncategorized') + '</div>' + (prChips ? '<div class="item-pr">' + prChips + '</div>' : '') + '</td>'
                 + '<td>' + esc(p.unit) + '</td>'
                 + '<td><div class="qty-pill"><span class="qty-num ' + qtyCls + '">' + p.on_hand_qty + '</span><div class="qty-track"><i class="' + trackCls + '" style="width:' + trackW + '%"></i></div></div></td>'
                 + '<td>' + p.reorder_level + '</td>'

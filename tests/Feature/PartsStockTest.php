@@ -2,7 +2,9 @@
 
 namespace Tests\Feature;
 
+use App\Actions\PurchaseRequest\CreatePurchaseRequestAction;
 use App\Models\Part;
+use App\Models\PurchaseRequest;
 use Tests\TestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -37,6 +39,21 @@ class PartsStockTest extends TestCase
     private function adminWithSupply()
     {
         return $this->makeUser(['role' => 'admin', 'can_supply' => true]);
+    }
+
+    /** Create a PR document via the form action (status: submitted by default). */
+    private function makePr(\App\Models\User $creator, array $overrides = []): PurchaseRequest
+    {
+        \Illuminate\Support\Facades\Auth::login($creator);
+
+        return (new CreatePurchaseRequestAction)->createFromForm($creator, array_merge([
+            'items' => [[
+                'description' => 'SSD 1TB NVMe',
+                'quantity' => 2,
+                'unit_cost' => 3500.00,
+            ]],
+            'purpose' => 'Stock replenishment.',
+        ], $overrides));
     }
 
     public function test_supply_officer_can_create_part()
@@ -346,5 +363,62 @@ public function test_parts_data_endpoint_returns_filtered_rows_and_stats()
 
         $resp403 = $this->getJson(route('inventory.parts.movements', ['part' => $part->id]));
         $resp403->assertStatus(403);
+    }
+
+    public function test_parts_data_exposes_in_flight_prs_for_linked_part(): void
+    {
+        $supply = $this->supplyOfficer();
+        $part = Part::create([
+            'item_name' => 'SSD 1TB NVMe', 'unit' => 'pcs', 'category' => 'Storage',
+            'on_hand_qty' => 0, 'reorder_level' => 3, 'region' => 'NCR',
+        ]);
+
+        // In-flight PR (submitted) referencing the part via part_id.
+        $submitted = $this->makePr($supply, ['items' => [[
+            'description' => 'SSD 1TB NVMe', 'quantity' => 2, 'unit_cost' => 3500.00,
+            'part_id' => $part->id,
+        ]]]);
+
+        // A delivered PR for the same part must NOT be reported as in-flight.
+        $delivered = $this->makePr($supply, ['items' => [[
+            'description' => 'SSD 1TB NVMe', 'quantity' => 1, 'unit_cost' => 3500.00,
+            'part_id' => $part->id,
+        ]]]);
+        $delivered->forceFill([
+            'status' => PurchaseRequest::STATUS_DELIVERED,
+            'delivered_at' => now(),
+            'delivered_by' => $supply->id,
+        ])->save();
+
+        $this->actingAs($supply);
+
+        $resp = $this->getJson(route('inventory.parts.data', ['search' => 'SSD 1TB NVMe']));
+        $resp->assertOk()
+            ->assertJsonPath('success', true)
+            ->assertJsonCount(1, 'parts')
+            ->assertJsonCount(1, 'parts.0.in_flight_prs')
+            ->assertJsonPath('parts.0.in_flight_prs.0.pr_number', $submitted->pr_number)
+            ->assertJsonPath('parts.0.in_flight_prs.0.id', $submitted->id);
+    }
+
+    public function test_parts_data_excludes_draft_prs_from_in_flight(): void
+    {
+        $supply = $this->supplyOfficer();
+        $part = Part::create([
+            'item_name' => 'RAM 8GB', 'unit' => 'pcs', 'on_hand_qty' => 0, 'region' => 'NCR',
+        ]);
+
+        $draft = $this->makePr($supply, ['items' => [[
+            'description' => 'RAM 8GB', 'quantity' => 2, 'part_id' => $part->id,
+        ]]]);
+        $draft->forceFill(['status' => PurchaseRequest::STATUS_DRAFT])->save();
+
+        $this->actingAs($supply);
+
+        $this->getJson(route('inventory.parts.data', ['search' => 'RAM 8GB']))
+            ->assertOk()
+            ->assertJsonCount(1, 'parts')
+            ->assertJsonPath('parts.0.item_name', 'RAM 8GB')
+            ->assertJsonCount(0, 'parts.0.in_flight_prs');
     }
 }
