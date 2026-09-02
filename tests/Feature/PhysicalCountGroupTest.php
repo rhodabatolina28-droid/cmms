@@ -192,6 +192,25 @@ class PhysicalCountGroupTest extends TestCase
             ->assertStatus(422);
     }
 
+    public function test_show_page_renders_custodian_grouped_table(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply9@test.com', 'full_name' => 'Supply Officer Nine']);
+        $custodian = $this->user(['full_name' => 'Maria Santos']);
+        $this->asset(['assigned_to_user' => $custodian->id, 'status' => 'Active']);
+        $this->asset(['assigned_to_user' => $custodian->id, 'status' => 'Active']);
+        $this->asset(['status' => 'Spare']); // unassigned → separate last group
+
+        $session = $this->startCountSession($supply);
+
+        $this->actingAs($supply)
+            ->get(route('physical-count.show', $session->id))
+            ->assertOk()
+            ->assertSee('Maria Santos')
+            ->assertSee('Unassigned / Spare')
+            ->assertSee('Mark all Present')
+            ->assertSee('counted');
+    }
+
     public function test_qr_batch_page_loads_with_paged_loader_for_supply_role(): void
     {
         $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply8@test.com', 'full_name' => 'Supply Officer Eight']);

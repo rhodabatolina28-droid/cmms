@@ -6,11 +6,13 @@ use App\Models\InventoryAsset;
 use App\Models\Scopes\InventoryScope;
 use App\Models\PhysicalCountSession;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\App;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\Facades\Auth;
 
 class ShowPhysicalCountAction
 {
+    use Concerns\BuildsCustodianGroups;
     /**
      * Show a physical count session with paginated assets.
      *
@@ -41,8 +43,7 @@ class ShowPhysicalCountAction
 
         $allAssets = InventoryAsset::with('assignedUser');
         InventoryScope::scopeAssetsToActor($allAssets, $user);
-        $allAssets = $allAssets->orderBy('category')->orderBy('item_name')
-            ->paginate(50);
+        $allAssets = $allAssets->orderBy('item_name')->get();
 
         $countedIds = $session->counts->pluck('asset_id')->toArray();
 
@@ -54,6 +55,19 @@ class ShowPhysicalCountAction
             'damaged' => $session->counts->where('status', 'Damaged')->count(),
         ];
 
-        return view('inventory.physical-count-show', compact('session', 'allAssets', 'countedIds', 'summary'));
+        // Main table grouped by custodian (PAR-based accountability view).
+        // One group per employee, unassigned/spare assets last, 10 groups per page.
+        $groups = $this->buildCustodianGroups($allAssets, $session->counts);
+        $perPage = 10;
+        $page = LengthAwarePaginator::resolveCurrentPage();
+        $custodianGroups = new LengthAwarePaginator(
+            $groups->forPage($page, $perPage)->values(),
+            $groups->count(),
+            $perPage,
+            $page,
+            ['path' => Paginator::resolveCurrentPath()]
+        );
+
+        return view('inventory.physical-count-show', compact('session', 'allAssets', 'countedIds', 'summary', 'custodianGroups'));
     }
 }

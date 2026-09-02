@@ -28,6 +28,11 @@
     .search-input-wrap input:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,0.1); }
     .search-results { margin-top: 12px; display: none; }
     .search-result-item { display: flex; justify-content: space-between; align-items: center; padding: 10px 14px; background: white; border: 1px solid #e2e8f0; border-radius: 6px; margin-bottom: 6px; }
+    .custodian-block { border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 14px; overflow: hidden; }
+    .custodian-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #f8fafc; border-bottom: 1px solid #e2e8f0; flex-wrap: wrap; }
+    .custodian-name { font-size: 13px; font-weight: 800; color: #1e293b; }
+    .custodian-par { font-size: 11px; font-weight: 700; color: #0038A8; font-family: monospace; margin-left: 8px; }
+    .custodian-progress { font-size: 11px; font-weight: 800; color: #64748b; margin-left: 8px; }
         .search-group-header { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 10px 14px; background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 6px; margin-bottom: 6px; font-size: 13px; flex-wrap: wrap; }
         .search-group-header .group-count { font-size: 11px; font-weight: 800; color: #0038A8; background: white; border: 1px solid #bfdbfe; padding: 2px 8px; border-radius: 99px; }
         .search-custodian { font-size: 11px; color: #64748b; margin-top: 2px; }
@@ -176,6 +181,9 @@
                     <a href="{{ route('physical-count.print', $session->id) }}" class="btn-secondary btn-secondary-sm" target="_blank">
                         <i class="fa-solid fa-print"></i> Print Report
                     </a>
+                    <a href="{{ route('physical-count.print', ['sessionId' => $session->id, 'group' => 'custodian']) }}" class="btn-secondary btn-secondary-sm" target="_blank">
+                        <i class="fa-solid fa-user-tag"></i> Print by Custodian
+                    </a>
                 </div>
                 @endif
             </div>
@@ -233,58 +241,78 @@
             @endif
 
             <div class="scroll-x">
-                <table class="asset-table">
-                    <thead>
-                        <tr>
-                            <th>Status</th>
-                            <th>Item Name</th>
-                            <th>Serial No</th>
-                            <th>PAR No</th>
-                            <th>Property No</th>
-                            <th>Assigned To</th>
-                            @if($session->status === 'Ongoing')
-                            <th class="th-center">Action</th>
+                @forelse($custodianGroups as $group)
+                    @php
+                        $pending = $group['assets']->filter(fn ($a) => !in_array($a->asset_id, $countedIds));
+                    @endphp
+                    <div class="custodian-block">
+                        <div class="custodian-header">
+                            <div>
+                                <i class="fa-solid fa-user-tag"></i>
+                                <strong class="custodian-name">{{ $group['name'] }}</strong>
+                                @if($group['par'])<span class="custodian-par">PAR: {{ $group['par'] }}</span>@endif
+                                <span class="custodian-progress">{{ $group['counted'] }}/{{ $group['total'] }} counted</span>
+                            </div>
+                            @if($session->status === 'Ongoing' && $pending->isNotEmpty())
+                            <button type="button" class="mark-btn mark-operational" data-action="mark-all-group" data-ids="{{ $pending->pluck('asset_id')->implode(',') }}">
+                                Mark all Present ({{ $pending->count() }})
+                            </button>
                             @endif
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @forelse($allAssets as $asset)
-                            @php
-                                $count = $session->counts->firstWhere('asset_id', $asset->asset_id);
-                                $displayStatus = $count ? ($count->status === 'Present' ? 'Operational' : 'Non-Operational') : 'Not Counted';
-                                $rowClass = $count ? ($count->status === 'Present' ? 'counted-operational' : 'counted-non-ops') : '';
-                                $pillClass = $count ? ($count->status === 'Present' ? 'pill-operational' : 'pill-non-ops') : '';
-                            @endphp
-                            <tr class="{{ $rowClass }}">
-                                <td>
-                                    @if($count)
-                                        <span class="status-pill-small {{ $pillClass }}">{{ $displayStatus }}</span>
-                                    @else
-                                        <span class="not-counted-text">Not Counted</span>
+                        </div>
+                        <table class="asset-table">
+                            <thead>
+                                <tr>
+                                    <th>Status</th>
+                                    <th>Item Name</th>
+                                    <th>Serial No</th>
+                                    <th>PAR No</th>
+                                    <th>Property No</th>
+                                    <th>Category</th>
+                                    @if($session->status === 'Ongoing')
+                                    <th class="th-center">Action</th>
                                     @endif
-                                </td>
-                                <td class="td-bold">{{ $asset->item_name }}</td>
-                                <td class="td-mono">{{ $asset->serial_number ?? '—' }}</td>
-                                <td>{{ $asset->par_number ?? '—' }}</td>
-                                <td class="td-mono">{{ $asset->property_number ?? '—' }}</td>
-                                <td>{{ $asset->assignedUser->full_name ?? 'Unassigned' }}</td>
-                                @if($session->status === 'Ongoing')
-                                <td class="td-actions">
-                                    <div class="action-btn-group">
-                                        <button data-action="mark-asset" data-asset-id="{{ $asset->asset_id }}" data-status="Present" class="mark-btn mark-operational {{ $count ? 'disabled-btn' : '' }}" {{ $count ? 'disabled' : '' }}>Operational</button>
-                                        <button data-action="mark-asset" data-asset-id="{{ $asset->asset_id }}" data-status="Missing" class="mark-btn mark-non-ops {{ $count ? 'disabled-btn' : '' }}" {{ $count ? 'disabled' : '' }}>Non-Operational</button>
-                                    </div>
-                                </td>
-                                @endif
-                            </tr>
-                        @empty
-                            <tr><td colspan="7" class="empty-table">No assets found in your scope.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach($group['assets'] as $asset)
+                                    @php
+                                        $count = $session->counts->firstWhere('asset_id', $asset->asset_id);
+                                        $displayStatus = $count ? ($count->status === 'Present' ? 'Operational' : 'Non-Operational') : 'Not Counted';
+                                        $rowClass = $count ? ($count->status === 'Present' ? 'counted-operational' : 'counted-non-ops') : '';
+                                        $pillClass = $count ? ($count->status === 'Present' ? 'pill-operational' : 'pill-non-ops') : '';
+                                    @endphp
+                                    <tr class="{{ $rowClass }}">
+                                        <td>
+                                            @if($count)
+                                                <span class="status-pill-small {{ $pillClass }}">{{ $displayStatus }}</span>
+                                            @else
+                                                <span class="not-counted-text">Not Counted</span>
+                                            @endif
+                                        </td>
+                                        <td class="td-bold">{{ $asset->item_name }}</td>
+                                        <td class="td-mono">{{ $asset->serial_number ?? '—' }}</td>
+                                        <td>{{ $asset->par_number ?? '—' }}</td>
+                                        <td class="td-mono">{{ $asset->property_number ?? '—' }}</td>
+                                        <td>{{ $asset->category ?? '—' }}</td>
+                                        @if($session->status === 'Ongoing')
+                                        <td class="td-actions">
+                                            <div class="action-btn-group">
+                                                <button data-action="mark-asset" data-asset-id="{{ $asset->asset_id }}" data-status="Present" class="mark-btn mark-operational {{ $count ? 'disabled-btn' : '' }}" {{ $count ? 'disabled' : '' }}>Operational</button>
+                                                <button data-action="mark-asset" data-asset-id="{{ $asset->asset_id }}" data-status="Missing" class="mark-btn mark-non-ops {{ $count ? 'disabled-btn' : '' }}" {{ $count ? 'disabled' : '' }}>Non-Operational</button>
+                                            </div>
+                                        </td>
+                                        @endif
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                @empty
+                    <div class="empty-table">No assets found in your scope.</div>
+                @endforelse
             </div>
             <div style="margin-top:16px;">
-                {{ $allAssets->links() }}
+                {{ $custodianGroups->links() }}
             </div>
         </div>
     </div>
