@@ -161,39 +161,19 @@
 
     <div class="polish-card">
         <div class="card-header-accent" style="flex-direction:column;align-items:stretch;gap:14px;">
-            <div style="background:#f0fdf4;border:1px solid #86efac;border-radius:10px;padding:14px 18px;display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
-                <div>
-                    <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;">
-                        <i class="fa-solid fa-clipboard-check"></i>
-                        @if($session->status === 'Ongoing') Ongoing Physical Count @else Completed Count @endif
-                    </div>
-                    <div style="font-size:13px;color:#1e293b;margin-top:2px;">
-                        Started {{ $session->started_at->format('M d, Y h:i A') }} by {{ $session->startedBy->full_name ?? 'Unknown' }}
-                        @if($session->completed_at)
-                            &middot; Completed {{ $session->completed_at->format('M d, Y h:i A') }}
-                        @endif
-                    </div>
-                </div>
-                <div style="display:flex;gap:8px;align-items:center;">
-                    @if($session->status !== 'Ongoing')
-                        <a href="{{ route('physical-count.export', $session->id) }}" class="btn-secondary btn-secondary-sm">
-                            <i class="fa-solid fa-download"></i> Export CSV
-                        </a>
-                        <a href="{{ route('physical-count.print', $session->id) }}" class="btn-secondary btn-secondary-sm" target="_blank">
-                            <i class="fa-solid fa-print"></i> Print Report
-                        </a>
-                    @endif
-                </div>
-            </div>
             <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
                 <h4 class="card-h4">
                     <i class="fa-solid fa-list"></i> Asset List
                 </h4>
-                @if($session->status === 'Ongoing')
-                <form id="completeSessionForm" method="POST" action="{{ route('physical-count.complete', $session->id) }}" class="inline-form">
-                    @csrf
-                    <button type="submit" class="btn-success" style="padding:8px 18px;font-size:12px;"><i class="fa-solid fa-check"></i> Complete Session</button>
-                </form>
+                @if($session->status !== 'Ongoing')
+                <div style="display:flex;gap:8px;align-items:center;">
+                    <a href="{{ route('physical-count.export', $session->id) }}" class="btn-secondary btn-secondary-sm">
+                        <i class="fa-solid fa-download"></i> Export CSV
+                    </a>
+                    <a href="{{ route('physical-count.print', $session->id) }}" class="btn-secondary btn-secondary-sm" target="_blank">
+                        <i class="fa-solid fa-print"></i> Print Report
+                    </a>
+                </div>
                 @endif
             </div>
             <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;">
@@ -222,6 +202,10 @@
                     <i class="fa-solid fa-magnifying-glass search-icon-gray"></i>
                     <input type="text" id="scanSearchInput" placeholder="Search or scan QR sticker..." autocomplete="off">
                     <button id="clearSearchBtn" class="btn-secondary"><i class="fa-solid fa-times"></i> Clear</button>
+                    <form id="completeSessionForm" method="POST" action="{{ route('physical-count.complete', $session->id) }}" class="inline-form" style="margin:0;">
+                        @csrf
+                        <button type="submit" class="btn-success" style="padding:8px 18px;font-size:12px;"><i class="fa-solid fa-check"></i> Complete Session</button>
+                    </form>
                 </div>
                 <button id="openScannerBtn" class="btn-scan">
                     <i class="fa-solid fa-camera"></i> Scan QR Sticker
@@ -545,7 +529,7 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    document.getElementById('completeSessionForm').addEventListener('submit', function(e) {
+    document.getElementById('completeSessionForm')?.addEventListener('submit', function(e) {
         e.preventDefault();
         Swal.fire({
             title: 'End this session?',
@@ -562,9 +546,9 @@ document.addEventListener('DOMContentLoaded', function() {
             }
         });
     });
-    document.getElementById('clearSearchBtn').addEventListener('click', clearSearch);
-    document.getElementById('openScannerBtn').addEventListener('click', openScanner);
-    document.getElementById('scannerModalOverlay').addEventListener('click', function(e) {
+    document.getElementById('clearSearchBtn')?.addEventListener('click', clearSearch);
+    document.getElementById('openScannerBtn')?.addEventListener('click', openScanner);
+    document.getElementById('scannerModalOverlay')?.addEventListener('click', function(e) {
         if (e.target === this) closeScanner();
     });
     document.querySelectorAll('.close-scanner-btn').forEach(function(el) {

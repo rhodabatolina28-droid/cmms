@@ -2,7 +2,9 @@
 
 namespace App\Actions\PhysicalCount;
 
+use App\Models\InventoryAsset;
 use App\Models\PhysicalCountSession;
+use App\Models\Scopes\InventoryScope;
 use Illuminate\Support\Facades\Auth;
 
 class ListPhysicalCountsAction
@@ -24,12 +26,27 @@ class ListPhysicalCountsAction
             ->where('status', 'Ongoing')
             ->first();
 
+        // Total assets in the user's scope (used for progress bars).
+        $totalAssetsQuery = InventoryAsset::query();
+        InventoryScope::scopeAssetsToActor($totalAssetsQuery, $user);
+        $totalAssets = (int) $totalAssetsQuery->count();
+
+        // Progress data for the active session card: counted assets vs total in scope.
+        $ongoingProgress = null;
+        if ($ongoing) {
+            $ongoingProgress = [
+                'counted' => (int) $ongoing->counts()->count(),
+                'total' => $totalAssets,
+            ];
+        }
+
         $sessions = PhysicalCountSession::with('startedBy')
+            ->withCount('counts')
             ->where('scope_region', $user->region)
             ->when($user->branch, fn ($q) => $q->where('scope_branch', $user->branch))
             ->orderByDesc('started_at')
             ->paginate(20);
 
-        return view('inventory.physical-count', compact('sessions', 'ongoing'));
+        return view('inventory.physical-count', compact('sessions', 'ongoing', 'ongoingProgress', 'totalAssets'));
     }
 }

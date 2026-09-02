@@ -20,11 +20,22 @@
         .icon-box-blue { margin-right: 10px; color: #0038A8; }
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .inline-form { display:inline; }
+        .pc-start-wrap { padding: 14px 24px 0; display: flex; justify-content: flex-end; }
         .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
         .alert-info { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
         .ongoing-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
         .ongoing-label { font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; }
         .ongoing-date { font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 2px; }
+        .session-row-active { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
+        .session-row-active .session-name { color: #1e293b; }
+        .session-active-badge { display: inline-flex; align-items: center; gap: 5px; background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; padding: 3px 10px; border-radius: 999px; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: .4px; }
+        .session-active-badge i { font-size: 9px; }
+        .session-progress-wrap { display: flex; align-items: center; gap: 10px; margin-top: 8px; }
+        .session-progress-bar { flex: 1; max-width: 220px; height: 6px; background: #e2e8f0; border-radius: 999px; overflow: hidden; }
+        .session-progress-fill { height: 100%; background: #0038A8; border-radius: 999px; transition: width .3s ease; }
+        .session-progress-text { font-size: 11px; font-weight: 700; color: #475569; white-space: nowrap; }
+        .btn-continue { background: #0038A8; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
+        .btn-continue:hover { background: #002d8c; color: #fff; }
         .section-h4 { font-size: 14px; font-weight: 800; color: #1e293b; margin: 0 0 14px; }
         .empty-state { color: #94a3b8; font-size: 13px; text-align: center; padding: 40px 0; }
         .empty-icon { font-size: 24px; display: block; margin-bottom: 10px; }
@@ -33,12 +44,17 @@
         .session-actions { display: flex; align-items: center; gap: 12px; }
         .view-link { color: #0038A8; font-size: 12px; font-weight: 700; text-decoration: none; }
         .pagination-wrap { margin-top: 16px; }
+        .session-progress-wrap .session-progress-bar { max-width: 160px; }
         @media (max-width: 767px) {
             input[type="checkbox"] { display: none !important; }
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
             .card-header-accent .btn-primary { width: 100% !important; justify-content: center !important; }
             .ongoing-box { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
             .ongoing-box .btn-primary { width: 100% !important; justify-content: center !important; }
+            .session-row-active { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
+            .session-row-active .btn-continue { width: 100% !important; justify-content: center !important; }
+            .session-progress-wrap { max-width: 100% !important; }
+            .session-progress-bar { max-width: none !important; }
             .session-row { flex-direction: column !important; align-items: flex-start !important; gap: 8px !important; }
             .session-actions { width: 100% !important; }
             .session-actions a,
@@ -62,13 +78,18 @@
                     Record physical inventory counts. Mark assets as Present, Missing, or Damaged.
                 </p>
             </div>
-            <form method="POST" action="{{ route('physical-count.store') }}" class="inline-form" id="startCountForm">
-                @csrf
-                <button type="button" id="startCountBtn" class="btn-primary">
-                    <i class="fa-solid fa-play"></i> Start New Count
-                </button>
-            </form>
         </div>
+
+        @if(!$ongoing)
+            <div class="pc-start-wrap">
+                <form method="POST" action="{{ route('physical-count.store') }}" class="inline-form" id="startCountForm">
+                    @csrf
+                    <button type="button" id="startCountBtn" class="btn-primary">
+                        <i class="fa-solid fa-play"></i> Start New Count
+                    </button>
+                </form>
+            </div>
+        @endif
 
         <div class="card-body-content">
             @if(session('success'))
@@ -83,14 +104,22 @@
             @endif
 
             @if($ongoing)
-                <div class="ongoing-box">
+                <div class="session-row-active" style="margin-bottom:20px;">
                     <div>
-                        <span class="ongoing-label">Ongoing Session</span>
-                        <div class="ongoing-date">
-                            Started {{ $ongoing->started_at->format('M d, Y h:i A') }}
+                        <div class="session-name">
+                            <span class="session-active-badge"><i class="fa-solid fa-circle"></i> Active Session</span>
+                        </div>
+                        <div class="session-meta" style="margin-top:6px;">
+                            Started {{ $ongoing->started_at->format('M d, Y h:i A') }} by {{ $ongoing->startedBy->full_name ?? 'Unknown' }}
+                        </div>
+                        <div class="session-progress-wrap">
+                            <div class="session-progress-bar">
+                                <div class="session-progress-fill" style="width: {{ $ongoingProgress['total'] > 0 ? min(100, round(($ongoingProgress['counted'] / $ongoingProgress['total']) * 100)) : 0 }}%"></div>
+                            </div>
+                            <span class="session-progress-text">{{ $ongoingProgress['counted'] }} of {{ $ongoingProgress['total'] }} assets counted</span>
                         </div>
                     </div>
-                    <a href="{{ route('physical-count.show', $ongoing->id) }}" class="btn-primary">
+                    <a href="{{ route('physical-count.show', $ongoing->id) }}" class="btn-continue">
                         <i class="fa-solid fa-arrow-right"></i> Continue Count
                     </a>
                 </div>
@@ -105,27 +134,36 @@
                 </p>
             @else
                 @foreach($sessions as $session)
+                    @continue($ongoing && $session->id === $ongoing->id)
                     <div class="session-row">
-                        <div>
-                            <div class="session-name">
-                                {{ $session->started_at->format('M d, Y h:i A') }}
-                            </div>
-                            <div class="session-meta">
-                                Started by {{ $session->startedBy->full_name ?? 'Unknown' }}
+                            <div>
+                                <div class="session-name">
+                                    {{ $session->started_at->format('M d, Y h:i A') }}
+                                </div>
+                                <div class="session-meta">
+                                    Started by {{ $session->startedBy->full_name ?? 'Unknown' }}
+                                    @if($session->status === 'Completed')
+                                        &middot; Completed {{ $session->completed_at?->format('M d, Y h:i A') }}
+                                    @endif
+                                </div>
                                 @if($session->status === 'Completed')
-                                    &middot; Completed {{ $session->completed_at?->format('M d, Y h:i A') }}
+                                <div class="session-progress-wrap">
+                                    <div class="session-progress-bar">
+                                        <div class="session-progress-fill" style="width: {{ $totalAssets > 0 ? min(100, round(($session->counts_count / $totalAssets) * 100)) : 0 }}%"></div>
+                                    </div>
+                                    <span class="session-progress-text">{{ $session->counts_count }} of {{ $totalAssets }} assets counted</span>
+                                </div>
                                 @endif
                             </div>
+                            <div class="session-actions">
+                                <span class="session-status status-{{ $session->status === 'Completed' ? 'completed' : 'ongoing' }}">
+                                    {{ $session->status }}
+                                </span>
+                                <a href="{{ route('physical-count.show', $session->id) }}" class="view-link">
+                                    View <i class="fa-solid fa-arrow-right"></i>
+                                </a>
+                            </div>
                         </div>
-                        <div class="session-actions">
-                            <span class="session-status status-{{ $session->status === 'Completed' ? 'completed' : 'ongoing' }}">
-                                {{ $session->status }}
-                            </span>
-                            <a href="{{ route('physical-count.show', $session->id) }}" class="view-link">
-                                View <i class="fa-solid fa-arrow-right"></i>
-                            </a>
-                        </div>
-                    </div>
                 @endforeach
 
                 @if($sessions->hasPages())
@@ -140,34 +178,20 @@
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
 document.getElementById('startCountBtn')?.addEventListener('click', function() {
-    @if($ongoing)
-        Swal.fire({
-            icon: 'warning',
-            title: 'Session Already Active',
-            text: 'You have an ongoing physical count session. Please complete it before starting a new one.',
-            confirmButtonColor: '#0038A8',
-            confirmButtonText: 'Go to Session'
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                window.location.href = '{{ route("physical-count.show", $ongoing->id) }}';
-            }
-        });
-    @else
-        Swal.fire({
-            icon: 'question',
-            title: 'Start Physical Count?',
-            text: 'This will begin a new inventory count session. Make sure all supply team members are ready.',
-            showCancelButton: true,
-            confirmButtonColor: '#0038A8',
-            cancelButtonColor: '#64748b',
-            confirmButtonText: '<i class="fa-solid fa-play"></i> Start Count',
-            cancelButtonText: 'Cancel'
-        }).then(function(result) {
-            if (result.isConfirmed) {
-                document.getElementById('startCountForm').submit();
-            }
-        });
-    @endif
+    Swal.fire({
+        icon: 'question',
+        title: 'Start Physical Count?',
+        text: 'This will begin a new inventory count session. Make sure all supply team members are ready.',
+        showCancelButton: true,
+        confirmButtonColor: '#0038A8',
+        cancelButtonColor: '#64748b',
+        confirmButtonText: '<i class="fa-solid fa-play"></i> Start Count',
+        cancelButtonText: 'Cancel'
+    }).then(function(result) {
+        if (result.isConfirmed) {
+            document.getElementById('startCountForm').submit();
+        }
+    });
 });
 </script>
 @endsection

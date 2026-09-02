@@ -186,12 +186,6 @@
                 <p class="p-subtitle">Monitoring real-time administrative actions and system events.</p>
             </div>
             <div class="header-action-group">
-                <form id="archiveForm" action="{{ route('super_admin.audit_logs.archive') }}" method="POST">
-                    @csrf
-                    <button type="submit" class="btn-hover-archive btn-archive">
-                        <i class="fa-solid fa-file-export"></i> ARCHIVE OLD LOGS
-                    </button>
-                </form>
                 <div class="sync-badge">
                     <i class="fa-solid fa-circle-nodes"></i> Department Synchronization: ACTIVE
                 </div>
@@ -213,6 +207,13 @@
                     <option value="Requests">Service Requests</option>
                     <option value="User Management">Personnel Accounts</option>
                 </select>
+
+                <form id="archiveForm" action="{{ route('super_admin.audit_logs.archive') }}" method="POST">
+                    @csrf
+                    <button type="submit" class="btn-hover-archive btn-archive">
+                        <i class="fa-solid fa-file-export"></i> ARCHIVE OLD LOGS
+                    </button>
+                </form>
             </div>
 
             <div class="table-wrap">

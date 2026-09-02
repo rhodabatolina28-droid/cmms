@@ -398,9 +398,6 @@
                 </h3>
                 <p class="p-subtitle">Manage system access, roles, and office assignments for all personnel.</p>
             </div>
-            <button id="addUserBtn" class="btn-gov-primary">
-                <i class="fa-solid fa-user-plus"></i> Create System Account
-            </button>
         </div>
 
         <div class="content-padding">
@@ -465,6 +462,10 @@
                     <option value="active">Active Only</option>
                     <option value="inactive">Inactive Only</option>
                 </select>
+
+                <button id="addUserBtn" class="btn-gov-primary">
+                    <i class="fa-solid fa-user-plus"></i> Create System Account
+                </button>
             </div>
 
             <div class="table-wrap">
