@@ -504,22 +504,23 @@
             .gov-table-premium th,
             .gov-table-premium td { padding: 10px 10px !important; font-size: 12px !important; }
             .gov-table-premium tr:active td { background: #f1f5f9 !important; }
-            /* Pagination — visible, wrapped, 44px touch targets */
+            /* Pagination — compact single-row bar */
             #inventoryPagination { width: 100%; }
             #inventoryPagination > div {
                 display: flex !important; flex-wrap: wrap !important;
-                gap: 8px !important; justify-content: center !important; align-items: center !important;
+                gap: 6px 8px !important; justify-content: center !important; align-items: center !important;
             }
             #inventoryPagination > div > span {
-                width: 100% !important; text-align: center !important; flex: 0 0 100% !important;
+                width: auto !important; flex: 0 0 auto !important;
+                font-size: 11px !important; color: #64748b !important;
             }
             #inventoryPagination > div > div {
-                flex-wrap: wrap !important; gap: 6px !important; justify-content: center !important;
+                flex-wrap: wrap !important; gap: 4px !important; justify-content: center !important;
             }
             #inventoryPagination button, #inventoryPagination span {
-                min-width: 44px !important; min-height: 44px !important;
-                padding: 10px 12px !important; border-radius: 8px !important;
-                font-size: 13px !important;
+                min-width: 38px !important; min-height: 38px !important;
+                padding: 8px 10px !important; border-radius: 8px !important;
+                font-size: 12px !important;
             }
             .modal-card { width: 95vw !important; max-width: 95vw !important; }
             .modal-body { padding: 14px !important; }
