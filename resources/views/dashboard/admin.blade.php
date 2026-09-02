@@ -242,6 +242,15 @@
             .assign-link { font-size: 13px !important; min-height: 44px !important; display: inline-flex !important; align-items: center !important; }
             input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
             .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 48px !important; font-size: 14px !important; }
+
+            /* ── Hero stack ── */
+            .welcome-hero .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+            .hero-name { font-size: 24px !important; }
+            .hero-stats-box { width: 100% !important; text-align: left !important; padding: 12px 16px !important; }
+
+            /* ── Spacing polish ── */
+            .premium-table-box { padding: 14px !important; }
+            .queue-panel .btn-action-premium { padding: 10px 12px !important; }
         }
     </style>
 @endsection
