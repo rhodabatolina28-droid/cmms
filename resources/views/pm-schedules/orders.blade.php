@@ -37,18 +37,18 @@
     .paginator { margin-top:16px; }
     .count-badge { background:#0038A8; color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; margin-left:8px; }
     .overdue-legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 10px; }
-    /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+    /* Mobile swipe-table hint - hidden on desktop, revealed at max-width 767px */
     .mobile-table-hint { display:none; }
 
     @media (max-width: 767px) {
         .card-header-accent { padding: 16px 14px !important; }
         .card-body-content { padding: 14px 12px !important; }
-        /* Filter buttons — 2x2 grid, 44px touch targets */
+        /* Filter buttons -- 2x2 grid, 44px touch targets */
         .filter-bar { display:grid !important; grid-template-columns:repeat(2, 1fr) !important; gap:8px !important; }
         .filter-btn { min-height:44px !important; font-size:12px !important; text-align:center !important; }
-        /* Overdue alert — compact */
+        /* Overdue alert -- compact */
         #overdueAlert { padding:10px 12px !important; }
-        /* Swipe hint — mobile only */
+        /* Swipe hint -- mobile only */
         .mobile-table-hint {
             display:flex !important;
             align-items:center;
@@ -64,12 +64,12 @@
             border-bottom:none;
             border-radius:10px 10px 0 0;
         }
-        /* Table — natural widths, scroll instead of squishing, no page shift */
+        /* Table -- natural widths, scroll instead of squishing, no page shift */
         .table-wrap { overscroll-behavior-x:contain !important; scroll-snap-type:none !important; -webkit-overflow-scrolling:touch !important; }
         .card-body-content { overflow-x:clip !important; }
         .table-orders { min-width:880px !important; width:880px !important; table-layout:auto !important; }
         .table-orders th, .table-orders td { white-space:nowrap !important; }
-        /* Action buttons — 44px touch targets */
+        /* Action buttons -- 44px touch targets */
         .action-btn { min-height:44px !important; padding:10px 16px !important; font-size:12px !important; justify-content:center !important; }
     }
 </style>
@@ -207,9 +207,9 @@ function renderOrdersTable(orders) {
         const createdStr = `${dateStr} | ${timeStr}`;
 
         const completed = order.completed_at ? new Date(order.completed_at) : null;
-        const completedDateStr = completed ? completed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '—';
+        const completedDateStr = completed ? completed.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : '--';
         const completedTimeStr = completed ? completed.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }) : '';
-        const completedStr = completed ? `${completedDateStr} | ${completedTimeStr}` : '—';
+        const completedStr = completed ? `${completedDateStr} | ${completedTimeStr}` : '--';
 
         let pillClass = 'pill-default';
         let pillLabel = order.status;
@@ -217,7 +217,7 @@ function renderOrdersTable(orders) {
         else if (order.status === 'Ongoing') { pillClass = 'pill-ongoing'; pillLabel = 'Ongoing'; }
         else if (order.status === 'Completed') { pillClass = 'pill-completed'; pillLabel = 'Completed'; }
 
-        const assignedName = order.assigned_to ? order.assigned_to.full_name : '—';
+        const assignedName = order.assigned_to ? order.assigned_to.full_name : '--';
         const overdue = isOverdue(order);
         if (overdue) hasOverdue = true;
         
@@ -226,8 +226,8 @@ function renderOrdersTable(orders) {
 
         return `<tr class="${rowClass}">
             <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.request_number}</a></td>
-            <td class="td">${order.requestor_name || '—'}</td>
-            <td class="td" style="color:#475569;font-size:12px;">${order.office || '—'}</td>
+            <td class="td">${order.requestor_name || '--'}</td>
+            <td class="td" style="color:#475569;font-size:12px;">${order.office || '--'}</td>
             <td class="td">${assignedName}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${createdStr}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${completedStr}</td>
