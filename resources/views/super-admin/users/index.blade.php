@@ -316,7 +316,8 @@
             .search-input { padding-left: 38px !important; }
             .search-icon { font-size: 14px !important; left: 14px !important; }
             .w-180, .w-220, .w-120 { width: 100% !important; }
-            .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; max-width: 100% !important; border-radius: 0 0 10px 10px !important; }
+            .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; max-width: 100% !important; border-radius: 0 0 10px 10px !important; overscroll-behavior-x: contain !important; scroll-snap-type: none !important; }
+            .content-padding { overflow-x: clip !important; }
             .gov-table-premium th, .gov-table-premium td { padding: 10px 8px !important; font-size: 12px !important; }
             .gov-table-premium th { font-size: 10px !important; letter-spacing: 0.3px !important; }
             .gov-table-premium tr:active { background: #f1f5f9 !important; }
