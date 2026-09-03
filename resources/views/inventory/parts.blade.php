@@ -199,6 +199,9 @@
         text-align: center;
     }
 
+.mobile-table-hint { display: none; }
+
+    @media (max-width: 768px) {
     @media (max-width: 768px) {
         .parts-container { padding: 12px 8px !important; }
         .parts-body { padding: 12px 10px !important; }
@@ -264,6 +267,28 @@
         }
 
         /* Table: gaya ng inventory — regular horizontal scroll, kumpleto lahat ng columns, walang nakatago */
+        .mobile-table-hint {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            border: 1px solid #dbeafe;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
+        .table-wrap-parts {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 0 0 10px 10px !important;
+        }
         .parts-table colgroup {
             display: none !important;
         }
@@ -634,7 +659,8 @@
             </div>
         </div>
 
-        <div style="overflow-x:auto;">
+        <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
+        <div style="overflow-x:auto;" class="table-wrap-parts">
                 <table class="parts-table">
                 <colgroup>
                     <col style="width:22%">

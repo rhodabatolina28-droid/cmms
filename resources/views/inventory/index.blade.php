@@ -504,6 +504,56 @@
             .gov-table-premium th,
             .gov-table-premium td { padding: 10px 10px !important; font-size: 12px !important; }
             .gov-table-premium tr:active td { background: #f1f5f9 !important; }
+
+            /* ── Mobile horizontal scroll table (Supply Workspace pattern) ── */
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            .table-wrap-mobile {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 0 10px 10px !important;
+            }
+            .gov-table-mobile {
+                min-width: 760px !important;
+                width: 760px !important;
+                table-layout: auto !important;
+            }
+            .gov-table-mobile th,
+            .gov-table-mobile td {
+                white-space: nowrap !important;
+                padding: 12px 12px !important;
+                font-size: 13px !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+            }
+            .gov-table-mobile th { font-size: 11px !important; padding: 10px 12px !important; }
+            /* Actions column — dropdown button stays inline round */
+            .gov-table-mobile th:last-child,
+            .gov-table-mobile td:last-child {
+                min-width: 60px !important;
+                text-align: center !important;
+            }
+            .gov-table-mobile .actions-dropdown { justify-content: center !important; }
+            .gov-table-mobile .btn-dropdown-toggle {
+                width: 42px !important; height: 42px !important;
+                min-width: 42px !important; min-height: 42px !important;
+                flex-shrink: 0 !important;
+            }
             /* Pagination — same look as desktop, wraps instead of clipping on small screens */
             #inventoryPagination > div { flex-wrap: wrap !important; gap: 8px !important; }
             #inventoryPagination > div > div { flex-wrap: wrap !important; }
@@ -542,6 +592,7 @@
             .transfer-asset-name { font-size: 14px !important; }
         }
         .transfer-asset-name { font-weight: 800; font-size: 14px; color: #1e293b; }
+.mobile-table-hint { display: none; }
         .transfer-custodian { margin-top: 6px; font-size: 12px; color: #64748b; }
         .warning-box { background: #fffbeb; border: 1px solid #fcd34d; border-radius: 6px; padding: 10px 14px; font-size: 12px; color: #92400e; }
         .btn-cancel-modal { padding: 10px 20px; }
@@ -664,8 +715,9 @@
                 @endif
             </div>
 
-            <div class="overflow-x-auto">
-                <table class="gov-table-premium">
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
+            <div class="overflow-x-auto table-wrap-mobile">
+                <table class="gov-table-premium gov-table-mobile">
                     <thead>
                         <tr>
                             <th>PAR No</th>
