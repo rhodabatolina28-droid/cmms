@@ -181,6 +181,8 @@
         .sa-filter-select-sm { width: 120px; }
         .sa-my-assigned-btn { padding: 8px 14px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; font-weight: 700; cursor: pointer; background: white; color: #475569; display: inline-flex; align-items: center; gap: 6px; transition: all 0.2s; white-space: nowrap; }
         .sa-table-wrap { overflow-x: auto; }
+        /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+        .mobile-table-hint { display: none; }
         .gov-table-premium tbody { transition: opacity 0.15s ease; }
         .gov-table-premium tbody.fading { opacity: 1; }
         .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
@@ -213,6 +215,7 @@
         .sa-stat-card-accent { border-right: 4px solid #0038A8; }
         @media (max-width: 767px) {
             .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+            .stats-ribbon .stat-item-premium:first-child { grid-column: 1 / -1 !important; }
             .stat-item-premium { padding: 10px 12px !important; }
             .stat-icon { width: 28px !important; height: 28px !important; font-size: 13px !important; }
             .stat-info p { font-size: 9px !important; }
@@ -226,8 +229,35 @@
             .sa-search-icon { font-size: 14px !important; left: 14px !important; }
             .sa-filter-select-wide, .sa-filter-select-med, .sa-filter-select-sm { width: 100% !important; }
             .sa-my-assigned-btn { width: 100% !important; justify-content: center !important; min-height: 44px !important; }
+            .sa-table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; max-width: 100% !important; overscroll-behavior-x: contain !important; scroll-snap-type: none !important; }
+            .card-body-content { overflow-x: clip !important; }
             .gov-table-premium th, .gov-table-premium td { padding: 8px 10px !important; font-size: 11px !important; }
+            .gov-table-premium th { font-size: 10px !important; letter-spacing: 0.3px !important; }
             .btn-action-modern { min-height: 44px !important; min-width: 44px !important; }
+            /* Mobile swipe hint — shown only on mobile */
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            /* Table keeps natural column widths — scroll instead of squishing */
+            .sa-table-wrap .gov-table-premium {
+                min-width: 1080px !important;
+                width: 1080px !important;
+                table-layout: auto !important;
+            }
+            .sa-table-wrap .gov-table-premium th,
+            .sa-table-wrap .gov-table-premium td { white-space: nowrap !important; }
             .sa-empty { padding: 30px !important; }
             .sa-pagination { margin-top: 12px !important; }
         }
@@ -314,6 +344,7 @@
             </div>
 
             {{-- TABLE --}}
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
             <div class="sa-table-wrap">
                 <table class="gov-table-premium">
                     <thead>
