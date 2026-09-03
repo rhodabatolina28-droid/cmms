@@ -218,6 +218,38 @@
         .th-status { width: 100px; }
         .th-actions { width: 120px; }
         .pagination-wrap { margin-top: 20px; }
+        /* --- Custom pagination (kapareho ng inventory/physical-count pattern) --- */
+        .pagination-wrap nav {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            align-items: center;
+        }
+        .pagination-wrap nav a,
+        .pagination-wrap nav span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 40px;
+            min-width: 40px;
+            padding: 8px 14px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            background: white;
+            font-size: 13px;
+            font-weight: 700;
+            color: #334155;
+            text-decoration: none;
+            transition: all 0.15s;
+        }
+        .pagination-wrap nav a:hover { background: #f1f5f9; border-color: #cbd5e1; }
+        .pagination-wrap nav span.current { background: #0038A8; border-color: #0038A8; color: white; }
+        .pagination-wrap nav span[aria-disabled="true"],
+        .pagination-wrap nav .disabled span { opacity: 0.45; cursor: not-allowed; }
+        .pagination-wrap nav svg { width: 14px; height: 14px; }
+        /* --- Supply Workspace scroll pattern: base hide hint --- */
+        .mobile-table-hint { display: none; }
         .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
         .close-icon-btn { background: none; border: none; cursor: pointer; color: #94a3b8; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
@@ -318,6 +350,42 @@
             /* â”€â”€ Modal overlay scroll fix â”€â”€ */
             .modal-overlay { align-items: flex-start !important; padding-top: 20px !important; overflow-y: auto !important; }
             .modal-body { max-height: 70vh !important; overflow-y: auto !important; }
+            /* --- Supply Workspace scroll pattern --- */
+            .card-body-content { padding: 14px 12px !important; }
+            .card-header-accent { padding: 14px 16px !important; }
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            .table-wrap {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 0 10px 10px !important;
+            }
+            #personnelTable {
+                min-width: 780px !important;
+                width: 780px !important;
+                table-layout: auto !important;
+            }
+            #personnelTable th,
+            #personnelTable td { white-space: nowrap !important; }
+            /* --- Pagination mobile: 44px touch targets, centered wrap --- */
+            .pagination-wrap nav a,
+            .pagination-wrap nav span { min-height: 44px !important; min-width: 44px !important; }
+
         }
     </style>
 @endsection
@@ -376,6 +444,7 @@
                 @endif
             </div>
 
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap">
                 <table class="gov-table-premium" id="personnelTable">
                     <thead>
