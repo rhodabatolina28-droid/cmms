@@ -56,8 +56,8 @@
 4. ✅ Asset Detail
 5. ✅ Purchase Request Show
 6. ✅ Purchase Request Create / Edit
-7. **Requisitions / Supply Workspace** (`requisitions/supply-index.blade.php`)
-8. **Department Requests** (`admin/requests/index.blade.php`)
+7. ✅ Requisitions / Supply Workspace
+8. ✅ Department Requests
 9. **Batch QR Sticker Print** (`qr-batch.blade.php`)
 
 ## Notes / Gotchas (session-learned)
@@ -66,3 +66,7 @@
 - **Font plugin:** ayaw mag-build kapag walang `fontaine` — i-install ito kung may nag-rebuild (default ay OK kapag naroon na).
 - **`git checkout -- file`** ang ginagamit para i-revert ang hindi nagustuhang design (parts card experiment).
 - **Checklist pagkatapos ng bawat mobile change:** `php artisan view:clear` → `view:cache` (walang ERROR) → zero-width char scan → related tests → commit.
+## Session 2 Additions
+- **Dept Requests table** (12ed0d7): Supply Workspace scroll pattern � hint banner + .ad-table-wrap (touch scroll) + min-width 780px. Desktop: walang pagbabago.
+- **Parts fix** (12ed0d7): inalis ang dobleng @media (max-width: 768px) (nested) � base .mobile-table-hint { display:none } nasa labas ng MQ (pareho sa inventory).
+- **Pattern rule:** ang base hide rule (display:none para sa hint) ay dapat nasa **labas** ng media query; ang display:flex !important na re-show ay nasa **loob** ng MQ.
