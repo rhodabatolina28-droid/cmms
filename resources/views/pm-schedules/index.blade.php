@@ -71,6 +71,8 @@
     .empty-icon { font-size:48px; margin-bottom:16px; opacity:0.5; }
     .empty-title-sched { color:#64748b; }
     .btn-create-sched { display:inline-block; margin-top:16px; padding:10px 24px; background:#0038A8; color:white; border-radius:8px; text-decoration:none; font-weight:700; }
+    /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+    .mobile-table-hint { display:none; }
     .sched-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
     .sched-card-head { display:flex; justify-content:space-between; align-items:start; margin-bottom:12px; }
     .sched-card-title { margin:0; font-size:15px; color:#1e293b; font-weight:700; }
@@ -93,9 +95,6 @@
     .sched-progress-users { font-size:9px; color:#64748b; margin-top:3px; }
     .sched-dates { display:grid; grid-template-columns:1fr 1fr; gap:8px; font-size:11px; color:#475569; margin-top:10px; padding-top:10px; border-top:1px solid #f1f5f9; }
     .sched-paginator { margin-top:20px; }
-    .delete-all-wrap { margin-top:20px; padding-top:14px; border-top:1px solid #e2e8f0; display:flex; justify-content:flex-end; }
-    .btn-delete-all { display:inline-flex; align-items:center; gap:6px; padding:7px 14px; background:white; color:#dc2626; border:2px solid #dc2626; border-radius:8px; font-size:11px; font-weight:700; cursor:pointer; transition:all 0.2s; }
-    .btn-delete-all:hover { background:#dc2626; color:white; }
     .empty-state-wo { text-align:center; padding:30px 20px; color:#94a3b8; border:1px dashed #e2e8f0; border-radius:10px; }
     .page-head-flex { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; }
     .page-title-text { font-size:20px; font-weight:800; color:#1e293b; margin:0; }
@@ -126,14 +125,33 @@
         .sched-grid { grid-template-columns: 1fr !important; }
         .sched-dates { grid-template-columns: 1fr !important; gap: 4px !important; }
         .btn-new-schedule { width: 100% !important; justify-content: center !important; }
-        .delete-all-wrap { justify-content: stretch !important; }
-        .btn-delete-all { width: 100% !important; justify-content: center !important; }
         .div-footer-custom { flex-direction: column !important; gap: 6px !important; align-items: stretch !important; }
         .btn-refresh { width: 100% !important; justify-content: center !important; }
         .empty-state-wo { padding: 20px 16px !important; }
         .empty-schedules { padding: 40px 16px !important; }
         .empty-icon { font-size: 36px !important; }
         .btn-create-sched { width: 100% !important; text-align: center !important; }
+        /* Work Orders table — swipe hint + natural widths + no page shift */
+        .mobile-table-hint {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            border: 1px solid #dbeafe;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
+        .table-wrap-wo { overscroll-behavior-x: contain !important; scroll-snap-type: none !important; -webkit-overflow-scrolling: touch !important; }
+        .premium-card { overflow-x: clip !important; }
+        .table-wo { min-width: 860px !important; width: 860px !important; table-layout: auto !important; }
+        .table-wo th, .table-wo td { white-space: nowrap !important; }
+        .btn-wo-action { min-height: 44px !important; padding: 10px 14px !important; font-size: 12px !important; }
     }
     @media (max-width: 480px) {
         .stats-grid-custom { grid-template-columns: 1fr !important; }
@@ -243,7 +261,6 @@
                     </button>
                 </div>
             </div>
-
 
         </div>
     </div>
@@ -392,10 +409,6 @@
         @endif
     </div>
 
-    {{-- Delete All Button --}}
-    <div class="delete-all-wrap">
-        <button type="button" id="deleteAllBtn" class="btn-delete-all"><i class="fa-solid fa-trash"></i> Delete All Schedules</button>
-    </div>
 </div>
 
 @endsection
@@ -585,28 +598,6 @@ function deleteSchedule(id, name) {
     });
 }
 
-document.getElementById('deleteAllBtn')?.addEventListener('click', function () {
-    Swal.fire({
-        title: 'Delete All Schedules?',
-        text: 'This will permanently delete all PM schedules.',
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonColor: '#dc2626',
-        cancelButtonColor: '#64748b',
-        confirmButtonText: 'Yes, Delete All',
-        showLoaderOnConfirm: true,
-        preConfirm: () => {
-            return fetch('{{ route("pm-schedules.destroy-all") }}', {
-                method: 'DELETE',
-                headers: { 'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.content }
-            }).then(res => res.json()).catch(err => Swal.showValidationMessage('Failed'));
-        }
-    }).then(result => {
-        if (result.isConfirmed && result.value?.success) {
-            Swal.fire('Deleted', result.value.message, 'success').then(() => location.reload());
-        }
-    });
-});
 document.addEventListener('click', function(e) {
     var btn = e.target.closest('[data-action="toggle-schedule"]');
     if (btn) { toggleScheduleStatus(parseInt(btn.dataset.id)); }
