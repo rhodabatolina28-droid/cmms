@@ -846,6 +846,24 @@
     /* Empty state — centered, compact */
     .cal-empty { padding:28px 14px !important; }
     .cal-empty p { font-size:12px !important; margin:8px 0 0 !important; }
+    /* Right panel — prevent overflow from long text/table */
+    .cal-right-panel { min-width:0 !important; max-width:100% !important; }
+    .cal-detail-card, .cal-summary-card, .cal-upcoming-card, .cal-empty {
+        min-width:0 !important;
+        max-width:100% !important;
+        overflow:hidden !important;
+        overflow-wrap:break-word !important;
+    }
+    .cal-detail-table { table-layout:fixed !important; width:100% !important; }
+    .cal-detail-table td { overflow-wrap:break-word !important; word-break:break-word !important; }
+    .cal-detail-title, .cal-summary-title {
+        overflow:hidden !important;
+        text-overflow:ellipsis !important;
+        white-space:nowrap !important;
+        max-width:100% !important;
+    }
+    .cal-detail-badges { overflow-wrap:break-word !important; }
+    .cal-badge { max-width:100% !important; overflow:hidden !important; text-overflow:ellipsis !important; }
 }
 @media (max-width: 480px) {
     .cal-day { height:100px !important; }
