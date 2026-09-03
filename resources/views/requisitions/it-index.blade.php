@@ -57,12 +57,19 @@
         .tab-myprs-scroll .cmms-req-table td { white-space:nowrap !important; }
         /* History table — contain overscroll (min-width 860px already inline) */
         #tab-history .table-wrap { overscroll-behavior-x:contain !important; }
-        /* Awaiting Parts checkbox — proper touch target + readable wrap */
+        /* History table — natural widths like the other fixed tables */
+        .tab-history-scroll .cmms-official-table {
+            table-layout:auto !important;
+            min-width:920px !important;
+            width:920px !important;
+        }
+        .tab-history-scroll .cmms-official-table th,
+        .tab-history-scroll .cmms-official-table td { white-space:nowrap !important; }
+        /* Awaiting Parts checkbox — override the global 100%-width/44px input rule */
         .cmms-pr-option {
             display:flex !important;
             align-items:flex-start !important;
             gap:10px !important;
-            min-height:44px !important;
             padding:10px 12px !important;
             background:#f8fafc !important;
             border:1px solid #e2e8f0 !important;
@@ -70,14 +77,37 @@
             font-size:12.5px !important;
             line-height:1.4 !important;
         }
-        .cmms-pr-option input[type="checkbox"] {
+        .cmms-pr-option input[type="checkbox"],
+        #ticketReqAwaitingParts {
             width:18px !important;
             height:18px !important;
-            margin:2px 0 0 !important;
+            min-height:18px !important;
+            min-width:18px !important;
+            max-width:18px !important;
+            margin:0 !important;
+            padding:0 !important;
             flex-shrink:0 !important;
+            font-size:16px !important;
             accent-color:#0038A8 !important;
         }
-        .cmms-pr-option-hint { font-size:11px !important; line-height:1.35 !important; }
+        .cmms-pr-option-hint { font-size:11px !important; line-height:1.35 !important; padding:0 !important; }
+        /* History search + status chips — compact, wrapping */
+        .cmms-history-toolbar .search-input { min-height:44px !important; font-size:14px !important; padding-left:38px !important; }
+        .chips { display:flex !important; flex-wrap:wrap !important; width:100% !important; gap:6px !important; background:transparent !important; border:none !important; border-radius:8px !important; overflow:visible !important; }
+        .chips a {
+            flex:1 1 auto !important;
+            text-align:center !important;
+            display:inline-block !important;
+            padding:11px 10px !important;
+            font-size:10.5px !important;
+            min-height:44px !important;
+            line-height:1.2 !important;
+            border:1px solid #e2e8f0 !important;
+            border-radius:8px !important;
+            background:#fff !important;
+        }
+        .chips a + a { border-left:1px solid #e2e8f0 !important; }
+        .chips a.active { background:#0038A8 !important; color:#fff !important; border-color:#0038A8 !important; }
     }
     .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
     .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
@@ -316,7 +346,7 @@
                 </div>
             @else
                 <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
-                <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
+                <div class="table-wrap tab-history-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                     <table class="cmms-official-table" style="table-layout:fixed;min-width:860px;">
                         <colgroup>
                             <col style="width:12%">
