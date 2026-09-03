@@ -46,6 +46,17 @@
     @media (max-width:767px) {
         .cmms-history-toolbar { flex-direction:column; align-items:stretch; }
         .chips a { flex:1; text-align:center; display:inline-block; }
+        /* Tabs: horizontal scroll instead of squishing 3 labels */
+        .cmms-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; }
+        .cmms-tab { flex:0 0 auto; white-space:nowrap; }
+        /* Tables: contain overscroll so the page doesn't shift on swipe */
+        .table-wrap { overscroll-behavior-x:contain !important; }
+        /* My PRs table — natural widths, scroll instead of squishing */
+        .tab-myprs-scroll .cmms-req-table { min-width:560px !important; width:560px !important; table-layout:auto !important; }
+        .tab-myprs-scroll .cmms-req-table th,
+        .tab-myprs-scroll .cmms-req-table td { white-space:nowrap !important; }
+        /* History table — contain overscroll (min-width 860px already inline) */
+        #tab-history .table-wrap { overscroll-behavior-x:contain !important; }
     }
     .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
     .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
@@ -57,6 +68,8 @@
     .req-card-hover { transition: all 0.2s ease; }
     .req-card-hover:hover { background: #f8fafc; }
     /* Status badge glow — already in cmms-official.css */
+    /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+    .mobile-table-hint { display: none; }
     /* MOBILE RESPONSIVE */
     @media (max-width: 767px) {
         .cmms-official-hero h1,
@@ -235,7 +248,8 @@
             <div class="cmms-panel">
                 <div class="cmms-panel-body flush">
                     @if(isset($myPrs) && $myPrs->isNotEmpty())
-                        <div class="table-wrap">
+                        <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
+                        <div class="table-wrap tab-myprs-scroll">
                             <table class="cmms-official-table cmms-req-table">
                                 <thead>
                                     <tr>
@@ -280,6 +294,7 @@
                     </div>
                 </div>
             @else
+                <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
                 <div class="table-wrap" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">
                     <table class="cmms-official-table" style="table-layout:fixed;min-width:860px;">
                         <colgroup>
