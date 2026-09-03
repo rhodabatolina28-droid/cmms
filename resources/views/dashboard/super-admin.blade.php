@@ -338,8 +338,37 @@
             .link-master { font-size: 11px !important; }
             .table-header th { padding: 8px !important; font-size: 10px !important; }
             .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark { padding: 10px 8px !important; font-size: 12px !important; }
+
+            /* ═══ Recent Office Requests — DELIBERATELY NOT compressed ═══
+               Keep natural column widths & breathing room so it reads well;
+               the .scroll-x wrapper handles overflow instead of squishing. */
+            .premium-table-box .table-full {
+                min-width: 700px !important;
+            }
+            .premium-table-box .table-header th {
+                padding: 12px 10px !important;
+                font-size: 12px !important;
+                white-space: nowrap;
+            }
+            .premium-table-box .table-cell,
+            .premium-table-box .table-cell-bold,
+            .premium-table-box .table-cell-dept,
+            .premium-table-box .table-cell-gray,
+            .premium-table-box .table-cell-dark {
+                padding: 14px 10px !important;
+                font-size: 13px !important;
+                white-space: nowrap;
+            }
             .ribbon-label { font-size: 10px !important; margin-bottom: 12px !important; }
             .analytics-box { border-radius: 12px !important; padding: 16px !important; }
+
+            /* ═══ Charts — decompressed on mobile ═══
+               Taller canvas so office labels + doughnut legend breathe;
+               Chart.js is responsive so it reflows to the new height. */
+            .analytics-box .chart-box-bar,
+            .analytics-box .chart-box-doughnut {
+                height: 360px !important;
+            }
         }
         .tr-hover-row { transition: all 0.2s; position: relative; }
         .tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
@@ -433,7 +462,7 @@
                         <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Top offices by request volume.</p>
-                    <div style="height: 280px; width: 100%; position: relative;">
+                    <div class="chart-box-bar" style="height: 280px; width: 100%; position: relative;">
                         <canvas id="officeChart"></canvas>
                     </div>
                 </div>
@@ -444,7 +473,7 @@
                         Asset Status Overview
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
-                    <div style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
+                    <div class="chart-box-doughnut" style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
