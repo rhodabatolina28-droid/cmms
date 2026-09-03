@@ -858,7 +858,8 @@
     /* Detail card — readable on phone */
     .cal-detail-card.show { margin-bottom:16px !important; }
     /* Header stays HORIZONTAL: title left, X right (defeat global full-width button rules) */
-    .cal-detail-header { padding:12px 14px !important; flex-direction:row !important; flex-wrap:nowrap !important; align-items:flex-start !important; }
+    /* Rounded top corners match other cards (card has overflow:visible on mobile, so clip manually) */
+    .cal-detail-header { padding:12px 14px !important; flex-direction:row !important; flex-wrap:nowrap !important; align-items:flex-start !important; border-radius:13px 13px 0 0 !important; }
     .cal-detail-title { flex:1 1 auto !important; min-width:0 !important; }
     /* High-specificity: must beat mobile-responsive _base.css
        button:not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny) = (0,3,1) */
