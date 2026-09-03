@@ -292,6 +292,7 @@
                 <p style="font-size:13px;color:#64748b;margin:0;">No PM Work Orders yet. Generated tickets appear here once the scheduler runs.</p>
             </div>
         @else
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap-wo">
                 <table class="table-wo">
                     <thead>
