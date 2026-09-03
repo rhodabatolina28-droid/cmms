@@ -285,6 +285,8 @@
         .action-group { display: flex; gap: 6px; justify-content: center; align-items: center; }
         .btn-disabled { color: #94a3b8; border-color: #e2e8f0; cursor: not-allowed; pointer-events: none; }
         .pagination-wrap { margin-top: 20px; }
+        /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+        .mobile-table-hint { display: none; }
         .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
         .close-btn { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
         .close-btn:hover { background: #f1f5f9; color: #475569; }
@@ -314,10 +316,39 @@
             .search-input { padding-left: 38px !important; }
             .search-icon { font-size: 14px !important; left: 14px !important; }
             .w-180, .w-220, .w-120 { width: 100% !important; }
-            .table-wrap { overflow-x: auto !important; }
+            .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; width: 100% !important; max-width: 100% !important; border-radius: 0 0 10px 10px !important; }
             .gov-table-premium th, .gov-table-premium td { padding: 10px 8px !important; font-size: 12px !important; }
             .gov-table-premium th { font-size: 10px !important; letter-spacing: 0.3px !important; }
             .gov-table-premium tr:active { background: #f1f5f9 !important; }
+
+            /* Stats — Total on top (full width), Active + Inactive below (2-col) */
+            .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
+            .stats-ribbon .stat-item-premium:first-child { grid-column: 1 / -1 !important; }
+
+            /* Mobile swipe-table hint — shown only on mobile */
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            /* Table keeps natural column widths — scroll instead of squishing */
+            .table-wrap .gov-table-premium {
+                min-width: 780px !important;
+                width: 780px !important;
+                table-layout: auto !important;
+            }
+            .table-wrap .gov-table-premium th,
+            .table-wrap .gov-table-premium td { white-space: nowrap !important; }
             .name-bold { font-size: 13px !important; }
             .email-mono { font-size: 11px !important; }
             .role-pill { font-size: 10px !important; padding: 3px 8px !important; }
@@ -468,6 +499,7 @@
                 </button>
             </div>
 
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap">
                 <table class="gov-table-premium">
                     <thead>
