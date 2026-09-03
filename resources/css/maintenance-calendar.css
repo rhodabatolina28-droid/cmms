@@ -781,6 +781,9 @@
 .cal-modal-submit:hover { background:#002f8e; }
 
 /* Responsive */
+/* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+.mobile-table-hint { display:none; }
+
 @media (max-width: 1024px) {
     .cal-layout { grid-template-columns:1fr; }
 }
@@ -792,18 +795,37 @@
     .cal-subnav-filters { justify-content:center; }
     .cal-card-header { flex-direction:column; align-items:stretch !important; gap:8px !important; }
     .cal-nav-group { justify-content:center; }
-    .cal-day { height:70px !important; padding:2px !important; }
+    .mobile-table-hint {
+        display:flex !important;
+        align-items:center;
+        justify-content:center;
+        gap:7px;
+        padding:9px 12px;
+        margin-bottom:8px;
+        background:#eff6ff;
+        color:#1e40af;
+        font-size:11.5px;
+        font-weight:700;
+        letter-spacing:0.03em;
+        border:1px solid #dbeafe;
+        border-radius:10px;
+    }
+    /* Calendar grid - desktop-like cells with visible PM/ICT chips, horizontal scroll */
+    .cal-grid { overflow-x:auto !important; -webkit-overflow-scrolling:touch !important; overscroll-behavior-x:contain !important; }
+    .cal-grid-header, .cal-grid-body { min-width:700px !important; }
+    .cal-day { height:100px !important; min-height:100px !important; max-height:none !important; padding:4px !important; }
+    .cal-day-content { max-height:none !important; padding:4px !important; }
     .cal-day-num { font-size:11px !important; width:20px !important; height:20px !important; }
-    .cal-chip { font-size:0.6rem !important; padding:1px 4px !important; }
-    .cal-legend { flex-direction:column; gap:8px; }
+    .cal-chip { font-size:0.6rem !important; padding:1px 4px !important; display:block !important; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+    .cal-more { font-size:0.6rem !important; }
+    /* Legend - compact 2-col grid */
+    .cal-legend { display:grid !important; grid-template-columns:1fr 1fr !important; gap:6px 10px !important; }
+    .cal-legend-item { font-size:10.5px !important; }
     .cal-detail-table td { font-size:12px !important; }
     .cal-modal-row { grid-template-columns:1fr; }
 }
 @media (max-width: 480px) {
-    .cal-day { height:60px !important; }
-    .cal-chip { display:none; }
-    .cal-day-num { font-size:12px; }
-    .cal-day-add { display:none; }
+    .cal-day { height:100px !important; }
     .cal-tasks-header { flex-direction:column; align-items:flex-start !important; }
     .cal-tasks-header-right { width:100%; justify-content:space-between; }
 }

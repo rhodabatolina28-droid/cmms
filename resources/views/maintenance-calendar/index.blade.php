@@ -67,6 +67,7 @@
 
         {{-- Card Body --}}
         <div class="card-body-content">
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe calendar horizontally to see the full week</div>
 
             {{-- Sub-nav Strip: Period Label + Counts + Filters --}}
             <div class="cal-subnav">
