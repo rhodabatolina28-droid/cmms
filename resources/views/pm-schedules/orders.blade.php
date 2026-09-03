@@ -37,6 +37,41 @@
     .paginator { margin-top:16px; }
     .count-badge { background:#0038A8; color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; margin-left:8px; }
     .overdue-legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 10px; }
+    /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
+    .mobile-table-hint { display:none; }
+
+    @media (max-width: 767px) {
+        .card-header-accent { padding: 16px 14px !important; }
+        .card-body-content { padding: 14px 12px !important; }
+        /* Filter buttons — 2x2 grid, 44px touch targets */
+        .filter-bar { display:grid !important; grid-template-columns:repeat(2, 1fr) !important; gap:8px !important; }
+        .filter-btn { min-height:44px !important; font-size:12px !important; text-align:center !important; }
+        /* Overdue alert — compact */
+        #overdueAlert { padding:10px 12px !important; }
+        /* Swipe hint — mobile only */
+        .mobile-table-hint {
+            display:flex !important;
+            align-items:center;
+            justify-content:center;
+            gap:7px;
+            padding:9px 12px;
+            background:#eff6ff;
+            color:#1e40af;
+            font-size:11.5px;
+            font-weight:700;
+            letter-spacing:0.03em;
+            border:1px solid #dbeafe;
+            border-bottom:none;
+            border-radius:10px 10px 0 0;
+        }
+        /* Table — natural widths, scroll instead of squishing, no page shift */
+        .table-wrap { overscroll-behavior-x:contain !important; scroll-snap-type:none !important; -webkit-overflow-scrolling:touch !important; }
+        .card-body-content { overflow-x:clip !important; }
+        .table-orders { min-width:880px !important; width:880px !important; table-layout:auto !important; }
+        .table-orders th, .table-orders td { white-space:nowrap !important; }
+        /* Action buttons — 44px touch targets */
+        .action-btn { min-height:44px !important; padding:10px 16px !important; font-size:12px !important; justify-content:center !important; }
+    }
 </style>
 @endsection
 
@@ -75,6 +110,7 @@
                 </div>
             </div>
 
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap">
                 <table class="table-orders">
                     <thead>
