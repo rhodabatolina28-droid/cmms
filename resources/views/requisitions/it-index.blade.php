@@ -46,9 +46,9 @@
     @media (max-width:767px) {
         .cmms-history-toolbar { flex-direction:column; align-items:stretch; }
         .chips a { flex:1; text-align:center; display:inline-block; }
-        /* Tabs: horizontal scroll instead of squishing 3 labels */
-        .cmms-tabs { overflow-x:auto; -webkit-overflow-scrolling:touch; }
-        .cmms-tab { flex:0 0 auto; white-space:nowrap; }
+        /* Tabs: all 3 fit in one row — equal width, compact */
+        .cmms-tabs { overflow:visible; }
+        .cmms-tab { flex:1 1 0 !important; text-align:center !important; padding:12px 4px !important; font-size:11.5px !important; min-height:44px !important; white-space:normal !important; line-height:1.2 !important; }
         /* Tables: contain overscroll so the page doesn't shift on swipe */
         .table-wrap { overscroll-behavior-x:contain !important; }
         /* My PRs table — natural widths, scroll instead of squishing */
@@ -57,6 +57,27 @@
         .tab-myprs-scroll .cmms-req-table td { white-space:nowrap !important; }
         /* History table — contain overscroll (min-width 860px already inline) */
         #tab-history .table-wrap { overscroll-behavior-x:contain !important; }
+        /* Awaiting Parts checkbox — proper touch target + readable wrap */
+        .cmms-pr-option {
+            display:flex !important;
+            align-items:flex-start !important;
+            gap:10px !important;
+            min-height:44px !important;
+            padding:10px 12px !important;
+            background:#f8fafc !important;
+            border:1px solid #e2e8f0 !important;
+            border-radius:8px !important;
+            font-size:12.5px !important;
+            line-height:1.4 !important;
+        }
+        .cmms-pr-option input[type="checkbox"] {
+            width:18px !important;
+            height:18px !important;
+            margin:2px 0 0 !important;
+            flex-shrink:0 !important;
+            accent-color:#0038A8 !important;
+        }
+        .cmms-pr-option-hint { font-size:11px !important; line-height:1.35 !important; }
     }
     .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
     .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
