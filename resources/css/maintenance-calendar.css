@@ -896,11 +896,40 @@
         overflow:visible !important;
         overflow-wrap:break-word !important;
     }
-    /* Table: keep 2-column layout, just ensure text wraps */
-    .cal-detail-table { table-layout:fixed !important; width:100% !important; }
-    .cal-detail-table td { overflow-wrap:break-word !important; word-break:break-word !important; padding:6px 0 !important; vertical-align:top !important; }
-    .cal-detail-table td:first-child { width:36% !important; }
-    .cal-detail-table td:last-child { width:64% !important; }
+    /* Table: STACK label/value vertically — values get full card width,
+       so nothing (Office names, dates, assignees) can ever overflow */
+    .cal-detail-table { table-layout:auto !important; width:100% !important; border-collapse:collapse !important; }
+    .cal-detail-table tr {
+        display:block !important;
+        margin:0 0 8px !important;
+        border-bottom:1px solid #f1f5f9 !important;
+        padding-bottom:8px !important;
+    }
+    .cal-detail-table tr:last-child { border-bottom:none !important; margin-bottom:0 !important; padding-bottom:0 !important; }
+    .cal-detail-table td {
+        display:block !important;
+        width:100% !important;
+        max-width:100% !important;
+        padding:1px 0 !important;
+        border-bottom:none !important;
+        overflow-wrap:anywhere !important;
+        word-break:break-word !important;
+        vertical-align:top !important;
+    }
+    .cal-detail-table td:first-child {
+        font-size:10px !important;
+        text-transform:uppercase !important;
+        letter-spacing:.04em !important;
+        color:#94a3b8 !important;
+        font-weight:700 !important;
+        margin-bottom:1px !important;
+    }
+    .cal-detail-table td:last-child {
+        font-size:13px !important;
+        color:#1e293b !important;
+        font-weight:600 !important;
+        line-height:1.4 !important;
+    }
     /* Title wraps — base styles handle this, just ensure no override from other rules */
     .cal-detail-title { font-size:13px !important; max-width:100% !important; }
     .cal-summary-title {
