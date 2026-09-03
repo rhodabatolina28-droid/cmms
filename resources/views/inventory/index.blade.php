@@ -482,7 +482,7 @@
             .swal2-checkbox { display: none !important; }
             .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
             .stat-item-premium { padding: 12px 14px !important; }
-            .stats-ribbon .stat-item-premium:last-child { grid-column: span 2 !important; }
+            .stats-ribbon .stat-item-premium:first-child { grid-column: 1 / -1 !important; }
             .stat-info p { font-size: 10px !important; }
             .stat-info h4 { font-size: 18px !important; }
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
