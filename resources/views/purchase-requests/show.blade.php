@@ -88,14 +88,227 @@
     .pr-attach-row:last-of-type { border-bottom:none; }
     .pr-attach-meta { color:#6b7280; font-size:11.5px; }
 
+    .prd-table-responsive { width:100%; }
+
+    @media (max-width: 768px) {
+        .prd-wrap { padding:12px 8px !important; margin-top:0 !important; }
+        .prd-toolbar {
+            flex-direction:column !important;
+            align-items:stretch !important;
+            gap:12px !important;
+            padding:12px 14px !important;
+        }
+        .prd-status-box {
+            width:100% !important;
+            box-sizing:border-box !important;
+            flex-direction:column !important;
+            align-items:flex-start !important;
+            gap:6px !important;
+            padding:10px 14px !important;
+            border-radius:8px !important;
+        }
+        .prd-actions {
+            width:100% !important;
+            margin-left:0 !important;
+            display:grid !important;
+            grid-template-columns:1fr 1fr !important;
+            gap:8px !important;
+        }
+        .prd-actions form {
+            display:contents !important;
+        }
+        .prd-action-btn {
+            width:100% !important;
+            min-height:44px !important;
+            justify-content:center !important;
+            text-align:center !important;
+            padding:10px 12px !important;
+            box-sizing:border-box !important;
+            font-size:13px !important;
+        }
+        .prd-print-tip {
+            text-align:center !important;
+        }
+        .prd-sheet {
+            padding:14px 10px !important;
+            border-radius:10px !important;
+            margin:0 !important;
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            box-sizing:border-box !important;
+            overflow:hidden !important;
+        }
+        .prd-table-responsive {
+            width:100% !important;
+            max-width:100% !important;
+            min-width:0 !important;
+            overflow-x:auto !important;
+            -webkit-overflow-scrolling:touch !important;
+            margin-bottom:12px !important;
+            box-sizing:border-box !important;
+            display:block !important;
+        }
+        .prd-table {
+            min-width:620px !important;
+        }
+        /* Header fields: Mobile Grid with PR No. and Date side-by-side */
+        .a60-hdr-wrap {
+            width:100% !important;
+            max-width:100% !important;
+            border:1.5px solid #374151 !important;
+            border-radius:8px !important;
+            overflow:hidden !important;
+            box-sizing:border-box !important;
+            margin-bottom:14px !important;
+            background:#fff !important;
+        }
+        table.a60-hdr {
+            display:block !important;
+            width:100% !important;
+            max-width:100% !important;
+            border:none !important;
+            border-radius:0 !important;
+            overflow:visible !important;
+            box-sizing:border-box !important;
+            margin-bottom:0 !important;
+            background:#fff !important;
+        }
+        table.a60-hdr colgroup {
+            display:none !important;
+        }
+        table.a60-hdr tbody {
+            display:block !important;
+            width:100% !important;
+            box-sizing:border-box !important;
+        }
+        table.a60-hdr tr {
+            display:flex !important;
+            flex-wrap:wrap !important;
+            width:100% !important;
+            box-sizing:border-box !important;
+        }
+        table.a60-hdr td,
+        table.a60-hdr td.a60-field {
+            display:block !important;
+            box-sizing:border-box !important;
+        }
+        table.a60-hdr td.a60-cell-entity,
+        table.a60-hdr td.a60-cell-fund,
+        table.a60-hdr td.a60-cell-office,
+        table.a60-hdr td.a60-cell-rcc {
+            display:block !important;
+            width:100% !important;
+            flex:0 0 100% !important;
+            max-width:100% !important;
+            border-top:0 !important;
+            border-right:0 !important;
+            border-left:0 !important;
+            border-bottom:1px solid #cbd5e1 !important;
+            padding:7px 10px !important;
+            box-sizing:border-box !important;
+            background:#fff !important;
+        }
+        table.a60-hdr td.a60-cell-pr {
+            display:block !important;
+            width:50% !important;
+            flex:0 0 50% !important;
+            max-width:50% !important;
+            border-top:0 !important;
+            border-left:0 !important;
+            border-right:1px solid #cbd5e1 !important;
+            border-bottom:1px solid #cbd5e1 !important;
+            padding:7px 10px !important;
+            box-sizing:border-box !important;
+            background:#fff !important;
+        }
+        table.a60-hdr td.a60-cell-date {
+            display:block !important;
+            width:50% !important;
+            flex:0 0 50% !important;
+            max-width:50% !important;
+            border-top:0 !important;
+            border-left:0 !important;
+            border-right:0 !important;
+            border-bottom:1px solid #cbd5e1 !important;
+            padding:7px 10px !important;
+            box-sizing:border-box !important;
+            background:#fff !important;
+        }
+        table.a60-hdr td.a60-cell-rcc {
+            border-bottom:0 !important;
+        }
+        .a60-field-val {
+            font-size:12.5px !important;
+            font-weight:700 !important;
+            white-space:normal !important;
+            word-break:break-word !important;
+            overflow:visible !important;
+            line-height:1.3 !important;
+        }
+        .a60-cell-pr .a60-field-val,
+        .a60-cell-date .a60-field-val {
+            font-size:12px !important;
+            white-space:nowrap !important;
+            overflow:hidden !important;
+            text-overflow:ellipsis !important;
+        }
+        .prd-signs {
+            display:block !important;
+            margin-top:28px !important;
+        }
+        .prd-signs tr {
+            display:flex !important;
+            flex-direction:column !important;
+            margin-bottom:16px !important;
+        }
+        .prd-signs td {
+            display:block !important;
+            width:100% !important;
+            padding:6px 0 !important;
+            text-align:left !important;
+        }
+        .prd-signs td.val {
+            text-align:left !important;
+            border-bottom:1px solid #111827 !important;
+        }
+        .prd-signs td.sig-space {
+            height:36px !important;
+        }
+        .rx-panel {
+            padding:14px 12px !important;
+        }
+        .rx-line-head {
+            flex-direction:column !important;
+            align-items:stretch !important;
+        }
+        .rx-unit-grid {
+            grid-template-columns:1fr !important;
+        }
+        .pr-attach-card {
+            padding:12px 14px !important;
+        }
+        .pr-attach-row {
+            flex-direction:column !important;
+            align-items:flex-start !important;
+        }
+    }
+
     @media print {
         @page { size:A4 portrait; margin:12mm; }
         body * { visibility:hidden; }
         .prd-sheet, .prd-sheet * { visibility:visible; }
         .prd-sheet { position:absolute; left:0; top:0; width:100%; border:none; border-radius:0; padding:0; max-width:none; }
         .no-print { display:none !important; }
+        .prd-table-responsive { overflow:visible !important; }
+        .prd-table { min-width:0 !important; }
+        .a60-hdr colgroup { display:table-column-group !important; }
+        .a60-hdr tr { display:table-row !important; }
+        .a60-hdr td { display:table-cell !important; }
         .prd-table tr { page-break-inside:avoid; }
-        .prd-signs { page-break-inside:avoid; }
+        .prd-signs { display:table !important; page-break-inside:avoid; }
+        .prd-signs tr { display:table-row !important; }
+        .prd-signs td { display:table-cell !important; }
     }
 </style>
 @endsection
@@ -174,6 +387,7 @@
     <div class="prd-sheet">
         <div class="prd-title">PURCHASE REQUEST</div>
 
+        <div class="a60-hdr-wrap">
         <table class="a60-hdr" role="presentation" aria-label="Purchase request header fields">
             <colgroup>
                 <col style="width:50%;">
@@ -182,11 +396,11 @@
             </colgroup>
             {{-- Row 1: Entity Name | Fund Cluster --}}
             <tr>
-                <td class="a60-field" style="border-right:none;">
+                <td class="a60-field a60-cell-entity hdr-br-none">
                     <div class="a60-field-lbl">Entity Name</div>
                     <div class="a60-field-val">National Conciliation and Mediation Board</div>
                 </td>
-                <td class="a60-field" colspan="2" style="border-left:1px solid #374151;">
+                <td class="a60-field a60-cell-fund hdr-bl" colspan="2">
                     <div class="a60-field-lbl">Fund Cluster</div>
                     <div class="a60-field-val {{ $purchaseRequest->fund_cluster ? '' : 'muted' }}">
                         {{ $purchaseRequest->fund_cluster ?: '— not specified —' }}
@@ -195,24 +409,24 @@
             </tr>
             {{-- Row 2: Office/Unit | PR No. | Date --}}
             <tr>
-                <td class="a60-field" style="border-top:none;border-right:none;">
+                <td class="a60-field a60-cell-office hdr-bt-none hdr-br-none">
                     <div class="a60-field-lbl">Office / Unit</div>
                     <div class="a60-field-val {{ $purchaseRequest->office_unit ? '' : 'muted' }}">
                         {{ $purchaseRequest->office_unit ?: '— not specified —' }}
                     </div>
                 </td>
-                <td class="a60-field" style="border-top:none;border-left:1px solid #374151;border-right:none;">
+                <td class="a60-field a60-cell-pr hdr-bt-none hdr-bl hdr-br-none">
                     <div class="a60-field-lbl">PR No.</div>
                     <div class="a60-field-val accent">{{ $purchaseRequest->pr_number }}</div>
                 </td>
-                <td class="a60-field" style="border-top:none;border-left:1px solid #374151;">
+                <td class="a60-field a60-cell-date hdr-bt-none hdr-bl">
                     <div class="a60-field-lbl">Date</div>
                     <div class="a60-field-val">{{ $purchaseRequest->created_at?->format('F d, Y') }}</div>
                 </td>
             </tr>
             {{-- Row 3: Responsibility Center Code (full width) --}}
             <tr>
-                <td class="a60-field" colspan="3" style="border-top:none;">
+                <td class="a60-field a60-cell-rcc hdr-bt-none" colspan="3">
                     <div class="a60-field-lbl">Responsibility Center Code</div>
                     <div class="a60-field-val {{ $purchaseRequest->responsibility_center ? '' : 'muted' }}">
                         {{ $purchaseRequest->responsibility_center ?: '— not specified —' }}
@@ -220,7 +434,9 @@
                 </td>
             </tr>
         </table>
+        </div>
 
+        <div class="prd-table-responsive">
         <table class="prd-table">
             <thead>
                 <tr>
@@ -266,6 +482,7 @@
                 </tr>
             </tbody>
         </table>
+        </div>
 
         <div class="prd-purpose">
             <span class="k">Purpose / justification:</span>

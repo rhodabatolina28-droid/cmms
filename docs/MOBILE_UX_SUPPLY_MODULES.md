@@ -22,32 +22,43 @@
 - Pagination: **naayos ang vertical-stacking bug** — root cause ay ang global mobile rule `button { width: 100% !important }`; fix = inline `style="width:auto !important"` sa `resources/js/inventory.js` (5 buttons) + Vite rebuild. **Desktop at mobile pagination pareho na ang look** (nag-wrap lang ang mobile).
 - ⚠️ **Font regression naayos:** ang unang rebuild ay gumamit ng `optimizedFallbacks: false` (dahil kulang ang `fontaine`) → bumaba ang built CSS font fallbacks → bahagyang naiiba ang desktop font rendering. **Fix: `npm install fontaine --save-dev` + revert config** (`22ec451`, `ad516ff`) — desktop balik sa orihinal.
 
-### Parts & Consumables (`parts.blade.php`) — `b0fc781` — 🔶 WIP (hindi pa tapos)
-- Committed state: mobile `table-layout:auto`, `min-width:640px`, `nowrap`, inline 42px action buttons, centered pagination.
-- **Hindi pa naresolba ang UX:** feedback ng user pagkatapos ng commit — *"mahihirapan ang gagamit, kailangan pa i-improve."* Na-eksperimento ang sticky first column + `colgroup:hidden` + mas malalaking touch (44px) — **hindi pa na-save sa commit / hindi pa na-approve** (na-revert o nawala sa working tree). **Kailangan i-resume bukas.**
+### Parts & Consumables (`parts.blade.php`) — ✅ Phase 1 Complete
+- Mobile view: **pure horizontal scroll table gaya ng inventory** — walang sticky column na tumatakip, kumpleto lahat ng 8 columns (`Item`, `Unit`, `On-hand`, `Reorder`, `Unit Value`, `Total Cost`, `Status`, `Actions`).
+- **Action buttons fix:** Sa mobile, pinalitan ang 6 nakaharang na buttons ng **iisang 3-dots dropdown (`⋯`)** — Inventory Registry pattern; hindi na haharang sa table. Sa desktop, retained ang quick-action icon buttons.
+- **Add Part Modal fix:** Tinanggal ang checkbox na `Track every unit (serialized)` at sub-text nito.
+- **Modal Close (`×`) fix:** Naayos ang dahilan kung bakit sobrang laki ng `×` button sa mobile; nilagyan ng fixed 32×32px, 0 padding, at centered display sa lahat ng modals (`partModal`, `stockModal`, `historyModal`, `unitsModal`).
+- Stats: 2x2 compact grid (`repeat(2, 1fr)`) sa mobile.
+- Toolbar: 2-column grid para sa Export/Import at Add/Create buttons.
+- Pagination: may inline `style="width:auto !important;"` sa bawat button at smart ellipsis para hindi mag-stack vertically.
 
-### Asset Detail QR spacing (`inventory/detail.blade.php`) — 🔶 UNCOMMITTED
-- `working tree: M resources/views/inventory/detail.blade.php` — idinagdag ang `card-mt20` (16px top margin) sa **QR Code card** para magkaroon ng space pagkatapos ng Notes card (base `.detail-card` ay walang margin → magkadikit).
-- **As per user:** "sure ka na" — kailangan pa i-verify sa live bago i-commit.
+### Asset Detail (`inventory/detail.blade.php`) — ✅ Phase 2 Complete
+- **Structural Bug Fix:** Tinanggal ang sobrang closing `</div>` sa ilalim ng Installed Parts card na maagang nagko-close sa `.main-grid` at sumisira sa page container.
+- **QR Spacing:** Na-verify ang `card-mt20` (16px top margin).
+- **Typography Polish:** Pinalitan ang microscopic 8-9px font sizes sa screens `<= 480px` ng nababasang 12-14px mobile typography.
+
+### Purchase Request Show (`purchase-requests/show.blade.php`) — ✅ Phase 3 Complete
+- **Mobile Responsive Layout:** Dinagdagan ng `@media (max-width: 768px)` (dating zero mobile CSS).
+- **Item Grid Scroll:** Binalot ang `.prd-table` sa `.prd-table-responsive` na may `min-width: 620px` at horizontal touch scroll para hindi mag-ipit ang mga numero at paglalarawan.
+- **Actions & Toolbar:** Ginawang mobile-friendly ang toolbar; ang mga action buttons (Print, Finalize, Receive) ay naging 44px touch targets sa 2-column grid.
+- **Print Fidelity:** 100% buo at sumusunod sa Annex 60 Government Accounting Standards gamit ang `@media print` overrides.
+
+### Purchase Request Create & Edit (`create.blade.php`, `edit.blade.php`) — ✅ Phase 4 Complete
+- **Touch-friendly Delete Button:** Ginawang laging kita ang `.pr-x` sa mobile (dating naka-depende sa desktop `:hover` at `opacity: 0` kaya hindi ma-delete ang rows sa phone).
+- **Mobile Toolbar & Actions:** 44px min-height buttons, responsive sticky header.
+- **Stacked Signatures:** Malinis na 1-column layout para sa Requested By at Approved By sa mobile screens.
 
 ---
 
-## 🔶 NEXT (resume bukas)
-
-### 1. `parts.blade.php` — tapusin ang table mobile UX
-- Gusto ng user: **table gaya ng inventory** (scrollable, lahat ng columns, hindi stacked).
-- Kailangan i-polish para hindi "mahihirapan ang gagamit": sticky first column (solid bg per row-state), 44px action buttons, malinaw na row tints (low amber / critical red) pati sa sticky cell.
-- **Pending decision:** i-commit ang sticky-column approach, o subukan pa ang iba → i-check sa user bago mag-implement.
-
-### 2. `detail.blade.php` — i-verify sa live ang QR spacing; kung OK, i-commit.
-
-### 3. Susunod na modules (per plan):
+## 🔶 NEXT MODULES (per plan):
 1. ✅ Dashboard
 2. ✅ Supply Asset Registry
-3. 🔶 Parts & Consumables (ito)
-4. **Requisitions / PR Queue** (`requisitions/supply-index.blade.php`)
-5. **Department Requests** (`admin/requests/index.blade.php`)
-6. **Batch QR Sticker Print** (`qr-batch.blade.php`)
+3. ✅ Parts & Consumables
+4. ✅ Asset Detail
+5. ✅ Purchase Request Show
+6. ✅ Purchase Request Create / Edit
+7. **Requisitions / Supply Workspace** (`requisitions/supply-index.blade.php`)
+8. **Department Requests** (`admin/requests/index.blade.php`)
+9. **Batch QR Sticker Print** (`qr-batch.blade.php`)
 
 ## Notes / Gotchas (session-learned)
 - **Global mobile rule:** `button { width:100% !important }` sa layout — para sa inline buttons sa tables/modals, kailangan `width:auto !important` **inline** hindi lang stylesheet (ang stylesheet `!important` ay tinatalo ang normal na inline; kailangan ng inline na may `!important` para talunin ito).

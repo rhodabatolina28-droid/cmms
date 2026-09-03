@@ -210,21 +210,21 @@
     .back-link { font-size: 13px !important; padding: 10px 14px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 6px !important; min-height: 44px !important; }
 }
 @media (max-width: 480px) {
-    .detail-wrapper { padding: 8px !important; }
-    .hero-banner { padding: 14px !important; border-radius: 8px !important; }
-    .hero-title { font-size: 16px !important; }
-    .hero-badges { gap: 4px !important; }
-    .hero-badge, .hero-badge-mono { font-size: 9px !important; padding: 3px 6px !important; }
-    .stats-grid { grid-template-columns: 1fr !important; gap: 6px !important; }
-    .stat-card { padding: 8px !important; }
-    .stat-label { font-size: 8px !important; }
-    .stat-value { font-size: 12px !important; }
-    .detail-card { border-radius: 8px !important; }
-    .detail-card-header { padding: 8px 10px !important; font-size: 9px !important; }
-    .detail-card-body { padding: 10px !important; }
-    .field-row { padding: 6px 0 !important; }
-    .field-label { font-size: 9px !important; }
-    .field-value { font-size: 10px !important; }
+    .detail-wrapper { padding: 10px 8px !important; }
+    .hero-banner { padding: 16px 14px !important; border-radius: 10px !important; }
+    .hero-title { font-size: 18px !important; }
+    .hero-badges { gap: 6px !important; }
+    .hero-badge, .hero-badge-mono { font-size: 10.5px !important; padding: 4px 8px !important; }
+    .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
+    .stat-card { padding: 12px 10px !important; }
+    .stat-label { font-size: 10px !important; }
+    .stat-value { font-size: 15px !important; }
+    .detail-card { border-radius: 10px !important; }
+    .detail-card-header { padding: 12px 14px !important; font-size: 12px !important; }
+    .detail-card-body { padding: 14px !important; }
+    .field-row { padding: 8px 0 !important; }
+    .field-label { font-size: 12px !important; }
+    .field-value { font-size: 13.5px !important; }
 }
 </style>
 @endsection
@@ -610,7 +610,6 @@
                     </div>
                 @endif
             </div>
-            </div>
         </div>
 
         {{-- Notes Card --}}
@@ -625,7 +624,7 @@
 
         {{-- QR Code Card --}}
         @if($asset->qr_code)
-        <div class="detail-card">
+        <div class="detail-card card-mt20">
             <div class="detail-card-header"><i class="fa-solid fa-qrcode"></i> QR Code</div>
             <div class="detail-card-body qr-body">
                 <div class="qr-frame">

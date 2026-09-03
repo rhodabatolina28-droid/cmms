@@ -50,7 +50,8 @@
     .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
     .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; }
     .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
-    .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; }
+    .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; padding: 4px; border-radius: 6px; }
+    .modal-close:hover { background: #f1f5f9; color: #0f172a; }
     .modal-body { padding: 20px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-field { display: flex; flex-direction: column; gap: 5px; }
@@ -92,26 +93,299 @@
     .pagination-row { display: flex; justify-content: flex-end; padding: 14px 20px; }
     .toast { position: fixed; top: 18px; right: 18px; z-index: 2000; padding: 13px 18px; border-radius: 8px; color: #fff; font-size: 13px; font-weight: 700; box-shadow: 0 8px 20px rgba(0,0,0,.2); display: none; max-width: 340px; }
     .toast.ok { background: #15803d; } .toast.err { background: #b91c1c; }
+    /* ── Actions Dropdown (Inventory Registry Pattern) ── */
+    .actions-dropdown {
+        position: relative;
+        display: none;
+    }
+    .btn-dropdown-toggle {
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        padding: 4px 10px;
+        cursor: pointer;
+        font-size: 16px;
+        line-height: 1;
+        color: #475569;
+        transition: all 0.2s;
+        min-width: 40px;
+        min-height: 38px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .btn-dropdown-toggle:hover {
+        background: #f1f5f9;
+        border-color: #0038A8;
+        color: #0038A8;
+    }
+    .btn-dropdown-toggle:focus {
+        outline: none;
+        border-color: #0038A8;
+        box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.1);
+    }
+    .dropdown-menu-custom {
+        display: none;
+        position: absolute;
+        right: 0;
+        top: 100%;
+        z-index: 1000;
+        min-width: 190px;
+        padding: 6px 0;
+        margin-top: 4px;
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        text-align: left;
+    }
+    .dropdown-menu-custom.show {
+        display: block;
+    }
+    .dropdown-item-custom {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+        font-size: 13px;
+        font-weight: 600;
+        color: #1e293b;
+        text-decoration: none;
+        cursor: pointer;
+        transition: background 0.15s;
+        border: none;
+        background: none;
+        width: 100%;
+        text-align: left;
+        font-family: inherit;
+        min-height: 44px;
+        box-sizing: border-box;
+    }
+    .dropdown-item-custom:hover {
+        background: #f1f5f9;
+        color: #0038A8;
+    }
+    .dropdown-item-custom.disabled, .dropdown-item-custom[disabled] {
+        opacity: 0.45;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    .dropdown-item-custom i {
+        width: 18px;
+        font-size: 14px;
+        color: #64748b;
+        text-align: center;
+        flex-shrink: 0;
+    }
+    .dropdown-backdrop {
+        display: none;
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        z-index: 999;
+    }
+    .dropdown-backdrop.show {
+        display: block;
+    }
+    .row-actions-desktop {
+        display: inline-flex;
+        gap: 6px;
+        flex-wrap: nowrap;
+        align-items: center;
+        justify-content: center;
+    }
+    .parts-table th:last-child,
+    .parts-table td:last-child {
+        min-width: 205px;
+        text-align: center;
+    }
+
     @media (max-width: 768px) {
-        .form-grid { grid-template-columns: 1fr; }
-        .parts-header { flex-direction: column; align-items: stretch; }
-        .parts-search { flex-direction: column; align-items: stretch; }
-        .parts-search input, .parts-search select { width: 100%; }
-        .parts-toolbar { width: 100%; flex-direction: column; align-items: stretch; }
-        .parts-toolbar .btn-ghost, .parts-toolbar .btn-navy { width: 100% !important; text-align: center; }
-        /* Mobile: gaya ng inventory — mananatiling table (hindi stacked), 
-           content-based column widths (iwas sa naipit na fixed colgroup), 
-           nag-horizontal scroll lang kung hindi kasya */
-        .parts-table { table-layout: auto !important; min-width: 640px !important; }
-        .parts-table th, .parts-table td { white-space: nowrap !important; }
-        .parts-table th, .parts-table td { padding: 12px 10px; }
-        /* Manatiling round/compact actions (iwas sa global full-width button rule) */
-        .parts-table .act-btn { width: 42px !important; height: 42px !important; flex-shrink: 0 !important; }
-        /* Pagination — centered, inline-wrap (gaya ng inventory) */
-        .parts-pagination { justify-content: center !important; }
-        .parts-pag-info { text-align: center !important; }
-        .parts-pag-btns a, .parts-pag-btns button, .parts-pag-btns .active {
-            width: auto !important; min-width: 40px !important; min-height: 40px !important;
+        .parts-container { padding: 12px 8px !important; }
+        .parts-body { padding: 12px 10px !important; }
+        .parts-card-head { padding: 12px 14px !important; }
+
+        /* Stats: 2x2 grid, compact cards (gaya ng inventory) */
+        .parts-stats {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+            margin-bottom: 12px !important;
+        }
+        .parts-stats .stat-card {
+            padding: 10px 12px !important;
+        }
+        .parts-stats .stat-val {
+            font-size: 18px !important;
+        }
+        .parts-stats .stat-label {
+            font-size: 10px !important;
+        }
+
+        /* Filter ribbon & toolbar */
+        .parts-header {
+            margin-bottom: 12px !important;
+            padding: 10px 12px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+        }
+        .parts-search {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        .parts-search input,
+        .parts-search select {
+            width: 100% !important;
+            min-height: 44px !important;
+            font-size: 14px !important;
+            padding: 10px 12px !important;
+        }
+        .search-box {
+            width: 100% !important;
+            min-width: 0 !important;
+        }
+        .parts-toolbar {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+        }
+        .parts-toolbar .btn-ghost,
+        .parts-toolbar .btn-navy {
+            width: 100% !important;
+            min-height: 42px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            font-size: 12px !important;
+            padding: 8px 10px !important;
+        }
+
+        /* Table: gaya ng inventory — regular horizontal scroll, kumpleto lahat ng columns, walang nakatago */
+        .parts-table colgroup {
+            display: none !important;
+        }
+        .parts-table {
+            table-layout: auto !important;
+            min-width: 720px !important;
+            width: 100% !important;
+        }
+        .parts-table th,
+        .parts-table td {
+            padding: 10px 12px !important;
+            font-size: 12.5px !important;
+            white-space: nowrap !important;
+        }
+        .parts-table td:first-child {
+            white-space: normal !important;
+            min-width: 150px !important;
+        }
+
+        /* Action column on mobile: Single 3-dots dropdown (Gaya ng Inventory) — hindi na haharang sa table */
+        .row-actions-desktop {
+            display: none !important;
+        }
+        .actions-dropdown {
+            display: inline-block !important;
+        }
+        .btn-dropdown-toggle {
+            min-width: 44px !important;
+            min-height: 44px !important;
+            font-size: 20px !important;
+            padding: 6px 12px !important;
+        }
+        .dropdown-menu-custom {
+            min-width: 210px !important;
+            right: 0 !important;
+        }
+        .dropdown-item-custom {
+            padding: 12px 16px !important;
+            font-size: 13.5px !important;
+            min-height: 44px !important;
+        }
+        .parts-table td:last-child {
+            text-align: center !important;
+            min-width: 70px !important;
+            width: 70px !important;
+        }
+
+        /* Pagination: centered, inline-wrap (gaya ng inventory) */
+        .parts-pagination {
+            flex-direction: column !important;
+            align-items: center !important;
+            gap: 10px !important;
+            padding: 12px 10px !important;
+        }
+        .parts-pag-info {
+            text-align: center !important;
+            font-size: 12px !important;
+        }
+        .parts-pag-btns {
+            display: flex !important;
+            justify-content: center !important;
+            flex-wrap: wrap !important;
+            gap: 4px !important;
+        }
+        .parts-pag-btns a,
+        .parts-pag-btns button,
+        .parts-pag-btns .active {
+            width: auto !important;
+            min-width: 40px !important;
+            min-height: 40px !important;
+            font-size: 12px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+
+        /* Modals on mobile */
+        .form-grid {
+            grid-template-columns: 1fr !important;
+        }
+        .modal-box {
+            width: 95vw !important;
+            max-width: 95vw !important;
+            max-height: 90vh !important;
+            margin: 10px auto !important;
+        }
+        .modal-head {
+            padding: 14px 16px !important;
+        }
+        .modal-body {
+            padding: 14px !important;
+        }
+        .modal-foot {
+            padding: 12px 14px !important;
+            flex-wrap: wrap !important;
+            gap: 8px !important;
+        }
+        .modal-foot button,
+        .modal-foot .btn-navy,
+        .modal-foot .btn-ghost {
+            min-height: 44px !important;
+            flex: 1 1 120px !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        .form-field input,
+        .form-field select {
+            min-height: 44px !important;
+            font-size: 14px !important;
+        }
+        #unitsModal .modal-box {
+            width: 96vw !important;
+            max-width: 96vw !important;
+        }
+        #unitsSearch {
+            min-height: 44px !important;
+            font-size: 14px !important;
+            width: 100% !important;
+        }
+        #addUnitForm input {
+            min-height: 44px !important;
+            font-size: 14px !important;
         }
     }
 
@@ -180,7 +454,6 @@
     .modal-head h3 { font-size: 15px; }
 
     @media (max-width: 900px) { .parts-stats { grid-template-columns: repeat(2, 1fr); } }
-    @media (max-width: 480px) { .parts-stats { grid-template-columns: 1fr; } }
 </style>
 <style nonce="{{ $cspNonce }}">
     /* ═══ Card-only layout (mimic Inventory & Assets) ═══ */
@@ -363,15 +636,15 @@
 
         <div style="overflow-x:auto;">
                 <table class="parts-table">
-                                    <colgroup>
-                    <col style="width:24%">
+                <colgroup>
+                    <col style="width:22%">
                     <col style="width:7%">
-                    <col style="width:11%">
+                    <col style="width:10%">
                     <col style="width:7%">
                     <col style="width:14%">
                     <col style="width:14%">
                     <col style="width:7%">
-                    <col style="width:16%">
+                    <col style="width:19%">
                 </colgroup>
                 <thead>
                         <tr>
@@ -402,10 +675,11 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="partModalTitle">Add Part</h3>
-            <button class="modal-close" onclick="closeModal('partModal')">&times;</button>
+            <button class="modal-close" onclick="closeModal('partModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
         </div>
         <form id="partForm">
             <input type="hidden" name="_method" value="post" id="partMethod">
+            <input type="hidden" name="requires_unit_tracking" id="p_requires_unit_tracking" value="0">
             <div class="modal-body">
                 <div style="font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:.06em;color:#94a3b8;margin-bottom:8px;">Basic Info</div>
                 <div class="form-grid">
@@ -455,13 +729,6 @@
                         <span style="font-size:11px;color:#94a3b8;">Preview:</span>
                         <span class="badge badge-ok" id="statusPreviewBadge" style="display:none;"></span>
                     </div>
-                    <div class="form-field full" style="display:flex;flex-direction:column;gap:4px;">
-                        <div style="display:flex;align-items:center;gap:8px;">
-                            <input type="checkbox" name="requires_unit_tracking" id="p_requires_unit_tracking" value="1" style="width:auto;">
-                            <label for="p_requires_unit_tracking" style="margin:0;">Track every unit (serialized)</label>
-                        </div>
-                        <span style="font-size:11px;color:#94a3b8;">Requires serial number, property number, and unit cost per piece. Stock must start at zero.</span>
-                    </div>
                     <div class="form-field">
                         <label>Reorder level</label>
                         <input type="number" name="reorder_level" id="p_reorder" min="0" value="0">
@@ -481,7 +748,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="stockModalTitle">Stock In</h3>
-            <button class="modal-close" onclick="closeModal('stockModal')">&times;</button>
+            <button class="modal-close" onclick="closeModal('stockModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
         </div>
         <form id="stockForm">
             <div class="modal-body">
@@ -551,7 +818,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="historyTitle">History</h3>
-            <button class="modal-close" onclick="closeModal('historyModal')">&times;</button>
+            <button class="modal-close" onclick="closeModal('historyModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
         </div>
         <div class="modal-body" id="historyBody" style="max-height:50vh;overflow-y:auto;">
             <div class="empty-state"><div class="big"><i class="fa-solid fa-circle-notch fa-spin"></i></div>Loading...</div>
@@ -563,7 +830,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="unitsModalTitle">Units</h3>
-            <button class="modal-close" onclick="closeModal('unitsModal')">&times;</button>
+            <button class="modal-close" onclick="closeModal('unitsModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
         </div>
         <div class="modal-body">
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
@@ -592,6 +859,7 @@
 </div>
 
 <div class="toast" id="toast"></div>
+<div class="dropdown-backdrop" id="dropdownBackdrop" onclick="closeAllDropdowns()"></div>
 @endsection
 
 @section('scripts')
@@ -754,6 +1022,27 @@
         document.getElementById(id).classList.remove('open');
     }
 
+    function toggleDropdown(event, btn) {
+        event.stopPropagation();
+        closeAllDropdowns();
+        const menu = btn.nextElementSibling;
+        const backdrop = document.getElementById('dropdownBackdrop');
+        if (menu) {
+            menu.classList.add('show');
+            if (backdrop) backdrop.classList.add('show');
+        }
+    }
+
+    function closeAllDropdowns() {
+        document.querySelectorAll('.dropdown-menu-custom.show').forEach(m => m.classList.remove('show'));
+        const backdrop = document.getElementById('dropdownBackdrop');
+        if (backdrop) backdrop.classList.remove('show');
+    }
+
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') closeAllDropdowns();
+    });
+
     function api(url, method, body) {
         return fetch(url, {
             method: method,
@@ -853,18 +1142,35 @@
                 '<a class="pr-chip" href="' + PR_SHOW_PREFIX.replace('PR_ID', pr.id) + '" title="In-flight purchase request — hinihintay ang delivery"><i class="fa-solid fa-truck-fast"></i>' + esc(pr.pr_number) + '</a>'
             ).join('');
 
-            let actions = '<div class="row-actions">';
+            let actionsDesktop = '<div class="row-actions-desktop">';
+            let dropdownItems = '';
             if (canWrite) {
-                actions += '<button class="act-btn" title="Edit part" onclick="openPartModal(\'edit\', partsById[' + p.id + '])"><i class="fa-solid fa-pen"></i></button>';
-                actions += '<button class="act-btn in" title="Stock In" onclick="openStockModal(\'in\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-down"></i></button>';
-                actions += '<button class="act-btn out' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '" title="Stock Out"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-up"></i></button>';
+                actionsDesktop += '<button class="act-btn" title="Edit part" onclick="openPartModal(\'edit\', partsById[' + p.id + '])"><i class="fa-solid fa-pen"></i></button>';
+                actionsDesktop += '<button class="act-btn in" title="Stock In" onclick="openStockModal(\'in\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-down"></i></button>';
+                actionsDesktop += '<button class="act-btn out' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '" title="Stock Out"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + '])"><i class="fa-solid fa-arrow-up"></i></button>';
+
+                dropdownItems += '<button class="dropdown-item-custom" onclick="openPartModal(\'edit\', partsById[' + p.id + ']); closeAllDropdowns();"><i class="fa-solid fa-pen"></i> Edit Part</button>';
+                dropdownItems += '<button class="dropdown-item-custom" onclick="openStockModal(\'in\', partsById[' + p.id + ']); closeAllDropdowns();"><i class="fa-solid fa-arrow-down" style="color:#15803d;"></i> Stock In</button>';
+                dropdownItems += '<button class="dropdown-item-custom' + (p.on_hand_qty <= 0 ? ' disabled' : '') + '"' + (p.on_hand_qty <= 0 ? ' disabled' : '') + ' onclick="openStockModal(\'out\', partsById[' + p.id + ']); closeAllDropdowns();"><i class="fa-solid fa-arrow-up" style="color:#b91c1c;"></i> Stock Out</button>';
+
                 if (level === 'critical') {
-                    actions += '<a class="act-btn" title="Out of stock? Create a Purchase Request for this item" href="' + PARTS_PR_CREATE_PREFIX + p.id + '"><i class="fa-solid fa-file-invoice"></i></a>';
+                    actionsDesktop += '<a class="act-btn" title="Out of stock? Create a Purchase Request for this item" href="' + PARTS_PR_CREATE_PREFIX + p.id + '"><i class="fa-solid fa-file-invoice"></i></a>';
+                    dropdownItems += '<a class="dropdown-item-custom" href="' + PARTS_PR_CREATE_PREFIX + p.id + '"><i class="fa-solid fa-file-invoice" style="color:#0038A8;"></i> Create PR</a>';
                 }
             }
-            actions += '<button class="act-btn" title="View history" onclick="openHistory(' + p.id + ')"><i class="fa-solid fa-clock-rotate-left"></i></button>';
-            actions += '<button class="act-btn" title="View units (serial / property)" onclick="openUnitsModal(' + p.id + ')"><i class="fa-solid fa-list-ul"></i></button>';
-            actions += '</div>';
+            actionsDesktop += '<button class="act-btn" title="View history" onclick="openHistory(' + p.id + ')"><i class="fa-solid fa-clock-rotate-left"></i></button>';
+            actionsDesktop += '<button class="act-btn" title="View units (serial / property)" onclick="openUnitsModal(' + p.id + ')"><i class="fa-solid fa-list-ul"></i></button>';
+            actionsDesktop += '</div>';
+
+            dropdownItems += '<button class="dropdown-item-custom" onclick="openHistory(' + p.id + '); closeAllDropdowns();"><i class="fa-solid fa-clock-rotate-left"></i> View History</button>';
+            dropdownItems += '<button class="dropdown-item-custom" onclick="openUnitsModal(' + p.id + '); closeAllDropdowns();"><i class="fa-solid fa-list-ul"></i> View Units</button>';
+
+            let actionsDropdown = '<div class="actions-dropdown">'
+                + '<button class="btn-dropdown-toggle" onclick="toggleDropdown(event, this)" title="Actions" style="width:auto !important;">⋯</button>'
+                + '<div class="dropdown-menu-custom">' + dropdownItems + '</div>'
+                + '</div>';
+
+            let actions = actionsDesktop + actionsDropdown;
 
             return '<tr class="' + rowCls + '">'
                 + '<td><div class="item-name">' + esc(p.item_name) + '</div><div class="item-sub">' + esc(p.category || 'Uncategorized') + '</div>' + (prChips ? '<div class="item-pr">' + prChips + '</div>' : '') + '</td>'
@@ -886,13 +1192,25 @@
         const first = (partsPage - 1) * 15 + 1;
         const last = Math.min(partsPage * 15, total);
         let html = '<span class="parts-pag-info">Showing ' + first + '–' + last + ' of ' + total + '</span><div class="parts-pag-btns">';
-        html += '<button ' + (partsPage <= 1 ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage - 1) + ')"><i class="fa-solid fa-chevron-left"></i> Prev</button>';
-        for (let i = 1; i <= lastPage; i++) {
-            html += (i === partsPage)
-                ? '<span class="active">' + i + '</span>'
-                : '<button onclick="loadParts(' + i + ')">' + i + '</button>';
+        html += '<button ' + (partsPage <= 1 ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage - 1) + ')" style="width:auto !important;"><i class="fa-solid fa-chevron-left"></i> Prev</button>';
+
+        let startPage = Math.max(1, partsPage - 2);
+        let endPage = Math.min(lastPage, partsPage + 2);
+        if (startPage > 1) {
+            html += '<button onclick="loadParts(1)" style="width:auto !important;">1</button>';
+            if (startPage > 2) html += '<span class="p-ellipsis" style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
         }
-        html += '<button ' + (partsPage >= lastPage ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage + 1) + ')">Next <i class="fa-solid fa-chevron-right"></i></button>';
+        for (let i = startPage; i <= endPage; i++) {
+            html += (i === partsPage)
+                ? '<span class="active" style="width:auto !important;">' + i + '</span>'
+                : '<button onclick="loadParts(' + i + ')" style="width:auto !important;">' + i + '</button>';
+        }
+        if (endPage < lastPage) {
+            if (endPage < lastPage - 1) html += '<span class="p-ellipsis" style="padding:5px 4px;color:#94a3b8;font-size:12px;">&hellip;</span>';
+            html += '<button onclick="loadParts(' + lastPage + ')" style="width:auto !important;">' + lastPage + '</button>';
+        }
+
+        html += '<button ' + (partsPage >= lastPage ? 'disabled' : '') + ' onclick="loadParts(' + (partsPage + 1) + ')" style="width:auto !important;">Next <i class="fa-solid fa-chevron-right"></i></button>';
         html += '</div>';
         el.innerHTML = html;
     }
@@ -1048,7 +1366,8 @@
         document.getElementById('p_unit').value = part ? part.unit : '';
         document.getElementById('p_category').value = (part && part.category) ? part.category : '';
         document.getElementById('p_on_hand').value = part ? part.on_hand_qty : 0;
-        document.getElementById('p_requires_unit_tracking').checked = !!(part && part.requires_unit_tracking);
+        const reqUnitEl = document.getElementById('p_requires_unit_tracking');
+        if (reqUnitEl) reqUnitEl.value = (part && part.requires_unit_tracking) ? '1' : '0';
                 document.getElementById('p_reorder').value = part ? part.reorder_level : 0;
         document.getElementById('field_on_hand').style.display = mode === 'add' ? 'flex' : 'none';
         document.querySelectorAll('.form-err').forEach(e => e.textContent = '');

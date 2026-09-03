@@ -57,14 +57,357 @@
     .rq-banner--approved .rq-banner-icon { color:#0038A8; }
     .rq-banner--approved .rq-banner-title { color:#1e40af; }
     .rq-banner--approved .rq-banner-text { color:#1e40af; }
-    @media (max-width: 767px) {
-        .card-header-accent { flex-direction: column !important; gap: 10px !important; }
-        .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
-        .action-bar-flush { flex-direction: column !important; gap: 10px !important; }
-        input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
-        .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
-        .panel-body-compact { padding: 12px !important; }
-        .info-text, .info-text-sm { font-size: 13px !important; }
+
+    /* Desktop defaults for custom components */
+    .mobile-table-hint { display: none; }
+    .info-bar-deficit {
+        background: #fff7ed;
+        color: #9a3412;
+        border-bottom: none;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 10px;
+        padding: 10px 16px;
+    }
+    .deficit-pr-btn {
+        padding: 7px 14px;
+        font-size: 12px;
+        text-decoration: none;
+        white-space: nowrap;
+        display: inline-flex;
+        align-items: center;
+    }
+    .info-bar-issue-notice {
+        background: #eff6ff;
+        color: #0038A8;
+        border-bottom: none;
+        padding: 10px 16px;
+    }
+
+    /* Container containment */
+    .cmms-official,
+    .cmms-official-page,
+    .cmms-page-card,
+    .cmms-page-card-body,
+    .cmms-layout-split,
+    .cmms-panel,
+    .cmms-panel-body {
+        box-sizing: border-box !important;
+        max-width: 100% !important;
+    }
+
+    @media (max-width: 768px) {
+        html, body {
+            overflow-x: hidden !important;
+        }
+        .cmms-official,
+        .cmms-official-page {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        .cmms-page-card {
+            border-radius: 8px !important;
+            margin-bottom: 16px !important;
+            overflow: hidden !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .cmms-page-card-head {
+            padding: 14px 14px !important;
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 10px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-page-card-head h2 {
+            font-size: 16px !important;
+            line-height: 1.3 !important;
+            word-break: break-word !important;
+        }
+        .cmms-page-card-head .sub {
+            font-size: 12px !important;
+            line-height: 1.4 !important;
+        }
+        .cmms-page-card-head .cmms-btn-secondary {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+            min-height: 44px !important;
+            display: flex !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+            font-weight: 700 !important;
+        }
+        .cmms-page-card-body {
+            padding: 12px 10px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-layout-split {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 16px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .cmms-layout-split > div,
+        .cmms-sticky-side {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            position: static !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-panel {
+            border-radius: 8px !important;
+            margin-bottom: 14px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-panel-body {
+            padding: 12px 12px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .panel-body-flush {
+            padding: 0 !important;
+        }
+        /* Accountable property */
+        .cmms-meta-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            width: 100% !important;
+        }
+        .cmms-meta-card {
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 4px !important;
+            padding: 10px 12px !important;
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-meta-card .label {
+            font-size: 10.5px !important;
+            font-weight: 800 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.04em !important;
+            margin-bottom: 0 !important;
+        }
+        .cmms-meta-card .value {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            color: #0f172a !important;
+            word-break: break-word !important;
+        }
+        /* Mobile table swipe hint */
+        .mobile-table-hint {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 7px 10px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 11px;
+            font-weight: 700;
+            border-bottom: 1px solid #dbeafe;
+            width: 100%;
+            box-sizing: border-box;
+        }
+        .table-wrap {
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            box-sizing: border-box !important;
+        }
+        .desktop-colgroup {
+            display: none !important;
+        }
+        .cmms-req-items-table {
+            min-width: 500px !important;
+            width: 500px !important;
+            table-layout: auto !important;
+        }
+        .cmms-req-items-table th,
+        .cmms-req-items-table td {
+            padding: 9px 10px !important;
+            font-size: 12px !important;
+            white-space: nowrap !important;
+        }
+        .cmms-req-items-table td:nth-child(2) {
+            white-space: normal !important;
+            min-width: 150px !important;
+            max-width: 220px !important;
+            word-break: break-word !important;
+        }
+        /* Stock & inventory cards */
+        .item-block {
+            padding: 12px 12px !important;
+        }
+        .item-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+        }
+        .item-header .badge-spare,
+        .item-header .badge-stock-ok,
+        .item-header .badge-short {
+            align-self: flex-start !important;
+        }
+        .item-title {
+            font-size: 13.5px !important;
+            line-height: 1.4 !important;
+            word-break: break-word !important;
+        }
+        .asset-row {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            border-radius: 8px !important;
+        }
+        .asset-actions {
+            width: 100% !important;
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            flex-wrap: wrap !important;
+            gap: 6px !important;
+            border-top: 1px dashed #cbd5e1 !important;
+            padding-top: 8px !important;
+            margin-top: 4px !important;
+        }
+        /* Deficit alert bar */
+        .info-bar-deficit {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+        }
+        .deficit-pr-btn {
+            width: 100% !important;
+            min-height: 42px !important;
+            justify-content: center !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+        }
+        /* Bottom toolbar */
+        .cmms-toolbar {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 8px !important;
+            width: 100% !important;
+            margin-top: 14px !important;
+        }
+        .cmms-toolbar a,
+        .cmms-toolbar .cmms-btn-secondary {
+            width: 100% !important;
+            min-height: 44px !important;
+            justify-content: center !important;
+            text-align: center !important;
+            display: flex !important;
+            align-items: center !important;
+            box-sizing: border-box !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+        }
+        /* Particulars */
+        .cmms-pr-meta-row {
+            display: flex !important;
+            justify-content: space-between !important;
+            align-items: center !important;
+            padding: 10px 0 !important;
+            border-bottom: 1px dashed #e2e8f0 !important;
+        }
+        .cmms-pr-meta-row:last-child {
+            border-bottom: none !important;
+        }
+        .cmms-pr-meta-row .k {
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+        }
+        .cmms-pr-meta-row .v {
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            text-align: right !important;
+        }
+        /* Official action review panel */
+        #supplyReviewPanel {
+            border: 2px solid #0038A8 !important;
+            border-radius: 8px !important;
+            box-shadow: 0 4px 14px rgba(0,56,168,0.12) !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        #supplyReviewRemarks {
+            width: 100% !important;
+            min-height: 80px !important;
+            box-sizing: border-box !important;
+            font-size: 14px !important;
+            padding: 10px 12px !important;
+            border-radius: 8px !important;
+        }
+        .action-bar-flush {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 10px !important;
+            width: 100% !important;
+        }
+        .action-bar-flush button,
+        .action-bar-flush .cmms-btn-primary,
+        .action-bar-flush .cmms-btn-success,
+        .action-bar-flush .cmms-btn-danger {
+            width: 100% !important;
+            min-height: 48px !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 8px !important;
+            font-size: 14px !important;
+            font-weight: 700 !important;
+            border-radius: 8px !important;
+            box-sizing: border-box !important;
+        }
+        /* SweetAlert mobile */
+        .swal2-popup {
+            width: 92% !important;
+            max-width: 380px !important;
+            padding: 18px 14px !important;
+            border-radius: 14px !important;
+        }
+        .swal2-title {
+            font-size: 17px !important;
+        }
+        .swal2-actions {
+            width: 100% !important;
+            gap: 8px !important;
+            margin-top: 16px !important;
+        }
+        .swal2-actions button {
+            min-height: 44px !important;
+            border-radius: 8px !important;
+            flex: 1 !important;
+            margin: 0 !important;
+        }
     }
 </style>
 @endsection
@@ -128,9 +471,10 @@
                     <span class="badge-sm text-gray-400">{{ count($requisition->items ?? []) }} line item(s)</span>
                 </div>
                 <div class="cmms-panel-body panel-body-flush">
-                    <div style="overflow-x:auto;">
-                        <table class="cmms-official-table" style="table-layout:auto;">
-                            <colgroup>
+                    <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
+                    <div class="table-wrap">
+                        <table class="cmms-official-table cmms-req-items-table">
+                            <colgroup class="desktop-colgroup">
                                 <col style="width:5%">
                                 <col>
                                 <col style="width:8%">
@@ -303,13 +647,13 @@
             @endforeach
             @php $hasDeficit = $partsStockMatches->contains(fn($m) => !empty($m['deficit'])); @endphp
             @if(Auth::user()->canProcessSupply() && $hasDeficit)
-            <div class="info-bar" style="background:#fff7ed;color:#9a3412;border-bottom:none;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;">
+            <div class="info-bar info-bar-deficit">
                 <span><i class="fa-solid fa-boxes-stacked icon-mr-4"></i>May kulang sa Parts Stock — gumawa ng Purchase Request.</span>
-                <a href="{{ route('purchase_requests.create', ['requisition_id' => $requisition->id]) }}" class="cmms-btn-primary" style="padding:7px 14px;font-size:12px;text-decoration:none;">Create Purchase Request</a>
+                <a href="{{ route('purchase_requests.create', ['requisition_id' => $requisition->id]) }}" class="cmms-btn-primary deficit-pr-btn">Create Purchase Request</a>
             </div>
             @endif
             @if($canReview && in_array($status, ['approved'], true))
-            <div class="info-bar" style="background:#eff6ff;color:#0038A8;border-bottom:none;">
+            <div class="info-bar info-bar-issue-notice">
                 <i class="fa-solid fa-circle-info icon-mr-4"></i>
                 Issuing will deduct these items from Parts Stock and assign their serialized units to the linked asset custodian.
             </div>

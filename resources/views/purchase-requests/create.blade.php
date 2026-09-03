@@ -14,10 +14,15 @@
     .a60-title { text-align:center; font-size:16px; font-weight:bold; letter-spacing:.5px; margin:6px 0 14px; }
 
     /* ── Header field grid ── */
+    .a60-hdr-wrap { width:100%; }
     .a60-hdr { width:100%; border-collapse:collapse; margin-bottom:0; font-size:12.5px; }
     .a60-hdr td { padding:0; vertical-align:top; }
     .a60-field { border:1px solid #374151; padding:5px 9px 4px; }
     .a60-field + .a60-field { border-left:none; }
+    /* Desktop border helpers (replaces inline styles) */
+    .hdr-br-none { border-right:none; }
+    .hdr-bl { border-left:1px solid #374151; }
+    .hdr-bt-none { border-top:none; }
     .a60-field-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
     .a60-field-val { font-weight:700; color:#111827; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .a60-field-val.muted { color:#9ca3af; font-weight:400; font-style:italic; }
@@ -57,7 +62,7 @@
     .a60-signs .sstatic { flex:1; border-bottom:1px solid #111; font-weight:bold; padding:0 3px; min-height:17px; display:block; }
     .a60-signs .sig-note { font-size:10px; color:#94a3b8; font-style:italic; margin-top:4px; }
 
-    /* â”€â”€ Print â”€â”€ */
+    /* ── Print ── */
     @media print {
         .a60-toolbar, .error-banner { display:none !important; }
         .a60-sheet { max-width:none; border:none; box-shadow:none; padding:0; }
@@ -109,6 +114,334 @@
 
     /* Error banner — outside sheet, uses sans-serif */
     .error-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:10px 14px; border-radius:8px; font-size:13px; font-family:'Segoe UI',Arial,sans-serif; max-width:900px; margin:0 auto 12px; }
+
+    /* ===== MOBILE RESPONSIVE (≤ 768px) ===== */
+    @media (max-width: 768px) {
+        .a60-wrap {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: hidden !important;
+            box-sizing: border-box !important;
+            padding: 0 !important;
+            margin: 0 !important;
+        }
+        .a60-toolbar {
+            position: static !important;
+            display: flex !important;
+            flex-direction: row !important;
+            gap: 8px !important;
+            padding: 10px 12px !important;
+            margin-bottom: 12px !important;
+            border-radius: 10px !important;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.06) !important;
+            box-sizing: border-box !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        .a60-toolbar .cmms-btn-secondary {
+            flex: 0 0 auto !important;
+            min-height: 44px !important;
+            padding: 10px 16px !important;
+            font-size: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .a60-toolbar .cmms-action-btn--primary {
+            flex: 1 1 auto !important;
+            min-height: 44px !important;
+            padding: 10px 14px !important;
+            font-size: 13px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+        }
+        .a60-sheet {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif !important;
+            padding: 14px 10px !important;
+            border-radius: 10px !important;
+            border: 1px solid #cbd5e1 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            box-sizing: border-box !important;
+            overflow: hidden !important;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05) !important;
+        }
+        .a60-title {
+            font-size: 16px !important;
+            font-weight: 800 !important;
+            letter-spacing: 0.5px !important;
+            margin: 6px 0 14px !important;
+            color: #0038A8 !important;
+            text-align: center !important;
+        }
+
+        /* Header fields: Mobile Grid with PR No. and Date side-by-side */
+        .a60-hdr-wrap {
+            width: 100% !important;
+            max-width: 100% !important;
+            border: 1.5px solid #374151 !important;
+            border-radius: 8px !important;
+            overflow: hidden !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
+            margin-bottom: 14px !important;
+        }
+        table.a60-hdr {
+            display: block !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border: none !important;
+            border-radius: 0 !important;
+            overflow: visible !important;
+            margin-bottom: 0 !important;
+            background: #fff !important;
+            box-sizing: border-box !important;
+        }
+        table.a60-hdr colgroup,
+        table.a60-hdr col { display: none !important; }
+        table.a60-hdr tbody {
+            display: block !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        table.a60-hdr tr {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        table.a60-hdr td,
+        table.a60-hdr td.a60-field {
+            display: block !important;
+            box-sizing: border-box !important;
+        }
+        table.a60-hdr td.a60-cell-entity,
+        table.a60-hdr td.a60-cell-fund,
+        table.a60-hdr td.a60-cell-office,
+        table.a60-hdr td.a60-cell-rcc {
+            display: block !important;
+            width: 100% !important;
+            flex: 0 0 100% !important;
+            max-width: 100% !important;
+            border-top: 0 !important;
+            border-right: 0 !important;
+            border-left: 0 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            padding: 7px 10px !important;
+            box-sizing: border-box !important;
+            background: #fff !important;
+        }
+        table.a60-hdr td.a60-cell-pr {
+            display: block !important;
+            width: 50% !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 1px solid #cbd5e1 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            padding: 7px 10px !important;
+            box-sizing: border-box !important;
+            background: #fff !important;
+        }
+        table.a60-hdr td.a60-cell-date {
+            display: block !important;
+            width: 50% !important;
+            flex: 0 0 50% !important;
+            max-width: 50% !important;
+            border-top: 0 !important;
+            border-left: 0 !important;
+            border-right: 0 !important;
+            border-bottom: 1px solid #cbd5e1 !important;
+            padding: 7px 10px !important;
+            box-sizing: border-box !important;
+            background: #fff !important;
+        }
+        table.a60-hdr td.a60-cell-rcc {
+            border-bottom: 0 !important;
+        }
+        .a60-field-lbl {
+            font-size: 10px !important;
+            font-weight: 800 !important;
+            color: #64748b !important;
+            text-transform: uppercase !important;
+            letter-spacing: .04em !important;
+            margin-bottom: 2px !important;
+        }
+        .a60-field-val {
+            font-size: 12.5px !important;
+            font-weight: 700 !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow: visible !important;
+            line-height: 1.3 !important;
+        }
+        .a60-cell-pr .a60-field-val,
+        .a60-cell-date .a60-field-val {
+            font-size: 12px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+        }
+        .a60-line {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 8px 10px !important;
+            min-height: 40px !important;
+            font-size: 14px !important;
+            color: #0f172a !important;
+            font-family: inherit !important;
+            margin-top: 4px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+        }
+        .a60-line:focus {
+            background: #fff !important;
+            border-color: #0038A8 !important;
+            box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.12) !important;
+        }
+
+        /* Items Table — strictly confined so it never pushes the page to the right */
+        .prf-scroll {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            background: #fff !important;
+            margin-bottom: 10px !important;
+            box-sizing: border-box !important;
+            display: block !important;
+        }
+        .a60-table {
+            min-width: 620px !important;
+            border-collapse: collapse !important;
+            width: 100% !important;
+        }
+        .a60-table th {
+            background: #f8fafc !important;
+            padding: 10px 8px !important;
+            font-size: 11px !important;
+            font-weight: 700 !important;
+            text-transform: uppercase !important;
+            letter-spacing: .03em !important;
+            color: #475569 !important;
+            border: 1px solid #e2e8f0 !important;
+        }
+        .a60-table td {
+            padding: 8px 6px !important;
+            border: 1px solid #e2e8f0 !important;
+            vertical-align: middle !important;
+        }
+        .a60-table .cell-input {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 7px 8px !important;
+            font-size: 13px !important;
+            min-height: 38px !important;
+            box-sizing: border-box !important;
+            font-family: inherit !important;
+            font-weight: 600 !important;
+            color: #1e293b !important;
+        }
+        .a60-table .cell-input:focus {
+            background: #fff !important;
+            border-color: #0038A8 !important;
+            box-shadow: 0 0 0 2px rgba(0, 56, 168, 0.15) !important;
+        }
+        tr.pr-item-row .pr-x {
+            opacity: 1 !important;
+            position: static !important;
+            transform: none !important;
+            margin-left: 6px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            width: 28px !important;
+            height: 28px !important;
+            border-radius: 6px !important;
+            background: #fee2e2 !important;
+            color: #b91c1c !important;
+            border: none !important;
+            cursor: pointer !important;
+            font-size: 14px !important;
+            font-weight: 800 !important;
+            flex-shrink: 0 !important;
+        }
+        .pr-amount {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: flex-end !important;
+            gap: 6px !important;
+            min-height: 38px !important;
+        }
+        .cmms-pr-add-row {
+            width: 100% !important;
+            justify-content: center !important;
+            min-height: 44px !important;
+            font-size: 13px !important;
+            border-radius: 8px !important;
+        }
+
+        /* Purpose & Remarks */
+        .a60-purpose-box, .a60-remarks-box {
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 8px !important;
+            padding: 10px 12px !important;
+            margin-top: 10px !important;
+            background: #fff !important;
+        }
+        textarea.a60-line {
+            background: #f8fafc !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 8px 10px !important;
+            min-height: 75px !important;
+            font-size: 13.5px !important;
+            box-sizing: border-box !important;
+            font-family: inherit !important;
+        }
+
+        /* Signatures */
+        .a60-signs {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 12px !important;
+            margin-top: 14px !important;
+        }
+        .a60-signs > div {
+            background: #f8fafc !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px 14px !important;
+        }
+        .a60-signs .who {
+            font-size: 13px !important;
+            font-weight: 800 !important;
+            color: #0f172a !important;
+            margin-bottom: 8px !important;
+        }
+        .a60-signs .srow {
+            margin-bottom: 8px !important;
+        }
+        .a60-signs .sline {
+            background: #fff !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 6px !important;
+            padding: 6px 8px !important;
+            min-height: 36px !important;
+            font-size: 13px !important;
+        }
+    }
 </style>
 @endsection
 
@@ -147,7 +480,8 @@
 
             <div class="a60-title">PURCHASE REQUEST</div>
 
-            {{-- â”€â”€ Header field grid â”€â”€ --}}
+            {{-- ── Header field grid ── --}}
+            <div class="a60-hdr-wrap">
             <table class="a60-hdr" role="presentation" aria-label="Purchase request header fields">
                 <colgroup>
                     <col style="width:50%;">
@@ -156,11 +490,11 @@
                 </colgroup>
                 {{-- Row 1: Entity Name | Fund Cluster --}}
                 <tr>
-                    <td class="a60-field" style="border-right:none;">
+                    <td class="a60-field a60-cell-entity hdr-br-none">
                         <div class="a60-field-lbl">Entity Name</div>
                         <div class="a60-field-val">National Conciliation and Mediation Board</div>
                     </td>
-                    <td class="a60-field" colspan="2" style="border-left:1px solid #374151;">
+                    <td class="a60-field a60-cell-fund hdr-bl" colspan="2">
                         <div class="a60-field-lbl">Fund Cluster</div>
                         <div class="a60-field-val">
                             <input type="text" name="fund_cluster"
@@ -173,7 +507,7 @@
                 </tr>
                 {{-- Row 2: Office/Unit | PR No. | Date --}}
                 <tr>
-                    <td class="a60-field" style="border-top:none;border-right:none;">
+                    <td class="a60-field a60-cell-office hdr-bt-none hdr-br-none">
                         <div class="a60-field-lbl">Office / Unit</div>
                         <div class="a60-field-val">
                             <input type="text" name="office_unit"
@@ -183,18 +517,18 @@
                                    aria-label="Office or unit">
                         </div>
                     </td>
-                    <td class="a60-field" style="border-top:none;border-left:1px solid #374151;border-right:none;">
+                    <td class="a60-field a60-cell-pr hdr-bt-none hdr-bl hdr-br-none">
                         <div class="a60-field-lbl">PR No.</div>
                         <div class="a60-field-val" style="color:#0038A8;">{{ $prNumberPreview }}</div>
                     </td>
-                    <td class="a60-field" style="border-top:none;border-left:1px solid #374151;">
+                    <td class="a60-field a60-cell-date hdr-bt-none hdr-bl">
                         <div class="a60-field-lbl">Date</div>
                         <div class="a60-field-val">{{ now()->format('F d, Y') }}</div>
                     </td>
                 </tr>
                 {{-- Row 3: Responsibility Center Code --}}
                 <tr>
-                    <td class="a60-field" colspan="3" style="border-top:none;">
+                    <td class="a60-field a60-cell-rcc hdr-bt-none" colspan="3">
                         <div class="a60-field-lbl">Responsibility Center Code</div>
                         <div class="a60-field-val">
                             <input type="text" name="responsibility_center"
@@ -206,6 +540,7 @@
                     </td>
                 </tr>
             </table>
+            </div>
 
             {{-- ── Section divider ── --}}
             <div class="a60-section"></div>

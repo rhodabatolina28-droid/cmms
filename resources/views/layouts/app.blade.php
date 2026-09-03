@@ -188,8 +188,6 @@
     @auth
         <!-- SIDEBAR (LEGACY STYLE) -->
         <aside class="sidebar" id="sidebar">
-            <!-- Mobile Close Button -->
-            <button class="mobile-close-btn" id="mobileCloseBtn" aria-label="Close sidebar"><i class="fa-solid fa-xmark"></i></button>
             <div class="logo-section">
                 <img src="{{ asset('images/ncmb-logo.svg') }}" alt="NCMB Logo" class="sidebar-logo-img">
                 <h1 class="sidebar-title">CMMS PORTAL</h1>

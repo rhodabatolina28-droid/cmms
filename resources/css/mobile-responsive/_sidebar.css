@@ -76,27 +76,7 @@
     }
 
     .mobile-close-btn {
-        display: flex !important;
-        align-items: center;
-        justify-content: center;
-        position: absolute !important;
-        top: 15px !important;
-        right: 15px !important;
-        background: rgba(255, 255, 255, 0.15) !important;
-        border: none !important;
-        width: 44px !important;
-        height: 44px !important;
-        border-radius: 50% !important;
-        color: white !important;
-        font-size: 18px !important;
-        cursor: pointer !important;
-        z-index: 999999 !important;
-        transition: all 0.2s ease !important;
-    }
-
-    .mobile-close-btn:hover {
-        background: rgba(255, 255, 255, 0.3) !important;
-        transform: scale(1.05);
+        display: none !important;
     }
 
     /* WELCOME HERO - TABLET & MOBILE COMPACT STACK */

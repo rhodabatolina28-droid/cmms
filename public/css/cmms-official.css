@@ -1440,3 +1440,295 @@
 .cmms-action-btn--success:hover { background: #166534; transform: translateY(-1px); box-shadow: 0 3px 12px rgba(21,128,61,.35); }
 .cmms-action-btn--secondary { background: #fff; color: #374151; border-color: #cbd5e1; }
 .cmms-action-btn--secondary:hover { background: #eef2ff; border-color: #0038A8; color: #0038A8; }
+
+/* ── Append _responsive.css for official CMMS components on mobile ── */
+@media (max-width: 768px) {
+    .cmms-page-intro {
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding-bottom: 12px !important;
+    }
+    .cmms-page-intro p {
+        font-size: 12px !important;
+        max-width: 100% !important;
+    }
+    .cmms-page-intro .cmms-btn-secondary {
+        width: 100% !important;
+        text-align: center !important;
+        min-height: 44px !important;
+    }
+
+    .cmms-page-card-body {
+        padding: 14px 12px 20px !important;
+    }
+
+    /* View switch tabs */
+    .cmms-view-switch {
+        width: 100% !important;
+        flex-direction: column !important;
+    }
+    .cmms-view-switch a {
+        width: 100% !important;
+        text-align: center !important;
+        padding: 12px 16px !important;
+        font-size: 13px !important;
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+
+    /* Stat strip */
+    .cmms-stat-strip {
+        grid-template-columns: repeat(2, 1fr) !important;
+        gap: 1px !important;
+    }
+    .cmms-stat-chip {
+        padding: 10px 12px !important;
+    }
+    .cmms-stat-chip .n {
+        font-size: 1.2rem !important;
+    }
+    .cmms-stat-chip .l {
+        font-size: 10px !important;
+    }
+
+    /* Filter row */
+    .cmms-filter-row {
+        margin-bottom: 12px !important;
+    }
+    .cmms-filter-pill {
+        font-size: 11px !important;
+    }
+
+    /* Panel head */
+    .cmms-panel-head {
+        padding: 10px 14px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+    .cmms-panel-head h2 {
+        font-size: 11px !important;
+    }
+    .cmms-count-badge {
+        font-size: 11px !important;
+    }
+
+    /* Requisition cards */
+    .cmms-req-card {
+        grid-template-columns: 1fr !important;
+        padding: 12px 14px !important;
+        gap: 10px !important;
+    }
+    .cmms-req-card-top {
+        margin-bottom: 4px !important;
+    }
+    .cmms-req-id {
+        font-size: 13px !important;
+    }
+    .cmms-req-meta {
+        font-size: 11px !important;
+        gap: 8px !important;
+    }
+    .cmms-req-items-preview {
+        font-size: 11px !important;
+        padding-left: 8px !important;
+    }
+    .cmms-req-actions {
+        min-width: 100% !important;
+        display: flex !important;
+        gap: 8px !important;
+        flex-wrap: wrap !important;
+    }
+    .cmms-req-actions .cmms-btn-secondary,
+    .cmms-req-actions .cmms-btn-primary,
+    .cmms-req-actions .cmms-btn-success,
+    .cmms-req-actions .cmms-btn-danger,
+    .cmms-req-actions .cmms-btn-danger-ghost {
+        flex: 1 !important;
+        min-width: 120px !important;
+        min-height: 44px !important;
+        font-size: 12px !important;
+    }
+
+    /* ICT Job Orders table */
+    .table-wrap {
+        overflow-x: auto !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+    .cmms-official-table {
+        font-size: 11px !important;
+    }
+    .cmms-official-table th,
+    .cmms-official-table td {
+        padding: 8px 10px !important;
+        font-size: 11px !important;
+    }
+    .cmms-official-table th {
+        font-size: 10px !important;
+        letter-spacing: 0.03em !important;
+    }
+    .cmms-ticket-status {
+        font-size: 10px !important;
+    }
+    .req-pill {
+        font-size: 9px !important;
+        padding: 2px 6px !important;
+    }
+    .td-nowrap {
+        white-space: normal !important;
+    }
+    .cmms-ticket-table .cmms-btn-secondary {
+        font-size: 11px !important;
+        padding: 8px 12px !important;
+        min-height: 40px !important;
+    }
+
+    /* Status tracker mobile vertical steps */
+    .cmms-st-summary {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 8px !important;
+        padding: 12px 14px !important;
+    }
+    .cmms-st-summary-main {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+    }
+    .cmms-st-steps {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 16px !important;
+        padding: 16px 14px !important;
+    }
+    .cmms-st-step {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 12px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        position: relative !important;
+    }
+    .cmms-st-dot {
+        flex-shrink: 0 !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+    .cmms-st-line {
+        position: absolute !important;
+        left: 11px !important;
+        top: 24px !important;
+        bottom: -16px !important;
+        width: 2px !important;
+        height: auto !important;
+        right: auto !important;
+    }
+    .cmms-st-body {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+    }
+    .cmms-st-label {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+    }
+    .cmms-st-note {
+        font-size: 11.5px !important;
+        color: var(--cmms-muted) !important;
+    }
+    .cmms-st-date {
+        font-size: 11px !important;
+    }
+    .cmms-st-actor {
+        font-size: 11px !important;
+    }
+
+    /* Pagination */
+    .cmms-pagination-bar {
+        padding: 12px 14px !important;
+    }
+    .cmms-pagination-bar nav {
+        display: flex !important;
+        flex-wrap: wrap !important;
+        gap: 4px !important;
+        justify-content: center !important;
+    }
+
+    /* Empty state */
+    .cmms-empty {
+        padding: 30px 16px !important;
+    }
+    .cmms-empty h3 {
+        font-size: 13px !important;
+    }
+    .cmms-empty p {
+        font-size: 12px !important;
+    }
+
+    /* Buttons general */
+    .cmms-btn-primary,
+    .cmms-btn-secondary,
+    .cmms-btn-success,
+    .cmms-btn-danger,
+    .cmms-btn-danger-ghost,
+    .cmms-btn-muted {
+        font-size: 12px !important;
+        padding: 10px 14px !important;
+        min-height: 44px !important;
+    }
+
+    /* Meta grid */
+    .cmms-meta-grid {
+        grid-template-columns: 1fr !important;
+        gap: 8px !important;
+    }
+    .cmms-meta-card {
+        padding: 10px 12px !important;
+    }
+    .cmms-meta-card .label {
+        font-size: 10px !important;
+    }
+    .cmms-meta-card .value {
+        font-size: 12px !important;
+    }
+
+    /* PR meta rows */
+    .cmms-pr-meta-row {
+        grid-template-columns: 1fr !important;
+        gap: 4px !important;
+        padding: 8px 0 !important;
+    }
+    .cmms-pr-meta-row .k {
+        font-size: 9px !important;
+    }
+    .cmms-pr-meta-row .v {
+        font-size: 12px !important;
+    }
+
+    /* PR sheet */
+    .cmms-pr-sheet-head {
+        padding: 12px 14px !important;
+        flex-direction: column !important;
+        align-items: flex-start !important;
+    }
+    .cmms-pr-sheet-head .doc-title {
+        font-size: 12px !important;
+    }
+    .cmms-pr-sheet-head .doc-org {
+        font-size: 11px !important;
+    }
+
+    /* Action bar */
+    .cmms-action-bar {
+        flex-direction: column !important;
+        gap: 8px !important;
+    }
+    .cmms-action-bar .cmms-btn-primary,
+    .cmms-action-bar .cmms-btn-secondary {
+        width: 100% !important;
+        min-height: 44px !important;
+    }
+}
+

@@ -125,13 +125,19 @@
                     <div>
                         <span class="rx-field-label">Where did it go?</span>
                         <div class="rx-dest" role="radiogroup" aria-label="Destination for line {{ $idx + 1 }}">
-                            <label data-d="stock-in">
-                                <input type="radio" name="lines[{{ $idx }}][destination]" value="stock-in" required onchange="rxToggleUnits(this)">
-                                <span><span class="t">Add to inventory</span><span class="d">Stored in Parts &amp; Consumables &mdash; issued later to whoever needs it.</span></span>
+                            <label data-d="stock-in" class="rx-dest-card">
+                                <div class="rx-dest-head">
+                                    <input type="radio" name="lines[{{ $idx }}][destination]" value="stock-in" required onchange="rxToggleUnits(this)">
+                                    <span class="t">Add to inventory</span>
+                                </div>
+                                <div class="d">Stored in Parts &amp; Consumables &mdash; issued later to whoever needs it.</div>
                             </label>
-                            <label data-d="direct-asset" @class(['is-disabled' => !(isset($linkedAsset) && $linkedAsset)])>
-                                <input type="radio" name="lines[{{ $idx }}][destination]" value="direct-asset" required onchange="rxToggleUnits(this)" @disabled(!(isset($linkedAsset) && $linkedAsset))>
-                                <span><span class="t">Install on asset</span><span class="d">Straight onto {{ isset($linkedAsset) && $linkedAsset ? ($linkedAsset->asset_code ?? ('#' . $linkedAsset->asset_id)) : 'the linked asset (unavailable)' }}.</span></span>
+                            <label data-d="direct-asset" @class(['rx-dest-card', 'is-disabled' => !(isset($linkedAsset) && $linkedAsset)])>
+                                <div class="rx-dest-head">
+                                    <input type="radio" name="lines[{{ $idx }}][destination]" value="direct-asset" required onchange="rxToggleUnits(this)" @disabled(!(isset($linkedAsset) && $linkedAsset))>
+                                    <span class="t">Install on asset</span>
+                                </div>
+                                <div class="d">Straight onto {{ isset($linkedAsset) && $linkedAsset ? ($linkedAsset->asset_code ?? ('#' . $linkedAsset->asset_id)) : 'the linked asset (unavailable)' }}.</div>
                             </label>
                         </div>
                     </div>

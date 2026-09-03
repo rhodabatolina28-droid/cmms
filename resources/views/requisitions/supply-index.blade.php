@@ -144,11 +144,359 @@
     .cmms-sort-toggle a + a { border-left:1px solid var(--cmms-border); }
     .cmms-sort-toggle a:hover { color:#0038A8; background:#f8fafc; }
     .cmms-sort-toggle a.active { background:#0038A8; color:#fff; }
+    .mobile-table-hint { display: none; }
 
     @media (max-width: 768px) {
-        .cmms-queue-toolbar { flex-direction: column; align-items: stretch; }
-        .cmms-sort-toggle { justify-content: stretch; }
-        .cmms-sort-toggle a { flex: 1; justify-content: center; }
+        .cmms-page-card-head {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+        }
+        .cmms-page-card-head .cmms-btn-secondary {
+            width: 100% !important;
+            justify-content: center !important;
+            text-align: center !important;
+            min-height: 44px !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-gov-tabs {
+            overflow-x: auto !important;
+            white-space: nowrap !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            padding-bottom: 2px !important;
+            gap: 16px !important;
+        }
+        .cmms-gov-tabs::-webkit-scrollbar { display: none; }
+        .cmms-gov-tabs a {
+            flex-shrink: 0 !important;
+            padding: 10px 4px !important;
+            font-size: 11.5px !important;
+        }
+        .queue-summary-cards {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 8px !important;
+        }
+        .queue-summary-cards .qstat--all {
+            grid-column: 1 / -1 !important;
+        }
+        .qstat {
+            padding: 10px 12px !important;
+            min-height: 52px !important;
+        }
+        .qstat-val {
+            font-size: 20px !important;
+        }
+        .qstat-lbl {
+            font-size: 10.5px !important;
+        }
+        .cmms-queue-toolbar {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 8px !important;
+        }
+        .cmms-queue-toolbar form {
+            min-height: 44px !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-sort-toggle {
+            display: flex !important;
+            width: 100% !important;
+        }
+        .cmms-sort-toggle a {
+            flex: 1 !important;
+            justify-content: center !important;
+            min-height: 40px !important;
+        }
+        /* Mobile horizontal scroll table styling */
+        .mobile-table-hint {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            border-bottom: 1px solid #dbeafe;
+        }
+        .table-wrap {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            border-radius: 0 0 10px 10px !important;
+        }
+        .cmms-req-table {
+            min-width: 880px !important;
+            width: 880px !important;
+            table-layout: auto !important;
+        }
+        .cmms-req-table colgroup {
+            display: none !important;
+        }
+        .cmms-req-table th,
+        .cmms-req-table td {
+            white-space: nowrap !important;
+            padding: 12px 14px !important;
+            font-size: 13px !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+        }
+        .cmms-req-table th {
+            font-size: 11px !important;
+            padding: 10px 14px !important;
+        }
+        .cmms-req-table td.cell-trim {
+            white-space: normal !important;
+            min-width: 140px !important;
+            max-width: 220px !important;
+            line-height: 1.4 !important;
+        }
+        .cmms-req-table td.td-nowrap {
+            white-space: nowrap !important;
+        }
+        /* Table Action column & buttons mobile optimization */
+        .cmms-req-table th:last-child,
+        .cmms-req-table td:last-child {
+            min-width: 130px !important;
+            text-align: center !important;
+            padding: 10px 12px !important;
+        }
+        .cmms-req-table .row-actions {
+            display: inline-flex !important;
+            flex-wrap: nowrap !important;
+            align-items: center !important;
+            justify-content: center !important;
+            gap: 6px !important;
+        }
+        .cmms-req-table .act-btn {
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            font-size: 14px !important;
+            border-radius: 8px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            flex-shrink: 0 !important;
+            box-sizing: border-box !important;
+            touch-action: manipulation !important;
+        }
+        .cmms-req-table tr.cmms-req-details-row > td {
+            white-space: normal !important;
+            padding: 14px 16px !important;
+            background: #f8fafc !important;
+        }
+        .cmms-req-details-grid {
+            display: flex !important;
+            flex-direction: column !important;
+            gap: 14px !important;
+            max-width: 100% !important;
+        }
+        .cmms-req-details-col {
+            background: #fff !important;
+            border: 1px solid #e2e8f0 !important;
+            border-radius: 8px !important;
+            padding: 12px 14px !important;
+        }
+        .cmms-req-details-col .cmms-btn-secondary {
+            display: flex !important;
+            width: 100% !important;
+            min-height: 44px !important;
+            align-items: center !important;
+            justify-content: center !important;
+            text-align: center !important;
+            box-sizing: border-box !important;
+            font-size: 13px !important;
+            font-weight: 700 !important;
+            margin-top: 10px !important;
+        }
+
+        /* ── JOB ORDERS tab mobile optimization ── */
+        .cmms-ticket-table {
+            min-width: 780px !important;
+            width: 780px !important;
+            table-layout: auto !important;
+        }
+        .cmms-ticket-table th,
+        .cmms-ticket-table td {
+            white-space: nowrap !important;
+            padding: 11px 12px !important;
+            font-size: 13px !important;
+        }
+        .cmms-ticket-table td:first-child strong {
+            color: #0038A8;
+            font-size: 13px;
+        }
+        .cmms-ticket-table td.td-nowrap {
+            white-space: nowrap !important;
+            display: table-cell !important;
+        }
+        .cmms-ticket-table td.td-nowrap a.cmms-btn-secondary {
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            min-height: 36px !important;
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            border-radius: 6px !important;
+            white-space: nowrap !important;
+            margin: 0 2px !important;
+        }
+        .cmms-ticket-table .req-pill {
+            display: inline-block !important;
+            font-size: 11px !important;
+            padding: 2px 7px !important;
+            border-radius: 6px !important;
+            margin: 1px 2px !important;
+            white-space: nowrap !important;
+        }
+
+        /* ── PURCHASE REQUESTS tab mobile optimization ── */
+        .cmms-queue-toolbar.pr-chips {
+            display: flex !important;
+            flex-direction: row !important;
+            flex-wrap: nowrap !important;
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            scrollbar-width: none !important;
+            gap: 8px !important;
+            padding-bottom: 4px !important;
+            width: 100% !important;
+        }
+        .cmms-queue-toolbar.pr-chips::-webkit-scrollbar {
+            display: none !important;
+        }
+        .cmms-queue-toolbar.pr-chips .cmms-filter-pill {
+            flex-shrink: 0 !important;
+            min-height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            padding: 6px 14px !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            border-radius: 20px !important;
+        }
+        .cmms-queue-toolbar.pr-chips .chip-cnt {
+            margin-left: 6px !important;
+            padding: 2px 7px !important;
+            font-size: 11px !important;
+        }
+        .cmms-pr-table {
+            min-width: 820px !important;
+            width: 820px !important;
+            table-layout: auto !important;
+        }
+        .cmms-pr-table th,
+        .cmms-pr-table td {
+            white-space: nowrap !important;
+            padding: 11px 12px !important;
+            font-size: 13px !important;
+        }
+        .cmms-pr-table td.cell-trim {
+            white-space: normal !important;
+            min-width: 130px !important;
+            max-width: 220px !important;
+            line-height: 1.4 !important;
+        }
+        .cmms-pr-table td:last-child {
+            min-width: 150px !important;
+        }
+        .cmms-pr-table td:last-child > div {
+            display: inline-flex !important;
+            align-items: center !important;
+            gap: 6px !important;
+            flex-wrap: nowrap !important;
+        }
+        .cmms-pr-table .cmms-btn-secondary,
+        .cmms-pr-table .cmms-btn-primary {
+            min-height: 36px !important;
+            padding: 6px 12px !important;
+            font-size: 12px !important;
+            font-weight: 700 !important;
+            border-radius: 6px !important;
+            white-space: nowrap !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            box-sizing: border-box !important;
+        }
+        .cmms-pr-table form {
+            margin: 0 !important;
+            display: inline-flex !important;
+        }
+
+        /* ── Pagination bars on mobile (both JO and PR tabs) ── */
+        .cmms-pagination-bar {
+            padding: 10px 8px !important;
+            justify-content: center !important;
+        }
+        .cmms-pagination-bar nav {
+            width: 100% !important;
+        }
+        .cmms-pagination-bar .pagination {
+            display: flex !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            gap: 4px !important;
+        }
+        .cmms-pagination-bar .pagination li a,
+        .cmms-pagination-bar .pagination li span {
+            min-width: 38px !important;
+            min-height: 38px !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            font-size: 12px !important;
+            padding: 4px 8px !important;
+        }
+
+        /* ── Panel heads on mobile ── */
+        .cmms-panel-head {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            gap: 6px !important;
+            padding: 12px 14px !important;
+        }
+        .cmms-panel-head h2 {
+            font-size: 15px !important;
+        }
+        .cmms-count-badge {
+            font-size: 11px !important;
+        }
+    }
+
+    /* Mobile SweetAlert styling for Quick Actions */
+    @media (max-width: 768px) {
+        .swal2-popup {
+            width: 92% !important;
+            max-width: 380px !important;
+            padding: 18px 14px !important;
+            border-radius: 14px !important;
+        }
+        .swal2-title {
+            font-size: 17px !important;
+        }
+        .swal2-html-container {
+            font-size: 13.5px !important;
+        }
+        .swal2-actions {
+            width: 100% !important;
+            gap: 8px !important;
+            margin-top: 16px !important;
+        }
+        .swal2-actions button {
+            min-height: 44px !important;
+            border-radius: 8px !important;
+            font-size: 14px !important;
+            flex: 1 !important;
+            margin: 0 !important;
+        }
     }
 </style>
 @endsection
@@ -245,6 +593,7 @@
                 <span class="cmms-count-badge"><span id="queueTotalCount">{{ $requisitions->total() }}</span> record(s)</span>
             </div>
             <div class="cmms-panel-body flush" id="queuePanelBody">
+                <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
                 <div class="table-wrap">
                     <table class="cmms-official-table cmms-ticket-table cmms-req-table">
                         <colgroup>
@@ -313,6 +662,7 @@
                         <p>No assigned job orders fall within your office scope.</p>
                     </div>
                 @else
+                    <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-ticket-table">
                             <thead>
@@ -407,6 +757,7 @@
                         </p>
                     </div>
                 @else
+                    <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-req-table cmms-pr-table">
                             <thead>
