@@ -365,9 +365,21 @@
             /* ═══ Charts — decompressed on mobile ═══
                Taller canvas so office labels + doughnut legend breathe;
                Chart.js is responsive so it reflows to the new height. */
+            .analytics-grid {
+                min-width: 0 !important;
+            }
+            .analytics-box {
+                min-width: 0 !important;
+                overflow: hidden !important;
+            }
             .analytics-box .chart-box-bar,
             .analytics-box .chart-box-doughnut {
                 height: 360px !important;
+                max-width: 100% !important;
+                overflow: hidden !important;
+            }
+            .analytics-box canvas {
+                max-width: 100% !important;
             }
         }
         .tr-hover-row { transition: all 0.2s; position: relative; }
