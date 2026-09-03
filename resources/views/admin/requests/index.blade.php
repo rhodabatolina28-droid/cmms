@@ -307,6 +307,56 @@
             .btn-action-modern i { font-size: 13px !important; }
             .ad-td-id { display: inline-block !important; max-width: 100px !important; white-space: nowrap !important; overflow: hidden !important; text-overflow: ellipsis !important; }
 
+            /* Table mobile — Supply Workspace scroll pattern */
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            .ad-table-wrap {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 0 10px 10px !important;
+            }
+            .ad-table-wrap .gov-table-premium {
+                min-width: 780px !important;
+                width: 780px !important;
+                table-layout: auto !important;
+            }
+            .ad-table-wrap .gov-table-premium th,
+            .ad-table-wrap .gov-table-premium td {
+                white-space: nowrap !important;
+                padding: 12px 12px !important;
+                font-size: 13px !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+            }
+            .ad-table-wrap .gov-table-premium th { font-size: 11px !important; padding: 10px 12px !important; }
+            /* Keep the row-primary cells readable */
+            .ad-td-id { max-width: 140px !important; overflow: hidden !important; text-overflow: ellipsis !important; }
+            .ad-td-name { white-space: normal !important; min-width: 140px !important; }
+            /* Action buttons stay inline round (global full-width rule override) */
+            .ad-table-wrap .btn-action-modern {
+                width: 44px !important; height: 44px !important;
+                min-width: 44px !important; min-height: 44px !important;
+                flex-shrink: 0 !important;
+                display: inline-flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+            }
+            
             /* Pagination */
             .ad-pagination { margin-top: 16px !important; }
             .ad-pagination nav { 
@@ -320,6 +370,8 @@
             .btn-action-modern { min-height: 44px !important; min-width: 44px !important; }
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
         }
+        /* Base: hide swipe hint on desktop (mobile re-shows it) */
+        .mobile-table-hint { display: none; }
     </style>
 @endsection
 
@@ -359,6 +411,7 @@
                 </select>
             </div>
 
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="ad-table-wrap">
                 <table class="gov-table-premium">
                     <thead>

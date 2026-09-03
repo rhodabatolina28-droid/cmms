@@ -202,7 +202,6 @@
 .mobile-table-hint { display: none; }
 
     @media (max-width: 768px) {
-    @media (max-width: 768px) {
         .parts-container { padding: 12px 8px !important; }
         .parts-body { padding: 12px 10px !important; }
         .parts-card-head { padding: 12px 14px !important; }
