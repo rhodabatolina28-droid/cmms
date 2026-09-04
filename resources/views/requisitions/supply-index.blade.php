@@ -54,7 +54,7 @@
     .cmms-req-details-btn.is-open .cmms-req-details-chevron { transform:rotate(180deg); }
     /* Column alignment: fixed layout - ITEMS is the wide middle column; rest compact */
     table.cmms-ticket-table { min-width:820px; }
-    .cmms-req-table { table-layout:fixed; min-width:860px; }
+    .cmms-req-table { table-layout:auto; min-width:860px; }
     .cmms-req-table th, .cmms-req-table td { vertical-align:middle; }
     .cmms-req-table .cell-trim { overflow-wrap:anywhere; word-break:break-word; }
     .cmms-req-table th {
