@@ -277,6 +277,8 @@
             height: 36px !important;
             min-width: 36px !important;
             min-height: 36px !important;
+            padding: 0 !important;
+            line-height: 1 !important;
             font-size: 14px !important;
             border-radius: 8px !important;
             display: inline-flex !important;
@@ -285,6 +287,7 @@
             flex-shrink: 0 !important;
             box-sizing: border-box !important;
             touch-action: manipulation !important;
+            overflow: hidden !important;
         }
         .cmms-req-table tr.cmms-req-details-row > td {
             white-space: normal !important;
