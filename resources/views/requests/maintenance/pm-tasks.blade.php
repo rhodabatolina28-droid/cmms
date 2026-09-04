@@ -85,12 +85,55 @@
     .pm-btn-view:hover { background: #e2e8f0; transform: translateY(-2px); color: #475569; }
     .pm-pagination { margin-top: 20px; }
 
+    /* Base: hide swipe hint on desktop (mobile re-shows below) */
+    .mobile-table-hint { display: none; }
+
     @media screen and (max-width: 767px) {
         .card-header-accent { padding: 15px !important; }
         .card-body-content { padding: 15px !important; }
         .pm-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
-        .pm-table-card { overflow-x: auto !important; }
-        .pm-table { min-width: 600px !important; }
+
+        /* PM table - Supply Workspace scroll pattern */
+        .mobile-table-hint {
+            display: flex !important;
+            align-items: center;
+            justify-content: center;
+            gap: 7px;
+            padding: 9px 12px;
+            background: #eff6ff;
+            color: #1e40af;
+            font-size: 11.5px;
+            font-weight: 700;
+            letter-spacing: 0.03em;
+            border: 1px solid #dbeafe;
+            border-bottom: none;
+            border-radius: 10px 10px 0 0;
+        }
+        .pm-table-card {
+            overflow-x: auto !important;
+            -webkit-overflow-scrolling: touch !important;
+            border-radius: 0 0 10px 10px !important;
+        }
+        .pm-table {
+            min-width: 1000px !important;
+            width: 1000px !important;
+            table-layout: auto !important;
+        }
+        .pm-table .pm-td,
+        .pm-table .pm-td-name,
+        .pm-table .pm-td-office,
+        .pm-table .pm-td-status,
+        .pm-table .pm-td-action,
+        .pm-table .pm-th-cell,
+        .pm-table .pm-th-cell-center {
+            white-space: nowrap !important;
+            padding: 12px 12px !important;
+            font-size: 12px !important;
+            word-break: normal !important;
+            overflow-wrap: normal !important;
+        }
+        /* Action buttons stay inline-compact (global full-width rule override) */
+        .pm-btn-action { width: auto !important; }
     }
 </style>
 @endsection
@@ -151,6 +194,7 @@
             </div>
 
             {{-- PM Tasks Table --}}
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="pm-table-card">
                 @if($pmTasks->isEmpty())
                     <div class="pm-empty">
