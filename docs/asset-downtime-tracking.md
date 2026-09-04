@@ -182,6 +182,82 @@ php artisan downtime:repair
   availability %; requires aging (D2) and accurate downtime (this doc) first
 - Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
 
+### D4 — High-Official Immediate Priority (ICT) — DESIGNED, awaiting execution
+
+**Rule:** kapag nag-file ng ICT request ang high official (Director, ED, OIC), ang ticket niya ay
+**una sa IT queue** kahit huli siyang nagpasa — "immediate" ang treatment.
+
+#### D4.1 Detection — position keyword matching (locked decision: NO new column)
+```
+users.position (EXISTING column) → keyword match (case-insensitive) → HIGH OFFICIAL
+```
+**DB reality check (Sept 2026):**
+- `role` column = SYSTEM role lang (user=44, admin=10, super_admin=2, it=2) — ang Director ay `user` lang, walang rank info
+- `position` column: **54 sa 58 users ang null/empty (93%)** — 4 lang ang may laman
+- Kaya: **position backfill ang susi** — ibibigay ng user ang official list (pangalan + posisyon), i-fi-fill sa User Management
+
+#### D4.2 Keyword config (NEW `config/priority.php`)
+```php
+return [
+    'high_official_keywords' => [
+        'Executive Director', 'Deputy Executive Director', 'Director IV', 'Director III',
+        'OIC-Director', 'Director',   // full title phrases — HINDI generic words
+    ],
+];
+```
+**Guardrail 1 — full-phrase matching, hindi substring:** ginagamit ang buong plantilla title
+("Director IV"), hindi malayang salita. Kaya ligtas ang "Director's Secretary" at "Programmer"
+dahil hindi sila eksaktong tugma sa listahan. Ang Super Admin ang naglilista — ang position text
+ay kontrolado, kaya finite ang mga title.
+
+#### D4.3 Helper (User model)
+```php
+public function getIsHighOfficialAttribute(): bool
+{
+    $position = mb_strtolower(trim((string) $this->position));
+    if ($position === '') return false;
+    foreach (config('priority.high_official_keywords', []) as $kw) {
+        if (mb_strpos($position, mb_strtolower($kw)) !== false) return true;
+    }
+    return false;
+}
+```
+
+#### D4.4 Queue-jump — saan ipapasok (verified sites)
+| Site | Kasalukuyang ordering | D4 change |
+|---|---|---|
+| `ItDashboardAction` L46-61 (IT dashboard widget) | orderByRaw CASE by status → updated_at desc, limit 6 | **Officials-first**: dagdag na lead CASE (may LEFT JOIN sa users): `official → 0, iba → 1` bago ang status CASE |
+| `ListIctRequestsAction` (ICT requests list, paginate 20) | orderBy created_at desc (6 variants) | Parehong officials-first lead ordering, para consistent sa lahat ng list views |
+
+**Ordering rule (locked):** Officials muna (newest first), tapos ang lahat ng regular tickets
+ng may status CASE flow. Hindi hinahayaan ang Ongoing na regular na mawala sa flow — pero ang
+bagong official ticket ang lalabas sa pinaka-taas ng queue.
+
+#### D4.5 UI badge
+⚡ **High Official** chip (amber) sa ticket card/row ng IT queue at ICT lists — kita agad kung bakit
+nasa taas ang ticket.
+
+#### D4.6 🚨 RISK NA NAHULI SA DEEPVIEW — self-service position editing
+Ang `ProfileController` ay **hayaan ang USER na i-edit ang SARILING position** (self-service form,
+`profile/index.blade.php` L272). Ibig sabihin: **kahit sino pwedeng mag-type ng "Director" para
+lumaktaw sa queue!**
+
+**Guardrail 2 (required bago i-rollout ang D4):** gawing **read-only** ang position field sa
+self-service Profile; ang position ay i-e-edit **lang** ng Super Admin (User Management) at
+Department Admin (Personnel Management modals — existing na). Ang self-inflation ay hindi na posible.
+
+#### D4.7 Backfill plan
+1. User magbibigay ng **official list** (pangalan + eksaktong posisyon)
+2. Super Admin i-fi-fill sa User Management (54 users ang empty ngayon)
+3. Verify: tinker check — `User::whereNotNull('position')` count + isHighOfficial spot-check
+
+#### D4.8 Execution phases (pagkatapos ng X1-X4; test-first)
+| Phase | Scope | Gate |
+|---|---|---|
+| **D4a** | `config/priority.php` + `is_high_official` accessor + position read-only sa Profile | Unit test: accessor matches "Director IV" ✓, rejects "Programmer" ✓, rejects empty ✓ |
+| **D4b** | Queue-jump ordering sa ItDashboardAction + ListIctRequestsAction + ⚡ badge | Feature test: official ticket lumalabas sa taas ng regular queue |
+| **D4c** | Backfill positions (official list ng user) | Manual verify sa queue |
+
 ---
 
 ## 6. Key Design Decisions (locked, Sept 2026)
@@ -191,6 +267,13 @@ php artisan downtime:repair
 4. **Cancelled/Rejected/Referred close the window and credit the asset** — the asset really was down
 5. **`abs()` + `(int)` cast everywhere** — Carbon-version-proof
 6. **DB backup before any data-mutation command** (lesson learned from the pre-restore incident)
+7. **High-official detection = position keyword matching** (no `is_high_official` column) — position
+   backfill + `config/priority.php` full-phrase keyword list; DB audit showed `position` 93% empty
+   and `role` is system-role only, so neither can identify rank as-is
+8. **Position becomes admin-managed only** — self-service Profile position field goes read-only
+   BEFORE D4 rolls out (otherwise any user can self-inflate to "Director" and jump the queue)
+9. **Officials-first ordering** — officials (newest first) at the top of IT queue; regular tickets
+   keep the status-based flow below; Ongoing regular work is not displaced, only queue entry order changes
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
