@@ -665,9 +665,6 @@
             <div class="cmms-toolbar">
                 @if($ticket)
                     <a href="{{ $ticket->type === 'Preventive Maintenance' ? route('maintenance.show', $ticket->id) : route('ict.show', $ticket->id) }}" class="cmms-btn-secondary" target="_blank">Job order record</a>
-                    @if($isIT)
-                        <a href="{{ route('ict.ticket', $ticket->id) }}" class="cmms-btn-secondary">Parts register</a>
-                    @endif
                 @endif
                 @if(Auth::user()->canProcessSupply())
                 <a href="{{ route('requisitions.index', ['view' => 'queue']) }}" class="cmms-btn-secondary">Return to list</a>

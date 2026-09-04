@@ -266,7 +266,7 @@
 @php
     $jobUrl = function ($job) {
         if ($job->type === 'ICT' && $job->status === \App\Models\Request::STATUS_AWAITING_PARTS) {
-            return route('ict.ticket', $job->id);
+            return route('requisitions.index', ['request_id' => $job->id]);
         }
 
         return route($job->type === 'ICT' ? 'ict.edit' : 'maintenance.edit', $job->id);
