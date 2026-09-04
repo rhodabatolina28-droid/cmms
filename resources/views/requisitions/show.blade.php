@@ -97,7 +97,7 @@
         max-width: 100% !important;
     }
 
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         html, body {
             overflow-x: hidden !important;
         }

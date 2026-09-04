@@ -300,7 +300,7 @@
         .btn-submit { padding: 10px 25px; }
         .section-divider { font-size: 10px; font-weight: 800; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.6px; margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #f1f5f9; }
         /* MOBILE RESPONSIVE */
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px 20px !important; }
             .card-header-accent .btn-gov-primary { width: 100% !important; justify-content: center !important; }
             .h3-title { font-size: 16px !important; }

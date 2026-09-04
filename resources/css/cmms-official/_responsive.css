@@ -1,7 +1,7 @@
 /* cmms-official/_responsive.css — Supply Workspace Mobile Responsive */
 
 /* ── Supply Workspace Mobile Responsive ── */
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     /* Page intro */
     .cmms-page-intro {
         flex-direction: column !important;

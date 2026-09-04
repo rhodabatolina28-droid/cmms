@@ -112,7 +112,7 @@
     .div-card.queued .div-count { color:#64748b; }
     .div-footer-custom { display:flex; justify-content:space-between; align-items:center; margin-top:8px; font-size:10px; color:#64748b; }
     .btn-refresh { background:#f1f5f9; color:#475569; }
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .premium-card { padding: 16px !important; }
         .stat-count { font-size: 20px !important; }
         .schedule-card { padding: 14px !important; }
@@ -153,7 +153,7 @@
         .table-wo th, .table-wo td { white-space: nowrap !important; }
         .btn-wo-action { min-height: 44px !important; padding: 10px 14px !important; font-size: 12px !important; }
     }
-    @media (max-width: 480px) {
+    @media screen and (max-width: 480px) {
         .stats-grid-custom { grid-template-columns: 1fr !important; }
         .div-grid-custom { grid-template-columns: 1fr !important; }
         .th-wo, .th-wo-center { padding: 8px 6px !important; font-size: 9px !important; }

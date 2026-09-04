@@ -7,7 +7,7 @@
         max-width: 100%;
         overflow-x: hidden;
     }
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         #mainContent.main:has(.cmms-official-page) {
             padding: 8px 8px 18px !important;
             max-width: 100vw !important;

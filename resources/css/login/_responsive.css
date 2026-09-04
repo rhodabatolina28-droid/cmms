@@ -1,7 +1,7 @@
 /* login/_responsive.css — Tablet, Mobile, Small Mobile breakpoints */
 
 /* Tablet (768px - 1023px) */
-@media (max-width: 1023px) {
+@media screen and (max-width: 1023px) {
     .login-wrapper {
         max-width: 450px;
     }
@@ -12,7 +12,7 @@
 }
 
 /* Mobile (320px - 767px) */
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
     body {
         padding: 0;
         background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
@@ -171,7 +171,7 @@
 }
 
 /* Small Mobile (320px - 374px) */
-@media (max-width: 374px) {
+@media screen and (max-width: 374px) {
     .login-box {
         padding: 24px 18px;
     }

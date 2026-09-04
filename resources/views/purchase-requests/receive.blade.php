@@ -32,11 +32,11 @@
     .rx-line-desc em { color:#475569; font-style:normal; font-weight:700; background:#f1f5f9; border-radius:999px; padding:2px 10px; font-size:11.5px; margin-left:7px; }
     .rx-field-label { display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:5px; }
     .rx-cols { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
-    @media (max-width:680px){ .rx-cols { grid-template-columns:1fr; } }
+    @media screen and (max-width:680px){ .rx-cols { grid-template-columns:1fr; } }
     .rx-select-wrap select, .rx-input { width:100%; padding:9px 12px; border:1.5px solid #d1d5db; border-radius:9px; font-size:12.5px; background:#fff; transition:border-color .15s; }
     .rx-select-wrap select:focus, .rx-input:focus { outline:none; border-color:#0038A8; }
     .rx-dest { display:grid; grid-template-columns:1fr 1fr; gap:9px; }
-    @media (max-width:680px){ .rx-dest { grid-template-columns:1fr; } }
+    @media screen and (max-width:680px){ .rx-dest { grid-template-columns:1fr; } }
     .rx-dest label { display:flex; flex-direction:column; border:1.5px solid #d1d5db; border-radius:11px; padding:10px 13px; cursor:pointer; background:#fff; transition:all .15s; }
     .rx-dest label:hover { border-color:#86efac; }
     .rx-dest-head { display:flex; align-items:center; gap:8px; width:100%; }
@@ -49,7 +49,7 @@
     .rx-unit-grid.show { display:block; }
     .rx-unit-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#374151; margin-bottom:8px; }
     .rx-unit-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
-    @media (max-width:560px){ .rx-unit-row { grid-template-columns:1fr; } }
+    @media screen and (max-width:560px){ .rx-unit-row { grid-template-columns:1fr; } }
     .rx-warn { display:flex; gap:10px; align-items:flex-start; background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:13px 15px; margin-bottom:16px; font-size:12.5px; color:#92400e; line-height:1.5; }
     .rx-warn i { margin-top:2px; }
 
@@ -79,7 +79,7 @@
     .rx-confirm-bar .txt { font-size:12px; color:#475569; }
 
     /* ══════ MOBILE-ONLY STYLES ══════ */
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         /* Main container containment */
         #mainContent.main:has(.rx-page) {
             padding: 8px 8px 24px !important;

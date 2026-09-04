@@ -140,7 +140,7 @@
         .pagination-flex { margin-top: 25px; display: flex; justify-content: center; }
         .swal2-checkbox, #swal2-checkbox, div.swal2-checkbox { display: none !important; }
 
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 16px 20px !important; }
             .h3-title { font-size: 16px !important; }
             .p-subtitle { font-size: 11px !important; }

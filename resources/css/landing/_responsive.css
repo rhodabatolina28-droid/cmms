@@ -1,7 +1,7 @@
 /* landing/_responsive.css — All @media queries for landing page */
 
 /* RESPONSIVE */
-@media (max-width: 1023px) {
+@media screen and (max-width: 1023px) {
     .container {
         padding: 0 20px;
     }
@@ -28,7 +28,7 @@
     }
 }
 
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
     .container {
         padding: 0 16px;
     }
@@ -165,7 +165,7 @@
 }
 
 /* ENHANCED MOBILE LANDING PAGE IMPROVEMENTS */
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
     /* Hero Section - Enhanced Mobile */
     .hero {
         padding: 50px 0 40px;

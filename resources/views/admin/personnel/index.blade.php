@@ -297,7 +297,7 @@
         .form-group-lg { margin-bottom: 25px; }
         /* â”€â”€ SweetAlert on TOP of all modals â”€â”€ */
         .swal2-container { z-index: 100000 !important; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .det-grid { grid-template-columns: 1fr !important; }
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
             .form-grid { grid-template-columns: 1fr !important; }

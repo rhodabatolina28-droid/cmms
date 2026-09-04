@@ -201,7 +201,7 @@
         .warranty-expiring { background: #fffbeb; color: #b45309; border-color: #b45309; }
         .warranty-default { background: #f3f4f6; color: #6b7280; border-color: #6b7280; }
         .warranty-expiry { font-size: 12px; color: #64748b; margin-left: 8px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
             input, select, textarea { min-height: 48px !important; font-size: 15px !important; }

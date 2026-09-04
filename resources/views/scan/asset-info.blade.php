@@ -118,7 +118,7 @@
             text-transform: uppercase; letter-spacing: 1px; max-width: 480px;
         }
 
-        @media (max-width: 480px) {
+        @media screen and (max-width: 480px) {
             body { padding: 8px; }
             .row { flex-direction: column; gap: 2px; }
             .label { width: auto; }

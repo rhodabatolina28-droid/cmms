@@ -12,7 +12,7 @@
     /* Containment: horizontal scroll stays inside the table area */
     .cmms-panel { max-width:100%; min-width:0; }
     .cmms-page-card, .cmms-page-card-body { max-width:100%; min-width:0; }
-    @media (max-width:768px) {
+    @media screen and (max-width:768px) {
         .cmms-req-table th, .cmms-req-table td { padding:10px 12px; font-size:12.5px; }
     }
     .text-muted-none { color:#94a3b8; font-size:0.8rem; }
@@ -71,7 +71,7 @@
     .cmms-req-table tr.cmms-req-details-row > td { text-align:left; }
     .cmms-req-table td.td-nowrap { white-space:normal; }
     .cmms-req-table .cmms-qbtn-group, .cmms-req-table .row-actions { justify-content:center; flex-wrap:wrap; }
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
         .table-wrap { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
@@ -146,7 +146,7 @@
     .cmms-sort-toggle a.active { background:#0038A8; color:#fff; }
     .mobile-table-hint { display: none; }
 
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .cmms-page-card-head {
             flex-direction: column !important;
             align-items: stretch !important;
@@ -472,7 +472,7 @@
     }
 
     /* Mobile SweetAlert styling for Quick Actions */
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .swal2-popup {
             width: 92% !important;
             max-width: 380px !important;

@@ -477,7 +477,7 @@
         .transfer-card { max-width: 520px; }
         .transfer-info-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
         .transfer-info-title { font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             input[type="checkbox"] { display: none !important; }
             .swal2-checkbox { display: none !important; }
             .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }

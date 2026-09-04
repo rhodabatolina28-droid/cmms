@@ -205,7 +205,7 @@
             border-radius: 8px;
             font-size: 13px;
         }
-        @media (max-width: 800px) {
+        @media screen and (max-width: 800px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
             .workbench-grid { grid-template-columns: 1fr !important; }
             .job-row { grid-template-columns: 1fr !important; }
@@ -219,7 +219,7 @@
             .job-number { font-size: 14px !important; }
             .action-button { min-height: 48px !important; padding: 12px 16px !important; font-size: 14px !important; }
         }
-        @media (max-width: 480px) {
+        @media screen and (max-width: 480px) {
             .stats-grid { grid-template-columns: 1fr !important; }
         }
         .stat-value-amber { color: #f59e0b; }
@@ -233,7 +233,7 @@
         .empty-state-subtitle { margin-top: 5px; }
         .job-row-single { grid-template-columns: 1fr; }
         .job-action-full { width: 100%; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .workbench-grid { grid-template-columns: 1fr !important; }
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }

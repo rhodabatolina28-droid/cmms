@@ -43,7 +43,7 @@
     .chips a + a { border-left:1px solid #e2e8f0; }
     .chips a:hover { color:#0038A8; background:#f8fafc; }
     .chips a.active { background:#0038A8; color:#fff; }
-    @media (max-width:767px) {
+    @media screen and (max-width:767px) {
         .cmms-history-toolbar { flex-direction:column; align-items:stretch; }
         .chips a { flex:1; text-align:center; display:inline-block; }
         /* Tabs: all 3 fit in one row — equal width, compact */
@@ -122,7 +122,7 @@
     /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
     .mobile-table-hint { display: none; }
     /* MOBILE RESPONSIVE */
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .cmms-official-hero h1,
         .cmms-official-hero,
         .cmms-hero-badge,

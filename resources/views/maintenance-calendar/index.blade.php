@@ -41,7 +41,7 @@
         }
         .sa-title-icon { margin-right: 10px; color: #0038A8; }
 
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { padding: 16px 18px !important; flex-direction: column; gap: 10px; align-items: flex-start; }
             .card-body-content { padding: 14px 12px !important; }
         }

@@ -5,7 +5,7 @@
 >
 @slot('extraHead')
     <style nonce="{{ $cspNonce }}">
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             #pmForm .grid-table, #pmForm table.grid-table, #pmForm .grid-table tr,
             #pmForm .grid-table tbody, #pmForm .grid-table td,
             #pmForm table[class*="grid"] { display: block; width: 100%; box-sizing: border-box; }

@@ -201,7 +201,7 @@
 
 .mobile-table-hint { display: none; }
 
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .parts-container { padding: 12px 8px !important; }
         .parts-body { padding: 12px 10px !important; }
         .parts-card-head { padding: 12px 14px !important; }
@@ -477,7 +477,7 @@
     .modal-head { background: #f8fafc; padding: 16px 20px; }
     .modal-head h3 { font-size: 15px; }
 
-    @media (max-width: 900px) { .parts-stats { grid-template-columns: repeat(2, 1fr); } }
+    @media screen and (max-width: 900px) { .parts-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
 <style nonce="{{ $cspNonce }}">
     /* ═══ Card-only layout (mimic Inventory & Assets) ═══ */

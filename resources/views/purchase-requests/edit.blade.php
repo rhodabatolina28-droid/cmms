@@ -67,7 +67,7 @@
         .a60-toolbar, .error-banner { display:none !important; }
         .a60-sheet { max-width:none; border:none; box-shadow:none; padding:0; }
     }
-    @media (max-width:900px){
+    @media screen and (max-width:900px){
         .a60-sheet { padding:18px; }
         .a60-table { min-width:660px; }
         .prf-scroll { overflow-x:auto; }
@@ -116,7 +116,7 @@
     .error-banner { background:#fef2f2; border:1px solid #fecaca; color:#b91c1c; padding:10px 14px; border-radius:8px; font-size:13px; font-family:'Segoe UI',Arial,sans-serif; max-width:900px; margin:0 auto 12px; }
 
     /* ===== MOBILE RESPONSIVE (≤ 768px) ===== */
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .a60-wrap {
             width: 100% !important;
             max-width: 100% !important;

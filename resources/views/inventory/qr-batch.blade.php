@@ -301,7 +301,7 @@
         .id-monospace { font-family: monospace; font-weight: 700; color: #0038A8; }
         td.name-bold { font-weight: 600; }
         td.cell-mono { font-family: monospace; font-size: 12px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .page-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 12px 16px !important; }
             .page-header h1 { font-size: 16px !important; }
             .header-actions { width: 100% !important; display: flex !important; flex-direction: column !important; gap: 8px !important; }

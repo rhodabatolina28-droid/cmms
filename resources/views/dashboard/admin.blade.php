@@ -166,7 +166,7 @@
             border-bottom: 0;
         }
 
-        @media (max-width: 800px) {
+        @media screen and (max-width: 800px) {
             .admin-workspace-grid {
                 grid-template-columns: 1fr !important;
             }
@@ -233,7 +233,7 @@
         .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; font-size: 12px; color: #475569; }
         .info-min { min-width: 140px; }
         .info-label { color: #64748b; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .admin-workspace-grid { grid-template-columns: 1fr !important; }
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
             .workbench-grid { grid-template-columns: 1fr !important; }

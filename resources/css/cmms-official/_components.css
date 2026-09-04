@@ -225,14 +225,14 @@
     grid-template-columns: 1fr 1fr;
     border-bottom: 1px solid #c5c9d0;
 }
-@media (max-width: 600px) { .cmms-pr-meta-grid { grid-template-columns: 1fr; } }
+@media screen and (max-width: 600px) { .cmms-pr-meta-grid { grid-template-columns: 1fr; } }
 
 .cmms-pr-meta-block {
     padding: 12px 16px;
     border-right: 1px solid #e5e7eb;
 }
 .cmms-pr-meta-block:last-child { border-right: none; }
-@media (max-width: 600px) {
+@media screen and (max-width: 600px) {
     .cmms-pr-meta-block { border-right: none; border-bottom: 1px solid #e5e7eb; }
     .cmms-pr-meta-block:last-child { border-bottom: none; }
 }
@@ -406,7 +406,7 @@
     align-items: start;
     width: 100%;
 }
-@media (max-width: 900px) {
+@media screen and (max-width: 900px) {
     .cmms-layout-split { grid-template-columns: 1fr; }
 }
 

@@ -36,7 +36,7 @@
     .btn-submit:hover { background:#002d8c; transform:translateY(-1px); box-shadow:0 4px 12px rgba(0,56,168,0.2); }
     .btn-cancel { padding:12px 28px; background:#f1f5f9; color:#475569; border:none; border-radius:10px; font-size:14px; font-weight:600; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
     .btn-cancel:hover { background:#e2e8f0; transform:translateY(-1px); }
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .premium-card { padding: 20px 16px !important; }
         .form-title { font-size: 18px !important; }
         .form-subtitle { font-size: 12px !important; margin-bottom: 20px !important; }
@@ -49,7 +49,7 @@
         .btn-submit, .btn-cancel { width: 100% !important; justify-content: center !important; min-height: 48px !important; font-size: 14px !important; }
         .checkbox-label { padding: 10px 14px !important; }
     }
-    @media (max-width: 480px) {
+    @media screen and (max-width: 480px) {
         .premium-card { padding: 16px 14px !important; }
         .form-title { font-size: 16px !important; }
         .form-subtitle { font-size: 11px !important; }

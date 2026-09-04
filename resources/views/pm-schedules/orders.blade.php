@@ -40,7 +40,7 @@
     /* Mobile swipe-table hint - hidden on desktop, revealed at max-width 767px */
     .mobile-table-hint { display:none; }
 
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .card-header-accent { padding: 16px 14px !important; }
         .card-body-content { padding: 14px 12px !important; }
         /* Filter buttons -- 2x2 grid, 44px touch targets */

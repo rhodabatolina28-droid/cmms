@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -697,7 +697,7 @@
     @yield('scripts')
     {{-- MOBILE OVERRIDES — loaded last; !important wins over all stylesheets and inline styles --}}
     <style nonce="{{ $cspNonce }}">
-        @media (max-width: 1000px) {
+        @media screen and (max-width: 1000px) {
             /* ── ALL GRID LAYOUTS — force 1 column on mobile/tablet ── */
             .admin-workspace-grid,
             .user-grid,
@@ -743,7 +743,7 @@
             border-radius: 0 0 10px 10px;
         }
 
-        @media (max-width: 1000px) {
+        @media screen and (max-width: 1000px) {
             /* Ensure topbar UI controls stay compact */
             #sidebarToggle { width: 38px !important; flex-shrink: 0 !important; }
             .notification-wrapper { flex-shrink: 0 !important; }
@@ -751,7 +751,7 @@
             /* Signature Pad Mobile Fix */
             canvas, .sig-canvas, .signature-pad { touch-action: none !important; }
         }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
             .card-body-content { padding: 15px !important; }
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }

@@ -199,10 +199,10 @@
         .form-actions { margin-top: 30px; display: flex; justify-content: flex-end; gap: 15px; padding-top: 25px; border-top: 1px solid #f1f5f9; }
         .btn-cancel { padding: 12px 25px; text-decoration: none; color: #64748b; font-weight: 700; font-size: 14px; }
         
-        @media (max-width: 992px) {
+        @media screen and (max-width: 992px) {
             .profile-layout { grid-template-columns: 1fr; }
         }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .form-grid-simple { grid-template-columns: 1fr !important; gap: 15px !important; }
             .form-actions { flex-direction: column !important; gap: 10px !important; }
             .btn-cancel, .btn-update-gov { width: 100% !important; text-align: center !important; }

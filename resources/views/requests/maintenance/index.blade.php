@@ -47,7 +47,7 @@
     .maint-empty-text { font-weight: 700; font-size: 15px; color: #64748b; }
     .maint-empty-sub { font-size: 13px; margin-top: 4px; }
     .maint-pagination { margin-top: 20px; }
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .maint-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
         .maint-header .btn-primary { width: 100% !important; justify-content: center !important; }
         .maint-table td a { padding: 10px 14px !important; font-size: 13px !important; width: 100% !important; justify-content: center !important; box-sizing: border-box !important; }

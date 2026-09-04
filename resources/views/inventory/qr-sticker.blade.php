@@ -20,7 +20,7 @@
         }
         .label-top { margin-top: 10px; }
         .sn-small { margin-top: 6px; font-size: 10px; }
-        @media (max-width: 480px) {
+        @media screen and (max-width: 480px) {
             .sticker { padding: 12px 10px; max-width: 90vw; }
             .sticker svg { max-width: 140px !important; }
             .value { font-size: 12px; }

@@ -210,7 +210,7 @@
         .action-subtitle-warn { font-size: 12px; color: #b45309; line-height: 1.4; }
         .mt-12 { margin-top: 12px; }
         .mb-20 { margin-bottom: 20px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .user-grid { grid-template-columns: 1fr !important; }
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
             .welcome-hero { padding: 20px !important; }

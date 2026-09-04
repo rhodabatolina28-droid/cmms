@@ -213,7 +213,7 @@
         .sa-stat-icon-bg-green { background: #ecfdf5; color: #059669; }
         .sa-stat-icon-bg-gray { background: #f8fafc; color: #1e293b; }
         .sa-stat-card-accent { border-right: 4px solid #0038A8; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .stats-ribbon { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
             .stats-ribbon .stat-item-premium:first-child { grid-column: 1 / -1 !important; }
             .stat-item-premium { padding: 10px 12px !important; }

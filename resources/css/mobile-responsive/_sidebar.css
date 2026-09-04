@@ -1,7 +1,7 @@
-/* mobile-responsive/_sidebar.css — Sidebar/layout overrides for tablet/phone */
+﻿/* mobile-responsive/_sidebar.css — Sidebar/layout overrides for tablet/phone */
 
 /* LAYOUT & SIDEBAR NAVIGATION OVERRIDES FOR TABLETS/PHONES */
-@media (max-width: 1023px) {
+@media screen and (max-width: 1023px) {
     body {
         flex-direction: column !important;
         background: #f0f4f9 !important;

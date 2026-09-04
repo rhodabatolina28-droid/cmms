@@ -91,7 +91,7 @@
     .detail-row strong { color: #1e293b; display: block; }
     .profile-actions { display: flex; gap: 8px; }
 
-    @media (max-width: 640px) {
+    @media screen and (max-width: 640px) {
         .stats-bar { grid-template-columns: repeat(2, 1fr); }
         .stat-box h3 { font-size: 18px; }
         .profile-details { grid-template-columns: 1fr; }
@@ -167,7 +167,7 @@
         background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px;
         font-size: 12px; font-weight: 700; color: #475569; padding: 10px 8px;
     }
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .stats-bar { grid-template-columns: repeat(2, 1fr) !important; gap: 8px !important; }
         input[type="checkbox"] { display: none !important; }
         .swal2-checkbox { display: none !important; }

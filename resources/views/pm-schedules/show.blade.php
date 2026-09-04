@@ -101,7 +101,7 @@
     .empty-state { text-align:center; padding:40px 20px; color:#94a3b8; }
     .empty-icon { font-size:40px; margin-bottom:12px; opacity:0.5; }
     .empty-text { font-size:13px; margin:0; }
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .page-container { padding:0 12px !important; }
         .premium-card { padding:16px !important; border-radius:12px !important; }
         .action-bar { flex-direction:column; align-items:stretch !important; gap:8px !important; }
@@ -142,7 +142,7 @@
         .empty-icon { font-size:32px !important; }
         .empty-text { font-size:12px !important; }
     }
-    @media (max-width: 480px) {
+    @media screen and (max-width: 480px) {
         .premium-card { padding:14px !important; border-radius:10px !important; }
         .summary-grid { grid-template-columns:1fr !important; gap:8px !important; }
         .stat-card { padding:14px !important; }

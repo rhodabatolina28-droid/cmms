@@ -4,7 +4,7 @@
    MOBILE UX OVERHAUL — max-width: 767px
    ICT Service Request Form
 ══════════════════════════════════════════════════════════ */
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
 
     /* ── BODY & CONTAINER ── */
     body { padding: 8px; }
@@ -185,7 +185,7 @@
 }
 
 /* ── VERY SMALL SCREENS (320px – 390px) ── */
-@media (max-width: 390px) {
+@media screen and (max-width: 390px) {
     .container { padding: 12px 8px 20px; }
     .section-header h3 { font-size: 12px; }
     input:not([type="radio"]):not([type="checkbox"]),

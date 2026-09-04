@@ -45,7 +45,7 @@
         .view-link { color: #0038A8; font-size: 12px; font-weight: 700; text-decoration: none; }
         .pagination-wrap { margin-top: 16px; }
         .session-progress-wrap .session-progress-bar { max-width: 160px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             input[type="checkbox"] { display: none !important; }
             .card-header-accent { flex-direction: column !important; align-items: flex-start !important; gap: 10px !important; }
             .card-header-accent .btn-primary { width: 100% !important; justify-content: center !important; }

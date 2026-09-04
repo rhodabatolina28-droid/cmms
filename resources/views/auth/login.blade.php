@@ -45,7 +45,7 @@
         .password-toggle:active {
             background: #f3f4f6;
         }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .password-toggle {
                 width: 48px;
                 height: 48px;

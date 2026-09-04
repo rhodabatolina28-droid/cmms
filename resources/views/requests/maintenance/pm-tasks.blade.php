@@ -85,7 +85,7 @@
     .pm-btn-view:hover { background: #e2e8f0; transform: translateY(-2px); color: #475569; }
     .pm-pagination { margin-top: 20px; }
 
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .card-header-accent { padding: 15px !important; }
         .card-body-content { padding: 15px !important; }
         .pm-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }

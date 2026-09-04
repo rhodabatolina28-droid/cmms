@@ -1,4 +1,4 @@
-@extends('layouts.app')
+﻿@extends('layouts.app')
 
 @section('title', 'Purchase Request '.$purchaseRequest->pr_number)
 @section('page-title', 'Purchase Request')
@@ -90,7 +90,7 @@
 
     .prd-table-responsive { width:100%; }
 
-    @media (max-width: 768px) {
+    @media screen and (max-width: 768px) {
         .prd-wrap { padding:12px 8px !important; margin-top:0 !important; }
         .prd-toolbar {
             flex-direction:column !important;

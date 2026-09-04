@@ -143,7 +143,7 @@
         .empty-row { text-align: center; padding: 60px; color: #94a3b8; }
         .empty-icon-big { font-size: 40px; display: block; margin-bottom: 15px; opacity: 0.2; }
         .pagination-wrap { margin-top: 20px; }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
             .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }

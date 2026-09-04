@@ -317,11 +317,11 @@
         .action-center-danger p { color: #b91c1c; }
 
         /* LAYOUT & UTILITIES */
-        @media (max-width: 1000px) {
+        @media screen and (max-width: 1000px) {
             .admin-workspace-grid { grid-template-columns: 1fr !important; }
             .analytics-grid { grid-template-columns: 1fr !important; }
         }
-        @media (max-width: 767px) {
+        @media screen and (max-width: 767px) {
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
             .welcome-hero { padding: 18px 16px !important; border-radius: 12px !important; }
             .hero-name { font-size: 22px !important; }

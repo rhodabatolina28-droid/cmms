@@ -1,4 +1,4 @@
-/* mobile-responsive/_base.css — Desktop defaults, tablet/mobile base overrides */
+﻿/* mobile-responsive/_base.css — Desktop defaults, tablet/mobile base overrides */
 
 /* RESPONSIVE STYLES */
 
@@ -8,7 +8,7 @@
 }
 
 /* Tablet (768px - 1023px) */
-@media (max-width: 1023px) {
+@media screen and (max-width: 1023px) {
     .container {
         max-width: 100%;
         padding: 24px;
@@ -28,7 +28,7 @@
 }
 
 /* Mobile (320px - 767px) */
-@media (max-width: 767px) {
+@media screen and (max-width: 767px) {
     body {
         padding: 8px;
         font-size: 13px;
@@ -237,7 +237,7 @@
 }
 
 /* Small Mobile (320px - 480px) */
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     body {
         padding: 6px;
         font-size: 12px;
@@ -291,7 +291,7 @@
 }
 
 /* Landscape Mobile Optimization */
-@media (max-width: 767px) and (orientation: landscape) {
+@media screen and (max-width: 767px) and (orientation: landscape) {
 
     /* Keep some elements side-by-side in landscape */
     .form-row.compact-row {

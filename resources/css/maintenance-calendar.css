@@ -1,4 +1,4 @@
-/* Maintenance Calendar — Premium CMMS Styling (Template-Inspired) */
+﻿/* Maintenance Calendar — Premium CMMS Styling (Template-Inspired) */
 
 /* Page Container — now inside polish-card wrapper */
 .cal-page { width:100%; padding:0; box-sizing:border-box; }
@@ -808,10 +808,10 @@
 /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
 .mobile-table-hint { display:none; }
 
-@media (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
     .cal-layout { grid-template-columns:1fr; }
 }
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .cal-page { padding:0 12px !important; }
     .cal-header { flex-direction:column; align-items:stretch !important; gap:12px !important; }
     .cal-subnav { flex-direction:column; align-items:stretch !important; gap:10px !important; }
@@ -942,7 +942,7 @@
     .cal-detail-badges { overflow-wrap:break-word !important; }
     .cal-badge { max-width:100% !important; }
 }
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .cal-day { height:100px !important; }
     .cal-tasks-header { flex-direction:column; align-items:flex-start !important; }
     .cal-tasks-header-right { width:100%; justify-content:space-between; }
@@ -952,7 +952,7 @@
    MOBILE OVERRIDES — Prevent global full-width button rules
    (app.blade.php forces all buttons to 100% width on mobile)
    ══════════════════════════════════════════════ */
-@media (max-width: 1000px) {
+@media screen and (max-width: 1000px) {
     .cal-filter-btn,
     .cal-nav-btn,
     .cal-nav-today,

@@ -220,7 +220,7 @@
         .ad-btn-save { padding: 10px 25px; background: #0038A8; color: white; border: none; }
 
         /* Mobile Responsive */
-        @media (max-width: 768px) {
+        @media screen and (max-width: 768px) {
             /* Header */
             .card-header-accent { 
                 flex-direction: column !important; 

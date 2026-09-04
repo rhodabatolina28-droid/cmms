@@ -18,7 +18,7 @@
     .btn-conduct:hover { background: #002d8a; }
     .stat-count { font-size: 28px; font-weight: 800; color: #0038A8; line-height: 1; }
     .stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
-    @media (max-width: 767px) {
+    @media screen and (max-width: 767px) {
         .sched-table { min-width: 650px; }
         .sched-table th, .sched-table td { padding: 8px 10px; }
         .sched-table td { font-size: 12px; }

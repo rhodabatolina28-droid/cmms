@@ -182,11 +182,11 @@
 .mb-18 { margin-bottom: 16px; }
 
 /* ===== RESPONSIVE ===== */
-@media (max-width: 1024px) {
+@media screen and (max-width: 1024px) {
     .stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
     .main-grid { grid-template-columns: 1fr !important; }
 }
-@media (max-width: 768px) {
+@media screen and (max-width: 768px) {
     .detail-wrapper { padding: 16px !important; }
     .hero-banner { padding: 24px !important; }
     .hero-title { font-size: 24px !important; }
@@ -209,7 +209,7 @@
     .btn-view, .btn-del-attach { flex: 1; text-align: center; padding: 10px !important; }
     .back-link { font-size: 13px !important; padding: 10px 14px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 6px !important; min-height: 44px !important; }
 }
-@media (max-width: 480px) {
+@media screen and (max-width: 480px) {
     .detail-wrapper { padding: 10px 8px !important; }
     .hero-banner { padding: 16px 14px !important; border-radius: 10px !important; }
     .hero-title { font-size: 18px !important; }
