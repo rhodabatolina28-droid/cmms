@@ -209,7 +209,7 @@
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
             .workbench-grid { grid-template-columns: 1fr !important; }
             .job-row { grid-template-columns: 1fr !important; }
-            .action-button { width: 100% !important; }
+            .action-button { width: auto !important; min-width: 72px !important; }
             .welcome-hero { padding: 18px 16px !important; border-radius: 12px !important; }
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
             .hero-name { font-size: 20px !important; }
@@ -217,7 +217,7 @@
             .hero-stats-box { min-width: 0 !important; width: 100% !important; }
             .panel { padding: 12px 14px !important; }
             .job-number { font-size: 14px !important; }
-            .action-button { min-height: 40px !important; padding: 8px 12px !important; font-size: 12px !important; }
+            .action-button { min-height: 36px !important; padding: 6px 10px !important; font-size: 11px !important; }
         }
         .stat-value-amber { color: #f59e0b; }
         .stat-value-dark-amber { color: #92400e; }
@@ -235,9 +235,10 @@
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .action-bar { flex-direction: column !important; gap: 10px !important; }
-            .btn-pm-tasks { width: 100% !important; justify-content: center !important; min-height: 44px !important; font-size: 13px !important; }
+            .btn-pm-tasks { width: auto !important; justify-content: center !important; min-height: 36px !important; font-size: 12px !important; padding: 6px 14px !important; }
             input, select, textarea { min-height: 44px !important; font-size: 15px !important; }
             .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 44px !important; font-size: 13px !important; }
+            .job-action-full { width: auto !important; min-width: 72px !important; }
 
             /* Hero stats box — left-aligned row (was right-hugging full-width) */
             .hero-stats-box {
