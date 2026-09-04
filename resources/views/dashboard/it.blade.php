@@ -219,9 +219,6 @@
             .job-number { font-size: 14px !important; }
             .action-button { min-height: 48px !important; padding: 12px 16px !important; font-size: 14px !important; }
         }
-        @media screen and (max-width: 480px) {
-            .stats-grid { grid-template-columns: 1fr !important; }
-        }
         .stat-value-amber { color: #f59e0b; }
         .stat-value-dark-amber { color: #92400e; }
         .stat-value-blue { color: #2563eb; }
@@ -241,6 +238,25 @@
             .btn-pm-tasks { width: 100% !important; justify-content: center !important; min-height: 48px !important; font-size: 14px !important; }
             input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
             .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 48px !important; font-size: 14px !important; }
+
+            /* Hero stats box — left-aligned row (was right-hugging full-width) */
+            .hero-stats-box {
+                text-align: left !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: space-between !important;
+                gap: 10px !important;
+                padding: 12px 16px !important;
+            }
+            /* View All — comfortable tap target */
+            .panel-link {
+                display: inline-flex !important;
+                align-items: center !important;
+                min-height: 36px !important;
+                padding: 6px 4px !important;
+                font-size: 13px !important;
+            }
+            .job-row { padding: 12px 0 !important; }
         }
     </style>
 @endsection
