@@ -43,6 +43,17 @@ class ListPmTasksAction
 
         $pmTasks = $query->orderBy('created_at', 'desc')->paginate(20);
 
-        return view('requests.maintenance.pm-tasks', compact('pmTasks'));
+        // Accurate stats — computed from the full filtered set, not just the current page
+        $statsQuery = clone $query;
+        $allTasks = $statsQuery->get(['id', 'status', 'created_at']);
+        $stats = [
+            'total'     => $allTasks->count(),
+            'scheduled' => $allTasks->where('status', 'Scheduled')->count(),
+            'ongoing'   => $allTasks->where('status', 'Ongoing')->count(),
+            'completed' => $allTasks->where('status', 'Completed')->count(),
+            'overdue'   => $allTasks->where('status', 'Scheduled')->filter(fn ($t) => $t->created_at->diffInDays(now()) > 7)->count(),
+        ];
+
+        return view('requests.maintenance.pm-tasks', compact('pmTasks', 'stats'));
     }
 }

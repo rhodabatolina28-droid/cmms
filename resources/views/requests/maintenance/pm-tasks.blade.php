@@ -62,15 +62,6 @@
     .status-completed { background: #ecfdf5; color: #065f46; border-color: rgba(16, 185, 129, 0.2); }
     .badge-overdue { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; background: #fee2e2; color: #991b1b; margin-left: 5px; }
 
-    /* Progress Bar */
-    .progress-wrap { margin-top: 6px; }
-    .progress-track { height: 4px; background: #e2e8f0; border-radius: 3px; overflow: hidden; width: 100%; }
-    .progress-fill { height: 100%; border-radius: 3px; transition: width 0.4s ease; }
-    .progress-fill-todo { background: #fbbf24; width: 0%; }
-    .progress-fill-ongoing { background: #3b82f6; width: 50%; }
-    .progress-fill-done { background: #10b981; width: 100%; }
-    .progress-label { font-size: 9px; color: #94a3b8; font-weight: 600; margin-top: 2px; }
-
     /* Asset Tag */
     .asset-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #475569; font-weight: 600; background: #f1f5f9; border-radius: 4px; padding: 2px 7px; margin-top: 3px; }
     .asset-tag i { color: #0038A8; font-size: 10px; }
@@ -79,8 +70,6 @@
     .pm-btn-action { display: inline-flex; align-items: center; gap: 6px; padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; text-decoration: none; transition: all 0.2s; cursor: pointer; border: none; }
     .pm-btn-start { background: #0038A8; color: white; }
     .pm-btn-start:hover { background: #002366; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 56, 168, 0.2); color: white; }
-    .pm-btn-update { background: #eff6ff; color: #1e40af; border: 1px solid #bfdbfe; }
-    .pm-btn-update:hover { background: #dbeafe; transform: translateY(-2px); color: #1e40af; }
     .pm-btn-view { background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; }
     .pm-btn-view:hover { background: #e2e8f0; transform: translateY(-2px); color: #475569; }
     .pm-pagination { margin-top: 20px; }
@@ -153,11 +142,12 @@
         <div class="card-body-content">
             {{-- Stats Summary --}}
             @php
-                $totalCount     = $pmTasks->total();
-                $scheduledCount = $pmTasks->filter(fn($t) => $t->status === 'Scheduled')->count();
-                $ongoingCount   = $pmTasks->filter(fn($t) => $t->status === 'Ongoing')->count();
-                $completedCount = $pmTasks->filter(fn($t) => $t->status === 'Completed')->count();
-                $overdueCount   = $pmTasks->filter(fn($t) => $t->status === 'Scheduled' && $t->created_at->diffInDays(now()) > 7)->count();
+                // Accurate stats from full filtered set (passed by ListPmTasksAction)
+                $totalCount     = $stats['total'];
+                $scheduledCount = $stats['scheduled'];
+                $ongoingCount   = $stats['ongoing'];
+                $completedCount = $stats['completed'];
+                $overdueCount   = $stats['overdue'];
             @endphp
 
             <div class="pm-stats-grid">
@@ -171,7 +161,7 @@
                 </div>
                 <div class="task-card pm-stat-card">
                     <div class="pm-stat-num pm-stat-num-ongoing">{{ $ongoingCount }}</div>
-                    <div class="pm-stat-label">In Progress</div>
+                    <div class="pm-stat-label">Ongoing</div>
                 </div>
                 <div class="task-card pm-stat-card">
                     <div class="pm-stat-num pm-stat-num-completed">{{ $completedCount }}</div>
@@ -189,7 +179,7 @@
             <div class="pm-filters">
                 <a href="{{ route('pm.tasks') }}"                               class="filter-btn {{ !request('status') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> All</a>
                 <a href="{{ route('pm.tasks', ['status' => 'Scheduled']) }}"   class="filter-btn {{ request('status') === 'Scheduled' ? 'active' : '' }}"><i class="fa-solid fa-clock"></i> To Do</a>
-                <a href="{{ route('pm.tasks', ['status' => 'Ongoing']) }}"     class="filter-btn {{ request('status') === 'Ongoing' ? 'active' : '' }}"><i class="fa-solid fa-play"></i> In Progress</a>
+                <a href="{{ route('pm.tasks', ['status' => 'Ongoing']) }}"     class="filter-btn {{ request('status') === 'Ongoing' ? 'active' : '' }}"><i class="fa-solid fa-play"></i> Ongoing</a>
                 <a href="{{ route('pm.tasks', ['status' => 'Completed']) }}"   class="filter-btn {{ request('status') === 'Completed' ? 'active' : '' }}"><i class="fa-solid fa-check"></i> Completed</a>
             </div>
 
@@ -209,8 +199,7 @@
                                 <th class="pm-th-cell">PM ID</th>
                                 <th class="pm-th-cell">End User</th>
                                 <th class="pm-th-cell">Division</th>
-                                <th class="pm-th-cell">Asset</th>
-                                <th class="pm-th-cell">Progress</th>
+                                <th class="pm-th-cell">Date Generated</th>
                                 <th class="pm-th-cell">Completed At</th>
                                 <th class="pm-th-cell">Status</th>
                                 <th class="pm-th-cell-center">Action</th>
@@ -221,20 +210,6 @@
                             @php
                                 $isOverdue = $task->status === 'Scheduled' && $task->created_at->diffInDays(now()) > 7;
                                 $rowClass  = $isOverdue ? 'pm-row pm-row-overdue' : 'pm-row';
-                                $progressFill = match($task->status) {
-                                    'Scheduled'        => 'progress-fill-todo',
-                                    'Ongoing'          => 'progress-fill-ongoing',
-                                    'Completed'        => 'progress-fill-done',
-                                    default            => 'progress-fill-todo',
-                                };
-                                $progressPct = match($task->status) {
-                                    'Scheduled'        => '0%',
-                                    'Ongoing'          => '50%',
-                                    'Completed'        => '100%',
-                                    default            => '0%',
-                                };
-                                $assetName = $task->linkedAsset?->asset_name ?? $task->linkedAsset?->description ?? null;
-                                $assetTag  = $task->linkedAsset?->asset_tag ?? $task->linkedAsset?->par_number ?? null;
                                 $badgeClass  = match($task->status) {
                                     'Scheduled' => 'status-pending',
                                     'Ongoing'   => 'status-ongoing',
@@ -243,7 +218,7 @@
                                 };
                                 $statusLabel = match($task->status) {
                                     'Scheduled' => 'To Do',
-                                    'Ongoing'   => 'In Progress',
+                                    'Ongoing'   => 'Ongoing',
                                     'Completed' => 'Completed',
                                     default     => $task->status,
                                 };
@@ -259,26 +234,9 @@
                                 <td class="pm-td-name">{{ $task->requestor_name }}</td>
                                 <td class="pm-td-office">{{ $task->office ?? '—' }}</td>
 
-                                {{-- Asset Column --}}
-                                <td class="pm-td">
-                                    @if($assetName || $assetTag)
-                                        <div style="font-size:12px;font-weight:600;color:#1e293b;">{{ $assetName ?? '—' }}</div>
-                                        @if($assetTag)
-                                            <span class="asset-tag"><i class="fa-solid fa-tag"></i>{{ $assetTag }}</span>
-                                        @endif
-                                    @else
-                                        <span style="color:#94a3b8;font-size:12px;">—</span>
-                                    @endif
-                                </td>
-
-                                {{-- Progress Bar --}}
-                                <td class="pm-td" style="min-width:100px;">
-                                    <div class="progress-wrap">
-                                        <div class="progress-track">
-                                            <div class="progress-fill {{ $progressFill }}" style="width:{{ $progressPct }};"></div>
-                                        </div>
-                                        <div class="progress-label">{{ $progressPct }} done</div>
-                                    </div>
+                                {{-- Date Generated --}}
+                                <td class="pm-td-office">
+                                    {{ $task->created_at ? $task->created_at->format('M d, Y | h:i A') : '—' }}
                                 </td>
 
                                 <td class="pm-td-office">
@@ -293,6 +251,8 @@
                                 </td>
 
                                 <td class="pm-td-action">
+                                    {{-- Same pattern as Super Admin PM Work Orders:
+                                         Scheduled (assigned to me) -> Start, else -> View --}}
                                     @if($task->status === 'Scheduled')
                                         {{-- Start button triggers SweetAlert confirmation --}}
                                         <button
@@ -303,13 +263,9 @@
                                             data-number="{{ $task->display_number ?? $task->request_number }}">
                                             <i class="fa-solid fa-play"></i> Start
                                         </button>
-                                    @elseif($task->status === 'Ongoing')
-                                        <a href="{{ $editRoute }}" class="pm-btn-action pm-btn-update">
-                                            <i class="fa-solid fa-pen-to-square"></i> Update
-                                        </a>
                                     @else
                                         <a href="{{ $editRoute }}" class="pm-btn-action pm-btn-view">
-                                            <i class="fa-solid fa-eye"></i> View
+                                            <i class="fa-solid fa-arrow-right"></i> View
                                         </a>
                                     @endif
                                 </td>
@@ -343,7 +299,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
             Swal.fire({
                 title: 'Start PM Task?',
-                html: `<p style="color:#475569;font-size:14px;">You are about to start <strong>${number}</strong> for <strong>${name}</strong>.</p><p style="color:#94a3b8;font-size:12px;margin-top:8px;">This will mark the work order as <span style="color:#1e40af;font-weight:700;">In Progress</span>.</p>`,
+                html: `<p style="color:#475569;font-size:14px;">You are about to start <strong>${number}</strong> for <strong>${name}</strong>.</p><p style="color:#94a3b8;font-size:12px;margin-top:8px;">This will mark the work order as <span style="color:#1e40af;font-weight:700;">Ongoing</span>.</p>`,
                 icon: 'info',
                 showCancelButton: true,
                 confirmButtonColor: '#0038A8',
