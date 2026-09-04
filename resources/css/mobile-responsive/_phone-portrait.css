@@ -55,14 +55,17 @@
     }
 
     .notif-dropdown {
-        position: absolute !important;
-        top: calc(100% + 10px) !important;
-        right: 0 !important;
-        left: auto !important;
+        /* FIXED SHEET — escapes all ancestor clipping (sticky/overflow/transform),
+           consistent on EVERY phone size (320px-767px). Does not depend on bell position. */
+        position: fixed !important;
+        top: 64px !important;
+        left: max(12px, env(safe-area-inset-left)) !important;
+        right: max(12px, env(safe-area-inset-right)) !important;
         bottom: auto !important;
-        width: min(340px, calc(100vw - 24px)) !important;
-        max-width: 340px !important;
-        max-height: 70vh !important;
+        width: auto !important;
+        max-width: none !important;
+        max-height: calc(100vh - 76px) !important;
+        max-height: calc(100dvh - 76px) !important;
         overflow-y: auto !important;
         border-radius: 14px !important;
         box-shadow: 0 8px 30px rgba(0,0,0,0.15) !important;
@@ -107,6 +110,17 @@
         justify-content: center !important;
     }
     .notif-empty, .notif-empty-alt { padding: 48px 20px !important; }
+
+    /* SMALL PHONES (≤359px, e.g. 320px screens) — compact tier so nothing overflows */
+    @media (max-width: 359px) {
+        .notif-dropdown { left: 8px !important; right: 8px !important; top: 60px !important; }
+        .notif-item { padding: 12px 12px !important; }
+        .notif-header { padding: 12px !important; }
+        .notif-header-title { font-size: 14px !important; }
+        .notif-msg { font-size: 12px !important; }
+        .notif-footer { padding: 8px 12px !important; }
+        .notif-empty, .notif-empty-alt { padding: 40px 16px !important; }
+    }
 
     /* CARD HEADER & BODY STACKS */
     .card-header-accent {

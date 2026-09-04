@@ -4,6 +4,14 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
+    build: {
+        // Emit classic max-width media queries instead of modern range syntax
+        // (width<=767px). Range syntax is unsupported on iOS < 16.4 — on older
+        // phones (e.g. iPhone 8 on iOS 12-15) the whole mobile stylesheet
+        // silently fails to apply. safari12 target forces max-width lowering;
+        // visually identical on modern browsers, works everywhere.
+        cssTarget: 'safari12',
+    },
     plugins: [
         laravel({
             input: [
