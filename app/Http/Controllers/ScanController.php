@@ -35,33 +35,31 @@ class ScanController extends Controller
 
         $user = Auth::user();
 
-        // USER role
+        // USER role — preview page with the scanned asset + other assets (tap to select)
         if ($user->role === 'user') {
             $error = \App\Support\RequestHelpers::linkedAssetValidationError($user, $asset->asset_id);
             if ($error) {
-                return response("
-                    <div style='font-family:Arial;text-align:center;padding:60px 20px;max-width:400px;margin:0 auto;'>
-                        <h2 style='color:#dc2626;'>Asset Not Assigned</h2>
-                        <p style='color:#64748b;font-size:14px;'>This asset is not assigned to you.</p>
-                        <p style='color:#64748b;font-size:13px;'>Contact your Supply Admin if this is a mistake.</p>
-                        <a href='" . url('/') . "' style='display:inline-block;margin-top:20px;padding:10px 24px;background:#0038A8;color:white;text-decoration:none;border-radius:6px;font-size:14px;'>Go to Dashboard</a>
-                    </div>
-                ");
+                return view('scan.notice', [
+                    'title'    => 'Asset Not Assigned',
+                    'message'  => 'This asset is not assigned to you. Contact your Supply Admin if this is a mistake.',
+                    'icon'     => 'fa-triangle-exclamation',
+                ]);
             }
-            return redirect()->route('ict.create', ['asset_id' => $id]);
+            return view('scan.scan-preview', [
+                'asset'       => $asset,
+                'otherAssets' => $userAssets,
+            ]);
         }
 
         // IT role → standalone asset info page
         if ($user->role === 'it' || $user->role === 'super_admin') {
             // Scope check: asset must be in user's branch (or no branch restriction)
             if ($user->branch && $asset->branch !== $user->branch) {
-                return response("
-                    <div style='font-family:Arial;text-align:center;padding:60px 20px;max-width:400px;margin:0 auto;'>
-                        <h2 style='color:#dc2626;'>Asset Out of Scope</h2>
-                        <p style='color:#64748b;font-size:14px;'>This asset belongs to another branch.</p>
-                        <a href='" . url('/') . "' style='display:inline-block;margin-top:20px;padding:10px 24px;background:#0038A8;color:white;text-decoration:none;border-radius:6px;font-size:14px;'>Go to Dashboard</a>
-                    </div>
-                ");
+                return view('scan.notice', [
+                    'title'   => 'Asset Out of Scope',
+                    'message' => 'This asset belongs to another branch.',
+                    'icon'    => 'fa-location-crosshairs',
+                ]);
             }
 
             // Repair history: get ALL requests for this asset's user (bundled PM)
