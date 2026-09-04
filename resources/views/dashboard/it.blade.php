@@ -182,17 +182,17 @@
         .action-button {
             display: inline-flex;
             align-items: center;
-            gap: 7px;
-            min-width: 84px;
+            gap: 6px;
+            min-width: 72px;
             justify-content: center;
             background: #0038A8;
             color: white;
-            border-radius: 8px;
-            padding: 8px 12px;
+            border-radius: 7px;
+            padding: 6px 10px;
             text-decoration: none;
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 900;
-            min-height: 38px;
+            min-height: 32px;
             transition: all 0.2s;
         }
         .action-button:hover { background: #002366; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 35, 102, 0.3); }
@@ -217,7 +217,7 @@
             .hero-stats-box { min-width: 0 !important; width: 100% !important; }
             .panel { padding: 12px 14px !important; }
             .job-number { font-size: 14px !important; }
-            .action-button { min-height: 44px !important; padding: 10px 14px !important; font-size: 13px !important; }
+            .action-button { min-height: 40px !important; padding: 8px 12px !important; font-size: 12px !important; }
         }
         .stat-value-amber { color: #f59e0b; }
         .stat-value-dark-amber { color: #92400e; }
@@ -235,9 +235,9 @@
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .action-bar { flex-direction: column !important; gap: 10px !important; }
-            .btn-pm-tasks { width: 100% !important; justify-content: center !important; min-height: 48px !important; font-size: 14px !important; }
-            input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
-            .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 48px !important; font-size: 14px !important; }
+            .btn-pm-tasks { width: 100% !important; justify-content: center !important; min-height: 44px !important; font-size: 13px !important; }
+            input, select, textarea { min-height: 44px !important; font-size: 15px !important; }
+            .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 44px !important; font-size: 13px !important; }
 
             /* Hero stats box — left-aligned row (was right-hugging full-width) */
             .hero-stats-box {
