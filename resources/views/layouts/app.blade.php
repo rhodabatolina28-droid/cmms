@@ -723,7 +723,10 @@
             .modal-card { width: 95vw !important; max-width: 95vw !important; }
             .modal-footer { flex-direction: column !important; gap: 10px !important; }
             /* —— ALL BUTTONS — full width (exclude topbar icon buttons & SweetAlert buttons) —— */
-            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny),
+            /* .act-btn / .cmms-req-details-btn excluded: they are icon-only table action buttons
+               sized by their own rules (36px squares); forcing width:100% made them stretch
+               across the Actions cell and stack on mobile. */
+            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny):not(.act-btn):not(.cmms-req-details-btn),
             .btn, .btn-action-premium, .action-button-premium,
             .btn-view-modern, .btn-action-modern { width: 100% !important; }
         }
