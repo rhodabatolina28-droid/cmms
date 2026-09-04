@@ -76,6 +76,38 @@
         to   { opacity: 1; transform: translateY(0); }
     }
 
+    /* SINGLE SCROLL — dropdown scrolls as one; kill nested inner scroll */
+    #notifDropdown { overscroll-behavior: contain !important; }
+    #notifContent {
+        max-height: none !important;
+        overflow-y: visible !important;
+    }
+
+    /* TOUCH TARGETS — links and items become tappable */
+    .notif-item { padding: 14px 16px !important; }
+    .mark-read,
+    .notif-mark-read {
+        display: inline-block !important;
+        min-height: 36px !important;
+        padding: 8px 10px !important;
+        font-size: 12px !important;
+        margin-top: 2px !important;
+    }
+    #markAllRead {
+        display: inline-block !important;
+        min-height: 36px !important;
+        padding: 8px 6px !important;
+    }
+    .notif-header { padding: 14px 16px !important; }
+    .notif-footer { padding: 10px 16px !important; }
+    .notif-footer-link {
+        min-height: 44px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+    }
+    .notif-empty, .notif-empty-alt { padding: 48px 20px !important; }
+
     /* CARD HEADER & BODY STACKS */
     .card-header-accent {
         padding: 15px 20px !important;
