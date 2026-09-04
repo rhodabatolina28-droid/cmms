@@ -883,9 +883,10 @@
     .cal-detail-card { left:0 !important; right:0 !important; width:100% !important; max-width:100% !important; position:relative !important; }
     /* Summary card — compact */
     .cal-summary-header { padding:12px 14px !important; }
-    .cal-summary-grid { padding:12px 14px !important; gap:8px !important; }
-    .cal-summary-item { padding:10px 8px !important; }
-    .cal-summary-value { font-size:18px !important; }
+    .cal-summary-grid { padding:12px 14px !important; gap:8px !important; grid-template-columns:minmax(0,1fr) minmax(0,1fr) !important; }
+    .cal-summary-item { padding:10px 8px !important; min-width:0 !important; overflow:hidden !important; }
+    .cal-summary-value { font-size:18px !important; overflow-wrap:anywhere !important; word-break:break-word !important; }
+    .cal-summary-label { overflow-wrap:anywhere !important; word-break:break-word !important; line-height:1.35 !important; }
     /* Empty state — centered, compact */
     .cal-empty { padding:28px 14px !important; }
     .cal-empty p { font-size:12px !important; margin:8px 0 0 !important; }
@@ -941,6 +942,17 @@
     }
     .cal-detail-badges { overflow-wrap:break-word !important; }
     .cal-badge { max-width:100% !important; }
+    /* Event row text — office/assignee names wrap, never overflow the card */
+    .cal-event-meta {
+        overflow-wrap:anywhere !important;
+        word-break:break-word !important;
+    }
+    .cal-event-title {
+        white-space:normal !important;
+        overflow:hidden !important;
+        overflow-wrap:anywhere !important;
+        word-break:break-word !important;
+    }
 }
 @media screen and (max-width: 480px) {
     .cal-day { height:100px !important; }
@@ -963,6 +975,7 @@
     .cal-modal-cancel,
     .cal-modal-submit,
     .cal-detail-btn,
+    .cal-assign-btn,
     .cal-chip { width: auto !important; min-height: auto !important; }
     .cal-subnav-filters { flex-wrap: wrap; }
     .cal-priority-group { flex-wrap: wrap; }
@@ -970,4 +983,7 @@
     .cal-type-btn { flex: 1; }
     .cal-modal-actions { flex-direction: row; }
     .cal-modal-cancel, .cal-modal-submit { flex: 1; }
+    .cal-assign-flex { flex-wrap: wrap; }
+    .cal-assign-flex .cal-modal-input { flex: 1 1 150px !important; }
+    .cal-assign-flex .cal-assign-btn { flex: 0 0 auto; min-width: 88px !important; justify-content: center; display: inline-flex; align-items: center; }
 }
