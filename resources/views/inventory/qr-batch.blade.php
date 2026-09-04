@@ -294,6 +294,7 @@
         .icon-blue { color: #0038A8; margin-right: 8px; }
         .icon-gray { color: #94a3b8; }
         .search-wide { width: 280px; }
+        .mobile-table-hint { display: none; }
         td.loading-row { text-align: center; padding: 40px; color: #64748b; }
         td.error-row { text-align: center; padding: 40px; color: #dc2626; }
         .row-pointer { cursor: pointer; }
@@ -319,6 +320,8 @@
             .print-preview-note { margin: 0 12px 12px !important; padding: 10px 14px !important; font-size: 12px !important; }
             .cb-col { width: 36px !important; }
             .search-wide { width: 100% !important; }
+            .mobile-table-hint { display: flex !important; align-items: center !important; gap: 8px !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; border-radius: 8px !important; padding: 9px 12px !important; margin: 0 12px 10px !important; color: #1e40af !important; font-size: 12px !important; font-weight: 700 !important; }
+            .asset-table input[type="checkbox"] { width: 20px !important; height: 20px !important; accent-color: #0038A8 !important; }
         }
     </style>
 </head>
@@ -374,6 +377,8 @@
 </div>
 
 <!-- ASSET TABLE -->
+        <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
+        <div class="table-container">
 <div class="table-container">
     <table class="asset-table" id="assetTable">
         <thead>
