@@ -143,13 +143,55 @@
         .empty-row { text-align: center; padding: 60px; color: #94a3b8; }
         .empty-icon-big { font-size: 40px; display: block; margin-bottom: 15px; opacity: 0.2; }
         .pagination-wrap { margin-top: 20px; }
+        /* Base: hide swipe hint on desktop (mobile re-shows it) */
+        .mobile-table-hint { display: none; }
         @media screen and (max-width: 767px) {
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
-            .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
             input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
             .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
-            .td-desc { max-width: 140px !important; }
+
+            /* Table mobile - Supply Workspace scroll pattern */
+            .mobile-table-hint {
+                display: flex !important;
+                align-items: center;
+                justify-content: center;
+                gap: 7px;
+                padding: 9px 12px;
+                background: #eff6ff;
+                color: #1e40af;
+                font-size: 11.5px;
+                font-weight: 700;
+                letter-spacing: 0.03em;
+                border: 1px solid #dbeafe;
+                border-bottom: none;
+                border-radius: 10px 10px 0 0;
+            }
+            .table-wrap {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+                width: 100% !important;
+                max-width: 100% !important;
+                border-radius: 0 0 10px 10px !important;
+            }
+            .table-wrap .gov-table-premium {
+                min-width: 940px !important;
+                width: 940px !important;
+                table-layout: auto !important;
+            }
+            .table-wrap .gov-table-premium th,
+            .table-wrap .gov-table-premium td {
+                white-space: nowrap !important;
+                padding: 12px 12px !important;
+                font-size: 13px !important;
+                word-break: normal !important;
+                overflow-wrap: normal !important;
+            }
+            .table-wrap .gov-table-premium th { font-size: 11px !important; padding: 10px 12px !important; }
+            .td-desc { min-width: 220px !important; max-width: none !important; }
+            .td-remarks { min-width: 160px !important; max-width: none !important; }
+            /* Open button stays inline-compact (global full-width rule override) */
+            .btn-view-modern { width: auto !important; min-width: 76px !important; }
         }
     </style>
 @endsection
@@ -190,6 +232,7 @@
                 </select>
             </div>
 
+            <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap">
                 <table class="gov-table-premium">
                     <thead>
