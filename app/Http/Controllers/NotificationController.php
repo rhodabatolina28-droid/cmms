@@ -10,6 +10,12 @@ class NotificationController extends Controller
 {
     public function getNotifications()
     {
+        // Badge: true unread total (no limit) so the red bubble is accurate.
+        $count = Notification::where('user_id', Auth::id())
+            ->where('is_read', false)
+            ->count();
+
+        // Dropdown list: recent unread only (keep it snappy).
         $notifications = Notification::where('user_id', Auth::id())
             ->where('is_read', false)
             ->orderBy('created_at', 'desc')
@@ -18,7 +24,7 @@ class NotificationController extends Controller
 
         return response()->json([
             'notifications' => $notifications,
-            'count' => $notifications->count()
+            'count' => $count
         ]);
     }
 

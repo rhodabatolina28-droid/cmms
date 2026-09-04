@@ -990,6 +990,7 @@ class PurchaseRequestTest extends TestCase
         $this->assertCount(1, $rows);
         $this->assertSame('PR Submitted', $rows->first()->type);
         $this->assertStringContainsString($pr->pr_number, $rows->first()->message);
+        $this->assertSame(route('purchase_requests.show', $pr->id), $rows->first()->url);
 
         // The other same-region supply user is notified too.
         $this->assertCount(1, \App\Models\Notification::where('user_id', $otherSupply->id)->get());
@@ -1197,5 +1198,46 @@ class PurchaseRequestTest extends TestCase
 
         $response = $this->actingAs($other)->get(route('purchase_requests.delivery_confirmation.pdf', $pr));
         $response->assertRedirect(route('purchase_requests.show', $pr->id));
+    }
+public function test_pr_notification_carries_deep_link_and_email_url(): void
+    {
+        \Illuminate\Support\Facades\Mail::fake();
+
+        $it = $this->makeUser(['role' => 'it']);
+        $supply = $this->makeUser(['role' => 'supply_officer', 'region' => 'NCR', 'full_name' => 'Supply Email']);
+        $pr = $this->makePr($it);
+
+        // In-app notification carries a deep link to the PR show page.
+
+        $notif = \App\Models\Notification::where('user_id', $supply->id)->where('type', 'PR Submitted')->first();
+        $this->assertNotNull($notif);
+        $this->assertSame(route('purchase_requests.show', $pr->id), $notif->url);
+
+        // Email carries the PR number and the ticket url (via the booted pipeline).
+
+        \Illuminate\Support\Facades\Mail::assertQueued(\App\Mail\SystemNotificationMail::class, function ($mail) use ($pr) {
+            return $mail->requestNumber === $pr->pr_number
+                && $mail->ticketUrl === route('purchase_requests.show', $pr->id);
+        });
+    }
+public function test_badge_counts_all_unread_but_list_limited_to_ten(): void
+    {
+        $user = $this->makeUser(['role' => 'it']);
+
+        // Create 15 unread notifications for this user.
+        for ($i = 0; $i < 15; $i++) {
+            \App\Models\Notification::send($user->id, null, 'Test', "Notification #$i");
+        }
+
+        $response = $this->actingAs($user)->getJson(route('notifications.get'));
+
+        $response->assertOk();
+        $data = $response->json();
+
+        // Badge reflects the true unread total.
+        $this->assertSame(15, $data['count']);
+
+        // Dropdown list stays capped at 10 for a snappy panel。
+        $this->assertCount(10, $data['notifications']);
     }
 }

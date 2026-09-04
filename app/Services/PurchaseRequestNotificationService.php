@@ -45,7 +45,8 @@ class PurchaseRequestNotificationService
             if ($creator && $recipient->id === $creator->id) {
                 continue; // do not notify the creator of their own submission
             }
-            Notification::send($recipient->id, null, 'PR Submitted', $message);
+            Notification::send($recipient->id, null, 'PR Submitted', $message,
+                route('purchase_requests.show', $pr->id));
         }
     }
 
@@ -60,7 +61,8 @@ class PurchaseRequestNotificationService
             ->values();
 
         foreach ($targets as $userId) {
-            Notification::send($userId, null, 'PR Finalized', $message);
+            Notification::send($userId, null, 'PR Finalized', $message,
+                route('purchase_requests.show', $pr->id));
         }
     }
 
@@ -75,7 +77,8 @@ class PurchaseRequestNotificationService
             ->values();
 
         foreach ($targets as $userId) {
-            Notification::send($userId, null, 'PR Delivered', $message);
+            Notification::send($userId, null, 'PR Delivered', $message,
+                route('purchase_requests.show', $pr->id));
         }
     }
 }

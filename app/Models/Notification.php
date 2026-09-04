@@ -14,6 +14,7 @@ class Notification extends Model
         'request_id',
         'type',
         'message',
+        'url',
         'is_read',
         'read_at',
     ];
@@ -32,7 +33,8 @@ class Notification extends Model
                     return;
                 }
 
-                $requestNumber = $notification->request ? $notification->request->request_number : 'N/A';
+                // PR-type notifications carry their number inside the message (they have no requests row); fall back to "N/A" for everything else
+                $requestNumber = $notification->request ? $notification->request->request_number : ($notification->prNumber() ?? 'N/A');
 
                 // Super admin: in-app only (no email flood on shared region)
                 if ($user->role === 'super_admin') {
@@ -59,7 +61,7 @@ class Notification extends Model
                 }
 
                 // Build ticket URL and branch/region data
-                $ticketUrl = null;
+                $ticketUrl = $notification->url ?: null;
                 $branch = $user->branch;
                 $region = $user->region;
                 $request = $notification->request;
@@ -147,6 +149,15 @@ class Notification extends Model
     }
 
     // Helpers
+    public function prNumber(): ?string
+    {
+        if (preg_match('/PR-[A-Z0-9-]+/', $this->message, $m)) {
+            return $m[0];
+        }
+
+        return null;
+    }
+
     public function markAsRead()
     {
         $this->update([
@@ -155,13 +166,14 @@ class Notification extends Model
         ]);
     }
 
-    public static function send($userId, $requestId, $type, $message)
+    public static function send($userId, $requestId, $type, $message, $url = null)
     {
         return self::create([
             'user_id' => $userId,
             'request_id' => $requestId,
             'type' => $type,
             'message' => $message,
+            'url' => $url,
             'is_read' => false
         ]);
     }

@@ -371,7 +371,17 @@ stale-partId clearing. Tests: `test_create_form_prefills_from_part_id` +
 notifyFinalized/notifyDelivered + supplyUsers region/branch query). Wired
 into `CreatePurchaseRequestAction`, `FinalizePurchaseRequestAction`, and
 `ReceivePurchaseRequestAction`. Gate: full PR/parts/requisition suites green
-(35 PR + 58 parts/requisition + 15 parts stock).
+(48 PR + 58 parts/requisition + 15 parts stock)..
+
+### 8.2a PR notification deep-link + accurate badge
+- `notifications.url` column (nullable string) added - carries a deep link to
+  `purchase_requests.show` for Submitted / Finalized / Delivered notifications.
+- In-app dropdown:the whole item becomes a clickable `<a href>` when a URL is present;
+  legacy request notifications (without URL) stay plain text (nothing breaks).
+- Emails:the PR number is now extracted from the message for PR-type notifications
+  (so Ticket No. shows `PR-xxxx` instead of `N/A`), and the `View PR` button links direct.
+- Badge count now reflects the true unread total (no 10-cap); dropdown list stays
+  capped at 10. Gate:full PurchaseRequestTest green (48 passed/ 184 assertions).
 
 ### 8.3 Explicit non-goals
 - No schema change (no new columns/tables).
