@@ -1,183 +1,197 @@
-# Asset Downtime Tracking — Implementation Plan
+# Asset Downtime Tracking — Implementation & Overhaul Plan
 
-## Overview
-Track asset downtime per-ticket (ICT and PM) with dashboard widgets for monitoring.
+> **Status:** v1 implemented but **BROKEN** (Carbon 3 sign bug — all recorded durations ≤ 0).
+> **Overhaul approved (Sept 2026):** X1 math fix + PM/ICT split → X2 data cleanup → X3 gap closure → X4 display.
+> **Locked decisions:** PM downtime counts toward the combined total AND gets its own bucket. Bundled PM credits ALL of the user's assets.
 
-## Phase 1: Database Migration (15 min)
+---
 
-### 1.1 Add downtime columns to `requests` table
-```php
-// database/migrations/YYYY_MM_DD_add_downtime_to_requests.php
-Schema::table('requests', function (Blueprint $table) {
-    $table->timestamp('downtime_start')->nullable()->after('status');
-    $table->timestamp('downtime_end')->nullable()->after('downtime_start');
-    $table->integer('downtime_duration')->nullable()->after('downtime_end'); // minutes
-});
+## 1. How Downtime Works Today (v1 — implemented)
+
+### 1.1 Where the logic lives
+NOT in controllers (the original plan assumed that). It is **inline in `Request.php::booted()`**
+(model `updating` handler, ~lines 260-350), so EVERY status transition goes through it —
+from any Action, controller, or queue job. There are **no mass updates** (`Request::where()->update()`)
+anywhere in the codebase, so no path bypasses the model events. ✓
+
+### 1.2 The rules (v1)
+| Event | What happens |
+|---|---|
+| Status → `Ongoing` | `downtime_start = now()` (once; skipped if already set) |
+| Status → `Completed` | `downtime_end = now()`; `downtime_duration = now()->diffInMinutes(downtime_start)`; asset `total_downtime += duration` |
+| Anything else (Pending, Awaiting Parts, Cancelled…) | downtime untouched |
+
+### 1.3 Where it is displayed
+- **Asset Profile → Repair & Maintenance History** (`inventory/detail.blade.php` L648-697):
+  - Summary line: `Total Downtime: {{ $asset->formatted_downtime }}` (from `InventoryAsset::formatted_downtime`)
+  - Per-ticket badge inside every timeline item: `Downtime: X (start → end | Ongoing)` — works for BOTH PM and ICT tickets ✓ (keep as-is)
+- Request model accessors: `formatted_downtime_duration` ("2d 4h 30m"), `is_downtime` (bool)
+
+### 1.4 Schema
+```sql
+requests:          downtime_start TIMESTAMP NULL · downtime_end TIMESTAMP NULL · downtime_duration INT NULL (minutes)
+inventory_assets:  total_downtime INT DEFAULT 0 (minutes, combined)
 ```
 
-### 1.2 Add total_downtime to `inventory_assets` table
+
+---
+
+## 2. Discovered Bugs (verified against live data, Sept 2026)
+
+### 🐛 B1 — Carbon 3 SIGN BUG (critical — the reason every duration is ≤ 0)
+Carbon 3.11.4 (Laravel 13) made `diffInMinutes()` **signed**. Current code:
 ```php
-Schema::table('inventory_assets', function (Blueprint $table) {
-    $table->integer('total_downtime')->default(0)->after('status'); // minutes
-});
+// Request.php L340 — WRONG in Carbon 3:
+$duration = now()->diffInMinutes($request->downtime_start);   // past argument → NEGATIVE
+```
+**Live-data proof (before fix):**
+```
+requests:      min_duration = -17,303 · max_duration = 0 · negative_count = 11 of 22
+assets:        11 assets with NEGATIVE total_downtime (DELL XPS8940 = -17,303 min ≈ -12 days!)
+```
+`increment('total_downtime', -X)` = DECREMENT → asset totals went negative.
+
+**Fix (X1):**
+```php
+$duration = (int) abs($request->downtime_start->diffInMinutes(now()));
+// downtime_start->diffInMinutes(now()) → past→future = positive in Carbon 3
+// abs() + (int) cast = version-proof against any Carbon behaviour change
 ```
 
-## Phase 2: Model Updates (10 min)
+### 🐛 B2 — Bundled-PM loop: only the FIRST asset ever gets credit
+The downtime-completion block sits **inside** `foreach ($assetsToUpdate as $asset)`. On the first
+iteration `downtime_end` gets written, so every later iteration is skipped by
+`if ($request->downtime_start && !$request->downtime_end)`.
 
-### 2.1 Request model (`app/Models/Request.php`)
+**Fix (X1):** move the window-close + duration computation **outside the loop** (compute once per ticket),
+then credit **each asset** in `$assetsToUpdate` (locked decision: bundled PM = all N assets were genuinely
+unavailable).
+
+
+### ⚠️ G1 — Window never closes on Cancelled / Rejected / Referred-External
+Only `Completed` closes the window. A ticket that goes Ongoing → Cancelled leaves an **open window**:
+no `downtime_end`, no duration, no asset credit — permanent data loss for that outage.
+
+**Fix (X3):** treat `Cancelled / Rejected / Referred - External` like Completed for window-closing
+(close + compute + credit the correct bucket). Awaiting Parts / Awaiting Signature keep the window
+open (asset is still down — correct).
+
+### ⚠️ G2 — Pending time is not counted (accepted limitation — documented, NOT fixed)
+Downtime starts at Ongoing. Days spent in Pending (user waiting, asset unusable) are not captured.
+The deep review flags this; for now we keep "downtime = repair time" as the definition.
+Revisit together with Phase D3 (SLA), where response-time metrics belong.
+
+### ⚠️ G3 — `is_downtime` accessor inconsistency
+`getIsDowntimeAttribute()` requires `status === 'Ongoing'`, so the "currently down" indicator hides
+while status is `Awaiting Parts` even though the asset is still broken and the window is still open.
+
+**Fix (X3):**
 ```php
-public function getDowntimeDurationAttribute(): string
-{
-    if (!$this->downtime_duration) return 'N/A';
-    $hours = floor($this->downtime_duration / 60);
-    $minutes = $this->downtime_duration % 60;
-    return "{$hours}h {$minutes}m";
-}
-
 public function getIsDowntimeAttribute(): bool
 {
-    return $this->status === 'Ongoing' && $this->downtime_start !== null;
+    return $this->downtime_start !== null && $this->downtime_end === null;
 }
 ```
 
-### 2.2 InventoryAsset model (`app/Models/InventoryAsset.php`)
+---
+
+## 3. The New Logic (X1 — what we are building)
+
+### 3.1 Design: Combined total + PM breakdown (locked decision)
+```
+inventory_assets:
+├── total_downtime       (existing, stays) = COMBINED (ICT + PM)   → "Total Downtime" display
+└── total_pm_downtime    (NEW migration)   = PM portion only       → breakdown
+
+ICT/Repair downtime = DERIVED = total_downtime − total_pm_downtime   (no extra column)
+```
+
+### 3.2 Credit rules (per ticket, on window close)
+```
+PM ticket completed:
+├── total_downtime      += duration     (still counts toward the total ✓)
+└── total_pm_downtime   += duration     (own bucket ✓)
+
+ICT / Repair ticket completed:
+└── total_downtime      += duration     (total only)
+
+Bundled auto-generated PM (covers ALL assets of the user):
+└── EVERY asset in $assetsToUpdate gets the credit (locked decision — all were down)
+```
+
+### 3.3 New model code (`InventoryAsset.php`)
 ```php
-public function getTotalDowntimeAttribute(): string
-{
-    $minutes = $this->attributes['total_downtime'] ?? 0;
-    $hours = floor($minutes / 60);
-    $days = floor($hours / 24);
-    $hours = $hours % 24;
-    return "{$days}d {$hours}h";
-}
+// cast
+'total_pm_downtime' => 'integer',
 
-public function downtimeTickets()
-{
-    return $this->hasMany(Request::class, 'linked_asset_id', 'asset_id')
-        ->whereNotNull('downtime_duration');
-}
+// accessors (appended)
+public function getFormattedPmDowntimeAttribute(): string   // "1h 30m"
+public function getFailureDowntimeAttribute(): string        // derived: total − PM → "1d 8h"
 ```
 
-## Phase 3: Controller Triggers (20 min)
-
-### 3.1 ICTRequestController
+### 3.4 Migration
 ```php
-// When IT clicks "Start Repair"
-public function start($id)
-{
-    $request = Request::findOrFail($id);
-    $request->update([
-        'status' => 'Ongoing',
-        'downtime_start' => now(),
-    ]);
-
-    // Update asset status
-    if ($request->linked_asset_id) {
-        InventoryAsset::where('asset_id', $request->linked_asset_id)
-            ->update(['status' => 'For Repair']);
-    }
-}
-
-// When IT clicks "Complete"
-public function complete($id)
-{
-    $request = Request::findOrFail($id);
-    $duration = now()->diffInMinutes($request->downtime_start);
-    $request->update([
-        'status' => 'Completed',
-        'downtime_end' => now(),
-        'downtime_duration' => $duration,
-    ]);
-
-    // Update asset status + total_downtime
-    if ($request->linked_asset_id) {
-        $asset = InventoryAsset::where('asset_id', $request->linked_asset_id)->first();
-        $asset->update(['status' => 'Active']);
-        $asset->increment('total_downtime', $duration);
-    }
-}
+// add_total_pm_downtime_to_inventory_assets
+Schema::table('inventory_assets', function (Blueprint $table) {
+    $table->integer('total_pm_downtime')->default(0)->after('total_downtime'); // minutes, PM-only
+});
 ```
 
-### 3.2 MaintenanceController (same pattern)
-- `start()` — set `downtime_start`, asset status → 'For Repair'
-- `complete()` — set `downtime_end` + `downtime_duration`, asset status → 'Active', increment `total_downtime`
+### 3.5 Display (X4) — `inventory/detail.blade.php` downtime-summary block
+```
+Total Downtime: 2d 4h 30m
+📉 ICT/Repair: 1d 8h   ·   🔧 PM: 20h 30m
+```
+Per-ticket badges below stay as-is (already correct UI) — only their VALUES become positive.
 
-## Phase 4: Asset Detail Page (15 min)
-
-### 4.1 InventoryController::detail()
-```php
-$repairHistory = Request::with(['user', 'assignedTo'])
-    ->where('linked_asset_id', $assetId)
-    ->orderByDesc('created_at')
-    ->limit(50)
-    ->get();
-
-return view('inventory.detail', compact('asset', 'repairHistory', 'transferHistory'));
+### 3.6 How to read the numbers (the practical point)
+```
+Asset A:  ICT 40h · PM 2h   → 🔴 chronically failing — replacement candidate
+Asset B:  ICT 2h  · PM 6h   → 🟢 healthy — only scheduled servicing
+(v1 showed both as "42h combined" — indistinguishable)
 ```
 
-### 4.2 inventory/detail.blade.php
-Add to Repair History section:
-```html
-<div class="downtime-summary">
-    <strong>Total Downtime: {{ $asset->total_downtime }}</strong>
-</div>
 
-<!-- Per ticket -->
-<span class="downtime-badge">
-    Downtime: {{ $ticket->downtime_duration }}
-    ({{ $ticket->downtime_start }} - {{ $ticket->downtime_end ?? 'Ongoing' }})
-</span>
+---
+
+## 4. Execution Phases (test-first per phase — no phase moves until green)
+
+| Phase | Scope | Gate |
+|---|---|---|
+| **X1** | Sign fix + loop fix + bundled-PM all-assets credit + `total_pm_downtime` migration + accessors + split credit logic | Feature tests: PM ticket raises BOTH columns; ICT raises total only; bundled PM credits every asset; all durations positive |
+| **X2** | **DB backup first** (`storage/ux_backup/cmms_pre_downtime_fix_YYYYMMDD.sql`) → artisan command: `abs()` all negative `downtime_duration` rows; recompute BOTH asset columns per asset from its tickets (sum by type, with abs) | Verification query: 0 negative durations; 0 negative asset totals; spot-check DELL XPS8940 |
+| **X3** | G1 window-closing on Cancelled/Rejected/Referred (credit by type) + G3 `is_downtime` accessor | Tests: cancelled Ongoing ticket closes window + credits asset; Awaiting Parts keeps window open + is_downtime true |
+| **X4** | Breakdown line in Repair & Maintenance History summary (Total + ICT/PM split) | Manual check on asset profile; syntax + full suite |
+
+### X2 cleanup command sketch
+```
+php artisan downtime:repair
+  1. UPDATE requests SET downtime_duration = ABS(downtime_duration) WHERE downtime_duration < 0;
+  2. For each inventory_assets row:
+       total_downtime    = SUM(ABS(duration)) of ALL closed downtime windows (any type)
+       total_pm_downtime = SUM(ABS(duration)) of closed windows where type = 'Preventive Maintenance'
+  3. Report before/after table (assets touched, minutes corrected)
 ```
 
-## Phase 5: Dashboard Widgets (15 min)
+---
 
-### 5.1 DashboardController::superAdmin()
-```php
-// Top 5 assets by downtime
-$topDowntimeAssets = InventoryAsset::where('region', $user->region)
-    ->when($user->branch, fn($q) => $q->where('branch', $user->branch))
-    ->orderByDesc('total_downtime')
-    ->limit(5)
-    ->get();
+## 5. Out of Scope (future phases — do NOT mix into X1-X4)
+- **D2 Ticket Aging** — unified age accessor + buckets (🟢 0-24h · 🟡 1-3d · 🟠 3-7d · 🔴 7d+) to replace
+  the hardcoded 7-day Overdue rule in PM Tasks
+- **D3 SLA-lite** — priority (P1-P4) usage, response/resolution targets, breach badges, MTTR/MTBF,
+  availability %; requires aging (D2) and accurate downtime (this doc) first
+- Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
 
-// Assets currently in downtime
-$assetsInDowntime = InventoryAsset::where('status', 'For Repair')
-    ->where('region', $user->region)
-    ->when($user->branch, fn($q) => $q->where('branch', $user->branch))
-    ->limit(10)
-    ->get();
-```
+---
 
-### 5.2 dashboard/super-admin.blade.php
-Two widgets:
-1. **TOP 5 ASSETS BY DOWNTIME** — table with asset name, total downtime, # tickets
-2. **ASSETS CURRENTLY IN DOWNTIME** — list with asset name, current downtime duration, ticket link
+## 6. Key Design Decisions (locked, Sept 2026)
+1. **PM counts toward the combined total** AND gets its own bucket — one "Total Downtime" line, never two competing totals
+2. **ICT downtime is derived** (total − PM), not a third column
+3. **Bundled PM credits ALL of the user's assets** — every asset was genuinely unavailable
+4. **Cancelled/Rejected/Referred close the window and credit the asset** — the asset really was down
+5. **`abs()` + `(int)` cast everywhere** — Carbon-version-proof
+6. **DB backup before any data-mutation command** (lesson learned from the pre-restore incident)
 
-## Phase 6: Testing & Commit (10 min)
-
-### Test scenarios:
-1. ICT ticket: create → start → complete → verify downtime recorded
-2. PM ticket: create → start → complete → verify downtime recorded
-3. Asset detail page: verify downtime display
-4. Dashboard: verify both widgets show correct data
-5. Multiple tickets: verify total_downtime accumulates correctly
-
-### Git:
-```bash
-git add -A
-git commit -m "feat: Add asset downtime tracking (ICT + PM)"
-git push origin develop
-```
-
-## Key Design Decisions
-
-1. **Per-ticket downtime** — each ICT/PM ticket tracks its own downtime
-2. **Asset-level total** — `total_downtime` field accumulates all ticket downtimes
-3. **Status-based triggers** — downtime starts on "Ongoing", ends on "Completed"
-4. **Both ICT and PM** — same `requests` table handles both types
-5. **Dashboard widgets** — database aggregation for performance (no N+1)
-
-## Git Checkpoints
-- `checkpoint/pre-multilocation-fix` — before region scoping fixes
-- `9f19ee8` — region scoping fixes (pushed to develop)
-- New checkpoint after downtime implementation
+## 7. Git Checkpoints
+- v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
+- Overhaul: X1-X4 to be committed per phase with tests, then pushed as a single squash to `origin/develop`
