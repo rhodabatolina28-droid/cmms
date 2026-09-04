@@ -41,6 +41,29 @@
     .cmms-pr-table { min-width:900px; width:100%; }
     .cmms-pr-table th, .cmms-pr-table td { vertical-align:middle; }
     .cmms-pr-table .nowrap { white-space:nowrap; }
+    /* PR action buttons: uniform inline height + centered so View / Finalize / Record delivery
+       align on one line in the Actions cell (desktop). */
+    .cmms-pr-table td:last-child > div,
+    .cmms-pr-table td:last-child > form {
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        gap:6px !important;
+    }
+    .cmms-pr-table td:last-child .cmms-btn-secondary,
+    .cmms-pr-table td:last-child .cmms-btn-primary {
+        display:inline-flex !important;
+        align-items:center !important;
+        justify-content:center !important;
+        min-height:32px !important;
+        padding:5px 12px !important;
+        font-size:12px !important;
+        font-weight:700 !important;
+        line-height:1 !important;
+        white-space:nowrap !important;
+        border-radius:6px !important;
+        box-sizing:border-box !important;
+    }
     /* Icon action buttons - same look as Parts & Consumables rows */
     .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
@@ -691,7 +714,7 @@
                                     <th>Assigned IT</th>
                                     <th>End user</th>
                                     <th>Parts requests</th>
-                                    <th></th>
+                                    <th>Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="ticketsTableBody">
