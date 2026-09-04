@@ -42,7 +42,7 @@
     .cmms-pr-table th, .cmms-pr-table td { vertical-align:middle; }
     .cmms-pr-table .nowrap { white-space:nowrap; }
     /* Icon action buttons - same look as Parts & Consumables rows */
-    .act-btn { width:34px; height:34px; border-radius:9px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:13px; transition:all .15s; text-decoration:none; flex-shrink:0; }
+    .act-btn { width:30px; height:30px; border-radius:8px; display:inline-flex; align-items:center; justify-content:center; border:1px solid #e2e8f0; background:#fff; color:#475569; cursor:pointer; font-size:12px; transition:all .15s; text-decoration:none; }
     .act-btn:hover { border-color:#0038A8; color:#0038A8; background:#eff6ff; }
     .act-btn.in { border-color:#bbf7d0; color:#15803d; }
     .act-btn.in:hover { background:#f0fdf4; border-color:#86efac; color:#166534; }
@@ -273,12 +273,12 @@
             gap: 6px !important;
         }
         .cmms-req-table .act-btn {
-            width: 34px !important;
-            height: 34px !important;
-            min-width: 34px !important;
-            min-height: 34px !important;
-            font-size: 13px !important;
-            border-radius: 9px !important;
+            width: 36px !important;
+            height: 36px !important;
+            min-width: 36px !important;
+            min-height: 36px !important;
+            font-size: 14px !important;
+            border-radius: 8px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
@@ -695,17 +695,11 @@
                                         @endforelse
                                     </td>
                                     <td class="td-nowrap">
-                                        <div style="display:flex;align-items:center;gap:6px;">
                                         @if($t->requisitions->isNotEmpty())
                                             @php $latest = $t->requisitions->sortByDesc('created_at')->first(); @endphp
-                                            <a href="{{ route('requisitions.show', $latest->id) }}" class="act-btn" aria-label="Open latest requisition of {{ $t->display_number ?? $t->request_number }}" title="Open latest requisition">
-                                                <i class="fa-solid fa-file-invoice"></i>
-                                            </a>
+                                            <a href="{{ route('requisitions.show', $latest->id) }}" class="cmms-btn-secondary">Latest REQ</a>
                                         @endif
-                                        <a href="{{ $t->type === 'Preventive Maintenance' ? route('maintenance.show', $t->id) : route('ict.show', $t->id) }}" class="act-btn" target="_blank" aria-label="Open job order record of {{ $t->display_number ?? $t->request_number }}" title="Open job order record">
-                                            <i class="fa-solid fa-file-lines"></i>
-                                        </a>
-                                        </div>
+                                        <a href="{{ $t->type === 'Preventive Maintenance' ? route('maintenance.show', $t->id) : route('ict.show', $t->id) }}" class="cmms-btn-secondary" target="_blank">Job order</a>
                                     </td>
                                 </tr>
                                 @endforeach

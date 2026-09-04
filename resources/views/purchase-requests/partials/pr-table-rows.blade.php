@@ -35,23 +35,23 @@
         </td>
         <td class="nowrap">
             <div style="display:flex;align-items:center;gap:6px;">
-                <a href="{{ route('purchase_requests.show', $pr->id) }}" class="act-btn" aria-label="View {{ $pr->pr_number }} document" title="Open full document">
-                    <i class="fa-solid fa-eye"></i>
+                <a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View {{ $pr->pr_number }} document" title="Open full document">
+                    <i class="fa-solid fa-eye"></i>&nbsp;View
                 </a>
                 @if($isSubmitted)
                     <form method="POST" action="{{ route('purchase_requests.finalize', $pr->id) }}">
                         @csrf
-                        <button type="submit" class="act-btn in pr-finalize-btn" data-pr="{{ $pr->pr_number }}" aria-label="Finalize and print {{ $pr->pr_number }}" title="Finalize & enable printing">
-                            <i class="fa-solid fa-stamp"></i>
+                        <button type="submit" class="cmms-btn-primary pr-finalize-btn" data-pr="{{ $pr->pr_number }}" style="padding:5px 10px;font-size:11.5px;">
+                            Finalize &amp; Print
                         </button>
                     </form>
                 @elseif($pr->status === 'finalized')
-                    <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="act-btn in" aria-label="Record delivery for {{ $pr->pr_number }}" title="Goods arrived? Log items, serials, and destination">
-                        <i class="fa-solid fa-truck-fast"></i>
+                    <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-primary" style="padding:5px 10px;font-size:11.5px;" aria-label="Record delivery for {{ $pr->pr_number }}" title="Goods arrived? Log items, serials, and destination">
+                        Record delivery
                     </a>
                 @elseif($pr->status === 'delivered')
-                    <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="act-btn" aria-label="View delivery record for {{ $pr->pr_number }}" title="View what arrived, where it went, and the proof of purchase">
-                        <i class="fa-solid fa-receipt"></i>
+                    <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View delivery record for {{ $pr->pr_number }}" title="View what arrived, where it went, and the proof of purchase">
+                        <i class="fa-solid fa-receipt"></i>&nbsp;View delivery
                     </a>
                 @endif
             </div>
