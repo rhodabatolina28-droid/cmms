@@ -70,7 +70,14 @@
     .cmms-req-table td:first-child { text-align:left; }
     .cmms-req-table tr.cmms-req-details-row > td { text-align:left; }
     .cmms-req-table td.td-nowrap { white-space:normal; }
-    .cmms-req-table .cmms-qbtn-group, .cmms-req-table .row-actions { justify-content:center; flex-wrap:wrap; }
+    .cmms-req-table .cmms-qbtn-group, .cmms-req-table .row-actions { justify-content:center; flex-wrap:nowrap; display:inline-flex; align-items:center; gap:6px; }
+/* Action columns: consistent centering across Queue / Job Orders / Purchase Requests tables (desktop) */
+.cmms-req-table th:last-child, .cmms-req-table td:last-child,
+.cmms-ticket-table th:last-child, .cmms-ticket-table td:last-child,
+.cmms-pr-table th:last-child, .cmms-pr-table td:last-child { text-align:center; }
+.cmms-req-table th, .cmms-req-table td,
+.cmms-ticket-table th, .cmms-ticket-table td,
+.cmms-pr-table th, .cmms-pr-table td { vertical-align:middle; }
     @media screen and (max-width: 767px) {
         .card-header-accent { flex-direction: column !important; gap: 10px !important; }
         .filter-ribbon { flex-direction: column !important; gap: 10px !important; }
@@ -320,9 +327,17 @@
         }
 
         /* ── JOB ORDERS tab mobile optimization ── */
-        .cmms-ticket-table {
+        /* Scope the forced width to the JO table ONLY — the Queue table also
+           carries .cmms-ticket-table and must size naturally (8 columns). */
+        .cmms-ticket-table:not(.cmms-req-table) {
             min-width: 780px !important;
             width: 780px !important;
+            table-layout: auto !important;
+        }
+        /* Queue table: natural width, min 780px, scrolls in .table-wrap */
+        .cmms-req-table:not(.cmms-pr-table) {
+            min-width: 780px !important;
+            width: auto !important;
             table-layout: auto !important;
         }
         .cmms-ticket-table th,
