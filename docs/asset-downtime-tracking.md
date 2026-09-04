@@ -260,6 +260,104 @@ Department Admin (Personnel Management modals — existing na). Ang self-inflati
 
 ---
 
+## 5a. D5 — Storage Reorganization + CSM Auto-PDF — DESIGNED, awaiting execution
+
+> **Konteksto:** lahat ng uploads ay dapat may kanya-kanyang organized storage, at ang CSM survey ay
+> dapat may awtomatikong naka-save na PDF copy pagkatapos ma-submit (walang download button,
+> walang manual na aksyon — awtomatikong mai-imbak). Ang mga signature files ngayon ay **test data
+> lamang** — kaya walang maselang migration na kailangan; matatayo natin nang tama ang storage
+> mula sa simula.
+
+### D5.0 Storage audit findings (Sept 2026 — naberipika sa disk at DB)
+| Upload type | Kasalukuyang lokasyon | Estado |
+|---|---|---|
+| Signatures (bago, base64→PNG) | `storage/app/public/signatures/` | ❌ **1,085 files, FLAT** + **PUBLIC disk** (may direktang URL!) |
+| Signatures (legacy) | `public/signatures/` | ❌ 223 files, deretso sa public, hindi dumadaan sa Storage |
+| Asset attachments | `storage/app/public/asset-attachments/{assetId}/` | ✅ organized, pero **public disk** (sensitibong docs!) |
+| PR attachments (mga resibo/proof!) | `storage/app/public/pr-attachments/{prId}/` | ✅ organized, pero **public disk** (sensitibong financial!) |
+| `public/csm/` | **HINDI uploads pala** — mga static na UI asset (csm_survey.css/js, banner PNG) | housekeeping lang |
+| `csm_surveys` table | **WALANG file columns** — mga sagot lang (cc1-3, sqd1-9, suggestions) | walang nakaimbak na kopya ng form |
+
+**Bakit mali ang public disk:** ang `/storage/signatures/technician_Juan_123.png` ay direktang
+maa-access ng kahit sinong may URL — **walang auth check**. Ang mga pirma at resibo ay
+personal/sensitibong data.
+
+### D5.1 Target architecture: PRIVATE disk + authed serving (naka-lock na desisyon)
+```
+PRIVATE DISK (storage/app/private) — WALANG direktang URL, walang /storage/ leak
+├── signatures/{requestId}/...        ← mga pirma (sensitibo)
+├── csm-copies/{requestId}/...        ← mga CSM PDF copy
+├── asset-attachments/{assetId}/...   ← mga asset docs/photos
+└── pr-attachments/{prId}/...         ← mga resibo/proof of purchase
+
+PUBLIC DISK: mga static na UI asset na lang (csm_banner.png, logo, css/js)
+
+PAGKAKITA (halimbawa — pirma):
+  <img src="/tickets/{id}/signature/technician">
+      → SignatureController (auth middleware)
+          ├─ naka-login? ✓
+          ├─ pwede bang makita ang ticket na ito? (parehong policy sa ticket view)
+          └─ ✓ → stream inline (hindi bilang hiwalay na download) · ✗ → 403
+```
+**Bonus:** mawawala ang DomPDF whitelist problem (`$allowed = realpath(...signatures)`) — ang PDF
+generation ay magbabasa nang direkta mula sa private path (`Storage::path()`), walang URL, walang whitelist.
+
+### D5.2 CSM auto-PDF (walang download button — awtomatikong naka-imbak)
+```
+End user [I-submit] ang CSM survey
+  └─ StoreCsmSurveyAction:
+     1. DB::transaction (mga sagot + lockForUpdate) — WALANG binago ✓
+     2. PAGKATAPOS NG COMMIT (hindi sa loob!): subukang gawin ang PDF
+        └─ Pdf::loadView('pdf.csm-form', mga sagot + respondent + request number)
+           → i-save sa: csm-copies/{requestId}/CSM-{requestNumber}.pdf (PRIVATE disk)
+        └─ I-update ang csm_surveys.pdf_path (BAGONG nullable column)
+     3. try-catch: KUNG PUMALYA ANG PDF → naka-save pa rin ang mga sagot, null ang pdf_path,
+        may log + retry command — HINDI KAILANMAN hahadakan ng PDF ang pagsusumite
+```
+**Bakit pagkatapos ng commit:** ang `RequirePendingSurvey` middleware ay nag-bl-block sa buong
+app kapag may pending survey — kung pumalya ang PDF sa loob ng transaction, **makakulong ang user
+sa survey loop**. Non-blocking = ligtas. (FINDING 1 ng deepview)
+
+**Pag-view:** `[👁 Tingnan ang Kopya]` — authed route (`csm.pdf.show`) → inline PDF. Mga lugar:
+user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
+
+### D5.3 Signature private switch
+1. `RequestHelpers::saveSignature()` → `Storage::disk('private')` + path `signatures/{requestId}/...`
+2. **BAGONG authed route:** `GET /tickets/{request}/signature/{field}` → `SignatureController@show`
+   (papalit sa lahat ng `/storage/{{ path }}` na `<img>` srcs — ict-form sections L203/280/338,
+   ict form L324, maintenance sections L38/L15)
+3. `pdf/ict-form.blade.php` L203 + `pdf/maintenance-form.blade.php` L86 whitelist → **tanggalin**;
+   palitan ng direktang `Storage::disk('private')->get()` read sa PDF action (ipasa ang bytes/image data sa view)
+4. Mga legacy test files (1,085 + 223) → **i-archive/i-delete** (test data lang — walang reconciliation)
+5. Mga test DB signature paths (3+ PM rows) → i-reset o iwanan (mga test ticket naman)
+
+### D5.4 Attachments → private (mga resibo = sensitibo)
+- `UploadAssetAttachmentAction` + `UploadPrAttachmentAction` → private disk, parehong folder scheme
+- Bagong authed attachment serving routes (papalit sa mga `/storage/` URL sa asset detail + PR pages)
+- `PurchaseRequestController::download()` (L391) → palitan ang disk sa 'private' (may policy check na)
+
+### D5.5 CSM static assets (housekeeping)
+- `public/csm/` → mananatiling static (hindi uploads) — pero ilalipat sa `public/images/csm/` at
+  aayusin ang 5 `asset()` reference sa `csm/form.blade.php` (L12-14, L27) para malinis ang root
+
+### D5.6 Configuration (gDrive-ready)
+```php
+// config/cmms.php (BAGO)
+'csm_copy_disk' => env('CSM_COPY_DISK', 'local'),   // o 'private' — lokal ngayon
+// BALANG-ARAW GDRIVE: magdagdag lang ng 'gdrive' disk sa filesystems.php
+// + palitan ang env value — WALANG code change sa Action (naka-abstract sa Storage API)
+```
+
+### D5.7 Execution phases (pagkatapos ng X1-X4; test-first)
+| Phase | Saklaw | Gate |
+|---|---|---|
+| **D5a** | `pdf_path` column + post-commit auto-PDF + `pdf/csm-form` view + authed View Copy route | Test: submission → may PDF sa private `csm-copies/{requestId}/`; failed gen → naka-save pa rin ang survey; nagbubukas nang inline ang view route |
+| **D5b** | `saveSignature` → private + `{requestId}` scheme + authed signature route + blade src updates + tanggalin ang DomPDF whitelist | Test: bagong pirma ay nasa private path; hindi na gumagana ang lumang `/storage/signatures/...` URL; ICT/PM PDF ay may pirma pa rin |
+| **D5c** | Test-file cleanup (1,085 + 223 archive) + mga attachment sa private + authed attachment routes + CSM static asset relocation | Beripikahin: walang natirang sensitibong file sa public disk; gumagana ang lahat ng view flows |
+| **D5d** | Backfill: gumawa ng PDF copy para sa 3 lumang CSM survey | Tinker verify: lahat ng survey ay may pdf_path |
+
+---
+
 ## 6. Key Design Decisions (locked, Sept 2026)
 1. **PM counts toward the combined total** AND gets its own bucket — one "Total Downtime" line, never two competing totals
 2. **ICT downtime is derived** (total − PM), not a third column
@@ -274,6 +372,14 @@ Department Admin (Personnel Management modals — existing na). Ang self-inflati
    BEFORE D4 rolls out (otherwise any user can self-inflate to "Director" and jump the queue)
 9. **Officials-first ordering** — officials (newest first) at the top of IT queue; regular tickets
    keep the status-based flow below; Ongoing regular work is not displaced, only queue entry order changes
+10. **ALL sensitive uploads move to the PRIVATE disk** (signatures, CSM copies, asset + PR attachments)
+    — served only through authed controller routes with the same access policy as the parent ticket;
+    public disk keeps only static UI assets. No `/storage/` direct URLs for sensitive files.
+11. **CSM PDF is auto-generated AFTER the DB transaction commits** — never inside it, never blocking
+    the survey submission (PDF failure = null pdf_path + retry command; the `RequirePendingSurvey`
+    middleware means a failed submission would trap the user in a loop)
+12. **Storage is disk-abstracted from day one** — CSM copy disk via config (`csm_copy_disk`), so a
+    future Google Drive switch is an env change, not a code change
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
