@@ -183,16 +183,16 @@
             display: inline-flex;
             align-items: center;
             gap: 7px;
-            min-width: 100px;
+            min-width: 84px;
             justify-content: center;
             background: #0038A8;
             color: white;
             border-radius: 8px;
-            padding: 11px 14px;
+            padding: 8px 12px;
             text-decoration: none;
-            font-size: 13px;
+            font-size: 12px;
             font-weight: 900;
-            min-height: 44px;
+            min-height: 38px;
             transition: all 0.2s;
         }
         .action-button:hover { background: #002366; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 35, 102, 0.3); }
@@ -217,13 +217,13 @@
             .hero-stats-box { min-width: 0 !important; width: 100% !important; }
             .panel { padding: 12px 14px !important; }
             .job-number { font-size: 14px !important; }
-            .action-button { min-height: 48px !important; padding: 12px 16px !important; font-size: 14px !important; }
+            .action-button { min-height: 44px !important; padding: 10px 14px !important; font-size: 13px !important; }
         }
         .stat-value-amber { color: #f59e0b; }
         .stat-value-dark-amber { color: #92400e; }
         .stat-value-blue { color: #2563eb; }
         .action-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-        .btn-pm-tasks { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: #059669; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
+        .btn-pm-tasks { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #059669; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
         .job-status-mt { margin-top: 8px; }
         .empty-state-icon { font-size: 28px; color: #94a3b8; margin-bottom: 10px; }
         .empty-state-title { font-weight: 900; color: #334155; }
