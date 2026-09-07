@@ -393,6 +393,37 @@ user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
 | **D5c** | Test-file cleanup (1,085 + 223 archive) + mga attachment sa private + authed attachment routes + CSM static asset relocation | Beripikahin: walang natirang sensitibong file sa public disk; gumagana ang lahat ng view flows |
 | **D5d** | Backfill: gumawa ng PDF copy para sa 3 lumang CSM survey | Tinker verify: lahat ng survey ay may pdf_path |
 
+### D5.8 EXECUTION LOG (naudagawa — tapos na ang D5b + D5c)
+
+> **D5b — ✅ COMPLETE (`264156b`, Sept 7, 2026)** — Signatures → PRIVATE disk + authed serving
+> **D5c — ✅ COMPLETE (`c10c9f1`, Sept 7, 2026)** — Attachments → PRIVATE + test-file archive
+
+#### D5b implementation details
+| # | Gawain | Files |
+|---|---|---|
+| 1 | `RequestHelpers::saveSignature()` → `Storage::disk('local')` + month-year path `signatures/{year}/{MonthName}/...` | `app/Support/RequestHelpers.php` |
+| 2 | Lahat ng 7 action files na nag-delete ng signature files → `'local'` (public→private) | `app/Actions/ICT/*` (5), `app/Actions/Maintenance/*` (2) |
+| 3 | **Bagong authed route** `GET /tickets/{ticket}/signature/{field}` → `SignatureController@show` — may role middleware (`user,it,admin,supply_officer,super_admin`) + ticket policy check (`viewIct`/`viewMaintenance`) + field whitelist (404 kung mali) + path-traversal guard (`str_starts_with('signatures/')`) + `Storage::disk('local')->get()` | `app/Http/Controllers/Tickets/SignatureController.php` (NEW) + `routes/web.php` |
+| 4 | 6 na blade img locations → `route('tickets.signature.show', ...)` | `partials/ict/_ict_form_sections.blade.php` (3), `requests/ict/form.blade.php` (1), `partials/maintenance/_technician_section.blade.php` (1), `_end_user_section.blade.php` (1) |
+| 5 | DomPDF whitelist → `app/private/` (na-direct na) | `resources/views/pdf/ict-form.blade.php` L201-203, `pdf/maintenance-form.blade.php` L84-86 |
+| 6 | **🚨 MAJOR DISCOVERY + FIX:** ang Laravel `local` disk ay may `'serve' => true` — nagrerehistro ng **unauthenticated `GET|PUT /storage/{path}` routes** (na-serve ang private files WITHOUT auth, at pwede pang mag-upload!). → **`serve => false`** | `config/filesystems.php` |
+
+**Test gate D5b:** `SignatureAccessTest` 6 passed (10 assertions) — private write + month folder, non-image → null, owner 200, stranger 403, invalid field 404, **`storage.local` route WALA na**.
+
+#### D5c implementation details
+| # | Gawain | Files |
+|---|---|---|
+| 1 | Lahat ng attachment disk → **`'local'`** (private ang default na) | `UploadAssetAttachmentAction`, `UploadPrAttachmentAction` (store), `DeleteAssetAttachmentAction`, `DownloadAssetAttachmentAction`, `PurchaseRequestController` L391/L411, `models/AssetAttachment.php` (accessor) |
+| 2 | **Data migration:** asset-attachments (9) + pr-attachments (7) = 16 files COPIED public→private (naka-verify bago tanggalin ang originals) | storage |
+| 3 | **Test-file archive** → `storage/d5c_archive_20260907/` | 1,085 public `signatures/` + 223 legacy `public/signatures/` = **1,308 files**, inalis ang originals |
+| 4 | Final: **public disk = `.gitignore` LANG** (1 file); private disk = 133 files | verified |
+
+**Test gate D5c:** SignatureAccessTest 6 ✓ · RequisitionTicketContext 33 ✓ · SupplyQueueSearchTest 20 ✓
+
+**⚠️ Tandaan (Option A na-inatanggap):** ang 20 lumang PM records na may old `signatures/maint_tech_...` flat paths ay **hindi na magpapakita ng pirma** (files na naka-archive). Test data lang sila. Lahat ng bagong pirma mula ngayon = 100% private + authed.
+
+**✅ Ang binago para sa ADMIN/USER experience:** WALANG observable na pagbabago sa forms/PDFs ng mga bagong tickets — ang nagbago lang ay ang pinto (direct URL wala na; lahat dumadaan sa authed route na may parehong ticket access policy). Ang end-user/admin na may access sa ticket → nakikita pa rin nang pareho ang pirma.
+
 ---
 
 ## 5b. D6 — Auto-Archived PDFs (ICT + PM) — DESIGNED, awaiting execution
