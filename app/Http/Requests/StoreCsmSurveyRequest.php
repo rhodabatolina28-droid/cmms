@@ -18,6 +18,7 @@ class StoreCsmSurveyRequest extends FormRequest
         return [
             'request_id'  => 'required|exists:requests,id',
             'consent'     => 'required|in:yes',
+            'email'       => 'nullable|email|max:255',
             'age'         => 'required|integer|min:18|max:99',
             'sex'         => 'required|string|in:Male,Female',
             'cc1'         => 'required|array|size:1',

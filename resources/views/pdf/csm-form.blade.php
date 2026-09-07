@@ -29,7 +29,8 @@
         .survey-options { font-size: 10.5px; }
         .survey-options .opt { margin: 0.5px 0; }
         .cb { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; margin-right: 5px; position: relative; top: 2px; text-align: center; line-height: 11px; font-size: 10px; font-weight: bold; }
-        .cb.x:after { content: "✓"; }
+        .cb-img { width: 10px; height: 10px; position: relative; top: 1px; margin-right: 1px; }
+        .chk-img { width: 11px; height: 11px; }
         .survey-row table { width: 100%; border-collapse: collapse; }
         .survey-row td { width: 50%; border: none; padding: 1px 0; }
         .survey-row td + td { padding-left: 18px; }
@@ -47,6 +48,14 @@
 <body>
     <div class="form-container">
 {{-- HEADER: logo + NCMB + title (replaces the web banner image) --}}
+        @php
+            // D5a: TEXT stays Arial; the ✓ marks are tiny inline SVG images
+            // (same technique as the NCMB logo) because the Arial core font
+            // has no checkmark glyph in DomPDF.
+            $checkSvg = 'data:image/svg+xml;base64,' . base64_encode(
+                '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><path d="M2.5 8.5L6.5 12.5 13.5 3.5" fill="none" stroke="#000" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+            );
+        @endphp
         <div class="header-bar">
             <table>
                 <tr>
@@ -72,7 +81,7 @@
                 <table class="profile-table">
                     <tr>
                         <td class="p-label">Email address (optional):</td>
-                        <td class="p-value" colspan="3"><span class="value-box" style="min-width:60%;">&nbsp;</span></td>
+                        <td class="p-value" colspan="3"><span class="value-box" style="min-width:60%;">{{ $survey->email ?? '' }}</span></td>
                     </tr>
                     <tr>
                         <td class="p-label">Age<span class="required"> *</span>:</td>
@@ -110,7 +119,7 @@
                 @endphp
                 <div class="survey-options">
                     @foreach($cc1Options as $val => $label)
-                        <div class="opt"><span class="cb {{ (string)$survey->cc1 === $val ? 'x' : '' }}"></span>{{ $val }}. {{ $label }}</div>
+                        <div class="opt"><span class="cb">@if((string)$survey->cc1 === $val)<img src="{{ $checkSvg }}" class="cb-img">@endif</span>{{ $val }}. {{ $label }}</div>
                     @endforeach
                 </div>
             </div>
@@ -127,7 +136,7 @@
                         @foreach($cc2Chunks as $i => $chunk)
                             <tr>
                                 @foreach($chunk as $val => $label)
-                                    <td><span class="cb {{ (string)$survey->cc2 === (string)$val ? 'x' : '' }}"></span>{{ $val }}. {{ $label }}</td>
+                                    <td><span class="cb">@if((string)$survey->cc2 === (string)$val)<img src="{{ $checkSvg }}" class="cb-img">@endif</span>{{ $val }}. {{ $label }}</td>
                                 @endforeach
                                 @if(count($chunk) === 1)<td></td><td></td>@elseif(count($chunk) === 2)<td></td>@endif
                             </tr>
@@ -148,7 +157,7 @@
                         @foreach($cc3Chunks as $i => $chunk)
                             <tr>
                                 @foreach($chunk as $val => $label)
-                                    <td><span class="cb {{ (string)$survey->cc3 === (string)$val ? 'x' : '' }}"></span>{{ $val }}. {{ $label }}</td>
+                                    <td><span class="cb">@if((string)$survey->cc3 === (string)$val)<img src="{{ $checkSvg }}" class="cb-img">@endif</span>{{ $val }}. {{ $label }}</td>
                                 @endforeach
                                 @if(count($chunk) === 1)<td></td>@endif
                             </tr>
@@ -200,7 +209,7 @@
                         <tr>
                             <td>{{ $question }}</td>
                             @foreach(array_merge(array_keys($faces), ['N/A']) as $s)
-                                <td class="chk">{{ strtolower($survey->{$key}) === strtolower($s) ? '✓' : '' }}</td>
+                                <td class="chk">@if(strtolower($survey->{$key}) === strtolower($s))<img src="{{ $checkSvg }}" class="chk-img">@endif</td>
                             @endforeach
                         </tr>
                     @endforeach

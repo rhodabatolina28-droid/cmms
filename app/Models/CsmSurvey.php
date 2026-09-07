@@ -13,6 +13,7 @@ class CsmSurvey extends Model
 
     protected $fillable = [
         'request_id',
+        'email',
         'age',
         'sex',
         'cc1',
