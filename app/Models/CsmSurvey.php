@@ -28,6 +28,7 @@ class CsmSurvey extends Model
         'sqd8',
         'sqd9',
         'suggestions',
+        'pdf_path',
     ];
 
     public function request()

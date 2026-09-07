@@ -46,6 +46,31 @@ class StoreCsmSurveyAction
         } catch (\RuntimeException $e) {
             return redirect()->route('dashboard.user')->with('error', $e->getMessage());
         }
+// D5a: generate the archival PDF copy AFTER the DB transaction commits.
+        // Non-blocking — if generation fails the survey is still saved (pdf_path stays null).
+        // Record-date rule (D5.1b): folder month comes from the survey's created_at.
+        try {
+            $survey = CsmSurvey::with('request.user')
+                ->where('request_id', $validated['request_id'])
+                ->latest('id')
+                ->first();
+
+            if ($survey) {
+                $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('pdf.csm-form', ['survey' => $survey])
+                    ->setPaper('a4', 'portrait');
+
+                $relative = 'csm-copies/'
+                    . $survey->created_at->format('Y') . '/'
+                    . $survey->created_at->format('F') . '/'
+                    . 'CSM-' . ($survey->request?->request_number ?? 'SURVEY-' . $survey->id) . '.pdf';
+
+                \Illuminate\Support\Facades\Storage::disk('local')->put($relative, $pdf->output());
+
+                $survey->update(['pdf_path' => $relative]);
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::warning('CSM archives PDF generation failed (survey #' . ($survey->id ?? '') . '): ' . $e->getMessage());
+        }
 
         $nextPending = $user->pendingSurveyRequest();
 
