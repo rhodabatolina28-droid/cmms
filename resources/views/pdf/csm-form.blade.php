@@ -42,8 +42,6 @@
         .subcell { display: block; font-size: 7px; font-weight: normal; color: #666; line-height: 1.15; }
         .suggestion-label { font-weight: bold; font-size: 11px; margin: 3px 0 2px 0; }
         .fill-line { border-bottom: 1px solid #000; height: 17px; margin-bottom: 2px; font-size: 11px; }
-        .footer { text-align: center; font-weight: bold; font-size: 10px; margin-top: 5px; border-top: 1.5px solid #0f2a6b; padding-top: 3px; color: #0f2a6b; }
-        .subnote { text-align: center; font-size: 8px; color: #666; font-weight: normal; margin-top: 1px; }
     </style>
 </head>
 <body>
@@ -215,11 +213,6 @@
             <div class="fill-line">{{ $survey->suggestions ?: '&nbsp;' }}</div>
             <div class="fill-line">&nbsp;</div>
             <div class="fill-line">&nbsp;</div>
-
-            <div class="footer">
-                &mdash;&mdash;&mdash; END OF FORM &mdash;&mdash;&mdash;<br>
-                <span class="subnote">Official archival copy (storage only)</span>
-            </div>
         </div>
     </div>
 </body>
