@@ -4,9 +4,9 @@
     <meta charset="UTF-8">
     <title>Client Satisfaction Measurement (CSM) — Survey Copy</title>
     <style>
-        @page { size: A4 portrait; margin: 2mm; }
+        @page { size: A4 portrait; margin: 9mm; }
         body { font-family: Arial, sans-serif; font-size: 9.5px; color: #333; line-height: 1.3; padding: 6px 8px; }
-        .form-container { padding: 4px 6px; }
+        .form-container { padding: 8px 10px; }
         .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 6px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
@@ -15,7 +15,6 @@
         .form-title { font-size: 8px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; }
         .form-body h1 { font-size: 11px; margin-bottom: 3px; }
         .form-body p { font-size: 8.5px; line-height: 1.3; margin-bottom: 3px; text-align: justify; }
-        .consent-text { font-size: 8px; line-height: 1.3; margin-bottom: 4px; text-align: justify; }
         .form-row { width: 100%; margin-bottom: 1px; }
         .profile-table { width: 100%; border-collapse: collapse; }
         .profile-table td { padding: 2px 3px; vertical-align: middle; }
@@ -70,14 +69,6 @@
         <div class="form-body">
             <h1>THANK YOU FOR GIVING US THE OPPORTUNITY TO SERVE YOU!</h1>
             <p>This Client Satisfaction Measurement (CSM) survey assesses customer experience in government offices. Your feedback on your recent transaction with us will help us improve our services to the public.</p>
-
-            <div class="consent-text">
-                <strong>CONSENT NOTICE:</strong><br>
-                Personal information shared shall be kept confidential. The respondents have the option not to answer this form. By CLICKING "YES", the respondent grants his/her voluntary and absolute consent to the collection and processing of his/her personal data (as defined) and other information or records given/shared by him/her or by his/her authorized agent/s to the National Conciliation and Mediation Board (NCMB) and/or any of its authorized agent/s or representative/s solely for purposes relating to program implementation and reporting in accordance with Republic Act (RA) 10173, otherwise known as the 'Data Privacy Act of 2012' and its implementing Rules and Regulations (IRR). Furthermore, the respondent agrees to hold the NCMB free from any liability arising from the lawful disclosure and use of the collected data and information in accordance with relevant privacy laws and policies. The NCMB shall maintain strict confidentiality of the collected data and information, and retain these until the purpose for which they were collected has been achieved.<br><br>
-                <strong><span class="cb x"></span> Yes, I agree</strong>
-                &nbsp;&nbsp;&nbsp;&nbsp;
-                <span class="cb"></span> No, I do not agree
-            </div>
 
             <div class="form-row">
                 <table class="profile-table">
