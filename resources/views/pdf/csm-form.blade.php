@@ -17,14 +17,15 @@
         .form-body p { font-size: 12px; line-height: 1.45; margin-bottom: 8px; text-align: justify; }
         .consent-text { font-size: 11px; line-height: 1.4; margin-bottom: 10px; text-align: justify; }
         .form-row { width: 100%; margin-bottom: 6px; }
-        .form-group { display: inline-block; vertical-align: top; width: 48%; margin-right: 3%; }
-        .form-group.full-width { width: 100%; margin-right: 0; }
-        .form-group label { font-size: 12px; font-weight: bold; }
+        .profile-table { width: 100%; border-collapse: collapse; }
+        .profile-table td { padding: 3px 4px; vertical-align: middle; }
+        .profile-table .p-label { font-weight: bold; white-space: nowrap; width: 22%; }
+        .profile-table .p-value { width: 28%; }
         .required { color: #e11d48; }
         .value-box { display: inline-block; border-bottom: 1px solid #000; min-height: 16px; padding: 0 8px; font-weight: bold; min-width: 120px; }
         .divider { border: none; border-top: 1px solid #ccc; margin: 14px 0; }
         .instructions p { font-size: 12px; font-weight: bold; text-align: justify; }
-        .survey-section { background: #fbfbfd; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
+        .survey-section { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
         .survey-header { font-size: 12px; margin-bottom: 4px; }
         .cc-tag { font-weight: bold; margin-right: 6px; min-width: 40px; display: inline-block; }
         .survey-options { font-size: 12px; }
@@ -36,12 +37,12 @@
         .survey-row td + td { padding-left: 24px; }
         .sqd-table { width: 100%; border-collapse: collapse; }
         .sqd-table th, .sqd-table td { padding: 4px 6px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; }
-        .sqd-table th { background: #f1f5f9; font-size: 9px; font-weight: bold; text-transform: uppercase; height: 64px; }
+        .sqd-table th { font-size: 9px; font-weight: bold; text-transform: uppercase; height: 64px; }
         .sqd-table td:first-child { text-align: left; color: #333; font-size: 11px; width: 34%; }
         .emoji { width: 28px; height: 28px; }
         .chk { font-size: 13px; font-weight: bold; }
         .subcell { display: block; font-size: 8px; font-weight: normal; color: #666; }
-        .suggestion-box { background: #fbfbfd; border: 1px solid #e2e8f0; border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
+        .suggestion-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
         .suggestion-box label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 6px; }
         .sugg-text { min-height: 60px; padding: 8px; border: 1px solid #000; border-radius: 6px; font-size: 12px; }
         .footer { text-align: center; font-weight: bold; font-size: 11px; margin-top: 14px; border-top: 2px solid #0f2a6b; padding-top: 8px; color: #0f2a6b; }
@@ -70,7 +71,6 @@
 
         <div class="form-body">
             <h1>THANK YOU FOR GIVING US THE OPPORTUNITY TO SERVE YOU!</h1>
-            <p>Please help us improve the quality of our services by taking a few minutes to answer this survey.</p>
             <p>This Client Satisfaction Measurement (CSM) survey assesses customer experience in government offices. Your feedback on your recent transaction with us will help us improve our services to the public.</p>
 
             <div class="consent-text">
@@ -82,22 +82,30 @@
             </div>
 
             <div class="form-row">
-                <div class="form-group full-width"><label>Email address (optional):</label> <span class="value-box">&nbsp;</span></div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group"><label>Age<span class="required"> *</span>:</label> <span class="value-box">{{ $survey->age }}</span></div>
-                <div class="form-group"><label>Sex<span class="required"> *</span>:</label> <span class="value-box">{{ $survey->sex }}</span></div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group"><label>Office<span class="required"> *</span>:</label> <span class="value-box">{{ $survey->request?->user?->office ?? '—' }}</span></div>
-                <div class="form-group"><label>Client Type<span class="required"> *</span>:</label> <span class="value-box">Government</span></div>
-            </div>
-
-            <div class="form-row">
-                <div class="form-group"><label>Service Availed<span class="required"> *</span>:</label> <span class="value-box">{{ $survey->request?->type ?? '—' }}</span></div>
-                <div class="form-group"><label>Date Availed<span class="required"> *</span>:</label> <span class="value-box">{{ $survey->request?->created_at?->format('Y-m-d') ?? '—' }}</span></div>
+                <table class="profile-table">
+                    <tr>
+                        <td class="p-label">Email address (optional):</td>
+                        <td class="p-value" colspan="3"><span class="value-box" style="min-width:60%;">&nbsp;</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-label">Age<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">{{ $survey->age }}</span></td>
+                        <td class="p-label">Sex<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">{{ $survey->sex }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-label">Office<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">{{ $survey->request?->user?->office ?? '—' }}</span></td>
+                        <td class="p-label">Client Type<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">Government</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-label">Service Availed<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">{{ $survey->request?->type ?? '—' }}</span></td>
+                        <td class="p-label">Date Availed<span class="required"> *</span>:</td>
+                        <td class="p-value"><span class="value-box">{{ $survey->request?->created_at?->format('Y-m-d') ?? '—' }}</span></td>
+                    </tr>
+                </table>
             </div>
 
             <hr class="divider">
