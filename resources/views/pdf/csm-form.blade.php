@@ -121,7 +121,7 @@
                 @endphp
                 <div class="survey-options">
                     @foreach($cc1Options as $val => $label)
-                        <div class="opt"><span class="cb">@if((string)$survey->cc1 === $val)<img src="{{ $checkSvg }}" class="cb-img">@endif</span>{{ $val }}. {{ $label }}</div>
+                        <div class="opt"><span class="cb">@if((string)$survey->cc1 === (string)$val)<img src="{{ $checkSvg }}" class="cb-img">@endif</span>{{ $val }}. {{ $label }}</div>
                     @endforeach
                 </div>
             </div>
@@ -221,7 +221,7 @@
             <hr class="divider">
 
             <div class="suggestion-label">Suggestions on how we can further improve our services (optional):</div>
-            <div class="fill-line">{{ $survey->suggestions ?: '&nbsp;' }}</div>
+            <div class="fill-line">{{ $survey->suggestions }}</div>
             <div class="fill-line">&nbsp;</div>
             <div class="fill-line">&nbsp;</div>
         </div>
