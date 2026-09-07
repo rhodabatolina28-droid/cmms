@@ -29,7 +29,7 @@ class DeleteAssetAttachmentAction
             return response()->json(['success' => false, 'message' => 'Asset is outside your scope.'], 403);
         }
 
-        Storage::disk('public')->delete($attachment->filepath);
+        Storage::disk('local')->delete($attachment->filepath);
         $attachment->delete();
 
         return response()->json(['success' => true, 'message' => 'Attachment deleted.']);

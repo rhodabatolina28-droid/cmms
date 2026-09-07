@@ -388,7 +388,7 @@ class PurchaseRequestController extends Controller
             }
         }
 
-        return \Storage::disk('public')->download($attachment->filepath, $attachment->filename);
+        return \Storage::disk('local')->download($attachment->filepath, $attachment->filename);
     }
 
     /**
@@ -408,7 +408,7 @@ class PurchaseRequestController extends Controller
             ], 403);
         }
 
-        \Storage::disk('public')->delete($attachment->filepath);
+        \Storage::disk('local')->delete($attachment->filepath);
         $attachment->delete();
 
         AuditLog::log(

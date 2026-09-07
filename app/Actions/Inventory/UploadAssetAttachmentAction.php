@@ -33,7 +33,8 @@ class UploadAssetAttachmentAction
 
         $file = $request->file('file');
         $filename = $file->getClientOriginalName();
-        $filepath = $file->store("asset-attachments/{$assetId}", 'public');
+        // D5c: attachments are sensitive — private disk ('local'), not public.
+        $filepath = $file->store("asset-attachments/{$assetId}", 'local');
 
         $attachment = AssetAttachment::create([
             'asset_id'    => $assetId,

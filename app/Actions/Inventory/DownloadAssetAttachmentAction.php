@@ -34,7 +34,7 @@ class DownloadAssetAttachmentAction
             }
         }
 
-        $path = storage_path('app/public/' . $attachment->filepath);
+        $path = storage_path('app/private/' . $attachment->filepath);
 
         if (!file_exists($path)) {
             abort(404, 'File not found.');

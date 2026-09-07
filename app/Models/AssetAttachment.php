@@ -30,7 +30,7 @@ class AssetAttachment extends Model
     /** Human-readable file size from the stored file */
     public function getFileSizeAttribute(): string
     {
-        $path = storage_path('app/public/' . $this->filepath);
+        $path = storage_path('app/private/' . $this->filepath);
         if (!file_exists($path)) return 'N/A';
         $bytes = filesize($path);
         if ($bytes < 1024) return $bytes . ' B';

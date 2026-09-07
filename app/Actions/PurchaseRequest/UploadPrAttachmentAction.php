@@ -42,7 +42,8 @@ class UploadPrAttachmentAction
             ], 403);
         }
 
-        $filepath = $file->store("pr-attachments/{$purchaseRequest->id}", 'public');
+        // D5c: receipts are sensitive financial documents — private disk ('local'), not public.
+        $filepath = $file->store("pr-attachments/{$purchaseRequest->id}", 'local');
 
         $attachment = PrAttachment::create([
             'purchase_request_id' => $purchaseRequest->id,
