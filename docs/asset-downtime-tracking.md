@@ -284,11 +284,19 @@ personal/sensitibong data.
 
 ### D5.1 Target architecture: PRIVATE disk + authed serving (naka-lock na desisyon)
 ```
-PRIVATE DISK (storage/app/private) — WALANG direktang URL, walang /storage/ leak
-├── signatures/{requestId}/...        ← mga pirma (sensitibo)
-├── csm-copies/{requestId}/...        ← mga CSM PDF copy
-├── asset-attachments/{assetId}/...   ← mga asset docs/photos
-└── pr-attachments/{prId}/...         ← mga resibo/proof of purchase
+PRIVATE DISK (storage/app/private — 'local' disk, mayroon na: root = storage/app/private)
+── WALANG direktang URL, walang /storage/ leak
+
+📄 Mga PDF COPY (naka-organisa ayon sa BUWAN-TAON — "filing cabinet" ayon sa buwan):
+├── csm-copies/{year}/{MonthName}/CSM-{requestNumber}.pdf
+├── ict-pdfs/{year}/{MonthName}/ICT-{requestNumber}.pdf
+└── pm-pdfs/{year}/{MonthName}/PM-{requestNumber}.pdf
+    Halimbawa: csm-copies/2026/September/CSM-REQ-NCR-RCMB-2026-0005.pdf
+
+🏷️ Mga ticket-scoped file (kada ID — mabilis mahanap ayon sa ticket):
+├── signatures/{requestId}/...          ← mga pirma (sensitibo)
+├── asset-attachments/{assetId}/...     ← mga asset docs/photos
+└── pr-attachments/{prId}/...           ← mga resibo/proof of purchase
 
 PUBLIC DISK: mga static na UI asset na lang (csm_banner.png, logo, css/js)
 
@@ -302,6 +310,28 @@ PAGKAKITA (halimbawa — pirma):
 **Bonus:** mawawala ang DomPDF whitelist problem (`$allowed = realpath(...signatures)`) — ang PDF
 generation ay magbabasa nang direkta mula sa private path (`Storage::path()`), walang URL, walang whitelist.
 
+### D5.1a ★ PRIORITY: i-fix muna ang public-disk exposure (D5b/D5c) bago ang mga bagong PDF feature
+Ang mga signature/resibo na nakatira sa public disk ay **live security exposure ngayon** (direct URL,
+walang auth). Ang private-disk switch (D5b) + test-file cleanup (D5c) ay **unahin** — ang mga PDF
+auto-copy features (D5a/D6) ay masusunod. Ang mga test signature files (1,085 + 223) ay hindi tunay
+na data, kaya walang maselang migration: archive/clean lang.
+
+### D5.1b ★ RECORD-DATE RULE (deepview refinement — pumipigil sa wrong-folder bug)
+Ang folder month ay dapat galing sa **petsa ng RECORD**, hindi sa `now()` ng generation time:
+| Type | Galing ng month/year folder |
+|---|---|
+| CSM | `csm_surveys.created_at` (petsa ng pagsusumite) |
+| ICT / PM | `requests.completed_at` (petsa ng pagkumpleto — may column na) |
+
+**Bakit:** kung pumalya ang PDF generation noong Sept 30 at na-retry sa Oct 3, dapat **September**
+pa rin ang folder (September ticket iyon!). Bonus: ang retry ay nagiging **idempotent** — parehong
+path = overwrite, walang mga duplicate PDF.
+
+**Naberipika na ligtas:** `app.timezone = Asia/Manila` (live check: now() = PST) — folder month ay
+palaging tamang PH month, walang UTC shift bug. Ang mga request number ay filename-safe
+(`PM-NCR-RCMB-2026-0027` — mga gitling lang). `Storage::put()` ay awtomatikong gumagawa ng nested dirs.
+
+
 ### D5.2 CSM auto-PDF (walang download button — awtomatikong naka-imbak)
 ```
 End user [I-submit] ang CSM survey
@@ -309,7 +339,7 @@ End user [I-submit] ang CSM survey
      1. DB::transaction (mga sagot + lockForUpdate) — WALANG binago ✓
      2. PAGKATAPOS NG COMMIT (hindi sa loob!): subukang gawin ang PDF
         └─ Pdf::loadView('pdf.csm-form', mga sagot + respondent + request number)
-           → i-save sa: csm-copies/{requestId}/CSM-{requestNumber}.pdf (PRIVATE disk)
+           → i-save sa: csm-copies/{year}/{MonthName}/CSM-{requestNumber}.pdf (PRIVATE disk; month/year = record date, see D5.1b)
         └─ I-update ang csm_surveys.pdf_path (BAGONG nullable column)
      3. try-catch: KUNG PUMALYA ANG PDF → naka-save pa rin ang mga sagot, null ang pdf_path,
         may log + retry command — HINDI KAILANMAN hahadakan ng PDF ang pagsusumite
@@ -348,13 +378,61 @@ user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
 // + palitan ang env value — WALANG code change sa Action (naka-abstract sa Storage API)
 ```
 
-### D5.7 Execution phases (pagkatapos ng X1-X4; test-first)
+### D5.7 Execution phases
+
+> **★ ORDER LOCKED (user decision):** **D5b + D5c FIRST** — the public-disk exposure is a live
+> security issue (direct URLs, no auth). Fix private switch + cleanup BEFORE building new PDF features.
+>
+> (Superseded note: the earlier month/year UI-filter plan was DROPPED — month-year folder
+> organization in storage replaces it, per user decision.)
+
 | Phase | Saklaw | Gate |
 |---|---|---|
-| **D5a** | `pdf_path` column + post-commit auto-PDF + `pdf/csm-form` view + authed View Copy route | Test: submission → may PDF sa private `csm-copies/{requestId}/`; failed gen → naka-save pa rin ang survey; nagbubukas nang inline ang view route |
+| **D5a** | `pdf_path` column + post-commit auto-PDF + `pdf/csm-form` view + authed View Copy route | Test: submission → may PDF sa tamang month folder (record-date rule, D5.1b); failed gen → naka-save pa rin ang survey; nagbubukas nang inline ang view route |
 | **D5b** | `saveSignature` → private + `{requestId}` scheme + authed signature route + blade src updates + tanggalin ang DomPDF whitelist | Test: bagong pirma ay nasa private path; hindi na gumagana ang lumang `/storage/signatures/...` URL; ICT/PM PDF ay may pirma pa rin |
 | **D5c** | Test-file cleanup (1,085 + 223 archive) + mga attachment sa private + authed attachment routes + CSM static asset relocation | Beripikahin: walang natirang sensitibong file sa public disk; gumagana ang lahat ng view flows |
 | **D5d** | Backfill: gumawa ng PDF copy para sa 3 lumang CSM survey | Tinker verify: lahat ng survey ay may pdf_path |
+
+---
+
+## 5b. D6 — Auto-Archived PDFs (ICT + PM) — DESIGNED, awaiting execution
+
+**Rule:** kapag **na-Complete** ang ICT o PM ticket, awtomatikong gagawa ng FINAL archived PDF
+(kumpleto: mga pirma, diagnosis, action taken, mga petsa) — naka-imbak sa private disk, naka-organisa
+ayon sa buwan-taon. Walang manual na aksyon — awtomatikong mai-imbak, kagaya ng CSM.
+
+### D6.1 Bakit completion-only (hindi bawat pag-update)
+Ang ICT/PM form ay **nagbabago habang buhay ng ticket** (mga update ng technician, mga pirma, repair
+recommendation). Kung bawat pag-update ay may sariling PDF → daan-daang duplicate na bersyon, walang
+"opisyal" na kopya. **Isang final archived PDF kada ticket** = malinis na opisyal na record. Ang
+on-demand na Download PDF button ang bahala sa mga interim state (mayroon na, walang pagbabago).
+
+### D6.2 Trigger point (isang lugar lang — sakop ang lahat ng completion paths)
+```
+Request.php::booted() status sync — doon na nangyayari ang:
+  ✓ downtime close (X1)   ✓ asset restore   ✓ CSM gating
+  + BAGO: auto-archive PDF (post-commit, try-catch, non-blocking — pareho ng pattern ng D5a)
+```
+
+### D6.3 Storage + DB (month-year folders, record-date rule)
+```
+ict-pdfs/{year}/{Month}/ICT-{requestNumber}.pdf   ← ang buwan ay galing sa requests.completed_at (D5.1b)
+pm-pdfs/{year}/{Month}/PM-{requestNumber}.pdf
+DB: requests.archive_pdf_path (BAGONG nullable column — iisang column para sa LAHAT ng uri ng ticket)
+```
+
+### D6.4 Pag-view
+`[👁 View Archived Copy]` sa mga completed ticket — authed inline route (pareho ng CSM View Copy).
+Ang mga on-demand na `ict.pdf` / `maintenance.pdf` route — **walang pagbabago**, para sa mga ongoing tickets.
+
+### D6.5 Mga yugto ng pagpapatupad (pagkatapos ng D5a; test-first)
+| Phase | Saklaw | Gate |
+|---|---|---|
+| **D6a** | `archive_pdf_path` column + post-commit auto-archive sa `booted()` completion path + View Archived Copy route | Test: pagkumpleto → may PDF sa tamang month folder (record-date rule); nabigong gen → tapos pa rin ang ticket (retry command) |
+| **D6b** | Backfill: gumawa ng archived PDF para sa mga umiiral na completed ICT/PM ticket | Tinker verify: lahat ng completed ay may archive_pdf_path |
+
+**Opsyonal (pag-aprobahan pa):** PR Delivery Confirmation ay maaari ring i-auto-archive sa `received`
+— parehong mekanismo, `purchase_requests.archive_pdf_path`. Hindi pa napagdesisyunan.
 
 ---
 
@@ -380,6 +458,14 @@ user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
     middleware means a failed submission would trap the user in a loop)
 12. **Storage is disk-abstracted from day one** — CSM copy disk via config (`csm_copy_disk`), so a
     future Google Drive switch is an env change, not a code change
+13. **PDF copies are organized by MONTH-YEAR folders in storage** (`{type}-pdfs/{year}/{MonthName}/`),
+    not by requestId and not by UI filters (the month/year UI-filter plan was dropped) — the storage
+    itself becomes the filing cabinet ("CSM ng September 2026" = buksan lang ang folder)
+14. **Folder month = RECORD date, never generation `now()`** (CSM → `created_at`; ICT/PM →
+    `completed_at`) — makes retries land in the correct folder and idempotent (same path = overwrite);
+    verified safe: `app.timezone = Asia/Manila`, request numbers are filename-safe
+15. **Execution order: D5b → D5c → D5a → D5d → D6** — the public-disk security exposure is fixed
+    BEFORE any new PDF auto-copy feature is built
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
