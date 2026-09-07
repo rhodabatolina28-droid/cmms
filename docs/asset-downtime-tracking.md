@@ -424,6 +424,22 @@ user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
 
 **✅ Ang binago para sa ADMIN/USER experience:** WALANG observable na pagbabago sa forms/PDFs ng mga bagong tickets — ang nagbago lang ay ang pinto (direct URL wala na; lahat dumadaan sa authed route na may parehong ticket access policy). Ang end-user/admin na may access sa ticket → nakikita pa rin nang pareho ang pirma.
 
+#### D5a implementation details (COMPLETE — `8757695`, `4dcf91a`, Sept 7, 2026)
+| # | Gawain | Files |
+|---|---|---|
+| 1 | Migration: `csm_surveys.pdf_path` (nullable) | `2026_09_07_000001_add_pdf_path_to_csm_surveys.php` |
+| 2 | **PDF view** — faithful 1:1 replica ng web CSM form: NCMB logo sa gilid (SVG base64), THANK YOU + description, **walang consent notice** (system-only), horizontal profile table, CC1-3 na may SVG ✓, SQD table na may **face icons** (base64 PNG: strongly-disagree → strongly-agree) + N/A column, suggestions bilang **fill-lines** (hindi box), **walang END OF FORM footer**, walang `*` asterisks, **1 A4 page** | `resources/views/pdf/csm-form.blade.php` |
+| 3 | **Auto-PDF sa submit** — POST-COMMIT (non-blocking try-catch), private disk, month-year folders, record-date rule (`created_at`), filename `CSM-{requestNumber}.pdf` | `app/Actions/Csm/StoreCsmSurveyAction.php` |
+| 4 | **Email** — nullable column + validation (`nullable|email`) + fillable + PDF display | migration `000002`, `StoreCsmSurveyRequest`, `CsmSurvey` model, PDF view |
+| 5 | **SVG checkmarks** — ang Arial core font ay WALANG ✓ glyph sa DomPDF (kaya blank ang mga marka) → ginawa silang **inline SVG images** (base64, pareho ng teknik ng NCMB logo). TEXT ay mananatiling **Arial** | PDF view (`$checkSvg`, `.cb-img`, `.chk-img`) |
+| 6 | **CC1 strict-comparison bug** — `'2' === 2` (int key) → LAGING FALSE. Fix: `(string)$val` cast (pareho ng CC2/CC3) | PDF view |
+| 7 | **`&nbsp;` literal** — ang Blade `{{ }}` ay nag-e-escape ng `'&nbsp;'` fallback → literal text. Fix: empty string (fill-line ay may border pa rin) | PDF view |
+| 8 | **Profile layout** — walang `*` asterisks; Office + Service Availed = **full-width rows** (hindi na-compress ang mahabang division names); Client Type = "Government" (internal-use default, sadya) | PDF view |
+| 9 | INSTRUCTIONS blocks (CC + SQD) — **ibalik** (mahalaga, per user) | PDF view |
+
+**Test gate D5a:** `CsmArchivePdfTest` 2 passed (6 assertions) — submission → PDF sa tamang month folder (private, record-date rule); failed gen → naka-save pa rin ang survey. Render verified: **1 A4 page**, 10 embedded images (logo + 5 face icons + SVG checkmarks), email + CC1 ✓ + walang `&nbsp;` literal.
+
+**⚠️ Tandaan:** ang mga **stored PDFs** na ginawa bago ang mga fixes na ito ay may lumang render (walang email/✓/atbp.). Ang mga **bagong submissions** ay gagawa ng bagong render nang tama. Para sa mga lumang survey, i-backfill gamit ang D5d.
 ---
 
 ## 5b. D6 — Auto-Archived PDFs (ICT + PM) — DESIGNED, awaiting execution
