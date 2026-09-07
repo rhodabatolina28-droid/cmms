@@ -84,22 +84,24 @@
                         <td class="p-value" colspan="3"><span class="value-box" style="min-width:60%;">{{ $survey->email ?? '' }}</span></td>
                     </tr>
                     <tr>
-                        <td class="p-label">Age<span class="required"> *</span>:</td>
+                        <td class="p-label">Age:</td>
                         <td class="p-value"><span class="value-box">{{ $survey->age }}</span></td>
-                        <td class="p-label">Sex<span class="required"> *</span>:</td>
+                        <td class="p-label">Sex:</td>
                         <td class="p-value"><span class="value-box">{{ $survey->sex }}</span></td>
                     </tr>
                     <tr>
-                        <td class="p-label">Office<span class="required"> *</span>:</td>
-                        <td class="p-value"><span class="value-box">{{ $survey->request?->user?->office ?? '—' }}</span></td>
-                        <td class="p-label">Client Type<span class="required"> *</span>:</td>
-                        <td class="p-value"><span class="value-box">Government</span></td>
+                        <td class="p-label">Office:</td>
+                        <td class="p-value" colspan="3"><span class="value-box" style="min-width:88%;">{{ $survey->request?->user?->office ?? '—' }}</span></td>
                     </tr>
                     <tr>
-                        <td class="p-label">Service Availed<span class="required"> *</span>:</td>
-                        <td class="p-value"><span class="value-box">{{ $survey->request?->type ?? '—' }}</span></td>
-                        <td class="p-label">Date Availed<span class="required"> *</span>:</td>
+                        <td class="p-label">Client Type:</td>
+                        <td class="p-value"><span class="value-box">Government</span></td>
+                        <td class="p-label">Date Availed:</td>
                         <td class="p-value"><span class="value-box">{{ $survey->request?->created_at?->format('Y-m-d') ?? '—' }}</span></td>
+                    </tr>
+                    <tr>
+                        <td class="p-label">Service Availed:</td>
+                        <td class="p-value" colspan="3"><span class="value-box" style="min-width:88%;">{{ $survey->request?->type ?? '—' }}</span></td>
                     </tr>
                 </table>
             </div>
@@ -108,7 +110,7 @@
             <div class="instructions"><p>INSTRUCTIONS: Check mark (✔) your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that outlines the services provided by a government agency/office including its requirements, fees, and processing times among others.</p></div>
             {{-- CC1 --}}
             <div class="survey-section">
-                <div class="survey-header"><span class="cc-tag">CC1</span><span class="cc-q">Which of the following best describes your awareness of a CC? <span class="required">*</span></span></div>
+                <div class="survey-header"><span class="cc-tag">CC1</span><span class="cc-q">Which of the following best describes your awareness of a CC? </span></div>
                 @php
                     $cc1Options = [
                         '1' => 'I know what a CC is and I saw this office\'s CC.',
@@ -126,7 +128,7 @@
 
             {{-- CC2 --}}
             <div class="survey-section">
-                <div class="survey-header"><span class="cc-tag">CC2</span><span class="cc-q">If aware of CC (answered 1-3 in CC1), would you say that the CC of this office was ...? <span class="required">*</span></span></div>
+                <div class="survey-header"><span class="cc-tag">CC2</span><span class="cc-q">If aware of CC (answered 1-3 in CC1), would you say that the CC of this office was ...? </span></div>
                 @php
                     $cc2Options = ['1' => 'Easy to see', '2' => 'Somewhat easy to see', '3' => 'Difficult to see', '4' => 'Not visible at all', '5' => 'N/A'];
                     $cc2Chunks = array_chunk($cc2Options, 3, true);
@@ -147,7 +149,7 @@
 
             {{-- CC3 --}}
             <div class="survey-section">
-                <div class="survey-header"><span class="cc-tag">CC3</span><span class="cc-q">If aware of CC (answered 1-3 in CC1), how much did the CC help you in your transaction? <span class="required">*</span></span></div>
+                <div class="survey-header"><span class="cc-tag">CC3</span><span class="cc-q">If aware of CC (answered 1-3 in CC1), how much did the CC help you in your transaction? </span></div>
                 @php
                     $cc3Options = ['1' => 'Helped very much', '2' => 'Somewhat helped', '3' => 'Did not help', '4' => 'N/A'];
                     $cc3Chunks = array_chunk($cc3Options, 2, true);
