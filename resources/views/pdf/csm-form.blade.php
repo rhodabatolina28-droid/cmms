@@ -10,40 +10,40 @@
         .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 6px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
-        .logo { width: 34px; height: 34px; }
-        .agency { font-size: 13px; font-weight: bold; color: #0f2a6b; }
-        .form-title { font-size: 8px; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase; }
-        .form-body h1 { font-size: 11px; margin-bottom: 3px; }
-        .form-body p { font-size: 8.5px; line-height: 1.3; margin-bottom: 3px; text-align: justify; }
+        .logo { width: 44px; height: 44px; }
+        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; }
+        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
+        .form-body h1 { font-size: 13px; margin-bottom: 4px; }
+        .form-body p { font-size: 10px; line-height: 1.3; margin-bottom: 4px; text-align: justify; }
         .form-row { width: 100%; margin-bottom: 1px; }
         .profile-table { width: 100%; border-collapse: collapse; }
-        .profile-table td { padding: 2px 3px; vertical-align: middle; }
-        .profile-table .p-label { font-weight: bold; white-space: nowrap; width: 22%; }
+        .profile-table td { padding: 3px 4px; vertical-align: middle; }
+        .profile-table .p-label { font-weight: bold; white-space: nowrap; width: 22%; font-size: 10.5px; }
         .profile-table .p-value { width: 28%; }
         .required { color: #e11d48; }
-        .value-box { display: inline-block; border-bottom: 1px solid #000; min-height: 12px; padding: 0 6px; font-weight: bold; min-width: 105px; font-size: 9px; }
-        .divider { border: none; border-top: 1px solid #ccc; margin: 5px 0; }
-        .survey-section { padding: 3px 5px; margin-bottom: 5px; }
-        .survey-header { font-size: 9px; margin-bottom: 2px; }
-        .cc-tag { font-weight: bold; margin-right: 5px; min-width: 34px; display: inline-block; }
-        .survey-options { font-size: 9px; }
+        .value-box { display: inline-block; border-bottom: 1px solid #000; min-height: 14px; padding: 0 6px; font-weight: bold; min-width: 110px; font-size: 11px; }
+        .divider { border: none; border-top: 1px solid #ccc; margin: 4px 0; }
+        .survey-section { padding: 3px 5px; margin-bottom: 4px; }
+        .survey-header { font-size: 10.5px; margin-bottom: 2px; }
+        .cc-tag { font-weight: bold; margin-right: 5px; min-width: 36px; display: inline-block; }
+        .survey-options { font-size: 10.5px; }
         .survey-options .opt { margin: 0.5px 0; }
-        .cb { display: inline-block; width: 9.5px; height: 9.5px; border: 1px solid #000; margin-right: 4px; position: relative; top: 1.5px; text-align: center; line-height: 9.5px; font-size: 8.5px; font-weight: bold; }
+        .cb { display: inline-block; width: 11px; height: 11px; border: 1px solid #000; margin-right: 5px; position: relative; top: 2px; text-align: center; line-height: 11px; font-size: 10px; font-weight: bold; }
         .cb.x:after { content: "✓"; }
         .survey-row table { width: 100%; border-collapse: collapse; }
         .survey-row td { width: 50%; border: none; padding: 1px 0; }
         .survey-row td + td { padding-left: 18px; }
         .sqd-table { width: 100%; border-collapse: collapse; }
-        .sqd-table th, .sqd-table td { padding: 2px 3px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; }
-        .sqd-table th { font-size: 7px; font-weight: bold; text-transform: uppercase; height: 42px; }
-        .sqd-table td:first-child { text-align: left; color: #333; font-size: 8.5px; width: 34%; }
-        .emoji { width: 18px; height: 18px; }
-        .chk { font-size: 10.5px; font-weight: bold; }
-        .subcell { display: block; font-size: 6px; font-weight: normal; color: #666; line-height: 1.15; }
-        .suggestion-label { font-weight: bold; font-size: 9px; margin: 3px 0 2px 0; }
-        .fill-line { border-bottom: 1px solid #000; height: 14px; margin-bottom: 2px; font-size: 9px; }
-        .footer { text-align: center; font-weight: bold; font-size: 8.5px; margin-top: 4px; border-top: 1.5px solid #0f2a6b; padding-top: 3px; color: #0f2a6b; }
-        .subnote { text-align: center; font-size: 6.5px; color: #666; font-weight: normal; margin-top: 1px; }
+        .sqd-table th, .sqd-table td { padding: 3px 4px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; }
+        .sqd-table th { font-size: 8px; font-weight: bold; text-transform: uppercase; height: 42px; }
+        .sqd-table td:first-child { text-align: left; color: #333; font-size: 10px; width: 34%; }
+        .emoji { width: 22px; height: 22px; }
+        .chk { font-size: 12px; font-weight: bold; }
+        .subcell { display: block; font-size: 7px; font-weight: normal; color: #666; line-height: 1.15; }
+        .suggestion-label { font-weight: bold; font-size: 11px; margin: 3px 0 2px 0; }
+        .fill-line { border-bottom: 1px solid #000; height: 17px; margin-bottom: 2px; font-size: 11px; }
+        .footer { text-align: center; font-weight: bold; font-size: 10px; margin-top: 5px; border-top: 1.5px solid #0f2a6b; padding-top: 3px; color: #0f2a6b; }
+        .subnote { text-align: center; font-size: 8px; color: #666; font-weight: normal; margin-top: 1px; }
     </style>
 </head>
 <body>
