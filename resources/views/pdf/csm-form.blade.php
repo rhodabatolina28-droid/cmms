@@ -98,6 +98,7 @@
             </div>
 
             <hr class="divider">
+            <div class="instructions"><p>INSTRUCTIONS: Check mark (✔) your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that outlines the services provided by a government agency/office including its requirements, fees, and processing times among others.</p></div>
             {{-- CC1 --}}
             <div class="survey-section">
                 <div class="survey-header"><span class="cc-tag">CC1</span><span class="cc-q">Which of the following best describes your awareness of a CC? <span class="required">*</span></span></div>
@@ -178,6 +179,8 @@
                     'Strongly Agree' => 'strongly agree.png',
                 ];
             @endphp
+            <hr class="divider">
+            <div class="instructions"><p>INSTRUCTIONS: Please put a check mark (✔) on the column that best corresponds to your answer.</p></div>
             <table class="sqd-table">
                 <thead>
                     <tr>
