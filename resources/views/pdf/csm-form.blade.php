@@ -2,50 +2,44 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Client Satisfaction Measurement (CSM) — Survey Copy</title>
+    <title>Client Satisfaction Measurement (CSM) â€” Survey Copy</title>
     <style>
-        @page { size: A4 portrait; margin: 7mm 9mm 7mm 9mm; }
-        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 8.5px; color: #1f2937; margin: 0; padding: 0; line-height: 1.35; }
+        @page { size: A4 portrait; margin: 8mm 9mm 8mm 9mm; }
+        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 9px; color: #1f2937; margin: 0; padding: 0; line-height: 1.4; }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; padding: 0; }
-        .header-table td { border: none; }
-        .logo { width: 42px; height: 42px; vertical-align: middle; }
-        .agency { font-size: 15px; font-weight: bold; color: #0f2a6b; }
-        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.5px; }
-        .section-head { text-align: center; font-weight: bold; font-size: 9.5px; background: #f3f4f6; border: 1px solid #000; padding: 3px; text-transform: uppercase; margin: 5px 0 2px 0; }
+        .header-table { border-bottom: 2.5px solid #0f2a6b; margin-bottom: 6px; }
+        .header-table td { border: none; padding-bottom: 5px; }
+        .logo { width: 46px; height: 46px; vertical-align: middle; }
+        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; letter-spacing: 0.5px; }
+        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.8px; text-transform: uppercase; }
+        .sec { text-align: center; font-weight: bold; font-size: 9.5px; background: #0f2a6b; color: #ffffff; padding: 3px; text-transform: uppercase; letter-spacing: 1px; margin: 6px 0 3px 0; border: 1px solid #0f2a6b; }
         .intro { text-align: center; font-size: 9px; margin: 4px 0; }
-        .consent-box { border: 1px solid #000; padding: 5px 7px; margin: 4px 0; font-size: 8px; text-align: justify; }
-        .consent-head { font-weight: bold; margin-bottom: 2px; }
-        .nd-line { border-bottom: 2px solid #000; display: inline-block; min-height: 13px; padding: 0 6px; font-size: 8.5px; }
+        .consent-box { border: 1px solid #000; background: #f8fafc; padding: 6px 9px; margin: 5px 0; font-size: 8.5px; text-align: justify; }
+        .consent-head { font-weight: bold; margin-bottom: 3px; font-size: 9px; }
+        .cb { display: inline-block; width: 11px; height: 11px; border: 1.5px solid #000; margin-right: 5px; position: relative; top: 1.5px; text-align: center; line-height: 11px; font-size: 8.5px; font-weight: bold; }
+        .cb.x:after { content: "X"; }
         .profile-label { font-weight: bold; }
-        .cc-q { margin: 6px 0 2px 0; font-weight: bold; }
-        .cc-opt { margin: 1px 0 1px 10px; }
-        .cb { display: inline-block; width: 10px; height: 10px; border: 1px solid #000; margin-right: 4px; position: relative; top: 1px; text-align: center; line-height: 10px; font-size: 8px; }
-        .cb.x:after { content: "X"; font-weight: bold; }
-        .sqd-table { width: 100%; border-collapse: collapse; margin-top: 3px; }
-        .sqd-table th, .sqd-table td { border: 1px solid #000; padding: 2px 3px; font-size: 7.5px; }
-        .sqd-table th { background: #e8eef5; font-weight: bold; text-align: center; }
-        .sqd-q { font-weight: bold; }
-        .sqd-cell { text-align: center; width: 30px; font-weight: bold; font-size: 8px; }
-        .sugg-box { border: 1px solid #000; min-height: 34px; padding: 4px 6px; margin-top: 3px; }
-        .footer { text-align: center; font-weight: bold; font-size: 8px; margin-top: 6px; border-top: 1px solid #999; padding-top: 3px; }
-        .subnote { text-align: center; font-size: 7px; color: #666; }
+        .nd-line { border-bottom: 1.5px solid #000; display: inline-block; min-height: 13px; padding: 0 10px; font-size: 9px; font-weight: bold; }
+        .profile-table td { border: 1px solid #000; padding: 4px 8px; font-size: 9px; }
+        .profile-table .lb { font-weight: bold; width: 24%; background: #e8eef5; }
+        .legend { font-size: 7.5px; color: #475569; margin-top: 2px; }
     </style>
 </head>
 <body>
 
-    {{-- HEADER (logo + title; no request number per user decision) --}}
+    {{-- HEADER (logo sa gilid, katulad ng ICT/PM forms; walang request number) --}}
     <table class="header-table">
         <tr>
-            <td style="width:48px;">
+            <td style="width:52px;">
                 @php $logo = public_path('images/ncmb-logo.svg'); @endphp
                 @if(file_exists($logo))
                     <img src="{{ 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logo)) }}" class="logo">
                 @endif
             </td>
             <td>
-                <span class="agency">NCMB</span>
-                <span class="form-title"> CLIENT SATISFACTION MEASUREMENT (CSM) SURVEY FORM</span>
+                <div class="agency">NCMB</div>
+                <div class="form-title">Client Satisfaction Measurement (CSM) Survey Form</div>
             </td>
         </tr>
     </table>
@@ -71,14 +65,15 @@
         from the lawful disclosure and use of the collected data and information in accordance with relevant privacy laws
         and policies. The NCMB shall maintain strict confidentiality of the collected data and information, and retain
         these until the purpose for which they were collected has been achieved.
-        <div style="margin-top:4px;">
+        <div style="margin-top:5px;">
             <span class="cb x"></span> <strong>Yes, I agree</strong>
-            &nbsp;&nbsp;&nbsp;
+            &nbsp;&nbsp;&nbsp;&nbsp;
             <span class="cb"></span> No, I do not agree
         </div>
     </div>
 
-    <div class="section-head">I. RESPONDENT PROFILE</div>
+    <div class="sec">I. Respondent Profile</div>
+    TABLE_PROFILE_MARK
     <table>
         <tr>
             <td style="width:50%;">
@@ -90,20 +85,20 @@
         </tr>
         <tr>
             <td>
-                <span class="profile-label">Office:</span> <span class="nd-line">{{ $survey->request?->user?->office ?? '—' }}</span>
+                <span class="profile-label">Office:</span> <span class="nd-line">{{ $survey->request?->user?->office ?? 'â€”' }}</span>
             </td>
             <td>
-                <span class="profile-label">Service:</span> <span class="nd-line">{{ $survey->request?->type ?? '—' }}</span>
+                <span class="profile-label">Service:</span> <span class="nd-line">{{ $survey->request?->type ?? 'â€”' }}</span>
             </td>
         </tr>
         <tr>
             <td>
-                <span class="profile-label">Date Availed:</span> <span class="nd-line">{{ $survey->request?->created_at?->format('m/d/Y') ?? '—' }}</span>
+                <span class="profile-label">Date Availed:</span> <span class="nd-line">{{ $survey->request?->created_at?->format('m/d/Y') ?? 'â€”' }}</span>
             </td>
             <td></td>
         </tr>
     </table>
-<div class="section-head">II. CITIZEN'S CHARTER (CC) AWARENESS</div>
+<div class="sec">II. Citizen's Charter (CC) Awareness</div>
     @php
         $cc1Options = ['1' => 'I know what a CC is and I saw this office\'s CC.', '2' => 'I know what a CC is but I did NOT see this office\'s CC.', '3' => 'I learned of the CC only when I saw this office\'s CC.', '4' => 'I do not know what a CC is and I did not see one in this office.'];
         $cc2Options = ['1' => 'Easy to see', '2' => 'Somewhat easy to see', '3' => 'Difficult to see', '4' => 'Not visible at all', '5' => 'N/A'];
@@ -137,7 +132,7 @@
         @endforeach
     </table>
 
-    <div class="section-head">III. SERVICE QUALITY DIMENSIONS (SQD)</div>
+    <div class="sec">III. Service Quality Dimensions (SQD)</div>
     @php
         $sqdQuestions = [
             'sqd1' => 'SDQ0. I am satisfied with the service that I availed.',
@@ -151,21 +146,41 @@
             'sqd9' => 'SDQ8. I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.',
         ];
         $scale = ['Strongly Disagree', 'Disagree', 'Neither Agree Nor Disagree', 'Agree', 'Strongly Agree', 'N/A'];
+        $scaleAbbr = ['SD', 'D', 'NAD', 'A', 'SA', 'N/A'];
     @endphp
-    <table class="sqd-table">
+<table class="sqd-table">
         <thead>
             <tr>
-                <th style="text-align:left; width:38%;">SQD Question</th>
-                @foreach($scale as $s)
-                    <th>{{ $s }}</th>
+                <th style="text-align:left; width:34%;">SQD Question</th>
+                @php
+                    $faces = [
+                        'Strongly Disagree' => 'strongly disagree.png',
+                        'Disagree' => 'disagree.png',
+                        'Neither Agree Nor Disagree' => 'neither agree nor disagree.png',
+                        'Agree' => 'agree.png',
+                        'Strongly Agree' => 'strongly agree.png',
+                    ];
+                @endphp
+                @foreach($faces as $label => $img)
+                    @php $facePath = public_path('csm/' . $img); @endphp
+                    <th style="padding:3px 2px;">
+                        @if(file_exists($facePath))
+                            <img src="{{ 'data:image/png;base64,' . base64_encode(file_get_contents($facePath)) }}" style="width:18px; height:18px; display:block; margin:0 auto 2px auto;">
+                        @endif
+                        <div style="font-size:7px; font-weight:bold; line-height:1.15;">{{ $label }}</div>
+                    </th>
                 @endforeach
+                <th style="padding:3px 2px;">
+                    <div style="font-size:7px; font-weight:bold; line-height:1.15; margin-top:8px;">N/A</div>
+                    <div style="font-size:6px;">Not Applicable</div>
+                </th>
             </tr>
         </thead>
         <tbody>
             @foreach($sqdQuestions as $key => $question)
                 <tr>
                     <td class="sqd-q">{{ $question }}</td>
-                    @foreach($scale as $s)
+                    @foreach(array_merge(array_keys($faces), ['N/A']) as $s)
                         <td class="sqd-cell">{{ strtolower($survey->{$key}) === strtolower($s) ? 'X' : '' }}</td>
                     @endforeach
                 </tr>
@@ -173,7 +188,7 @@
         </tbody>
     </table>
 
-    <div class="section-head">IV. SUGGESTIONS / COMMENTS</div>
+    <div class="sec">IV. Suggestions / Comments</div>
     <div class="sugg-box">{{ $survey->suggestions ?: '' }}</div>
 
     <div class="footer">
