@@ -4,49 +4,47 @@
     <meta charset="UTF-8">
     <title>Client Satisfaction Measurement (CSM) — Survey Copy</title>
     <style>
-        @page { size: A4 portrait; margin: 4mm; }
-        body { font-family: Arial, sans-serif; font-size: 12px; color: #333; line-height: 1.4; padding: 16px 14px; }
-        .form-container { padding: 20px 24px; }
-        .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 10px; margin-bottom: 16px; }
+        @page { size: A4 portrait; margin: 2mm; }
+        body { font-family: Arial, sans-serif; font-size: 9px; color: #333; line-height: 1.2; padding: 4px 6px; }
+        .form-container { padding: 3px 5px; }
+        .header-bar { border-bottom: 1.5px solid #0f2a6b; padding-bottom: 3px; margin-bottom: 5px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
-        .logo { width: 52px; height: 52px; }
-        .agency { font-size: 20px; font-weight: bold; color: #0f2a6b; }
-        .form-title { font-size: 11px; font-weight: bold; letter-spacing: 1px; text-transform: uppercase; }
-        .form-body h1 { font-size: 18px; margin-bottom: 12px; }
-        .form-body p { font-size: 12px; line-height: 1.45; margin-bottom: 8px; text-align: justify; }
-        .consent-text { font-size: 11px; line-height: 1.4; margin-bottom: 10px; text-align: justify; }
-        .form-row { width: 100%; margin-bottom: 6px; }
+        .logo { width: 30px; height: 30px; }
+        .agency { font-size: 11px; font-weight: bold; color: #0f2a6b; }
+        .form-title { font-size: 7px; font-weight: bold; letter-spacing: 0.4px; text-transform: uppercase; }
+        .form-body h1 { font-size: 10px; margin-bottom: 2px; }
+        .form-body p { font-size: 8px; line-height: 1.25; margin-bottom: 2px; text-align: justify; }
+        .consent-text { font-size: 7.5px; line-height: 1.25; margin-bottom: 3px; text-align: justify; }
+        .form-row { width: 100%; margin-bottom: 1px; }
         .profile-table { width: 100%; border-collapse: collapse; }
-        .profile-table td { padding: 3px 4px; vertical-align: middle; }
+        .profile-table td { padding: 1px 2px; vertical-align: middle; }
         .profile-table .p-label { font-weight: bold; white-space: nowrap; width: 22%; }
         .profile-table .p-value { width: 28%; }
         .required { color: #e11d48; }
-        .value-box { display: inline-block; border-bottom: 1px solid #000; min-height: 16px; padding: 0 8px; font-weight: bold; min-width: 120px; }
-        .divider { border: none; border-top: 1px solid #ccc; margin: 14px 0; }
-        .instructions p { font-size: 12px; font-weight: bold; text-align: justify; }
-        .survey-section { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-bottom: 12px; }
-        .survey-header { font-size: 12px; margin-bottom: 4px; }
-        .cc-tag { font-weight: bold; margin-right: 6px; min-width: 40px; display: inline-block; }
-        .survey-options { font-size: 12px; }
-        .survey-options .opt { margin: 2px 0; }
-        .cb { display: inline-block; width: 12px; height: 12px; border: 1px solid #000; margin-right: 5px; position: relative; top: 2px; text-align: center; line-height: 12px; font-size: 10px; font-weight: bold; }
-        .cb.x:after { content: "X"; }
+        .value-box { display: inline-block; border-bottom: 1px solid #000; min-height: 11px; padding: 0 5px; font-weight: bold; min-width: 100px; font-size: 8.5px; }
+        .divider { border: none; border-top: 1px solid #ccc; margin: 4px 0; }
+        .survey-section { padding: 2px 4px; margin-bottom: 4px; }
+        .survey-header { font-size: 8.5px; margin-bottom: 1px; }
+        .cc-tag { font-weight: bold; margin-right: 5px; min-width: 34px; display: inline-block; }
+        .survey-options { font-size: 8.5px; }
+        .survey-options .opt { margin: 0.5px 0; }
+        .cb { display: inline-block; width: 9px; height: 9px; border: 1px solid #000; margin-right: 3px; position: relative; top: 1px; text-align: center; line-height: 9px; font-size: 8px; font-weight: bold; }
+        .cb.x:after { content: "✓"; }
         .survey-row table { width: 100%; border-collapse: collapse; }
         .survey-row td { width: 50%; border: none; padding: 1px 0; }
-        .survey-row td + td { padding-left: 24px; }
+        .survey-row td + td { padding-left: 18px; }
         .sqd-table { width: 100%; border-collapse: collapse; }
-        .sqd-table th, .sqd-table td { padding: 4px 6px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; }
-        .sqd-table th { font-size: 9px; font-weight: bold; text-transform: uppercase; height: 64px; }
-        .sqd-table td:first-child { text-align: left; color: #333; font-size: 11px; width: 34%; }
-        .emoji { width: 28px; height: 28px; }
-        .chk { font-size: 13px; font-weight: bold; }
-        .subcell { display: block; font-size: 8px; font-weight: normal; color: #666; }
-        .suggestion-box { border: 1px solid #cbd5e1; border-radius: 8px; padding: 12px 14px; margin-top: 10px; }
-        .suggestion-box label { font-size: 12px; font-weight: bold; display: block; margin-bottom: 6px; }
-        .sugg-text { min-height: 60px; padding: 8px; border: 1px solid #000; border-radius: 6px; font-size: 12px; }
-        .footer { text-align: center; font-weight: bold; font-size: 11px; margin-top: 14px; border-top: 2px solid #0f2a6b; padding-top: 8px; color: #0f2a6b; }
-        .subnote { text-align: center; font-size: 9px; color: #666; font-weight: normal; margin-top: 2px; }
+        .sqd-table th, .sqd-table td { padding: 1.5px 2px; border: 1px solid #cbd5e1; text-align: center; vertical-align: middle; }
+        .sqd-table th { font-size: 6.5px; font-weight: bold; text-transform: uppercase; height: 36px; }
+        .sqd-table td:first-child { text-align: left; color: #333; font-size: 8px; width: 34%; }
+        .emoji { width: 16px; height: 16px; }
+        .chk { font-size: 10px; font-weight: bold; }
+        .subcell { display: block; font-size: 5.5px; font-weight: normal; color: #666; line-height: 1.1; }
+        .suggestion-label { font-weight: bold; font-size: 8.5px; margin: 2px 0 1px 0; }
+        .fill-line { border-bottom: 1px solid #000; height: 12px; margin-bottom: 1px; font-size: 8.5px; }
+        .footer { text-align: center; font-weight: bold; font-size: 8px; margin-top: 3px; border-top: 1.5px solid #0f2a6b; padding-top: 2px; color: #0f2a6b; }
+        .subnote { text-align: center; font-size: 6.5px; color: #666; font-weight: normal; margin-top: 1px; }
     </style>
 </head>
 <body>
@@ -109,8 +107,7 @@
             </div>
 
             <hr class="divider">
-            <div class="instructions"><p>INSTRUCTIONS: Check mark (✓) your answer to the Citizen's Charter (CC) questions. The Citizen's Charter is an official document that outlines the services provided by a government agency/office including its requirements, fees, and processing times among others.</p></div>
-{{-- CC1 --}}
+            {{-- CC1 --}}
             <div class="survey-section">
                 <div class="survey-header"><span class="cc-tag">CC1</span><span class="cc-q">Which of the following best describes your awareness of a CC? <span class="required">*</span></span></div>
                 @php
@@ -169,8 +166,6 @@
                     </table>
                 </div>
             </div>
-<hr class="divider">
-            <div class="instructions"><p>INSTRUCTIONS: Please put a check mark (✓) on the column that best corresponds to your answer.</p></div>
 
             @php
                 $sqdQuestions = [
@@ -213,7 +208,7 @@
                         <tr>
                             <td>{{ $question }}</td>
                             @foreach(array_merge(array_keys($faces), ['N/A']) as $s)
-                                <td class="chk">{{ strtolower($survey->{$key}) === strtolower($s) ? 'X' : '' }}</td>
+                                <td class="chk">{{ strtolower($survey->{$key}) === strtolower($s) ? '✓' : '' }}</td>
                             @endforeach
                         </tr>
                     @endforeach
@@ -222,10 +217,10 @@
 
             <hr class="divider">
 
-            <div class="suggestion-box">
-                <label>Suggestions on how we can further improve our services (optional):</label>
-                <div class="sugg-text">{{ $survey->suggestions ?: '' }}</div>
-            </div>
+            <div class="suggestion-label">Suggestions on how we can further improve our services (optional):</div>
+            <div class="fill-line">{{ $survey->suggestions ?: '&nbsp;' }}</div>
+            <div class="fill-line">&nbsp;</div>
+            <div class="fill-line">&nbsp;</div>
 
             <div class="footer">
                 &mdash;&mdash;&mdash; END OF FORM &mdash;&mdash;&mdash;<br>
