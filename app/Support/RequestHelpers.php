@@ -107,7 +107,11 @@ class RequestHelpers
     }
 
     /**
-     * Save a base64 signature image to storage/app/public/signatures/.
+     * Save a base64 signature image to the PRIVATE disk
+     * (storage/app/private/signatures/{year}/{MonthName}/).
+     *
+     * D5b: signatures are sensitive personal data — never on the public disk.
+     * Viewing goes through the authed route: /tickets/{ticket}/signature/{field}
      */
     public static function saveSignature(?string $base64Data, string $type, string $name): ?string
     {
@@ -125,9 +129,9 @@ class RequestHelpers
             }
 
             $filename = $type . '_' . $safeName . '_' . time() . '.png';
-            $filepath = 'signatures/' . $filename;
+            $filepath = 'signatures/' . now()->format('Y') . '/' . now()->format('F') . '/' . $filename;
 
-            Storage::disk('public')->put($filepath, base64_decode($image));
+            Storage::disk('local')->put($filepath, base64_decode($image));
 
             return $filepath;
         } catch (\Exception $e) {

@@ -122,8 +122,8 @@ class CreateIctTicketAction
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($savedSigFiles ?? [] as $sigPath) {
-                if ($sigPath && Storage::disk('public')->exists($sigPath)) {
-                    Storage::disk('public')->delete($sigPath);
+                if ($sigPath && Storage::disk('local')->exists($sigPath)) {
+                    Storage::disk('local')->delete($sigPath);
                 }
             }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

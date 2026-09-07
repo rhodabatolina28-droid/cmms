@@ -81,9 +81,9 @@
         };
         function pmSigImg($path) {
             if (!$path) return '';
-            $full = storage_path('app/public/' . $path);
+            $full = storage_path('app/private/' . $path);
             $real = realpath($full);
-            $allowed = realpath(storage_path('app/public/signatures'));
+            $allowed = realpath(storage_path('app/private/signatures'));
             if (!$real || !$allowed || strpos($real, $allowed) !== 0 || !file_exists($real)) {
                 return '';
             }

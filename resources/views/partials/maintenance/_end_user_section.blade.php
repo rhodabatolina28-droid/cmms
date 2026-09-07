@@ -35,7 +35,7 @@
                                 <div class="input-group input-group-flex">
                                     <label>END-USER SIGNATURE OVER PRINTED NAME</label>
                                     <div class="sig-container-minimal">
-                                        @php $sigPath = !empty($maintenance->end_user_signature) ? (str_starts_with($maintenance->end_user_signature, 'http') ? $maintenance->end_user_signature : Storage::url($maintenance->end_user_signature)) : ''; @endphp
+                                        @php $sigPath = !empty($maintenance->end_user_signature) ? (str_starts_with($maintenance->end_user_signature, 'http') ? $maintenance->end_user_signature : route('tickets.signature.show', ['ticket' => $maintenance->request->id ?? 0, 'field' => 'end_user_signature'])) : ''; @endphp
                                         @if(!empty($maintenance->end_user_signature) && empty($reSignMode))
                                             <img src="{{ $sigPath }}" alt="End-User Signature" class="signature-preview-img">
                                             <input type="hidden" id="endUserSignature" name="endUserSignature" value="{{ $maintenance->end_user_signature }}">

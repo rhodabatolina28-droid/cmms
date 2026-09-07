@@ -33,7 +33,11 @@ return [
         'local' => [
             'driver' => 'local',
             'root' => storage_path('app/private'),
-            'serve' => true,
+            // D5b: serve DISABLED — the /storage/{path} route served PRIVATE files
+            // (and even allowed uploads) without authentication. Sensitive files
+            // (signatures, receipts, CSM copies) must only be served through
+            // authed controller routes (e.g. SignatureController@show).
+            'serve' => false,
             'throw' => false,
             'report' => false,
         ],

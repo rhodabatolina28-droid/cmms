@@ -46,8 +46,8 @@ class TechnicianUpdateIctTicketAction
             foreach ($sigFields as $field => $prefix) {
                 if (isset($mappedData[$field]) && str_contains($mappedData[$field], 'data:image')) {
                     // Delete old signature file if it exists to prevent disk bloat
-                    if (!empty($repairRequest->$field) && Storage::disk('public')->exists($repairRequest->$field)) {
-                        Storage::disk('public')->delete($repairRequest->$field);
+                    if (!empty($repairRequest->$field) && Storage::disk('local')->exists($repairRequest->$field)) {
+                        Storage::disk('local')->delete($repairRequest->$field);
                     }
                     $mappedData[$field] = \App\Support\RequestHelpers::saveSignature($mappedData[$field], $prefix, 'Update');
                     $savedSigFiles[] = $mappedData[$field];
@@ -227,8 +227,8 @@ class TechnicianUpdateIctTicketAction
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($savedSigFiles ?? [] as $sigPath) {
-                if ($sigPath && Storage::disk('public')->exists($sigPath)) {
-                    Storage::disk('public')->delete($sigPath);
+                if ($sigPath && Storage::disk('local')->exists($sigPath)) {
+                    Storage::disk('local')->delete($sigPath);
                 }
             }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

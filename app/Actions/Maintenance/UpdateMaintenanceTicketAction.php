@@ -87,15 +87,15 @@ class UpdateMaintenanceTicketAction
 
             $savedSigFiles = [];
             if ($techSigData && str_contains($techSigData, 'data:image')) {
-                if (!empty($maintenance->technician_signature) && Storage::disk('public')->exists($maintenance->technician_signature)) {
-                    Storage::disk('public')->delete($maintenance->technician_signature);
+                if (!empty($maintenance->technician_signature) && Storage::disk('local')->exists($maintenance->technician_signature)) {
+                    Storage::disk('local')->delete($maintenance->technician_signature);
                 }
                 $mappedData['technician_signature'] = $this->saveSignature($techSigData, 'maint_tech', $data['technician_name'] ?? $data['technicianName'] ?? 'Unknown');
                 $savedSigFiles[] = $mappedData['technician_signature'];
             }
             if ($userSigData && str_contains($userSigData, 'data:image')) {
-                if (!empty($maintenance->end_user_signature) && Storage::disk('public')->exists($maintenance->end_user_signature)) {
-                    Storage::disk('public')->delete($maintenance->end_user_signature);
+                if (!empty($maintenance->end_user_signature) && Storage::disk('local')->exists($maintenance->end_user_signature)) {
+                    Storage::disk('local')->delete($maintenance->end_user_signature);
                 }
                 $mappedData['end_user_signature'] = $this->saveSignature($userSigData, 'maint_user', $data['end_user_name'] ?? $data['endUserName'] ?? 'Unknown');
                 $savedSigFiles[] = $mappedData['end_user_signature'];
@@ -310,8 +310,8 @@ class UpdateMaintenanceTicketAction
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($savedSigFiles ?? [] as $sigPath) {
-                if ($sigPath && Storage::disk('public')->exists($sigPath)) {
-                    Storage::disk('public')->delete($sigPath);
+                if ($sigPath && Storage::disk('local')->exists($sigPath)) {
+                    Storage::disk('local')->delete($sigPath);
                 }
             }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

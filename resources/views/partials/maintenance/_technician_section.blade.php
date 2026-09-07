@@ -12,7 +12,7 @@
                                 <div class="input-group">
                                     <label>SIGNATURE</label>
                                     <div class="sig-container-minimal">
-                                        @php $techSigPath = !empty($maintenance->technician_signature) ? (str_starts_with($maintenance->technician_signature, 'http') ? $maintenance->technician_signature : Storage::url($maintenance->technician_signature)) : ''; @endphp
+                                        @php $techSigPath = !empty($maintenance->technician_signature) ? (str_starts_with($maintenance->technician_signature, 'http') ? $maintenance->technician_signature : route('tickets.signature.show', ['ticket' => $maintenance->request->id ?? 0, 'field' => 'technician_signature'])) : ''; @endphp
                                         @if(!empty($maintenance->technician_signature))
                                             <img src="{{ $techSigPath }}" alt="Technician Signature" class="signature-preview-img" id="technicianSignatureImg">
                                             <input type="hidden" id="technicianSignature" name="technicianSignature" value="{{ $maintenance->technician_signature }}">

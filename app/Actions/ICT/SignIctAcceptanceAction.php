@@ -53,8 +53,8 @@ class SignIctAcceptanceAction
 
             // Handle acceptance signature
             if (isset($mappedData['end_user_acceptance_signature']) && str_contains($mappedData['end_user_acceptance_signature'], 'data:image')) {
-                if (!empty($repairRequest->end_user_acceptance_signature) && Storage::disk('public')->exists($repairRequest->end_user_acceptance_signature)) {
-                    Storage::disk('public')->delete($repairRequest->end_user_acceptance_signature);
+                if (!empty($repairRequest->end_user_acceptance_signature) && Storage::disk('local')->exists($repairRequest->end_user_acceptance_signature)) {
+                    Storage::disk('local')->delete($repairRequest->end_user_acceptance_signature);
                 }
                 $mappedData['end_user_acceptance_signature'] = \App\Support\RequestHelpers::saveSignature(
                     $mappedData['end_user_acceptance_signature'], 'ict_acceptance', 'Acceptance'
@@ -116,8 +116,8 @@ class SignIctAcceptanceAction
         } catch (\Exception $e) {
             DB::rollBack();
             foreach ($savedSigFiles ?? [] as $sigPath) {
-                if ($sigPath && Storage::disk('public')->exists($sigPath)) {
-                    Storage::disk('public')->delete($sigPath);
+                if ($sigPath && Storage::disk('local')->exists($sigPath)) {
+                    Storage::disk('local')->delete($sigPath);
                 }
             }
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);

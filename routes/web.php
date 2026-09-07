@@ -21,6 +21,7 @@ use App\Http\Controllers\Inventory\PhysicalCountController;
 use App\Http\Controllers\Inventory\PartsStockController;
 use App\Http\Controllers\PurchaseRequest\PurchaseRequestController;
 use App\Http\Controllers\Maintenance\PMScheduleController;
+use App\Http\Controllers\Tickets\SignatureController;
 
 Route::get('/', [PageController::class, 'landing']);
 
@@ -58,6 +59,10 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
 
 
     // ICT Requests
+    // D5b: authed signature serving (private disk — no /storage/ direct URLs)
+    Route::get('/tickets/{ticket}/signature/{field}', [\App\Http\Controllers\Tickets\SignatureController::class, 'show'])
+        ->name('tickets.signature.show')->middleware('role:user,it,admin,supply_officer,super_admin');
+
     Route::middleware('role:user,it,admin,super_admin')->group(function () {
         Route::get('/requests/ict', [ICTRequestController::class, 'index'])->name('ict.index');
         Route::get('/requests/ict/create', [ICTRequestController::class, 'create'])->name('ict.create');
