@@ -150,21 +150,25 @@
             display:block !important;
         }
         .prd-table {
-            min-width:680px !important;
+            min-width:800px !important;
+            table-layout:auto !important;
+            width:auto !important;
         }
-        /* Currency columns: sakto room para hindi mag-merge + never bleed into the next cell */
+        /* Currency columns: natural width (auto layout) — never bleed into the next cell */
         .prd-table th:nth-child(5), .prd-table th:nth-child(6),
         .prd-table td:nth-child(5), .prd-table td:nth-child(6) {
-            min-width:74px !important;
-            padding:4px 5px !important;
+            min-width:88px !important;
+            padding:4px 6px !important;
         }
         .prd-table td.right {
             white-space:nowrap !important;
-            overflow:hidden !important;
-            text-overflow:ellipsis !important;
         }
         .prd-table th:last-child, .prd-table td:last-child {
             border-right:1px solid #374151 !important;
+        }
+        /* Right padding so the last column never sits flush / gets cut by the scrollbar */
+        .prd-table-responsive {
+            padding-right:16px !important;
         }
         /* Header fields: Mobile Grid with PR No. and Date side-by-side */
         .a60-hdr-wrap {
@@ -258,10 +262,11 @@
         }
         .a60-cell-pr .a60-field-val,
         .a60-cell-date .a60-field-val {
-            font-size:12px !important;
-            white-space:nowrap !important;
-            overflow:hidden !important;
-            text-overflow:ellipsis !important;
+            font-size:10.5px !important;
+            white-space:normal !important;
+            word-break:break-all !important;
+            overflow:visible !important;
+            line-height:1.25 !important;
         }
         .prd-signs {
             display:block !important;
