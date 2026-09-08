@@ -315,4 +315,34 @@ class DowntimeTrackingTest extends TestCase
         $this->assertGreaterThanOrEqual(1560, (int) $asset->total_downtime);
         $this->assertSame(0, (int) $asset->total_pm_downtime);
     }
+
+    public function test_downtime_repair_keeps_pm_minutes_out_of_the_failure_bucket(): void
+    {
+        // Gov-Option-B regression guard: a PM-only history must leave
+        // total_downtime at 0 — PM servicing is not failure downtime.
+        $requestor = $this->user();
+        $asset = $this->asset($requestor);
+
+        $pm = $this->ticket($requestor, [
+            'linked_asset_id' => $asset->asset_id,
+            'type' => 'Preventive Maintenance',
+        ]);
+        DB::table('requests')->where('id', $pm->getKey())->update([
+            'status' => 'Completed',
+            'downtime_start' => now()->subHours(5),
+            'downtime_end' => now()->subHours(1),
+            'downtime_duration' => -240,
+        ]);
+        // Pre-fix corruption: the old recompute put PM minutes into total too.
+        DB::table('inventory_assets')->where('asset_id', $asset->asset_id)->update([
+            'total_downtime' => 240,
+            'total_pm_downtime' => 0,
+        ]);
+
+        $this->artisan('downtime:repair')->assertSuccessful();
+
+        $asset->refresh();
+        $this->assertSame(0, (int) $asset->total_downtime, 'PM minutes must not land in the ICT/failure bucket');
+        $this->assertGreaterThanOrEqual(240, (int) $asset->total_pm_downtime);
+    }
 }

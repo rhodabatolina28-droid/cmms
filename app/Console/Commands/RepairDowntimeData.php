@@ -14,7 +14,8 @@ use Illuminate\Console\Command;
  *  2. Close stale open windows on terminal-status tickets (left open before
  *     the X3 fix) — downtime_end approximated with the ticket's updated_at.
  *  3. Recompute BOTH asset buckets from scratch:
- *       total_downtime    = SUM(|duration|) of ALL closed windows (any type)
+ *       total_downtime    = SUM(|duration|) of closed ICT/repair windows ONLY
+ *                           (Gov-Option-B: downtime = breakdown lang)
  *       total_pm_downtime = SUM(|duration|) of closed PM windows
  *     Bundled (auto-generated) PM tickets credit every asset of the
  *     custodian, matching the X1 model-event behaviour.
@@ -113,9 +114,11 @@ class RepairDowntimeData extends Command
 
             foreach (array_unique($assetIds) as $assetId) {
                 $targets[$assetId] ??= ['total' => 0, 'pm' => 0];
-                $targets[$assetId]['total'] += $minutes;
                 if ($isPm) {
+                    // Gov-Option-B: PM servicing NEVER inflates the failure bucket.
                     $targets[$assetId]['pm'] += $minutes;
+                } else {
+                    $targets[$assetId]['total'] += $minutes;
                 }
             }
         }
