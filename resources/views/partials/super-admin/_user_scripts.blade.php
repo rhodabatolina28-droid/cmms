@@ -166,6 +166,8 @@ function onUserFilterChange() {
 
 // â”€â”€ Modal helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 function openAddUserModal() {
+    // D4c: reset the position cascade so a fresh create always starts at "None".
+    applyPositionSelection('newUserPosition', 'newUserPositionManual', 'newUserPositionValue', '', '', '');
     document.getElementById('addUserModal').style.display = 'flex';
 }
 
@@ -256,6 +258,86 @@ function filterEditDivisionByDept(dept) {
     });
 }
 
+// ── D4c Position cascade ─────────────────────────────────────────────
+// Division → Position filter. Options carry data-position-office /
+// data-position-dept; "None" and "Other" are always visible.
+function filterPositionOptions(selectEl, dept, office) {
+    selectEl.querySelectorAll('option').forEach(opt => {
+        if (!opt.value || opt.value === '__other__') return;
+        const od = opt.getAttribute('data-position-office');
+        const dd = opt.getAttribute('data-position-dept');
+        let show = true;
+        if (od) show = !!office && od === office;
+        else if (dd) show = !!dept && dd === dept;
+        opt.style.display = show ? '' : 'none';
+    });
+}
+
+// Keep the hidden input[name=position] in sync with the dropdown + manual text.
+function syncPositionField(selectId, manualId, hiddenId) {
+    const sel = document.getElementById(selectId);
+    const man = document.getElementById(manualId);
+    const hid = document.getElementById(hiddenId);
+    const apply = () => {
+        man.style.display = sel.value === '__other__' ? '' : 'none';
+        if (sel.value !== '__other__') man.value = '';
+        hid.value = sel.value === '__other__' ? man.value.trim() : sel.value;
+    };
+    sel.addEventListener('change', apply);
+    man.addEventListener('input', apply);
+}
+
+// Prefill the dropdown for an existing position ("Other" fallback keeps any
+// non-catalog value instead of losing it), then sync the hidden input.
+function applyPositionSelection(selectId, manualId, hiddenId, dept, office, stored) {
+    const sel = document.getElementById(selectId);
+    const man = document.getElementById(manualId);
+    const hid = document.getElementById(hiddenId);
+    filterPositionOptions(sel, dept, office);
+    const pos = (stored || '').trim();
+    const match = [...sel.options].find(o => o.value && o.value !== '__other__' && o.value === pos);
+    if (pos && match) {
+        sel.value = pos;
+        man.style.display = 'none';
+        man.value = '';
+        hid.value = pos;
+    } else if (pos) {
+        sel.value = '__other__';
+        man.style.display = '';
+        man.value = pos;
+        hid.value = pos;
+    } else {
+        sel.value = '';
+        man.style.display = 'none';
+        man.value = '';
+        hid.value = '';
+    }
+}
+
+// After a Department/Division change: keep the selected position only if its
+// option is still visible; otherwise fall back to "Other" (value preserved).
+// NOTE: the filter MUST run even when nothing is selected yet — otherwise the
+// dropdown stays stuck with only the always-visible options after the modal
+// opened with empty dept/office (reported bug: division picks did nothing).
+function refreshPositionAfterCascade(selectId, manualId, hiddenId, dept, office) {
+    const sel = document.getElementById(selectId);
+    const man = document.getElementById(manualId);
+    const hid = document.getElementById(hiddenId);
+    const current = (hid.value || '').trim();
+    filterPositionOptions(sel, dept, office);
+    if (!current) { sel.value = ''; man.style.display = 'none'; man.value = ''; return; }
+    const opt = [...sel.options].find(o => o.value === current && o.style.display !== 'none');
+    if (opt) {
+        sel.value = current;
+        man.style.display = 'none';
+    } else {
+        sel.value = '__other__';
+        man.style.display = '';
+        man.value = current;
+    }
+    hid.value = current;
+}
+
 async function editUser(id) {
     try {
         const response = await fetch("{{ route('super_admin.users') }}?get_user=" + id);
@@ -271,6 +353,8 @@ async function editUser(id) {
             document.getElementById('editUserDepartment').value = u.department || '';
             filterEditDivisionByDept(u.department || '');
             document.getElementById('editUserOffice').value = u.office || '';
+            applyPositionSelection('editUserPosition', 'editUserPositionManual', 'editUserPositionValue',
+                u.department || '', u.office || '', u.position || '');
             document.getElementById('editUserModal').style.display = 'flex';
         } else {
             Swal.fire('Error!', result.message || 'Failed to load user data', 'error');
@@ -341,15 +425,23 @@ document.addEventListener('DOMContentLoaded', function() {
         icon.className = pwInput.type === 'password' ? 'fa-solid fa-eye' : 'fa-solid fa-eye-slash';
     });
 
-    // Edit modal — department â†’ division filter
+    // Edit modal — department → division filter (+ position cascade refresh)
     document.getElementById('editUserDepartment').addEventListener('change', function() {
         const currentOffice = document.getElementById('editUserOffice').value;
         filterEditDivisionByDept(this.value);
         const opt = document.getElementById('editUserOffice').querySelector(`option[value="${currentOffice}"]`);
         document.getElementById('editUserOffice').value = (opt && opt.style.display !== 'none') ? currentOffice : '';
+        refreshPositionAfterCascade('editUserPosition', 'editUserPositionManual', 'editUserPositionValue',
+            this.value, document.getElementById('editUserOffice').value);
     });
 
-    // Add modal — department â†’ division filter
+    // Edit modal — office change → re-filter position options
+    document.getElementById('editUserOffice').addEventListener('change', function() {
+        refreshPositionAfterCascade('editUserPosition', 'editUserPositionManual', 'editUserPositionValue',
+            document.getElementById('editUserDepartment').value, this.value);
+    });
+
+    // Add modal — department → division filter (+ position cascade refresh)
     document.getElementById('newUserDepartment').addEventListener('change', function() {
         const dept = this.value;
         const officeSelect = document.getElementById('newUserOffice');
@@ -359,8 +451,11 @@ document.addEventListener('DOMContentLoaded', function() {
             opt.style.display = (!dept || !d || (dept === 'INTERNAL SERVICES DEPARTMENT' && d === 'INTERNAL') || (dept === 'TECHNICAL SERVICES DEPARTMENT' && d === 'TECHNICAL')) ? '' : 'none';
         });
         officeSelect.value = '';
+        refreshPositionAfterCascade('newUserPosition', 'newUserPositionManual', 'newUserPositionValue',
+            dept, '');
     });
 
+    // Add modal — office change (auto-sets department) → re-filter positions
     document.getElementById('newUserOffice').addEventListener('change', function() {
         const deptMap = {
             'RESEARCH AND INFORMATION DIVISION': 'INTERNAL SERVICES DEPARTMENT',
@@ -373,7 +468,13 @@ document.addEventListener('DOMContentLoaded', function() {
             'OFFICE OF THE EXECUTIVE DIRECTOR': 'TECHNICAL SERVICES DEPARTMENT',
         };
         document.getElementById('newUserDepartment').value = deptMap[this.value] || '';
+        refreshPositionAfterCascade('newUserPosition', 'newUserPositionManual', 'newUserPositionValue',
+            document.getElementById('newUserDepartment').value, this.value);
     });
+
+    // D4c: keep the hidden input[name=position] synced in both modals
+    syncPositionField('editUserPosition', 'editUserPositionManual', 'editUserPositionValue');
+    syncPositionField('newUserPosition', 'newUserPositionManual', 'newUserPositionValue');
 });
 </script>
 @endsection

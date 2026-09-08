@@ -79,6 +79,8 @@
                         </select>
                         <p class="form-help">Required — determines the user's scope in the system.</p>
                     </div>
+
+                    @include('partials.super-admin._position_field', ['prefix' => 'editUser'])
                 </div>
             </div>
             <div class="modal-foot">
@@ -163,6 +165,8 @@
                         <p class="form-help">Required — determines the user's scope in the system.</p>
                     </div>
                 </div>
+
+                @include('partials.super-admin._position_field', ['prefix' => 'newUser'])
 
                 {{-- Row 6: Password --}}
                 <div class="form-group-sm" style="position:relative;">

@@ -68,7 +68,7 @@ class GetUsersDataAction
         $page    = max((int) $request->input('page', 1), 1);
 
         $users = $query->orderBy('full_name', 'asc')
-            ->select(['id', 'full_name', 'email', 'role', 'office', 'department', 'is_active'])
+            ->select(['id', 'full_name', 'email', 'role', 'office', 'department', 'position', 'is_active'])
             ->paginate($perPage, ['*'], 'page', $page);
 
         // Check if any filter is active

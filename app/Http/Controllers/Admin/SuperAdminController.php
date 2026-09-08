@@ -65,6 +65,7 @@ class SuperAdminController extends Controller
                     'branch' => $user->branch,
                     'department' => $user->department,
                     'office' => $user->office,
+                    'position' => $user->position, // D4c: Edit modal prefill
                 ]
             ]);
         }
