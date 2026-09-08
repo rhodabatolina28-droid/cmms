@@ -61,6 +61,7 @@ class PurchaseRequest extends Model
         'finalized_at',
         'delivered_by',
         'delivered_at',
+        'archive_pdf_path',
     ];
 
     protected $casts = [
@@ -148,5 +149,26 @@ class PurchaseRequest extends Model
     public function isLegacyStatus(): bool
     {
         return ! in_array($this->status, self::CURRENT_STATUSES, true);
+    }
+
+    protected static function booted(): void
+    {
+        // D7a: auto-archive the FINAL Delivery Confirmation PDF when the PR
+        // reaches delivered (CURRENT flow only — the legacy 'received' status
+        // is read-only display). Post-commit (DB::afterCommit) so DomPDF never
+        // runs inside the transaction / holds row locks. One archive per PR.
+        static::updated(function (PurchaseRequest $pr) {
+            if ($pr->wasChanged('status')
+                && $pr->status === self::STATUS_DELIVERED
+                && ! $pr->archive_pdf_path) {
+                \Illuminate\Support\Facades\DB::afterCommit(function () use ($pr) {
+                    try {
+                        \App\Actions\PurchaseRequest\ArchiveDeliveryConfirmationPdfAction::generate($pr->fresh());
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('PR archive PDF failed for ' . ($pr->pr_number ?? $pr->id) . ': ' . $e->getMessage());
+                    }
+                });
+            }
+        });
     }
 }

@@ -62,8 +62,8 @@ class DownloadDeliveryConfirmationPdfAction
         ]);
     }
 
-    /** One purchased line plus the physical pieces recorded against it. */
-    private function buildLine(array $item, Collection $unitsByPart): array
+    /** One purchased line plus the physical pieces recorded against it. Public: the D7 archive action reuses it. */
+    public function buildLine(array $item, Collection $unitsByPart): array
     {
         $qty = max(1, (int) ($item['quantity'] ?? 1));
 
