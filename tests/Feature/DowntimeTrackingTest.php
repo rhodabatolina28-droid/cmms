@@ -6,6 +6,7 @@ use App\Models\InventoryAsset;
 use App\Models\Request;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Tests\TestCase;
 
 /**
@@ -271,5 +272,47 @@ class DowntimeTrackingTest extends TestCase
         $ticket->refresh();
         $this->assertNull($ticket->downtime_end, 'Awaiting Parts must keep the window open');
         $this->assertTrue($ticket->is_downtime, 'Window open = asset is down, even while Awaiting Parts');
+    }
+
+    public function test_downtime_repair_command_fixes_negative_data_and_recomputes_buckets(): void
+    {
+        // X2: raw SQL inserts bypass model events to simulate the pre-fix corruption.
+        $requestor = $this->user();
+        $asset = $this->asset($requestor);
+
+        $corruptIct = $this->ticket($requestor, ['linked_asset_id' => $asset->asset_id]);
+        DB::table('requests')->where('id', $corruptIct->getKey())->update([
+            'status' => 'Completed',
+            'downtime_start' => now()->subHours(20),
+            'downtime_end' => now()->subHours(4),
+            'downtime_duration' => -960, // negative (Carbon 3 sign bug)
+        ]);
+        DB::table('inventory_assets')->where('asset_id', $asset->asset_id)->update(['total_downtime' => -17303]);
+
+        // Stale open window on a Cancelled ticket (pre-X3 G1 gap).
+        $stale = $this->ticket($requestor, ['linked_asset_id' => $asset->asset_id]);
+        DB::table('requests')->where('id', $stale->getKey())->update([
+            'status' => 'Cancelled',
+            'downtime_start' => now()->subHours(10),
+            'downtime_end' => null,
+            'downtime_duration' => null,
+        ]);
+
+        $this->artisan('downtime:repair')->assertSuccessful();
+
+        // Step 1: negative duration abs()'d (~16h window => ~960m).
+        $corruptIct->refresh();
+        $this->assertGreaterThanOrEqual(960, $corruptIct->downtime_duration);
+        $this->assertLessThanOrEqual(961, $corruptIct->downtime_duration);
+
+        // Step 2: stale window closed.
+        $stale->refresh();
+        $this->assertNotNull($stale->downtime_end);
+        $this->assertGreaterThan(0, $stale->downtime_duration);
+
+        // Step 3: buckets recomputed from the ledger (960 + ~600 stale ≈ 1560).
+        $asset->refresh();
+        $this->assertGreaterThanOrEqual(1560, (int) $asset->total_downtime);
+        $this->assertSame(0, (int) $asset->total_pm_downtime);
     }
 }
