@@ -442,7 +442,7 @@ user dashboard (sariling mga completed ticket) + CSM records view (Super Admin).
 **⚠️ Tandaan:** ang mga **stored PDFs** na ginawa bago ang mga fixes na ito ay may lumang render (walang email/✓/atbp.). Ang mga **bagong submissions** ay gagawa ng bagong render nang tama. Para sa mga lumang survey, i-backfill gamit ang D5d.
 ---
 
-## 5b. D6 — Auto-Archived PDFs (ICT + PM) — DESIGNED, awaiting execution
+## 5b. D6 — Auto-Archived PDFs (ICT + PM) — ✅ EXECUTED & COMMITTED (`0b791b8`)
 
 **Rule:** kapag **na-Complete** ang ICT o PM ticket, awtomatikong gagawa ng FINAL archived PDF
 (kumpleto: mga pirma, diagnosis, action taken, mga petsa) — naka-imbak sa private disk, naka-organisa
@@ -481,6 +481,44 @@ Ang mga on-demand na `ict.pdf` / `maintenance.pdf` route — **walang pagbabago*
 **Opsyonal (pag-aprobahan pa):** PR Delivery Confirmation ay maaari ring i-auto-archive sa `received`
 — parehong mekanismo, `purchase_requests.archive_pdf_path`. Hindi pa napagdesisyunan.
 
+### D6.6 EXECUTION LOG — ✅ tapos na (commit `0b791b8`, Sept 8 2026)
+
+**Ano ang nai-deliver:**
+
+| Component | File | Detalye |
+|---|---|---|
+| **DB column** | `2026_09_07_000004_add_archive_pdf_path_to_requests.php` | `requests.archive_pdf_path` nullable — iisang column para sa LAHAT ng ticket types (ICT/PM/REQ) |
+| **Archive action** | `app/Actions/Ticket/ArchiveTicketPdfAction.php` | `generate(Request): ?string` — renders the EXISTING `pdf/ict-form` o `pdf/maintenance-form` blade (walang bagong template), saves sa private disk, returns relative path. **Idempotent** — same path = overwrite, walang doble |
+| **Auto-trigger** | `app/Models/Request.php::booted()` updated event | `status` nagbago → `STATUS_COMPLETED` **AT** wala pang `archive_pdf_path` → `DB::afterCommit(...)` → `ArchiveTicketPdfAction::generate($request->fresh())`. Try/catch → `Log::warning` (hindi kailanman babagsak ang completion flow; retry command ang backup) |
+| **Backfill command** | `app/Console/Commands/GenerateTicketArchivePdfs.php` | `php artisan tickets:generate-archive-pdfs` — nilalagyan ng PDF ang lahat ng completed na walang archive. Record-date rule (D5.1b): folder month = `completed_at`, hindi `now()` |
+| **Tests** | `tests/Feature/TicketArchivePdfTest.php` | 4 tests, LAHAT PASS: ICT→`ict-pdfs/` (5 asr.), PM→`pm-pdfs/` (4 asr.), non-completed→null, idempotency |
+
+**Storage layout (verified live):**
+```
+storage/app/private/
+├── ict-pdfs/2026/September/ICT-2026-0004.pdf      ← buwan galing sa completed_at
+└── pm-pdfs/2026/September/PM-2026-0001.pdf        ← PM at ICT MAGKAHIWALAY talaga
+```
+
+**Backfill result:** `34 archived / 0 missing` — lahat ng completed tickets may PDF na.
+
+**Lesson learned sa build (nakuha sa totoong failure):** ang named function declaration
+(`function sigImg()` sa loob ng Blade `@php` block) ay **cannot redeclare** error kapag
+maraming PDF ang gine-generate sa isang PHP process — kaya bumabagsak ang backfill command
+pagkatapos ng unang file. Fix: ginawang **closures** (`$sigImg = function(...)`) ang
+`ict-form.blade.php` at `maintenance-form.blade.php`. Ito rin ang dahilan kung bakit pumasa ang
+first-run pero namatay ang batch — hindi bug sa data, bug sa pattern.
+
+**Paano gumagana ngayon (end-to-end):**
+```
+ICT/PM ticket → technician completes → status = completed (DB transaction commit)
+   → afterCommit: ArchiveTicketPdfAction.generate()
+      → renders existing form blade (kasama ang lahat ng pirma, diagnosis, actions, petsa)
+      → saves: {ict|pm}-pdfs/{year}/{Month}/{requestNumber}.pdf (private disk)
+      → requests.archive_pdf_path = relative path
+   → (kung pumalya: Log::warning; ticket TAPOS pa rin; ayusin via tickets:generate-archive-pdfs)
+```
+
 ---
 
 ## 6. Key Design Decisions (locked, Sept 2026)
@@ -513,7 +551,15 @@ Ang mga on-demand na `ict.pdf` / `maintenance.pdf` route — **walang pagbabago*
     verified safe: `app.timezone = Asia/Manila`, request numbers are filename-safe
 15. **Execution order: D5b → D5c → D5a → D5d → D6** — the public-disk security exposure is fixed
     BEFORE any new PDF auto-copy feature is built
+16. **Archive PDFs reuse the EXISTING form templates** — `ArchiveTicketPdfAction` renders the same
+    `pdf/ict-form` / `pdf/maintenance-form` blades the Download button uses (no duplicate template
+    to maintain); archive trigger is `DB::afterCommit` + one-per-ticket guard; and Blade `@php`
+    blocks must use **closures, never named functions** (named functions fatally collide when one
+    process generates multiple PDFs — the D6 backfill proved it)
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
 - Overhaul: X1-X4 to be committed per phase with tests, then pushed as a single squash to `origin/develop`
+- D4 (high-official priority): DESIGNED — position backfill + `config/priority.php` (awaiting execution)
+- D5 storage reorg: D5b/D5c private-disk migration + D5a CSM auto-PDF polish chain + D5d `csm:generate-pdfs` backfill — ✅ committed (`3a940d3` latest of chain)
+- **D6 ticket auto-archive: ✅ committed `0b791b8`** — `archive_pdf_path` column, afterCommit trigger sa completion, `tickets:generate-archive-pdfs` backfill (34/0), sigImg closure fix, 4 feature tests pass
