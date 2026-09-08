@@ -255,6 +255,10 @@ class Request extends Model
                 }
             }
                    if ($request->wasChanged('status')) {
+                   // X1: capture BEFORE any nested $request->update() below (downtime
+                   // window close) — a nested save resets the changed-attributes state
+                   // and would silently disable the D6 archive trigger at the bottom.
+                   $statusWasChanged = $request->wasChanged('status');
                 $assetsToUpdate = collect();
                 
                 if ($request->linked_asset_id) {
@@ -304,11 +308,43 @@ class Request extends Model
                         $request->update(['downtime_start' => now()]);
                     }
 
+                    // X1 (B2): close the window ONCE per ticket — OUTSIDE the asset
+                    // loop. Previously this sat inside the loop, so on bundled PMs
+                    // the first iteration wrote downtime_end and every later asset
+                    // was skipped by the !$request->downtime_end guard.
+                    // X1 (B1): abs() + (int) — Carbon 3 diffInMinutes() is SIGNED,
+                    // so now()->diffInMinutes($past) returned NEGATIVE durations,
+                    // which via increment() DECREMENTED asset totals (live data:
+                    // DELL XPS8940 = -17,303 min). Calling it as
+                    // $start->diffInMinutes(now()) + abs() is version-proof.
+                    $downtimeDuration = null;
+                    if ($newStatus === self::STATUS_COMPLETED
+                        && $request->downtime_start
+                        && !$request->downtime_end) {
+                        $downtimeDuration = (int) abs($request->downtime_start->diffInMinutes(now()));
+                        $request->update([
+                            'downtime_end' => now(),
+                            'downtime_duration' => $downtimeDuration,
+                        ]);
+                    }
+
                     foreach ($assetsToUpdate as $asset) {
                         $previousStatus = $asset->status;
                         $updated = false;
                         $historyAction = 'System Auto Update';
                         $remarks = '';
+
+                        // X1 (Gov-Option-B): credit the correct bucket by ticket type —
+                        // ICT/repair breakdown → total_downtime (SIRA); PM servicing →
+                        // total_pm_downtime (Servicio — scheduled, not failure downtime).
+                        // Bundled PM credits EVERY asset in the loop (all were down).
+                        if ($downtimeDuration !== null) {
+                            if ($request->type === 'Preventive Maintenance') {
+                                $asset->increment('total_pm_downtime', $downtimeDuration);
+                            } else {
+                                $asset->increment('total_downtime', $downtimeDuration);
+                            }
+                        }
 
                         if ($request->type === 'Preventive Maintenance') {
                             $historyAction = 'PM Status Sync';
@@ -336,15 +372,7 @@ class Request extends Model
                         }
                         
                         if ($newStatus === self::STATUS_COMPLETED) {
-                            // Downtime tracking: end when ticket is completed
-                            if ($request->downtime_start && !$request->downtime_end) {
-                                $duration = now()->diffInMinutes($request->downtime_start);
-                                $request->update([
-                                    'downtime_end' => now(),
-                                    'downtime_duration' => $duration,
-                                ]);
-                                $asset->increment('total_downtime', $duration);
-                            }
+                            // Downtime window is closed + credited ABOVE the loop (X1).
 
                             $itMarkedForDisposal = false;
                             $repairDetail = null;
@@ -434,7 +462,7 @@ class Request extends Model
                 // D6: auto-archive the FINAL PDF copy when a ticket completes.
                 // Post-commit (DB::afterCommit) so DomPDF never runs inside the
                 // transaction / holds row locks. One archive per ticket (guard).
-                if ($request->wasChanged('status')
+                if ($statusWasChanged
                     && $request->status === self::STATUS_COMPLETED
                     && !$request->archive_pdf_path) {
                     \Illuminate\Support\Facades\DB::afterCommit(function () use ($request) {

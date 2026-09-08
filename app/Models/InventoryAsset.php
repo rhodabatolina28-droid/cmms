@@ -43,7 +43,7 @@ class InventoryAsset extends Model
     }
     protected $primaryKey = 'asset_id';
     
-    protected $appends = ['is_depreciated', 'warranty_status', 'formatted_downtime'];
+    protected $appends = ['is_depreciated', 'warranty_status', 'formatted_downtime', 'formatted_pm_downtime'];
 
     protected $fillable = [
         'asset_id',
@@ -73,6 +73,7 @@ class InventoryAsset extends Model
         'next_pm_due_date',
         'pm_schedule_id',
         'total_downtime',
+        'total_pm_downtime',
     ];
 
     protected $casts = [
@@ -87,6 +88,7 @@ class InventoryAsset extends Model
         'next_pm_due_date'       => 'date',
         'pm_schedule_id'         => 'integer',
         'total_downtime'         => 'integer',
+        'total_pm_downtime'      => 'integer',
     ];
 
     // Downtime display accessor — returns human-readable string
@@ -94,7 +96,18 @@ class InventoryAsset extends Model
     // which needs the raw integer from the cast, not a formatted string.
     public function getFormattedDowntimeAttribute(): string
     {
-        $minutes = (int) ($this->attributes['total_downtime'] ?? 0);
+        return self::formatMinutes((int) ($this->attributes['total_downtime'] ?? 0));
+    }
+
+    // X1 (Gov-Option-B): PM servicing downtime has its own bucket — shown
+    // separately from failure downtime on the asset profile.
+    public function getFormattedPmDowntimeAttribute(): string
+    {
+        return self::formatMinutes((int) ($this->attributes['total_pm_downtime'] ?? 0));
+    }
+
+    private static function formatMinutes(int $minutes): string
+    {
         if ($minutes == 0) return '0h';
         $hours = floor($minutes / 60);
         $mins = $minutes % 60;
