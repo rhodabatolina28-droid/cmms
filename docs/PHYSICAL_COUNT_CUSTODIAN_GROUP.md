@@ -125,3 +125,196 @@ Mobile-only (`max-width: 767px` media query) — **desktop view untouched**:
 - Custodian group is bounded only by the custodian's assignment count (no artificial limit) — acceptable.
 - Search throttle (`throttle:30,1`) applies as before; bulk marking posts sequentially to `/mark` under the same throttle.
 - Super Admin access to Physical Count remains closed by design; opening it later is a separate decision (`role:admin,super_admin`).
+
+---
+
+## 8. Phase 12: Physical Count Reporting & Printing Overhaul (QR-Driven Reporting)
+
+> **Date:** September 2026  
+> **Status:** DESIGNED / DOCUMENTED (Awaiting User Execution Approval)  
+> **Goal:** Gawing mabilis, kapaki-pakinabang, at direktang digital tool ng QR scanning ang Physical Count Reporting. Alisin ang mga komplikadong manu-manong papel na labas sa CMMS (blangkong checklist, maintenance forms, 50-person signature matrix), at ibigay ang parehong kailangan ng ahensya: **Master Inventory Report** at **Custodian Accountability Sheets**.
+
+---
+
+### 8.1 Core Principles (Pinagkasunduang Panuntunan)
+
+1. **QR Code as the Primary Tool**:
+   - Ang pag-iikot at pagbibilang sa opisina ay 100% digital gamit ang smartphone o barcode/QR scanner sa CMMS.
+   - Ang report ay **hindi** form na pupunuan ng bolpen habang naglalakad; ito ay **opisyal na audit summary at patunay** ng kung ano ang na-scan at na-verify sa database.
+
+2. **Pagtanggal sa mga Komplikado at Manu-manong Papel (No Out-of-System Bureaucracy)**:
+   - ❌ **Alisin ang Blangkong Checkbox (`☐`)**: Nabilang na sa QR scanner, kaya digital status ang lalabas (`✔ Operational`, `⚠ Damaged`, `✖ Missing`, `— Uncounted`).
+   - ❌ **Alisin ang 20-linyang Blangkong "Maintenance Findings" Worksheet (`_________________`)**: Ang ticketing o maintenance findings ay may sariling CMMS module; hindi kailangang mag-aksaya ng 1-2 pahina ng blangkong linya sa print.
+   - ❌ **Alisin ang 50-person Signature Matrix Grid sa Dulo**: Hindi praktikal na pagsama-samahin ang 50 empleyado sa isang grid sa huling pahina kung saan walang nakakaalam kung anong asset ang pinipirmahan nila.
+   - ❌ **Ayusin ang Hardcoded `Page 1`**: Gawing dynamic CSS page counters (`counter(page)` / `counter(pages)`).
+
+3. **Dual-Report Architecture (Parehong Suportado: Master List at Custodian Sheets)**:
+   - **Report A (Master Inventory Count Report)**: Para sa COA, Chief Administrative Officer (CAO), at Regional Director. Isang tuloy-tuloy na consolidated landscape listahan ng lahat ng assets.
+   - **Report B (Custodian Accountability & Conforme Sheets)**: Para sa indibidwal na pananagutan ng empleyado (e.g. Lyssa Mercado). Suportado ang parehong **Batch by List** (isang print job para sa lahat ng may-ari ng gamit na may page-break bawat tao) at **Single On-Demand** (isang pindot lang para sa isang partikular na empleyado).
+
+---
+
+### 8.2 Disenyo at Visual Mockup ng Report A: Master Inventory Count Report (RPCPPE / COA)
+
+- **Sino ang gagamit:** Commission on Audit (COA), Regional Director, CAO, Supply Officer.
+- **Trigger:** Button sa toolbar: `[ 📄 Print Master Report ]`  
+  - URL: `/inventory/physical-count/{id}/print`
+- **Orientation:** A4 Landscape
+- **Katangian:** Tuloy-tuloy na listahan ng lahat ng assets mula una hanggang huli, may buod ng bilang (KPIs), at pormal na pirma ng Inventory Committee at CAO.
+
+#### Visual Layout Preview:
+```text
++---------------------------------------------------------------------------------------------------------------+
+| Republic of the Philippines                                                                                   |
+| NATIONAL CONCILIATION AND MEDIATION BOARD                                                                     |
+| Central Office / Regional Branch                                                                              |
+|                                                                                                               |
+|               REPORT ON THE PHYSICAL COUNT OF PROPERTY, PLANT AND EQUIPMENT (RPCPPE)                          |
+|                                     As of September 08, 2026                                                  |
+|                                                                                                               |
+| Session: PC-2026-09-001  |  Branch: Central Office  |  Auditor: Juan Dela Cruz  |  Status: Completed          |
++---------------------------------------------------------------------------------------------------------------+
+| TOTAL ASSETS: 184   |   PRESENT: 178 (96.7%)   |   DAMAGED: 4 (2.2%)   |   MISSING: 2 (1.1%)   |   NOT CTD: 0 |
++---------------------------------------------------------------------------------------------------------------+
+| #  | Property No.         | Item Description          | Serial No.   | Category    | Custodian    | Status    |
++----+----------------------+---------------------------+--------------+-------------+--------------+-----------+
+| 1  | SPHV-2025-08-022     | BROTHER ADS-4300N Scanner | BRO-99124    | ICT / Scan  | Lyssa Mercado| ✔ Present |
+| 2  | SPHV-2024-07-032     | EPSON L3250 EcoTank       | EPS-44120    | ICT / Print | Lyssa Mercado| ✔ Present |
+| 3  | 2022-05-03-0117-CMD  | HP PAVILION Desktop PC    | 4CE12399     | ICT / PC    | Lyssa Mercado| ✔ Present |
+| 4  | 2022-05-03-0117-M1   | Monitor - HP 24-inch      | 3CQ88210     | Monitor     | Lyssa Mercado| ✔ Present |
+| 5  | 2022-05-03-0117-M2   | Monitor - DELL 24-inch    | CN-08819     | Monitor     | Lyssa Mercado| ✔ Present |
+| 6  | LT-LE-CMD-RJN20      | THINKBOOK N-1519 Laptop   | PF39281      | ICT / Laptop| Lyssa Mercado| ✔ Present |
+| 7  | PMS-SPK-44           | Speaker - LOGITECH Z120   | —            | Peripheral  | Lyssa Mercado| ✔ Present |
+| 8  | PMS-HP-7             | Headphones - CREATIVE     | —            | Peripheral  | Lyssa Mercado| ✔ Present |
+| 9  | PMS-HP-18            | Headphones - JBL Quantum  | —            | Peripheral  | Lyssa Mercado| ✔ Present |
+| 10 | 2021-03-0089-RO      | SHARP AR-6020 Photocopier | SHP-77112    | Office Eq   | Roberto Diaz | ✔ Present |
+| 11 | 2023-11-0044-IT      | APC Smart-UPS 1500VA      | APC-00912    | ICT Power   | Roberto Diaz | ⚠ Damaged |
+| ...| ...                  | ...                       | ...          | ...         | ...          | ...       |
++----+----------------------+---------------------------+--------------+-------------+--------------+-----------+
+
+Certified Correct by:                                             Approved by:
+
+________________________________________                          ________________________________________
+JUAN DELA CRUZ                                                    ATTY. MARIA CONCEPCION
+Supply Officer / Inventory Committee Chair                        Chief Administrative Officer (CAO)
+Date: __________________________________                          Date: __________________________________
+
+                                                                                     Page 1 of 6
+```
+
+---
+
+### 8.3 Disenyo at Visual Mockup ng Report B: Custodian Accountability & Conforme Sheet
+
+- **Sino ang gagamit:** Empleyado (End-user / Custodian) at Property/Supply Inspector.
+- **Layunin:** Maging malinaw na patunay ng lahat ng gamit na nasa ilalim ng pananagutan ng isang empleyado pagkatapos ng QR scanning session. Dito direktang pipirma ang empleyado bilang **Conforme**.
+- **Dalawang Paraan ng Pag-Print (Both Fully Supported):**
+  1. **By List / Batch Print (`?group=custodian`)**:
+     - I-print ang lahat ng mga empleyado sa isang bagsakan.
+     - **CSS Rule:** Bawat empleyado ay may `page-break-after: always;` / `break-after: page;`.
+     - *Kahalagahan:* Kahit 30 empleyado ang nasa session, hindi maghahalo ang kagamitan ni Lyssa Mercado at ni Roberto Diaz sa iisang papel. Bawat empleyado ay makakakuha ng sariling 1-pahinang (o 2-pahinang kung >15 items) verification sheet na may Conforme signature block.
+  2. **Single On-Demand Print (`?group=custodian&user_id={id}`)**:
+     - Pindutan sa tabi ng bawat custodian card sa show screen: `[ 🖨 Print Sheet ]`.
+     - *Kahalagahan:* Kapag pumunta si Lyssa Mercado sa supply office, o kailangan lang papirmahan ang isang partikular na tao, hindi na kailangang i-print ang buong 50-person session. Direktang mai-print ang 1-page accountability sheet ni Lyssa lamang.
+
+#### Visual Layout Preview (Base sa Tunay na Datos ni Lyssa Mercado - 9 Assets):
+```text
++---------------------------------------------------------------------------------------------------------------+
+| Republic of the Philippines                                                                                   |
+| NATIONAL CONCILIATION AND MEDIATION BOARD                                                                     |
+| Central Office - Administrative Division / Supply Section                                                     |
+|                                                                                                               |
+|                              PROPERTY CUSTODIAN VERIFICATION & CONFORME SHEET                                 |
+|                                         Annual Physical Count 2026                                            |
++---------------------------------------------------------------------------------------------------------------+
+| Custodian Name : LYSSA MERCADO                            | Session ID   : PC-2026-09-001                     |
+| Division / Unit: Central Office / CMD                     | Date Verified: September 08, 2026                 |
+| Total Assigned : 9 Property Items                         | Count Status : 9 of 9 Verified (100% Complete)    |
++---------------------------------------------------------------------------------------------------------------+
+
+LIST OF ASSIGNED PROPERTIES / EQUIPMENT:
++----+----------------------+---------------------------+--------------+------------------+-----------+---------+
+| #  | Property No.         | Item Description          | Serial No.   | PAR / ICS No.    | Category  | Status  |
++----+----------------------+---------------------------+--------------+------------------+-----------+---------+
+| 1  | SPHV-2025-08-022     | BROTHER ADS-4300N         | —            | SPHV-2025-08-022 | Scanner   | ✔ Oper. |
+| 2  | SPHV-2024-07-032     | EPSON L3250               | —            | SPHV-2024-07-032 | Printer   | ✔ Oper. |
+| 3  | 2022-05-03-0117-CMD  | HP PAVILION Desktop       | —            | 2022-05-03-0117  | Desktop   | ✔ Oper. |
+| 4  | 2022-05-03-0117-M1   | Monitor - HP              | —            | 2022-05-03-0117  | Monitor   | ✔ Oper. |
+| 5  | 2022-05-03-0117-M2   | Monitor - DELL            | —            | 2022-05-03-0117  | Monitor   | ✔ Oper. |
+| 6  | LT-LE-CMD-RJN20      | THINKBOOK N-1519          | —            | LT-LE-CMD-RJN20  | Laptop    | ✔ Oper. |
+| 7  | PMS-SPK-44           | Speaker - LOGITECH        | —            | PMS-SPK-44       | Peripheral| ✔ Oper. |
+| 8  | PMS-HP-7             | Headphones - CREATIVE     | —            | PMS-HP-7         | Peripheral| ✔ Oper. |
+| 9  | PMS-HP-18            | Headphones - JBL          | —            | PMS-HP-18        | Peripheral| ✔ Oper. |
++----+----------------------+---------------------------+--------------+------------------+-----------+---------+
+
+REMARKS / VERIFICATION NOTES:
+All 9 items scanned and accounted for in Central Office Room 302. In good working condition.
+
+=================================================================================================================
+                                        CONFORME & ACKNOWLEDGMENT RECEIPT
+Pinatutunayan ko na ang mga kagamitang nakatala sa itaas ay aktwal na nabilang, sinuri gamit ang CMMS QR code, 
+at kasalukuyang nasa aking maayos na pangangalaga at opisyal na responsibilidad alinsunod sa umiiral na mga 
+alituntunin ng pamahalaan.
+
+Verified by (Inventory Inspector):                             Conforme (Property Custodian):
+
+
+________________________________________                       ________________________________________
+JUAN DELA CRUZ                                                 LYSSA MERCADO
+Supply Officer / Inspector                                     Signature over Printed Name
+Date: __________________________________                       Date: __________________________________
++---------------------------------------------------------------------------------------------------------------+
+[ === AUTOMATIC PAGE-BREAK HERE KUNG BATCH PRINT — SUNOD NA PAHINA AGAD ANG SUSUNOD NA CUSTODIAN === ]
+```
+
+---
+
+### 8.4 Daloy ng Paggamit sa Loob ng CMMS (User Flow)
+
+```mermaid
+graph TD
+    A[Physical Count Session Screen] --> B{Pumili ng Report Type}
+    
+    B -->|Click 'Print Master Report'| C[Mode 1: Master RPCPPE Landscape]
+    C --> D[Consolidated list ng lahat ng 184 assets]
+    D --> E[Pirpirmahan nina Supply Officer & CAO para sa COA]
+    
+    B -->|Click 'Print by Custodian'| F[Mode 2A: Batch Custodian Sheets]
+    F --> G[Lahat ng empleyado sunod-sunod na may page-break kada tao]
+    G --> H[Ipamamahagi sa bawat empleyado para sa Conforme]
+    
+    B -->|Click 'Print Sheet' icon sa tabi ni Lyssa| I[Mode 2B: Single Custodian Sheet]
+    I --> J[1-Page verification sheet para lang kay Lyssa Mercado]
+    J --> K[Agad na pipirmahan ni Lyssa at Supply Officer]
+```
+
+---
+
+### 8.5 Teknikal na Plano ng Implementasyon
+
+1. **Routing & Backend Logic (`app/Actions/PhysicalCount/PrintPhysicalCountReportAction.php`)**:
+   - Tanggapin ang parameter na `user_id` kapag may `group=custodian`.
+   - Kung walang `user_id`, kukunin ang lahat ng custodians na may assigned items sa session (Batch Mode).
+   - Kung may `user_id`, kukunin lamang ang partikular na custodian na iyon (Single Mode).
+   - Eager-load ang `assignedUser`, `asset.category`, at `physicalCountItems`.
+
+2. **Template Refactoring (`resources/views/inventory/physical-count-print.blade.php`)**:
+   - Hatiin nang malinis:
+     - `@if($groupBy === 'custodian')`: Custodian Sheet layout na may `page-break-after: always;` sa bawat `.custodian-sheet-container`.
+     - `@else`: Master Inventory RPCPPE layout na tuloy-tuloy.
+   - Burahin ang lumang `.maintenance-section` (ang 20-row blank lines).
+   - Burahin ang lumang 50-person signature matrix.
+   - Magdagdag ng `@media print` rules para sa malinis na margins (0.5in), tamang font sizes (9pt-10pt), at page counters.
+
+3. **Web UI Enhancement (`resources/views/inventory/physical-count-show.blade.php`)**:
+   - Toolbar buttons:
+     - `Print Master Report` (icon: `heroicon-o-document-text`)
+     - `Print by Custodian` (icon: `heroicon-o-users`)
+   - Bawat Custodian Group Accordion Header:
+     - Magdagdag ng maliit na action button: `[ 🖨 Print Sheet ]` na may link papuntang:  
+       `route('physical-count.print', [$physicalCount->id, 'group' => 'custodian', 'user_id' => $group->user_id])` na magbubukas sa new tab (`target="_blank"`).
+
+4. **Digital Archive View (`resources/views/pdf/physical-count-report.blade.php`)**:
+   - I-align ang HTML structure nito sa Master Report para ang PDF na naka-archive sa storage kapag nag-"Complete Session" ay kasing linis din ng print view.
+
+
