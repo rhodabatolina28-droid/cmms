@@ -653,8 +653,8 @@
                 <p class="text-empty">No repair or maintenance records linked to this asset.</p>
             @else
                 <div class="downtime-summary mb-4">
-                    <strong>📉 Downtime (ICT/Repair): {{ $asset->formatted_downtime }}</strong>
-                    <span class="ml-6">🔧 PM Maintenance: {{ $asset->formatted_pm_downtime }}</span>
+                    <strong>Downtime (ICT/Repair): {{ $asset->formatted_downtime }}</strong>
+                    <span style="margin-left: 18px;">PM Maintenance: {{ $asset->formatted_pm_downtime }}</span>
                 </div>
                 @foreach($repairHistory as $req)
                 @php
