@@ -676,9 +676,9 @@
                     <div class="timeline-dot {{ $dotClass }}"></div>
                     <div class="timeline-content">
                         <div class="tl-header">
-                            <div>
+                            <div style="display: flex; align-items: center; flex-wrap: wrap; gap: 8px;">
                                 <span class="tl-req-num">{{ $req->display_number ?? $req->request_number }}</span>
-                                <span class="tl-type ml-6">{{ $req->type }}</span>
+                                <span class="tl-type">{{ $req->type }}</span>
                                 <span class="status-badge {{ $statusClass }}">{{ $req->status }}</span>
                             </div>
                             <span class="tl-date">{{ $req->created_at->format('M d, Y') }}</span>
