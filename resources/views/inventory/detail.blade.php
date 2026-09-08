@@ -652,7 +652,7 @@
             @if($repairHistory->isEmpty())
                 <p class="text-empty">No repair or maintenance records linked to this asset.</p>
             @else
-                <div class="downtime-summary mb-4">
+                <div class="downtime-summary" style="margin-bottom: 14px;">
                     <strong>Downtime (ICT/Repair): {{ $asset->formatted_downtime }}</strong>
                     <span style="margin-left: 18px;">PM Maintenance: {{ $asset->formatted_pm_downtime }}</span>
                 </div>
