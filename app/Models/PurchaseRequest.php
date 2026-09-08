@@ -62,6 +62,7 @@ class PurchaseRequest extends Model
         'delivered_by',
         'delivered_at',
         'archive_pdf_path',
+        'pr_form_pdf_path',
     ];
 
     protected $casts = [
@@ -158,6 +159,18 @@ class PurchaseRequest extends Model
         // is read-only display). Post-commit (DB::afterCommit) so DomPDF never
         // runs inside the transaction / holds row locks. One archive per PR.
         static::updated(function (PurchaseRequest $pr) {
+            if ($pr->wasChanged('status')
+                && ! $pr->pr_form_pdf_path
+                && $pr->status === self::STATUS_FINALIZED) {
+                \Illuminate\Support\Facades\DB::afterCommit(function () use ($pr) {
+                    try {
+                        \App\Actions\PurchaseRequest\ArchivePrFormPdfAction::generate($pr->fresh());
+                    } catch (\Throwable $e) {
+                        \Illuminate\Support\Facades\Log::warning('PR form archive failed for ' . ($pr->pr_number ?? $pr->id) . ': ' . $e->getMessage());
+                    }
+                });
+            }
+
             if ($pr->wasChanged('status')
                 && $pr->status === self::STATUS_DELIVERED
                 && ! $pr->archive_pdf_path) {
