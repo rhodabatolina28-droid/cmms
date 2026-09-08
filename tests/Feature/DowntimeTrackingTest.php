@@ -191,4 +191,85 @@ class DowntimeTrackingTest extends TestCase
         $this->assertSame(0, (int) $asset->total_downtime);
         $this->assertSame(0, (int) $asset->total_pm_downtime);
     }
+
+    public function test_cancelled_ongoing_ict_ticket_closes_window_and_credits_asset(): void
+    {
+        // X3 (G1): previously only Completed closed the window — a Cancelled
+        // Ongoing ticket left an open window (145h "open" on live data).
+        $requestor = $this->user();
+        $asset = $this->asset($requestor);
+        $ticket = $this->ticket($requestor, ['linked_asset_id' => $asset->asset_id]);
+
+        $ticket->update(['status' => 'Ongoing']);
+        $this->backdateWindow($ticket, 60);
+        $ticket->update(['status' => 'Cancelled']);
+
+        $ticket->refresh();
+        $asset->refresh();
+        $this->assertNotNull($ticket->downtime_end, 'Cancelled must close the downtime window');
+        $this->assertGreaterThanOrEqual(60, $ticket->downtime_duration);
+        $this->assertGreaterThanOrEqual(60, (int) $asset->total_downtime);
+        $this->assertSame(0, (int) $asset->total_pm_downtime);
+        $this->assertFalse($ticket->is_downtime, 'Closed window must not report is_downtime');
+    }
+
+    public function test_rejected_and_referred_external_tickets_close_the_window(): void
+    {
+        $requestor = $this->user();
+
+        $assetRejected = $this->asset($requestor);
+        $rejected = $this->ticket($requestor, ['linked_asset_id' => $assetRejected->asset_id]);
+        $rejected->update(['status' => 'Ongoing']);
+        $this->backdateWindow($rejected, 15);
+        $rejected->update(['status' => 'Rejected']);
+        $rejected->refresh();
+        $assetRejected->refresh();
+        $this->assertNotNull($rejected->downtime_end);
+        $this->assertGreaterThanOrEqual(15, (int) $assetRejected->total_downtime);
+
+        $assetReferred = $this->asset($requestor);
+        $referred = $this->ticket($requestor, ['linked_asset_id' => $assetReferred->asset_id]);
+        $referred->update(['status' => 'Ongoing']);
+        $this->backdateWindow($referred, 25);
+        $referred->update(['status' => 'Referred - External']);
+        $referred->refresh();
+        $assetReferred->refresh();
+        $this->assertNotNull($referred->downtime_end);
+        $this->assertGreaterThanOrEqual(25, (int) $assetReferred->total_downtime);
+    }
+
+    public function test_cancelled_pm_ticket_credits_pm_bucket(): void
+    {
+        // Credit follows the ticket TYPE, not the terminal status.
+        $requestor = $this->user();
+        $asset = $this->asset($requestor);
+        $ticket = $this->ticket($requestor, [
+            'linked_asset_id' => $asset->asset_id,
+            'type' => 'Preventive Maintenance',
+        ]);
+
+        $ticket->update(['status' => 'Ongoing']);
+        $this->backdateWindow($ticket, 40);
+        $ticket->update(['status' => 'Cancelled']);
+
+        $asset->refresh();
+        $this->assertGreaterThanOrEqual(40, (int) $asset->total_pm_downtime);
+        $this->assertSame(0, (int) $asset->total_downtime);
+    }
+
+    public function test_awaiting_parts_keeps_window_open_and_reports_is_downtime(): void
+    {
+        // X3 (G3): the asset is still down while awaiting parts — is_downtime
+        // must not depend on status === 'Ongoing'.
+        $requestor = $this->user();
+        $asset = $this->asset($requestor);
+        $ticket = $this->ticket($requestor, ['linked_asset_id' => $asset->asset_id]);
+
+        $ticket->update(['status' => 'Ongoing']);
+        $ticket->update(['status' => 'Awaiting Parts']);
+
+        $ticket->refresh();
+        $this->assertNull($ticket->downtime_end, 'Awaiting Parts must keep the window open');
+        $this->assertTrue($ticket->is_downtime, 'Window open = asset is down, even while Awaiting Parts');
+    }
 }

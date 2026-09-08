@@ -133,7 +133,11 @@ class Request extends Model
 
     public function getIsDowntimeAttribute(): bool
     {
-        return $this->status === 'Ongoing' && $this->downtime_start !== null;
+        // X3 (G3): an OPEN window means the asset is still down — regardless of
+        // the current status. Awaiting Parts / Awaiting Signature / Referred -
+        // External all leave the asset unavailable, so keying on 'Ongoing' alone
+        // hid the "currently down" indicator for those states.
+        return $this->downtime_start !== null && $this->downtime_end === null;
     }
 
     // Relationships
@@ -317,8 +321,17 @@ class Request extends Model
                     // which via increment() DECREMENTED asset totals (live data:
                     // DELL XPS8940 = -17,303 min). Calling it as
                     // $start->diffInMinutes(now()) + abs() is version-proof.
+                    // X3 (G1): terminal statuses CLOSE the window too — the asset was
+                    // genuinely down until the ticket left the active flow. Credit
+                    // still follows the ticket type (see the loop below).
                     $downtimeDuration = null;
-                    if ($newStatus === self::STATUS_COMPLETED
+                    $closesWindow = in_array($newStatus, [
+                        self::STATUS_COMPLETED,
+                        self::STATUS_CANCELLED,
+                        self::STATUS_REJECTED,
+                        self::STATUS_REFERRED_EXTERNAL,
+                    ], true);
+                    if ($closesWindow
                         && $request->downtime_start
                         && !$request->downtime_end) {
                         $downtimeDuration = (int) abs($request->downtime_start->diffInMinutes(now()));
