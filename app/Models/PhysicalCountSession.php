@@ -13,6 +13,7 @@ class PhysicalCountSession extends Model
         'status',
         'scope_region',
         'scope_branch',
+        'report_pdf_path',
     ];
 
     protected $casts = [
