@@ -10,6 +10,8 @@ class User extends Authenticatable
 {
     use HasFactory, Notifiable;
 
+    protected $appends = ['is_high_official'];
+
     protected $fillable = [
         'full_name',
         'email',

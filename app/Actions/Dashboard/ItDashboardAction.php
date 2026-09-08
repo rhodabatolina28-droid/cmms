@@ -43,9 +43,12 @@ class ItDashboardAction
         ];
 
         // Show ALL assigned tickets including Scheduled PMs
+        // D4b: officials-first lead CASE (⚡ High Official rule) — officials jump
+        // to the top regardless of age, then the status flow for regular tickets.
         $requests = (clone $assignedQuery)
             ->with(['user', 'repairRequest', 'maintenanceRequest', 'requisitions'])
             ->whereNotIn('status', [RequestModel::STATUS_COMPLETED, RequestModel::STATUS_CANCELLED])
+            ->officialsFirst()
             ->orderByRaw("CASE
                 WHEN status = ? THEN 0
                 WHEN status = 'Scheduled' THEN 1

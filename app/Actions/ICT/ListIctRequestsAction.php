@@ -27,8 +27,9 @@ class ListIctRequestsAction
             }
             return view('requests.index', compact('requests'));
         } elseif ($user->role === 'it') {
+            // D4b: officials-first queue — official tickets jump to the top.
             $query->where('type', 'ICT')->where('assigned_to', $user->id);
-            $requests = $query->orderBy('created_at', 'desc')->paginate(20);
+            $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
             }
@@ -43,7 +44,7 @@ class ListIctRequestsAction
                         $q->where('office', $user->office);
                     }
                 });
-                $requests = $query->orderBy('created_at', 'desc')->paginate(20);
+                $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
                 if ($request->wantsJson() || $request->expectsJson()) {
                     return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
                 }
@@ -56,6 +57,7 @@ class ListIctRequestsAction
                             $q->where('branch', $user->branch);
                         }
                     })
+                    ->officialsFirst()
                     ->orderBy('created_at', 'desc')
                     ->paginate(20);
                 if ($request->wantsJson() || $request->expectsJson()) {
@@ -65,7 +67,7 @@ class ListIctRequestsAction
             }
         }
 
-        $requests = $query->orderBy('created_at', 'desc')->paginate(20);
+        $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
         if ($request->wantsJson() || $request->expectsJson()) {
             return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
         }

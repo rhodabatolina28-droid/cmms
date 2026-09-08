@@ -351,6 +351,9 @@
                             </a>
                             <div class="job-meta">
                                 {{ $job->requestor_name }}
+                                @if($job->user?->is_high_official)
+                                    <span style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</span>
+                                @endif
                             </div>
                             <div class="job-status-mt">
                                 <span class="status-pill {{ $pillClass($job->status) }}">{{ $job->status }}</span>

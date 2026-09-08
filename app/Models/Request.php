@@ -207,6 +207,36 @@ class Request extends Model
         return $query->where('user_id', $userId);
     }
 
+    /**
+     * D4b — High-Official queue-jump lead ordering.
+     * Officials (requester's position matches config/priority.php keywords) sort
+     * FIRST, then everything else in whatever order follows. LEFT JOIN only —
+     * one users row per request, so no row duplication; select(requests.*) keeps
+     * the joined columns from clobbering the request attributes.
+     */
+    public function scopeOfficialsFirst($query)
+    {
+        $keywords = config('priority.high_official_keywords', []);
+        if (empty($keywords)) {
+            return $query;
+        }
+
+        $bindings = [];
+        $conditions = [];
+        foreach ($keywords as $keyword) {
+            $conditions[] = 'LOWER(official_users.position) LIKE ?';
+            $bindings[] = '%' . strtolower($keyword) . '%';
+        }
+
+        return $query
+            ->leftJoin('users as official_users', 'requests.user_id', '=', 'official_users.id')
+            ->select('requests.*')
+            ->orderByRaw(
+                'CASE WHEN official_users.id IS NOT NULL AND (' . implode(' OR ', $conditions) . ') THEN 0 ELSE 1 END',
+                $bindings
+            );
+    }
+
     // Helpers
     public function isPending()
     {
