@@ -1,8 +1,8 @@
 # Asset Downtime Tracking — Implementation & Overhaul Plan
 
-> **Status:** v1 implemented but **BROKEN** (Carbon 3 sign bug — all recorded durations ≤ 0).
-> **Overhaul approved (Sept 2026):** X1 math fix + PM/ICT split → X2 data cleanup → X3 gap closure → X4 display.
-> **Locked decisions:** PM downtime counts toward the combined total AND gets its own bucket. Bundled PM credits ALL of the user's assets.
+> **Status: ✅ COMPLETE (Sept 8, 2026).** All four phases shipped test-first:
+> `2a588e6` X1 (sign fix + bundled-PM loop fix + PM/ICT split) → `4c10a01` X3 (terminal-status window close + is_downtime) → `77537aa`/`8817c5c` X2 (`downtime:repair` cleanup — live data verified: 0 negative durations, 0 negative asset totals, DELL XPS8940 -17,303 → +17,535 ICT) → X4 (asset-profile ICT/PM breakdown line).
+> **Locked decisions (Gov-Option-B, FINAL):** `total_downtime` = ICT/repair breakdown ONLY (SIRA); `total_pm_downtime` = PM servicing ONLY (Servicio — scheduled, NOT failure downtime; does NOT inflate the failure total). Bundled PM credits ALL of the user's assets. Credit follows ticket TYPE, not terminal status.
 
 ---
 
