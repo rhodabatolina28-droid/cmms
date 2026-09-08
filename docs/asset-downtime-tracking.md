@@ -178,11 +178,16 @@ php artisan downtime:repair
 ## 5. Out of Scope (future phases — do NOT mix into X1-X4)
 - **D2 Ticket Aging** — unified age accessor + buckets (🟢 0-24h · 🟡 1-3d · 🟠 3-7d · 🔴 7d+) to replace
   the hardcoded 7-day Overdue rule in PM Tasks
+  - **target:** `ListPmTasksAction.php:54` `'overdue' => ... diffInDays(now()) > 7` — papalitin ng
+    bucket-based aging para mas actionable
 - **D3 SLA-lite** — priority (P1-P4) usage, response/resolution targets, breach badges, MTTR/MTBF,
   availability %; requires aging (D2) and accurate downtime (this doc) first
 - Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
 
 ### D4 — High-Official Immediate Priority (ICT) — ✅ COMPLETE (D4a + D4c + D4b done · D4d backfill: user data entry)
+
+**Note:** D5 (Private disk), D6 (Auto-archive PDFs), D7 (PR/Count archives) — **✅ TAPOS NA** na (Sept 7-8,
+commits nasa D5.8/D6.6/D7.9 execution logs sa ibaba). Ang natitirang feature work: **D2 → D3**.
 
 **Rule:** kapag nag-file ng ICT request ang high official (Director, ED, OIC), ang ticket niya ay
 **una sa IT queue** kahit huli siyang nagpasa — "immediate" ang treatment.
