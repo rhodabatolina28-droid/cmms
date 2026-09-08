@@ -182,7 +182,7 @@ php artisan downtime:repair
   availability %; requires aging (D2) and accurate downtime (this doc) first
 - Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
 
-### D4 — High-Official Immediate Priority (ICT) — D4a ✅ + D4c ✅ DONE · D4b ⏳ PENDING
+### D4 — High-Official Immediate Priority (ICT) — ✅ COMPLETE (D4a + D4c + D4b done · D4d backfill: user data entry)
 
 **Rule:** kapag nag-file ng ICT request ang high official (Director, ED, OIC), ang ticket niya ay
 **una sa IT queue** kahit huli siyang nagpasa — "immediate" ang treatment.
@@ -214,19 +214,18 @@ users.position (EXISTING column) → keyword match (case-insensitive) → HIGH O
 `getIsHighOfficialAttribute()` (str_contains-based, null-safe) + bonus `scopeHighOfficials()`
 para sa D4b queue-jump query. Tests: `HighOfficialTest` — 12 official titles ✓, 6 regular/empty ✓.
 
-#### D4.4 Queue-jump — saan ipapasok (verified sites)
-| Site | Kasalukuyang ordering | D4 change |
-|---|---|---|
-| `ItDashboardAction` L46-61 (IT dashboard widget) | orderByRaw CASE by status → updated_at desc, limit 6 | **Officials-first**: dagdag na lead CASE (may LEFT JOIN sa users): `official → 0, iba → 1` bago ang status CASE |
-| `ListIctRequestsAction` (ICT requests list, paginate 20) | orderBy created_at desc (6 variants) | Parehong officials-first lead ordering, para consistent sa lahat ng list views |
+#### D4.4 Queue-jump — ✅ DONE (commit pending D4b)
+**implemented:** `Request::scopeOfficialsFirst()` — LEFT JOIN sa users + lead CASE
+(official → 0, regular → 1) gamit ang keywords mula sa config; `select(requests.*)` para
+hindi ma-clobber ang attributes. Naka-apply sa:
+- `ItDashboardAction` — assigned widget (bago ang status CASE ordering)
+- `ListIctRequestsAction` — lahat ng role branches (it/admin/super_admin/fallback)
 
-**Ordering rule (locked):** Officials muna (newest first), tapos ang lahat ng regular tickets
-ng may status CASE flow. Hindi hinahayaan ang Ongoing na regular na mawala sa flow — pero ang
-bagong official ticket ang lalabas sa pinaka-taas ng queue.
-
-#### D4.5 UI badge
-⚡ **High Official** chip (amber) sa ticket card/row ng IT queue at ICT lists — kita agad kung bakit
-nasa taas ang ticket.
+#### D4.5 UI badge — ✅ DONE (red URGENT chip, user-approved design)
+Text na **"URGENT"** (uppercase, 10px bold, letter-spacing) sa soft-red chip
+(`#fef2f2` bg · `#b91c1c` text · `#fecaca` border) — walang icon, walang dot.
+Naka-apply sa 4 na views: IT Dashboard widget · ICT list (requests/index) ·
+Division Admin list (admin/requests) · SuperAdmin list (JS-driven).
 
 #### D4.6 🚨 Guardrail 2 — self-service position editing — ✅ DONE (commit 202197e)
 Position field sa self-service Profile ay **read-only** (disabled input) at **hindi na kinukuha**
@@ -257,7 +256,7 @@ sa User Management gamit ang bagong dropdown.
 |---|---|---|
 | **D4a** | `config/priority.php` + `is_high_official` accessor + position read-only sa Profile | ✅ commit 202197e — `HighOfficialTest` 4/4 |
 | **D4c** | Position dropdown sa Create/Edit System Account (cascade + None/Other fallback + prefill) | ✅ commit d23d37c — `PositionDropdownTest` 5/5 |
-| **D4b** | Queue-jump ordering sa ItDashboardAction + ListIctRequestsAction + ⚡ badge | ⏳ NEXT — gate: official ticket lumalabas sa taas ng regular queue |
+| **D4b** | Queue-jump ordering (ItDashboardAction + ListIctRequestsAction) + red URGENT badge sa 4 views | ✅ commit 99e0e65 — `HighOfficialQueueTest` 3/3 + 28 regression green |
 | **D4d** | Backfill ng positions (manual, gamit ang D4c dropdowns) | ⏳ user data entry — gate: `Officials total` > 0 sa live tinker check |
 
 ---
