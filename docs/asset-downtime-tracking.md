@@ -571,9 +571,6 @@ Count session → completed
    → physical_counts.report_pdf_path (bagong nullable column)
 ```
 
-### D7c (opsyonal — pag-aprobahan pa) — finalized PR form archive sa `finalized`
-Mababang priority: ang kritikal na record ay ang Delivery Confirmation (may serials + pirma na).
-
 ### D7 mga yugto (test-first, isang commit kada phase)
 | Phase | Saklaw | Gate |
 |---|---|---|
@@ -581,6 +578,50 @@ Mababang priority: ang kritikal na record ay ang Delivery Confirmation (may seri
 | **D7a-2** | Backfill command + i-run sa 10 delivered PRs | Tinker: 0 delivered na walang archive |
 | **D7b-1** | Migration (`physical_counts.report_pdf_path`) + report blade + archive action | Test: completed session → PDF sa tamang year folder |
 | **D7b-2** | Backfill command + i-run | Tinker: 0 completed sessions na walang archive |
+
+### D7.9 EXECUTION LOG — ✅ D7a + D7b tapos na (commit `34442e7`, Sept 8 2026)
+
+| Component | File | Detalye |
+|---|---|---|
+| **PR archive action** | `app/Actions/PurchaseRequest/ArchiveDeliveryConfirmationPdfAction.php` | Renders the EXISTING `pdf.delivery-confirmation` blade (per-piece serial/property numbers); `pr-pdfs/{year}/{Month}/{pr_number}.pdf`; month from `delivered_at` (record-date rule); idempotent |
+| **PR trigger** | `PurchaseRequest::booted()` | `status` → `delivered` (wasChanged guard + `!archive_pdf_path`) → `DB::afterCommit` → try/catch `Log::warning`. Legacy `received` status HINDI na-archive |
+| **PR backfill** | `php artisan prs:generate-archive-pdfs` | `--force` option; **10/10 archived, 0 failed, 0 missing** |
+| **Count report action** | `app/Actions/PhysicalCount/ArchiveCountReportAction.php` | NEW `pdf/physical-count-report` blade (custodian-grouped, Present/Missing/Damaged/Not counted, summary tota). `count-pdfs/{year}/COUNT-{id}.pdf` — **YEARLY** folders (annual inventory); year from `completed_at` |
+| **Count trigger** | `CompletePhysicalCountAction` | afterCommit + try/catch `Log::warning`; **instance method** (trait `BuildsCustodianGroups`) |
+| **Count backfill** | `php artisan counts:generate-archive-pdfs` | **5/5 archived** (sessions 1-5), 0 missing |
+| **Tests** | `PrDeliveryArchiveTest.php` (3) + `CountReportArchiveTest.php` (3) | Lahat PASS; regressions: 48 PR + 12 PhysicalCount PASS |
+
+**Storage (verified live):**
+```
+storage/app/private/
+├── pr-pdfs/2026/August/PR-2026-0001.pdf ...  (10 files, month = delivered_at)
+├── count-pdfs/2026/COUNT-1.pdf ...          (5 files, year = completed_at)
+```
+
+### D7c — ✅ EXECUTED & COMMITTED (Sept 8 2026, `4e9fc2c`)
+
+**Feedback: REUSE ang existing PR print design** (hindi gumawa ng bagong design). Ang DomPDF
+`pdf.pr-form` blade ay **eksaktong mirror ng `.prd-sheet` PRINT version** ng
+`show.blade.php` (ang `@media print` styles: walang outer card border/radius/padding — plain
+A4 sheet), kasama ang markup na `.prd-title`, `.a60-hdr` field grid (Entity Name / Fund Cluster /
+Office / PR No. / Date / RCC), `.prd-table` item grid na may blank padding rows + TOTAL row,
+`.prd-purpose`, at `.prd-signs` (Requested/Approved signature table, side-by-side).
+
+| Component | File | Detalye |
+|---|---|---|
+| **DB column** | `2026_09_08_000003_add_pr_form_pdf_path_to_purchase_requests.php` | `purchase_requests.pr_form_pdf_path` — HIWALAY sa `archive_pdf_path` (isang PR = DALAWANG documents: ang PR form sa `finalized`, ang Delivery Confirmation sa `delivered`) |
+| **PDF blade** | `resources/views/pdf/pr-form.blade.php` | DomPDF reuse ng existing `.prd-sheet` print design (walang outer card box — plain A4) |
+| **Archive action** | `app/Actions/PurchaseRequest/ArchivePrFormPdfAction.php` | Renders `pdf.pr-form` → `pr-forms/{year}/{Month}/{pr_number}.pdf` (private disk); month from `finalized_at` (record-date rule); idempotent; accepted statuses = `finalized` AT `delivered` (backfill-friendly) |
+| **Trigger** | `PurchaseRequest::booted()` (second guard) | `status` → `finalized` → afterCommit → try/catch `Log::warning`. Hindi nag-sagal sa D7a delivery archive (hiwalay columns + guards) |
+| **Backfill** | `php artisan prs:generate-archive-form-pdfs` | **13/13 archived, 0 failed** (may bagong delivered PR 2026-0013); `pr-forms/2026/August/...` + `September/...` |
+| **Tests** | `PrFormArchiveTest.php` (3) | Lahat PASS: finalized→correct folder, submitted→null, idempotent; **48 PR regression PASS** |
+
+**Storage (verified live):**
+```
+storage/app/private/
+├── pr-pdfs/2026/{August,September}/PR-*.pdf      ← D7a Delivery Confirmation (11)
+└── pr-forms/2026/{August,September}/PR-*.pdf     ← D7c PR Form mismo (13)
+```
 
 ---
 
