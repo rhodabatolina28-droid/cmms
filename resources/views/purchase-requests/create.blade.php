@@ -237,27 +237,23 @@
         }
         table.a60-hdr td.a60-cell-pr {
             display: block !important;
-            width: 50% !important;
-            flex: 0 0 50% !important;
-            max-width: 50% !important;
-            border-top: 0 !important;
-            border-left: 0 !important;
-            border-right: 1px solid #cbd5e1 !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            padding: 7px 10px !important;
+            flex: 0 0 35% !important;
+            max-width: 35% !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            margin: 3px 2px !important;
+            padding: 6px 8px !important;
             box-sizing: border-box !important;
             background: #fff !important;
         }
         table.a60-hdr td.a60-cell-date {
             display: block !important;
-            width: 50% !important;
-            flex: 0 0 50% !important;
-            max-width: 50% !important;
-            border-top: 0 !important;
-            border-left: 0 !important;
-            border-right: 0 !important;
-            border-bottom: 1px solid #cbd5e1 !important;
-            padding: 7px 10px !important;
+            flex: 0 0 calc(65% - 8px) !important;
+            max-width: calc(65% - 8px) !important;
+            border: 1px solid #cbd5e1 !important;
+            border-radius: 7px !important;
+            margin: 3px 2px !important;
+            padding: 6px 10px !important;
             box-sizing: border-box !important;
             background: #fff !important;
         }
@@ -280,12 +276,19 @@
             overflow: visible !important;
             line-height: 1.3 !important;
         }
-        .a60-cell-pr .a60-field-val,
+        .a60-cell-pr .a60-field-val {
+            font-size: 11px !important;
+            white-space: normal !important;
+            word-break: break-word !important;
+            overflow-wrap: anywhere !important;
+            overflow: visible !important;
+            line-height: 1.25 !important;
+        }
         .a60-cell-date .a60-field-val {
-            font-size: 12px !important;
+            font-size: 11.5px !important;
             white-space: nowrap !important;
-            overflow: hidden !important;
-            text-overflow: ellipsis !important;
+            overflow: visible !important;
+            line-height: 1.25 !important;
         }
         .a60-line {
             background: #f8fafc !important;
@@ -307,7 +310,7 @@
             box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.12) !important;
         }
 
-        /* Items Table — strictly confined so it never pushes the page to the right */
+        /* Items Table — strictly confined with smooth scroll so it never pushes page */
         .prf-scroll {
             width: 100% !important;
             max-width: 100% !important;
@@ -322,9 +325,10 @@
             display: block !important;
         }
         .a60-table {
-            min-width: 620px !important;
+            min-width: 780px !important;
+            width: 780px !important;
+            table-layout: fixed !important;
             border-collapse: collapse !important;
-            width: 100% !important;
         }
         .a60-table th {
             background: #f8fafc !important;
@@ -335,54 +339,127 @@
             letter-spacing: .03em !important;
             color: #475569 !important;
             border: 1px solid #e2e8f0 !important;
+            white-space: nowrap !important;
         }
         .a60-table td {
             padding: 8px 6px !important;
             border: 1px solid #e2e8f0 !important;
             vertical-align: middle !important;
         }
-        .a60-table .cell-input {
-            background: #f8fafc !important;
-            border: 1px solid #cbd5e1 !important;
-            border-radius: 6px !important;
-            padding: 7px 8px !important;
-            font-size: 13px !important;
-            min-height: 38px !important;
+        /* Strict column width definitions — guarantees columns never squeeze or collide */
+        .a60-table th:nth-child(1),
+        .a60-table td:nth-child(1) {
+            width: 85px !important;
+            min-width: 85px !important;
+            max-width: 85px !important;
             box-sizing: border-box !important;
-            font-family: inherit !important;
-            font-weight: 600 !important;
-            color: #1e293b !important;
         }
-        .a60-table .cell-input:focus {
-            background: #fff !important;
-            border-color: #0038A8 !important;
-            box-shadow: 0 0 0 2px rgba(0, 56, 168, 0.15) !important;
+        .a60-table th:nth-child(2),
+        .a60-table td:nth-child(2) {
+            width: 70px !important;
+            min-width: 70px !important;
+            max-width: 70px !important;
+            box-sizing: border-box !important;
         }
+        .a60-table th:nth-child(3),
+        .a60-table td:nth-child(3) {
+            width: 255px !important;
+            min-width: 255px !important;
+            max-width: 255px !important;
+            box-sizing: border-box !important;
+        }
+        .a60-table th:nth-child(4),
+        .a60-table td:nth-child(4) {
+            width: 75px !important;
+            min-width: 75px !important;
+            max-width: 75px !important;
+            box-sizing: border-box !important;
+        }
+        /* Cost columns — dedicated locked widths so Unit Cost and Total Cost never collide */
+        .a60-table th:nth-child(5),
+        .a60-table td:nth-child(5) {
+            width: 130px !important;
+            min-width: 130px !important;
+            max-width: 130px !important;
+            padding: 6px 8px !important;
+            box-sizing: border-box !important;
+        }
+        .a60-table td:nth-child(5) .cell-input {
+            width: 100% !important;
+            min-width: 0 !important;
+            text-align: right !important;
+            box-sizing: border-box !important;
+        }
+        /* Total Cost column — dedicated right padding keeps currency clear of the remove button */
+        .a60-table th:nth-child(6),
+        .a60-table td:nth-child(6) {
+            width: 165px !important;
+            min-width: 165px !important;
+            max-width: 165px !important;
+            padding: 6px 44px 6px 10px !important;
+            text-align: right !important;
+            position: relative !important;
+            white-space: nowrap !important;
+            box-sizing: border-box !important;
+        }
+        .a60-table td.pr-amount {
+            display: table-cell !important;
+            position: relative !important;
+            text-align: right !important;
+            white-space: nowrap !important;
+            padding-right: 44px !important;
+            vertical-align: middle !important;
+        }
+        .pr-amount-text {
+            display: inline-block !important;
+            font-weight: 700 !important;
+            font-size: 13px !important;
+            color: #0f172a !important;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+        }
+        .a60-table tfoot .total-val {
+            padding: 8px 14px !important;
+            white-space: nowrap !important;
+            text-align: right !important;
+        }
+        /* Remove button inside Total Cost cell on mobile — high specificity overrides global button styles */
+        tr.pr-item-row button.pr-x:not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny),
+        .a60-table td.pr-amount button.pr-x:not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny),
         tr.pr-item-row .pr-x {
-            opacity: 1 !important;
-            position: static !important;
-            transform: none !important;
-            margin-left: 6px !important;
             display: inline-flex !important;
             align-items: center !important;
             justify-content: center !important;
-            width: 28px !important;
-            height: 28px !important;
+            position: absolute !important;
+            right: 8px !important;
+            top: 50% !important;
+            transform: translateY(-50%) !important;
+            width: 26px !important;
+            height: 26px !important;
+            min-width: 26px !important;
+            max-width: 26px !important;
+            min-height: 26px !important;
+            max-height: 26px !important;
+            padding: 0 !important;
+            margin: 0 !important;
             border-radius: 6px !important;
             background: #fee2e2 !important;
             color: #b91c1c !important;
-            border: none !important;
+            border: 1px solid #fecaca !important;
             cursor: pointer !important;
-            font-size: 14px !important;
+            font-size: 16px !important;
             font-weight: 800 !important;
-            flex-shrink: 0 !important;
+            line-height: 1 !important;
+            opacity: 1 !important;
+            z-index: 10 !important;
+            box-sizing: border-box !important;
+            -webkit-tap-highlight-color: transparent !important;
         }
-        .pr-amount {
-            display: flex !important;
-            align-items: center !important;
-            justify-content: flex-end !important;
-            gap: 6px !important;
-            min-height: 38px !important;
+        tr.pr-item-row button.pr-x:active {
+            background: #dc2626 !important;
+            color: #fff !important;
+            border-color: #dc2626 !important;
+            transform: translateY(-50%) scale(0.92) !important;
         }
         .cmms-pr-add-row {
             width: 100% !important;

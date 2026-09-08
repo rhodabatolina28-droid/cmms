@@ -1,4 +1,4 @@
-﻿@extends('layouts.app')
+@extends('layouts.app')
 
 @section('title', 'Purchase Request '.$purchaseRequest->pr_number)
 @section('page-title', 'Purchase Request')
@@ -229,23 +229,23 @@
         }
         table.a60-hdr td.a60-cell-pr {
             display:block !important;
-            flex:0 0 calc(50% - 5px) !important;
-            max-width:calc(50% - 5px) !important;
+            flex:0 0 35% !important;
+            max-width:35% !important;
             border:1px solid #cbd5e1 !important;
             border-radius:7px !important;
             margin:3px 2px !important;
-            padding:7px 10px !important;
+            padding:6px 8px !important;
             box-sizing:border-box !important;
             background:#fff !important;
         }
         table.a60-hdr td.a60-cell-date {
             display:block !important;
-            flex:0 0 calc(50% - 5px) !important;
-            max-width:calc(50% - 5px) !important;
+            flex:0 0 calc(65% - 8px) !important;
+            max-width:calc(65% - 8px) !important;
             border:1px solid #cbd5e1 !important;
             border-radius:7px !important;
             margin:3px 2px !important;
-            padding:7px 10px !important;
+            padding:6px 10px !important;
             box-sizing:border-box !important;
             background:#fff !important;
         }
@@ -260,11 +260,17 @@
             overflow:visible !important;
             line-height:1.3 !important;
         }
-        .a60-cell-pr .a60-field-val,
-        .a60-cell-date .a60-field-val {
-            font-size:10.5px !important;
+        .a60-cell-pr .a60-field-val {
+            font-size:11px !important;
             white-space:normal !important;
-            word-break:break-all !important;
+            word-break:break-word !important;
+            overflow-wrap:anywhere !important;
+            overflow:visible !important;
+            line-height:1.25 !important;
+        }
+        .a60-cell-date .a60-field-val {
+            font-size:11.5px !important;
+            white-space:nowrap !important;
             overflow:visible !important;
             line-height:1.25 !important;
         }
