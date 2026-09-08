@@ -79,7 +79,7 @@
         $intChk = function($label, $field, $value) use ($check) {
             return '<span class="lb">' . $label . '</span> <span class="cb ' . $check($field) . '"></span> ' . $value;
         };
-        function pmSigImg($path) {
+        $pmSigImg = function ($path) {
             if (!$path) return '';
             $full = storage_path('app/private/' . $path);
             $real = realpath($full);
@@ -125,7 +125,7 @@
                         <td class="s16">
                             <div class="s17">SIGNATURE:</div>
                             <div class="s18">
-                                @if(!empty($pm->technician_signature)) {!! pmSigImg($pm->technician_signature) !!} @endif
+                                @if(!empty($pm->technician_signature)) {!! $pmSigImg($pm->technician_signature) !!} @endif
                             </div>
                         </td>
                         <td class="s19">
@@ -177,7 +177,7 @@
                         <td class="s16">
                             <div class="s17">SIGNATURE OVER PRINTED NAME:</div>
                             <div class="s30">
-                                @if(!empty($pm->end_user_signature)) {!! pmSigImg($pm->end_user_signature) !!} @endif
+                                @if(!empty($pm->end_user_signature)) {!! $pmSigImg($pm->end_user_signature) !!} @endif
                             </div>
                             <div class="s31">
                                 {{ $pm->end_user_printed_name ?: ($pm->end_user_name ?: ($request->requestor_name ?: ($request->assignedTo->full_name ?? ''))) }}

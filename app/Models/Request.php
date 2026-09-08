@@ -52,6 +52,7 @@ class Request extends Model
         'downtime_start',
         'downtime_end',
         'downtime_duration',
+        'archive_pdf_path',
         // Date tracking
         'assigned_at',
         'completed_at',
@@ -429,6 +430,20 @@ class Request extends Model
                             }
                         }
                     }
+                }
+                // D6: auto-archive the FINAL PDF copy when a ticket completes.
+                // Post-commit (DB::afterCommit) so DomPDF never runs inside the
+                // transaction / holds row locks. One archive per ticket (guard).
+                if ($request->wasChanged('status')
+                    && $request->status === self::STATUS_COMPLETED
+                    && !$request->archive_pdf_path) {
+                    \Illuminate\Support\Facades\DB::afterCommit(function () use ($request) {
+                        try {
+                            \App\Actions\Ticket\ArchiveTicketPdfAction::generate($request->fresh());
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::warning('Ticket archive PDF failed for ' . ($request->request_number ?? $request->id) . ': ' . $e->getMessage());
+                        }
+                    });
                 }
             }           
         });

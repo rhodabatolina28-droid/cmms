@@ -196,7 +196,7 @@
     @php
         $rr = $repairRequest;
         $types = json_decode($rr->repair_type ?? '[]', true) ?: [];
-        function sigImg($path) {
+        $sigImg = function ($path) {
             if (!$path) return '';
             $full = storage_path('app/private/' . $path);
             $real = realpath($full);
@@ -206,7 +206,7 @@
             }
             $ext = pathinfo($real, PATHINFO_EXTENSION);
             return '<img src="data:image/'.$ext.';base64,'.base64_encode(file_get_contents($real)).'" class="s1">';
-        }
+        };
     @endphp
 
     {{-- ═══════════════════════ HEADER ═══════════════════════ --}}
@@ -291,7 +291,7 @@
             </td>
             <td class="s29">
                 <div class="s30">
-                    @if(!empty($rr->end_user_signature)) {!! sigImg($rr->end_user_signature) !!} @endif
+                    @if(!empty($rr->end_user_signature)) {!! $sigImg($rr->end_user_signature) !!} @endif
                 </div>
                 <div class="sig-name">{{ $rr->end_user_printed_name ?? strtoupper($rr->end_user_first_name . ' ' . $rr->end_user_last_name) }}</div>
                 <div class="sig-line"></div>
@@ -465,7 +465,7 @@
             </td>
             <td class="s29">
                 <div class="s30">
-                    @if(!empty($rr->technician_signature)) {!! sigImg($rr->technician_signature) !!} @endif
+                    @if(!empty($rr->technician_signature)) {!! $sigImg($rr->technician_signature) !!} @endif
                 </div>
                 <div class="sig-name">{{ $rr->technician_printed_name ?? '' }}</div>
                 <div class="sig-line"></div>
@@ -513,7 +513,7 @@
             {{-- RIGHT: Signature --}}
             <td class="s79">
                 <div class="s30">
-                    @if(!empty($rr->it_personnel_signature)) {!! sigImg($rr->it_personnel_signature) !!} @endif
+                    @if(!empty($rr->it_personnel_signature)) {!! $sigImg($rr->it_personnel_signature) !!} @endif
                 </div>
                 <div class="sig-name">{{ $rr->it_personnel_printed_name ?? '' }}</div>
                 <div class="sig-line"></div>
@@ -537,7 +537,7 @@
         <tr>
             <td class="s84">
                 <div class="s30">
-                    @if(!empty($rr->end_user_acceptance_signature)) {!! sigImg($rr->end_user_acceptance_signature) !!} @endif
+                    @if(!empty($rr->end_user_acceptance_signature)) {!! $sigImg($rr->end_user_acceptance_signature) !!} @endif
                 </div>
                 <div class="sig-name">{{ $rr->end_user_acceptance_printed_name ?? '' }}</div>
                 <div class="s85"></div>
