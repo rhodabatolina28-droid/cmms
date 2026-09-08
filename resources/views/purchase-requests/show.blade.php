@@ -150,7 +150,21 @@
             display:block !important;
         }
         .prd-table {
-            min-width:620px !important;
+            min-width:680px !important;
+        }
+        /* Currency columns: sakto room para hindi mag-merge + never bleed into the next cell */
+        .prd-table th:nth-child(5), .prd-table th:nth-child(6),
+        .prd-table td:nth-child(5), .prd-table td:nth-child(6) {
+            min-width:74px !important;
+            padding:4px 5px !important;
+        }
+        .prd-table td.right {
+            white-space:nowrap !important;
+            overflow:hidden !important;
+            text-overflow:ellipsis !important;
+        }
+        .prd-table th:last-child, .prd-table td:last-child {
+            border-right:1px solid #374151 !important;
         }
         /* Header fields: Mobile Grid with PR No. and Date side-by-side */
         .a60-hdr-wrap {
@@ -211,26 +225,22 @@
         }
         table.a60-hdr td.a60-cell-pr {
             display:block !important;
-            width:50% !important;
-            flex:0 0 50% !important;
-            max-width:50% !important;
-            border-top:0 !important;
-            border-left:0 !important;
-            border-right:1px solid #cbd5e1 !important;
-            border-bottom:1px solid #cbd5e1 !important;
+            flex:0 0 calc(50% - 5px) !important;
+            max-width:calc(50% - 5px) !important;
+            border:1px solid #cbd5e1 !important;
+            border-radius:7px !important;
+            margin:3px 2px !important;
             padding:7px 10px !important;
             box-sizing:border-box !important;
             background:#fff !important;
         }
         table.a60-hdr td.a60-cell-date {
             display:block !important;
-            width:50% !important;
-            flex:0 0 50% !important;
-            max-width:50% !important;
-            border-top:0 !important;
-            border-left:0 !important;
-            border-right:0 !important;
-            border-bottom:1px solid #cbd5e1 !important;
+            flex:0 0 calc(50% - 5px) !important;
+            max-width:calc(50% - 5px) !important;
+            border:1px solid #cbd5e1 !important;
+            border-radius:7px !important;
+            margin:3px 2px !important;
             padding:7px 10px !important;
             box-sizing:border-box !important;
             background:#fff !important;
