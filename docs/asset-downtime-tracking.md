@@ -182,7 +182,7 @@ php artisan downtime:repair
   availability %; requires aging (D2) and accurate downtime (this doc) first
 - Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
 
-### D4 — High-Official Immediate Priority (ICT) — DESIGNED, awaiting execution
+### D4 — High-Official Immediate Priority (ICT) — D4a ✅ + D4c ✅ DONE · D4b ⏳ PENDING
 
 **Rule:** kapag nag-file ng ICT request ang high official (Director, ED, OIC), ang ticket niya ay
 **una sa IT queue** kahit huli siyang nagpasa — "immediate" ang treatment.
@@ -196,32 +196,23 @@ users.position (EXISTING column) → keyword match (case-insensitive) → HIGH O
 - `position` column: **54 sa 58 users ang null/empty (93%)** — 4 lang ang may laman
 - Kaya: **position backfill ang susi** — ibibigay ng user ang official list (pangalan + posisyon), i-fi-fill sa User Management
 
-#### D4.2 Keyword config (NEW `config/priority.php`)
+#### D4.2 Keyword config (`config/priority.php` — ✅ IMPLEMENTED, commit 202197e)
 ```php
-return [
-    'high_official_keywords' => [
-        'Executive Director', 'Deputy Executive Director', 'Director IV', 'Director III',
-        'OIC-Director', 'Director',   // full title phrases — HINDI generic words
-    ],
-];
+// ACTUAL (lock decision: standardized short keywords — case-insensitive substring):
+'high_official_keywords' => [
+    'executive director',   // OIC-ED IV, OIC Deputy ED IV, Deputy ED IV
+    'director ii',          // Director II, Technical / Internal Services
+    'chief',                // Chief / OIC Chief of the six divisions
+    'state auditor',        // State Auditor III (COA)
+],
 ```
-**Guardrail 1 — full-phrase matching, hindi substring:** ginagamit ang buong plantilla title
-("Director IV"), hindi malayang salita. Kaya ligtas ang "Director's Secretary" at "Programmer"
-dahil hindi sila eksaktong tugma sa listahan. Ang Super Admin ang naglilista — ang position text
-ay kontrolado, kaya finite ang mga title.
+**Guardrail 1 — full-phrase matching, hindi generic words:** "Director's Secretary" at
+"Programmer" ay ligtas (test-verified). Live-data check (Sept 2026): 4 users na may position
+(COMPUTER PROGRAMMER I, IT Manager, ADMINISTRATOR IV, ADMIN) — lahat regular, 0 false positives.
 
-#### D4.3 Helper (User model)
-```php
-public function getIsHighOfficialAttribute(): bool
-{
-    $position = mb_strtolower(trim((string) $this->position));
-    if ($position === '') return false;
-    foreach (config('priority.high_official_keywords', []) as $kw) {
-        if (mb_strpos($position, mb_strtolower($kw)) !== false) return true;
-    }
-    return false;
-}
-```
+#### D4.3 Helper (User model — ✅ IMPLEMENTED)
+`getIsHighOfficialAttribute()` (str_contains-based, null-safe) + bonus `scopeHighOfficials()`
+para sa D4b queue-jump query. Tests: `HighOfficialTest` — 12 official titles ✓, 6 regular/empty ✓.
 
 #### D4.4 Queue-jump — saan ipapasok (verified sites)
 | Site | Kasalukuyang ordering | D4 change |
@@ -237,26 +228,37 @@ bagong official ticket ang lalabas sa pinaka-taas ng queue.
 ⚡ **High Official** chip (amber) sa ticket card/row ng IT queue at ICT lists — kita agad kung bakit
 nasa taas ang ticket.
 
-#### D4.6 🚨 RISK NA NAHULI SA DEEPVIEW — self-service position editing
-Ang `ProfileController` ay **hayaan ang USER na i-edit ang SARILING position** (self-service form,
-`profile/index.blade.php` L272). Ibig sabihin: **kahit sino pwedeng mag-type ng "Director" para
-lumaktaw sa queue!**
+#### D4.6 🚨 Guardrail 2 — self-service position editing — ✅ DONE (commit 202197e)
+Position field sa self-service Profile ay **read-only** (disabled input) at **hindi na kinukuha**
+ng `ProfileController::update()`. Test-verified: user na nag-attempt mag-self-inflate
+(`Programmer I` → `OIC-Executive Director IV`) ay nanatiling `Programmer I`.
+Position ay i-e-edit **lang** sa User Management / Personnel Management.
 
-**Guardrail 2 (required bago i-rollout ang D4):** gawing **read-only** ang position field sa
-self-service Profile; ang position ay i-e-edit **lang** ng Super Admin (User Management) at
-Department Admin (Personnel Management modals — existing na). Ang self-inflation ay hindi na posible.
+#### D4.7 Position input + backfill — ✅ D4c DONE (commit d23d37c)
+Imbis na libreng listahan mula sa user, ang position ay naging **dropdown sa Create/Edit System
+Account** na may cascade: Department → Division → Position (options mula sa
+`config/priority.php::position_catalog`):
+- **Always visible:** OIC-Executive Director IV · OIC Deputy ED IV · Deputy ED IV
+- **Per Department:** Director II, Technical Services / Director II, Internal Services
+- **Per Division:** `Chief, {CODE}` + `OIC, Chief, {CODE}` (RID/CMD/VAD/WRED/AD/FMD) · `State Auditor III` (COA)
+- **"— None / Not set —"** default (hindi alam ang position = still creatable, settable anytime)
+- **"— Other / Not Listed —"** → free text para sa mga regular positions (hal. Computer Programmer I)
+  — hindi tumutugma sa keywords, kaya hindi official
+- **Edit modal prefill:** hindi nasa catalog ang stored position → auto-"Other" + pre-filled
+  (walang nawawalang data); `get_user` endpoint ngayon ay nagbabalik ng `position`
+- Bug fixed sa rollout: ang cascade filter ay tumatakbo na kahit walang nakaselect pa (ang early
+  return sana ay nag-stuck sa executive-only options)
 
-#### D4.7 Backfill plan
-1. User magbibigay ng **official list** (pangalan + eksaktong posisyon)
-2. Super Admin i-fi-fill sa User Management (54 users ang empty ngayon)
-3. Verify: tinker check — `User::whereNotNull('position')` count + isHighOfficial spot-check
+**Natitirang backfill step (manual data entry, walang code):** i-edit ang bawat official account
+sa User Management gamit ang bagong dropdown.
 
-#### D4.8 Execution phases (pagkatapos ng X1-X4; test-first)
-| Phase | Scope | Gate |
+#### D4.8 Execution phases — status
+| Phase | Scope | Status |
 |---|---|---|
-| **D4a** | `config/priority.php` + `is_high_official` accessor + position read-only sa Profile | Unit test: accessor matches "Director IV" ✓, rejects "Programmer" ✓, rejects empty ✓ |
-| **D4b** | Queue-jump ordering sa ItDashboardAction + ListIctRequestsAction + ⚡ badge | Feature test: official ticket lumalabas sa taas ng regular queue |
-| **D4c** | Backfill positions (official list ng user) | Manual verify sa queue |
+| **D4a** | `config/priority.php` + `is_high_official` accessor + position read-only sa Profile | ✅ commit 202197e — `HighOfficialTest` 4/4 |
+| **D4c** | Position dropdown sa Create/Edit System Account (cascade + None/Other fallback + prefill) | ✅ commit d23d37c — `PositionDropdownTest` 5/5 |
+| **D4b** | Queue-jump ordering sa ItDashboardAction + ListIctRequestsAction + ⚡ badge | ⏳ NEXT — gate: official ticket lumalabas sa taas ng regular queue |
+| **D4d** | Backfill ng positions (manual, gamit ang D4c dropdowns) | ⏳ user data entry — gate: `Officials total` > 0 sa live tinker check |
 
 ---
 
