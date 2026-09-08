@@ -521,6 +521,69 @@ ICT/PM ticket → technician completes → status = completed (DB transaction co
 
 ---
 
+## 5c. D7 — Huling mga Arkibo: PR Delivery Confirmation + Physical Count Report — DISENYO
+
+### D7.0 Kumpletong imbentaryo (deep scan, Sept 8 2026) — ano ang NA-SA-TABI na vs KULANG
+
+**✅ May archived PDF na (private disk):**
+| Document | Folder | Trigger |
+|---|---|---|
+| ICT ticket form | `ict-pdfs/{year}/{Month}/` | status → completed (D6) |
+| PM ticket form | `pm-pdfs/{year}/{Month}/` | status → completed (D6) |
+| REQ requisition form | `ict-pdfs/` (same flow) | status → completed (D6) |
+| CSM survey copy | `csm-copies/{year}/{Month}/` | survey submission (D5a) |
+
+**✅ Naka-store as-is (ang file mismo ang record — walang PDF na kailangan):**
+`signatures/` (D5b) · `asset-attachments/` (D5c) · `pr-attachments/` = proof of purchase (D5c) ·
+`inventory-imports/` (16 CSVs) · `parts-imports/` (92 CSVs) — lahat private, lahat nasa DB ang path.
+
+**🔴 GAP 1 — PR Delivery Confirmation: STREAM-ONLY.**
+`DownloadDeliveryConfirmationPdfAction` ay `response($pdf->output())` lang — **inist-stream sa
+browser, WALANG save sa disk**. Ito ang opisyal na receiving report (per-piece serial + property
+numbers + destinations + pirma) — permanent record sa gobyerno, pero walang nakatagong kopya.
+
+**🟡 GAP 2 — Physical Count report: on-demand lang.**
+May `printReport`/`export` pero walang permanent archive. Ang completed count session = **Annual
+Physical Inventory Report (COA document)** — dapat may archived copy sa session completion.
+
+**🟢 OK lang bilang ganito (hindi archival):** audit logs (data table), Excel exports (working
+reports), QR stickers (utility), finalized-PR-form (pre-delivery — optional follow-up lang).
+
+### D7a — PR Delivery Confirmation auto-archive (mirror ng D6)
+```
+PR → STATUS_DELIVERED (delivery recorded; HINDI ang legacy 'received' status)
+   → PurchaseRequest::booted() updated event
+   → DB::afterCommit → ArchiveDeliveryConfirmationPdfAction::generate($pr)
+      → renders EXISTING pdf.delivery-confirmation blade (serials + properties + pirma)
+      → saves: pr-pdfs/{year}/{Month}/{pr_number}.pdf  (private disk)
+        buwan galing sa delivered_at (record-date rule D5.1b)
+      → purchase_requests.archive_pdf_path (bagong nullable column)
+   → guard: one archive per PR; try/catch → Log::warning; retry command ang backup
+Backfill: php artisan prs:generate-archive-pdfs (10 delivered PRs sa kasalukuyan)
+```
+
+### D7b — Physical Count report auto-archive
+```
+Count session → completed
+   → CompletePhysicalCountAction (or model event) → afterCommit archive
+   → renders NEW pdf/physical-count-report blade (mirror ng print report view)
+   → saves: count-pdfs/{year}/COUNT-{sessionId}.pdf   ← YEARLY folder (annual inventory)
+   → physical_counts.report_pdf_path (bagong nullable column)
+```
+
+### D7c (opsyonal — pag-aprobahan pa) — finalized PR form archive sa `finalized`
+Mababang priority: ang kritikal na record ay ang Delivery Confirmation (may serials + pirma na).
+
+### D7 mga yugto (test-first, isang commit kada phase)
+| Phase | Saklaw | Gate |
+|---|---|---|
+| **D7a-1** | Migration (`purchase_requests.archive_pdf_path`) + `ArchiveDeliveryConfirmationPdfAction` + booted trigger | Test: delivered PR → PDF sa tamang month folder; non-delivered → null; idempotent |
+| **D7a-2** | Backfill command + i-run sa 10 delivered PRs | Tinker: 0 delivered na walang archive |
+| **D7b-1** | Migration (`physical_counts.report_pdf_path`) + report blade + archive action | Test: completed session → PDF sa tamang year folder |
+| **D7b-2** | Backfill command + i-run | Tinker: 0 completed sessions na walang archive |
+
+---
+
 ## 6. Key Design Decisions (locked, Sept 2026)
 1. **PM counts toward the combined total** AND gets its own bucket — one "Total Downtime" line, never two competing totals
 2. **ICT downtime is derived** (total − PM), not a third column
@@ -549,13 +612,17 @@ ICT/PM ticket → technician completes → status = completed (DB transaction co
 14. **Folder month = RECORD date, never generation `now()`** (CSM → `created_at`; ICT/PM →
     `completed_at`) — makes retries land in the correct folder and idempotent (same path = overwrite);
     verified safe: `app.timezone = Asia/Manila`, request numbers are filename-safe
-15. **Execution order: D5b → D5c → D5a → D5d → D6** — the public-disk security exposure is fixed
+15. **Execution order: D5b → D5c → D5a → D5d → D6 → D7a → D7b** — the public-disk security exposure is fixed
     BEFORE any new PDF auto-copy feature is built
 16. **Archive PDFs reuse the EXISTING form templates** — `ArchiveTicketPdfAction` renders the same
     `pdf/ict-form` / `pdf/maintenance-form` blades the Download button uses (no duplicate template
     to maintain); archive trigger is `DB::afterCommit` + one-per-ticket guard; and Blade `@php`
     blocks must use **closures, never named functions** (named functions fatally collide when one
     process generates multiple PDFs — the D6 backfill proved it)
+17. **PR archive trigger = `delivered` (CURRENT status), never the legacy `received`** — the
+    Delivery Confirmation needs actual receipt data (serials/property per piece) which only exists
+    after delivery recording; Physical Count archive uses **YEARLY folders** (`count-pdfs/{year}/`)
+    because the document is the annual inventory, not a monthly filing
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
