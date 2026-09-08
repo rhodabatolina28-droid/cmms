@@ -93,6 +93,44 @@ class User extends Authenticatable
         return $this->role === 'admin' || $this->role === 'supply_officer';
     }
 
+    /**
+     * D4a — High Official detection (NCMB).
+     * Case-insensitive keyword match against users.position using the list in
+     * config/priority.php. Full-phrase keywords only ("executive director",
+     * "director ii", "chief", "state auditor") so titles like
+     * "Director's Secretary" or "Programmer" can never match.
+     * Empty/null position (54 of 58 live users today) is never an official.
+     */
+    public function getIsHighOfficialAttribute(): bool
+    {
+        $position = trim((string) ($this->position ?? ''));
+        if ($position === '') {
+            return false;
+        }
+
+        foreach (config('priority.high_official_keywords', []) as $keyword) {
+            if (str_contains(strtolower($position), strtolower($keyword))) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * D4a companion scope — query all high officials at once (used later by
+     * the D4b queue-jump on the IT Dashboard / ICT ticket lists).
+     */
+    public function scopeHighOfficials($query)
+    {
+        $keywords = config('priority.high_official_keywords', []);
+        return $query->where(function ($q) use ($keywords) {
+            foreach ($keywords as $keyword) {
+                $q->orWhere('position', 'like', '%' . $keyword . '%');
+            }
+        });
+    }
+
     public function isSuperAdmin()
     {
         return $this->role === 'super_admin';

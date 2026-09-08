@@ -269,7 +269,10 @@
                         <label class="label-simple">Position / Designation</label>
                         <div class="input-wrapper">
                             <i class="fa-regular fa-id-badge input-icon"></i>
-                            <input type="text" name="position" value="{{ old('position', $user->position) }}" class="input-simple">
+                            {{-- D4a guardrail: position is admin-managed ONLY (Super Admin /
+                                 Department Admin). Read-only here so nobody can self-inflate
+                                 to "Director" and jump the IT queue (D4 High Official rule). --}}
+                            <input type="text" value="{{ old('position', $user->position) }}" class="input-simple" disabled>
                         </div>
                     </div>
 
