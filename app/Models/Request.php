@@ -140,6 +140,81 @@ class Request extends Model
         return $this->downtime_start !== null && $this->downtime_end === null;
     }
 
+    // =========================================================================
+    // D2 — Ticket Aging accessors (single source of truth for ALL aging UI)
+    // =========================================================================
+
+    /**
+     * D2-a (F3): total minutes since the ticket was filed — Carbon-3-proof.
+     * max(0, ...) clamps future-dated rows (never negative, never "old").
+     */
+    public function getAgeInMinutesAttribute(): int
+    {
+        return (int) max(0, $this->created_at->diffInMinutes(now()));
+    }
+
+    /**
+     * D2-a: unified age buckets — 🟢 fresh (≤24h) · 🟡 1-3d · 🟠 3-7d · 🔴 7d+.
+     * Exact boundaries: 1440 → yellow · 4320 → orange · 10080 → red.
+     */
+    public function getAgingBucketAttribute(): string
+    {
+        return match (true) {
+            $this->age_in_minutes > 10080 => 'red',
+            $this->age_in_minutes > 4320  => 'orange',
+            $this->age_in_minutes > 1440  => 'yellow',
+            default                       => 'green',
+        };
+    }
+
+    /** D2-a: short human format — "45m" · "2h 30m" · "1d 2h" · "10d 5h". */
+    public function getAgeDisplayAttribute(): string
+    {
+        $minutes = $this->age_in_minutes;
+
+        if ($minutes < 60) {
+            return $minutes > 0 ? "{$minutes}m" : '0h';
+        }
+
+        $hours = intdiv($minutes, 60);
+        $mins  = $minutes % 60;
+
+        if ($hours < 24) {
+            return $mins > 0 ? "{$hours}h {$mins}m" : "{$hours}h";
+        }
+
+        $days = intdiv($hours, 24);
+        $hrs  = $hours % 24;
+
+        return $hrs > 0 ? "{$days}d {$hrs}h" : "{$days}d";
+    }
+
+    /**
+     * D2-a (F6): THE overdue definition — a Scheduled PM task sitting 7d+.
+     * Replaces the duplicated diffInDays(now()) > 7 rules in ListPmTasksAction
+     * and pm-tasks.blade.php so stats and row highlighting can never disagree.
+     */
+    public function getIsAgingOverdueAttribute(): bool
+    {
+        return $this->status === self::STATUS_SCHEDULED && $this->aging_bucket === 'red';
+    }
+
+    /**
+     * D2-a (F5): age chips appear on ACTIVE tickets only — Completed/Cancelled/
+     * Rejected are history, not alarms.
+     */
+    public function getShouldShowAgeAttribute(): bool
+    {
+        return in_array($this->status, [
+            self::STATUS_PENDING,
+            self::STATUS_ONGOING,
+            self::STATUS_SCHEDULED,
+            self::STATUS_AWAITING_PARTS,
+            self::STATUS_AWAITING_SIGNATURE,
+            self::STATUS_REFERRED_EXTERNAL,
+        ], true);
+    }
+
     // Relationships
     public function user()
     {
