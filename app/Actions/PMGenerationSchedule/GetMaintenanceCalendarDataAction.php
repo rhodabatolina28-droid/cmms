@@ -314,6 +314,10 @@ class GetMaintenanceCalendarDataAction
                     'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
                     'assigned_at' => $req->assigned_at?->toDateString(),
                     'completed_at' => $req->completed_at?->toDateString(),
+                    // D2: per-ticket age (null when terminal — F5)
+                    'age_bucket' => $req->aging_bucket,
+                    'age_display' => $req->age_display,
+                    'age_minutes' => $req->should_show_age ? $req->age_in_minutes : null,
                     'details_url' => route('maintenance.show', $req->id),
                 ];
             }
@@ -338,6 +342,12 @@ class GetMaintenanceCalendarDataAction
                     default       => 'Scheduled',
                 };
 
+                // D2: group age = the OLDEST active ticket in the group
+                $oldestTicket = collect($group['tickets'])
+                    ->filter(fn ($t) => $t['age_minutes'] !== null)
+                    ->sortByDesc('age_minutes')
+                    ->first();
+
                 $events[] = [
                     'id'             => "pm-div-{$group['first_request_id']}",
                     'event_type'     => 'pm',
@@ -350,6 +360,9 @@ class GetMaintenanceCalendarDataAction
                     'division_status' => $group['division_status'],
                     'ticket_count'   => $group['ticket_count'],
                     'tickets'        => $group['tickets'],
+                    // D2: age of the oldest active ticket (null = none active)
+                    'age_bucket'     => $oldestTicket['age_bucket'] ?? null,
+                    'age_display'    => $oldestTicket['age_display'] ?? null,
                     'display_number' => null,
                     'office'         => $group['division'],
                     'assignee'       => $group['assignee'],
@@ -397,6 +410,9 @@ class GetMaintenanceCalendarDataAction
                     'assigned_at'    => $req->assigned_at?->toDateString(),
                     'completed_at'   => $req->completed_at?->toDateString(),
                     'priority'       => $req->priority,
+                    // D2: ticket age (only meaningful while active)
+                    'age_bucket'     => $req->should_show_age ? $req->aging_bucket : null,
+                    'age_display'    => $req->should_show_age ? $req->age_display : null,
                     'details_url'    => route('ict.show', $req->id),
                     'is_editable'    => false,
                 ];

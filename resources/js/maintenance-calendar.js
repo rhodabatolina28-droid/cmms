@@ -135,6 +135,20 @@
         updateSummary({ pm: pmCount, ict: ictCount, done, overdue });
     }
 
+    // D2: bucket-colored ticket age badge (shared by tasks panel + detail card)
+    function calAgeBadge(bucket, display) {
+        if (!bucket || !display) return '';
+        const colors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
+        const c = colors[bucket] || colors.green;
+        return '<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:9px;font-size:9px;font-weight:700;background:' + c[0] + ';color:' + c[1] + ';white-space:nowrap;margin-left:6px;"><i class="fa-regular fa-clock"></i> ' + display + '</span>';
+    }
+
+    // D2: day-cell chip border tint per aging bucket
+    function calAgeTint(bucket) {
+        const tints = { green: '#10b981', yellow: '#f59e0b', orange: '#f97316', red: '#ef4444' };
+        return tints[bucket] || null;
+    }
+
     function renderCalendar() {
         const monthLabel = document.getElementById('calMonthLabel');
         if (monthLabel) monthLabel.textContent = monthNames[currentMonth - 1] + ' ' + currentYear;
@@ -174,6 +188,10 @@
 
                 chip.className = chipClass;
 
+                // D2: aging tint + age in tooltip (active tickets only)
+                const ageTint = calAgeTint(e.age_bucket);
+                if (ageTint) chip.style.borderLeft = '3px solid ' + ageTint;
+
                 // Build compact chip text — PM grouped by division with ticket count
                 let chipText = e.display_number || e.title || '';
                 if (chipText.length > 22) chipText = chipText.substring(0, 22) + '…';
@@ -183,7 +201,7 @@
                     chipText = e.title + ' (' + e.ticket_count + ' ticket' + (e.ticket_count !== 1 ? 's' : '') + ')';
                 }
                 chip.textContent = (e.event_type === 'pm' ? 'PM' : 'ICT') + ' — ' + chipText;
-                chip.title = (e.display_number || e.title || '') + ' (' + formatDate(e.date) + ')';
+                chip.title = (e.display_number || e.title || '') + ' (' + formatDate(e.date) + ')' + (e.age_display ? ' — Age: ' + e.age_display : '');
                 chip.onclick = function(ev) { ev.stopPropagation(); showEventDetail(e); };
                 if (contentWrap) contentWrap.appendChild(chip);
             });
@@ -315,7 +333,8 @@
                         (e.office ? e.office : '') +
                     '</div>' +
                 '</div>' +
-                '<span class="cal-event-status ' + statusClass + '">' + (e.status || 'N/A') + '</span>';
+                '<span class="cal-event-status ' + statusClass + '">' + (e.status || 'N/A') + '</span>' +
+                calAgeBadge(e.age_bucket, e.age_display);
             row.onclick = function() { showEventDetail(e); };
             body.appendChild(row);
         });
@@ -409,6 +428,7 @@
         badges += '<span class="cal-badge cal-badge-status">' + (e.status || 'N/A') + '</span>';
         if (e.priority) badges += '<span class="cal-badge cal-badge-priority">' + e.priority + ' priority</span>';
         if ((e.status || '').toLowerCase() === 'overdue') badges += '<span class="cal-badge cal-badge-overdue">Overdue</span>';
+        badges += calAgeBadge(e.age_bucket, e.age_display);
         badges += '</div>';
 
         let table = '<table class="cal-detail-table">';
@@ -496,7 +516,8 @@
                             '<div class="cal-event-title">' + (ticket.display_number || '') + '</div>' +
                             '<div class="cal-event-meta">' + (ticket.assignee || 'Unassigned') + '</div>' +
                         '</div>' +
-                        '<span class="cal-event-status ' + statusClass + '">' + (ticket.status || 'N/A') + '</span>';
+                        '<span class="cal-event-status ' + statusClass + '">' + (ticket.status || 'N/A') + '</span>' +
+                        calAgeBadge(ticket.age_bucket, ticket.age_display);
                     row.onclick = function() {
                         showEventDetail({
                             event_type: 'pm',
@@ -509,6 +530,8 @@
                             date: e.date,
                             assigned_at: ticket.assigned_at || null,
                             completed_at: ticket.completed_at || null,
+                            age_bucket: ticket.age_bucket || null,
+                            age_display: ticket.age_display || null,
                             details_url: ticket.details_url,
                         });
                     };
