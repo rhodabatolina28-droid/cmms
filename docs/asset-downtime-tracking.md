@@ -176,13 +176,53 @@ php artisan downtime:repair
 ---
 
 ## 5. Out of Scope (future phases — do NOT mix into X1-X4)
-- **D2 Ticket Aging** — unified age accessor + buckets (🟢 0-24h · 🟡 1-3d · 🟠 3-7d · 🔴 7d+) to replace
-  the hardcoded 7-day Overdue rule in PM Tasks
-  - **target:** `ListPmTasksAction.php:54` `'overdue' => ... diffInDays(now()) > 7` — papalitin ng
-    bucket-based aging para mas actionable
 - **D3 SLA-lite** — priority (P1-P4) usage, response/resolution targets, breach badges, MTTR/MTBF,
   availability %; requires aging (D2) and accurate downtime (this doc) first
 - Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
+
+### D2 — Ticket Aging (NEXT — buong plano mula sa Sept 2026 discussion)
+
+**Layunin:** palitan ang hardcoded 7-day Overdue rule (`ListPmTasksAction.php:54`) ng unified,
+bucket-based aging na nakikita sa LAHAT ng ticket views — para mas actionable at pare-pareho.
+
+#### D2.1 Aging buckets (locked design)
+```
+🟢 Fresh    0–24h        · 🟡 Aging     1–3d
+🟠 Getting old  3–7d     · 🔴 Overdue   7d+
+```
+- Unified accessor sa `Request` model: `age_in_hours` + `aging_bucket` (color + label)
+- Age basis: `created_at` para sa pending tickets; tuloy-tuloy hanggang completion
+
+#### D2.2 Saan makikita (SCOPE — pare-pareho sa lahat ng views)
+| View | Ano ang ipapakita | Notes |
+|---|---|---|
+| Maintenance Calendar | age bucket badge sa bawat event — **BOTH ICT at PM** | user request |
+| ICT lists (IT/SA/Admin) | age bucket sa row | ✅ may usable pattern na |
+| **PM Work Orders (SA + IT)** | **age column/indicator — bago ito, dagdag mula sa user** | `pm-schedules/orders.blade.php` + `ListPmWorkOrdersAction` |
+| PM Tasks | bucket-based ang papalit sa `diffInDays(now()) > 7` | ang original target |
+
+#### D2.3 PM service window (locked rules)
+- **Window: 3 WORKING DAYS** — hindi binibilang ang **Saturday at Sunday**
+- **NO-SKIP rule:** hindi lalaktaw ang cycle sa susunod na division hangga't hindi natatapos ang
+  kasalukuyang division na PM — kailangan matapos bago mag-move (walang skip, walang carry-over
+  na automatic na pagpasok sa susunod na division habang may bukas pa)
+- Kung lumagpas sa window ang isang division: nananatili siyang focus division (🔴 Overdue) —
+  ang `next_scheduled_at` hindi bumabago hangga't hindi tapos
+
+#### D2.4 ⚠️ Related bug — Consent/auto-advance hindi kumpleto (REPORTED, hindi pa naayos)
+> "nag run ako ng PM pero hanggang 2 divisions lang ako, sa iba hindi pa na-trigger"
+- **Sanang imbestigahan:** `GeneratePMScheduleService::checkAndAdvance()` + division progression —
+  bakit hindi nag-a-advance sa lahat ng divisions (Consent A flow)
+- **Bago i-implement ang D2.3 no-skip rule, ayusin muna ito** — kung sira ang advance logic, ang
+  window/no-skip rules ay walang pagpapagana
+
+#### D2.5 Order of work (test-first per phase)
+1. **D2-a:** `age_in_hours` + `aging_bucket` accessors sa `Request` + tests
+2. **D2-b:** Calendar (ICT + PM events) badge + ICT lists badge
+3. **D2-c:** PM Work Orders (SA + IT) age column
+4. **D2-d:** Palitan ang PM Tasks 7-day rule ng buckets
+5. **D2-e:** Service window (3 working days, no weekends) + no-skip enforcement — **kasunod ng
+   pag-ayos sa D2.4 advance bug**
 
 ### D4 — High-Official Immediate Priority (ICT) — ✅ COMPLETE (D4a + D4c + D4b done · D4d backfill: user data entry)
 
