@@ -122,12 +122,11 @@
                             <th class="th">Date Generated</th>
                             <th class="th">Completed At</th>
                             <th class="th">Status</th>
-                            <th class="th">Age</th>
                             <th class="th" style="text-align:center;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="ordersTableBody">
-                        <tr><td colspan="9" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
+                        <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                     </tbody>
                 </table>
             </div>
@@ -154,7 +153,7 @@ async function loadOrders(page) {
     params.set('per_page', 20);
 
     const tbody = document.getElementById('ordersTableBody');
-    tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
     document.getElementById('overdueAlert').style.display = 'none';
 
     try {
@@ -170,10 +169,10 @@ async function loadOrders(page) {
             renderOrdersTable(result.orders);
             renderOrdersPagination(result.total);
         } else {
-            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#ef4444;">Failed to load orders.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Failed to load orders.</td></tr>';
         }
     } catch (e) {
-        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#ef4444;">Error loading orders.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Error loading orders.</td></tr>';
     }
 }
 
@@ -189,7 +188,7 @@ function renderOrdersTable(orders) {
     document.getElementById('ordersCount').textContent = '...';
 
     if (!orders.length) {
-        tbody.innerHTML = '<tr><td colspan="9" class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:40px;margin-bottom:12px;opacity:0.4;"></i><p style="font-size:14px;font-weight:600;">No work orders found</p></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="empty-state"><i class="fa-solid fa-clipboard-list" style="font-size:40px;margin-bottom:12px;opacity:0.4;"></i><p style="font-size:14px;font-weight:600;">No work orders found</p></td></tr>';
         return;
     }
 
@@ -222,25 +221,26 @@ function renderOrdersTable(orders) {
         const overdue = isOverdue(order);
         if (overdue) hasOverdue = true;
 
-        // D2: bucket-colored age badge (null/'--' for terminal statuses)
+        // D2: bucket-colored age badge — rendered UNDER the request number
+        // (same pattern as the ICT lists), never as its own column. Terminal
+        // statuses (Completed/Cancelled/Rejected) get no badge at all.
         const ageColors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
         const ageC = ageColors[order.age_bucket] || ageColors.green;
-        const ageCell = order.age_display
-            ? `<span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:9px;font-size:9px;font-weight:700;background:${ageC[0]};color:${ageC[1]};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${order.age_display}</span>`
-            : '--';
+        const ageBadge = order.age_display
+            ? `<div style="margin-top:3px;"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:9px;font-size:9px;font-weight:700;background:${ageC[0]};color:${ageC[1]};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${order.age_display}</span></div>`
+            : '';
 
         const rowClass = overdue ? 'tr tr-overdue' : 'tr';
         const overdueTag = overdue ? `<span class="status-pill pill-overdue"><i class="fa-solid fa-clock"></i> Overdue</span>` : '';
 
         return `<tr class="${rowClass}">
-            <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.request_number}</a></td>
+            <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.request_number}</a>${ageBadge}</td>
             <td class="td">${order.requestor_name || '--'}</td>
             <td class="td" style="color:#475569;font-size:12px;">${order.office || '--'}</td>
             <td class="td">${assignedName}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${createdStr}</td>
             <td class="td" style="font-size:12px;color:#64748b;">${completedStr}</td>
             <td class="td"><span class="status-pill ${pillClass}">${pillLabel}</span>${overdueTag}</td>
-            <td class="td">${ageCell}</td>
             <td class="td" style="text-align:center;">
                 ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID
                     ? `<a href="/requests/maintenance/${order.id}/conduct" class="action-btn">
