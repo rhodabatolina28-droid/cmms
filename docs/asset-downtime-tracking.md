@@ -176,11 +176,16 @@ php artisan downtime:repair
 ---
 
 ## 5. Out of Scope (future phases — do NOT mix into X1-X4)
-- **D3 SLA-lite** — priority (P1-P4) usage, response/resolution targets, breach badges, MTTR/MTBF,
-  availability %; requires aging (D2) and accurate downtime (this doc) first
-- Note: no priority values exist in the system yet (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10)
+- **D3 SLA-lite — 🔜 NEXT** (pagkatapos ng D2-e): priority (P1-P4) usage, response/resolution targets,
+  breach badges, MTTR/MTBF, availability %; requires aging (D2 — ✅ done Sept 9) and accurate downtime
+  (this doc — ✅ done)
+- **⚠️ D3 prerequisite (BLOCKER):** no priority values exist in the system yet
+  (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10). Kailangan muna ng decision: ano ang P1-P4
+  definition + kung saan i-input (request form? auto by high-official?) bago magsimula ang D3.
+- **D2-e (service window 3 working days + no-skip)** — ang advance-gate bug fix ay tapos na
+  (`66e52fc`), pero ang window-logic mismo ay naka-hold (tingnan ang D2.6 Remaining)
 
-### D2 — Ticket Aging (NEXT — buong plano mula sa Sept 2026 discussion)
+### D2 — Ticket Aging — ✅ DONE (Sept 9 2026 · execution log sa D2.6) <!-- ang "NEXT" ay nailipat na sa D3 -->
 
 **Layunin:** palitan ang hardcoded 7-day Overdue rule (`ListPmTasksAction.php:54`) ng unified,
 bucket-based aging na nakikita sa LAHAT ng ticket views — para mas actionable at pare-pareho.
@@ -235,10 +240,54 @@ bucket-based aging na nakikita sa LAHAT ng ticket views — para mas actionable 
 5. **D2-e:** Service window (3 working days, no weekends) + no-skip enforcement — **kasunod ng
    pag-ayos sa D2.4 advance bug**
 
+#### D2.6 EXECUTION LOG — ✅ D2 DONE (Sept 9 2026)
+Test-first lahat; full suite green pagkatapos ng bawat phase.
+
+| Phase | Scope | Commit | Tests |
+|---|---|---|---|
+| **D2-a** | `age_in_minutes` + `aging_bucket` + `age_display` + `is_aging_overdue` + `should_show_age` accessors (`Request`), Carbon3-proof `max(0)` clamp, exact boundaries 1440/4320/10080 | `5050937` | `TicketAgingTest` 5/5 |
+| **D2-b/F6** | PM Tasks overdue → `is_aging_overdue` accessor (isang source-of-truth, tanggalin ang duplicate `diffInDays > 7` rule sa action + blade); bucket-colored age chip sa ilalim ng request # | `dd8d178` | PMFlow regression green |
+| **D2-c** | Age chips sa LAHAT ng ticket lists (ICT/Admin/PM main/SA Master via JSON) + **F1 fix** (Master List user eager-load — naayos ang URGENT badge) + **F2 fix** (ICT list status-filter column index) | `b8d3267` | SupplyQueue/HighOfficial regression |
+| **D2-d** | Calendar aging — ICT + PM grouped events may `age_bucket`/`age_display`, day-cell border tint, detail-card badges, per-ticket ages sa PM tickets | `362d7bc` | `PMCalendarTest` + `TicketAgingTest` 31/31 |
+| **D2-fix** | Calendar Overdue counter + URGENT badge + unfinished-first (mga follow-up) | `ba4a009` `f7b00f3` `68fedeb` `bc21a6d` `9b8ef54` | `UnfinishedFirstTest` 10/10 · full suite **297/297** |
+
+**Mga follow-up fixes (post-D2-d, user-requested):**
+1. **URGENT badge gating** (`ba4a009`) — bagong `is_active_ticket` shared accessor (PENDING/ONGOING/
+   SCHEDULED/AWAITING-*/REFERRED) ang nagpapagana sa BAWANG `should_show_age` at bagong
+   `is_urgent_visible`. Ang URGENT badge ay hindi na lumalabas sa Completed/Cancelled/Rejected
+   (history ≠ alarm) — 4 na view locations; `HighOfficialQueueTest` +1 test, 20/20 green.
+2. **Calendar Overdue counter kasama na ang PM at ICT** (`f7b00f3`) — noon: PM schedule-level
+   Overdue/FAILED rows lang ang binibilang, kaya ang 7d+ na aktibong ICT ticket ay hindi
+   napapansin. Ngayon: `status = 'Overdue'` **O** `age_bucket = 'red'` (7d+ aktibong ticket,
+   both types). JS `recomputeSummaryFromEvents` mirror din. `PMCalendarTest` +1 test.
+3. **Unfinished-first ordering** (`68fedeb`) — bagong `Request::scopeUnfinishedFirst()`:
+   Pending/Ongoing/Scheduled/Awaiting/Referred **umaangat** sa taas, Completed/Cancelled/Rejected
+   **bumababa** sa dulo (hindi na matabunan ang naiwang trabaho ng bagong-tapos na). Naka-apply sa:
+   `ListIctRequestsAction` (lahat ng role branches) · `GetRequestsDataAction` (Master List) ·
+   `AdminDashboardAction` (Division Recent) · `SuperAdminDashboardAction` (Recent Office Requests).
+4. **URGENT leads the unfinished group** (`bc21a6d`) — dinagdag `officialsFirst()` pagkatapos ng
+   `unfinishedFirst()` sa Master List + SA/Admin dashboard Recents (nasa ICT lists na simula noon),
+   kaya ang high-official ticket ay nananatiling priority sa loob ng aktibong group. Final order:
+   ⚡URGENT-unfinished → regular-unfinished → terminal. Fixes: qualified `requests.*` columns
+   (ambiguous-id bug sa join), clone ang Admin widget query (only_full_group_by collision).
+5. **Calendar + Work Orders: age hidden sa terminal tickets** (`bc21a6d`) — ang PM per-ticket
+   `age_bucket`/`age_display` sa calendar ay hindi noon na-gated ng `should_show_age` (may "8d 4h"
+   kahit Completed). Ngayon null na (F5 rule). `PMCalendarTest::test_completed_pm_ticket_hides_age...`
+   +1 test. Sabay dinagdag ang age fields sa `GetOrdersDataAction` (PM Work Orders payload).
+6. **PM Work Orders age badge = ICT pattern** (`9b8ef54`) — sa una ay ginawa kong hiwalay na
+   "Age" column sa `orders.blade.php`, pero consistent pala ang ilalagay sa **ilalim ng request #**
+   (gaya ng ICT lists) — tanggalin ang extra column, badge → sariling cell under the order number.
+
+**Remaining (D2 scope):**
+- **D2-e** (service window + no-skip enforcement) — ang advance-gate fix ay tapos na
+  (`66e52fc`), pero ang 3-working-day window logic mismo ay **hindi pa implemented**
+
 ### D4 — High-Official Immediate Priority (ICT) — ✅ COMPLETE (D4a + D4c + D4b done · D4d backfill: user data entry)
 
-**Note:** D5 (Private disk), D6 (Auto-archive PDFs), D7 (PR/Count archives) — **✅ TAPOS NA** na (Sept 7-8,
-commits nasa D5.8/D6.6/D7.9 execution logs sa ibaba). Ang natitirang feature work: **D2 → D3**.
+**Note:** D5 (Private disk), D6 (Auto-archive PDFs), D7 (PR/Count archives) — **✅ TAPOS NA** (Sept 7-8,
+commits nasa D5.8/D6.6/D7.9 execution logs sa ibaba), at **D2 Ticket Aging — ✅ TAPOS NA** (Sept 9, log sa
+D2.6). Ang natitirang feature work: **D2-e (service window) → D3**. **Sa unahan ng lahat: DAILY**
+— ang D3 ay nangangailangan ng priority values na wala pa sa system (tingnan ang D3 note sa Section 5).
 
 **Rule:** kapag nag-file ng ICT request ang high official (Director, ED, OIC), ang ticket niya ay
 **una sa IT queue** kahit huli siyang nagpasa — "immediate" ang treatment.
@@ -313,6 +362,7 @@ sa User Management gamit ang bagong dropdown.
 | **D4a** | `config/priority.php` + `is_high_official` accessor + position read-only sa Profile | ✅ commit 202197e — `HighOfficialTest` 4/4 |
 | **D4c** | Position dropdown sa Create/Edit System Account (cascade + None/Other fallback + prefill) | ✅ commit d23d37c — `PositionDropdownTest` 5/5 |
 | **D4b** | Queue-jump ordering (ItDashboardAction + ListIctRequestsAction) + red URGENT badge sa 4 views | ✅ commit 99e0e65 — `HighOfficialQueueTest` 3/3 + 28 regression green |
+| **D4b+** | URGENT badge gated sa active statuses (`is_urgent_visible`) · URGENT leads unfinished group sa Master List + SA/Admin Recents | ✅ `ba4a009` `bc21a6d` — `HighOfficialQueueTest` 4/4 · `UnfinishedFirstTest` 10/10 |
 | **D4d** | Backfill ng positions (manual, gamit ang D4c dropdowns) | ⏳ user data entry — gate: `Officials total` > 0 sa live tinker check |
 
 ---
@@ -721,6 +771,15 @@ storage/app/private/
     Delivery Confirmation needs actual receipt data (serials/property per piece) which only exists
     after delivery recording; Physical Count archive uses **YEARLY folders** (`count-pdfs/{year}/`)
     because the document is the annual inventory, not a monthly filing
+18. **Unfinished-first ordering** — Pending/Ongoing/waiting tickets FLOAT above
+    Completed/Cancelled/Rejected in every list + dashboard Recent; unfinished work must never be
+    buried under freshly-Completed rows. High officials still lead WITHIN the unfinished group
+    (`unfinishedFirst()` → `officialsFirst()` → `created_at desc`).
+19. **URGENT badge is an alarm, not a tag** — shared `is_active_ticket` accessor gates it (and the
+    age chip): a Completed/Cancelled/Rejected ticket is history, so the red badge disappears even if
+    the requester is a Director.
+20. **Calendar "Overdue" = PM schedule-level Overdue + ANY 7d+ ACTIVE ticket (PM or ICT)** — a single
+    number, both types; the age accessor is the single source of truth.
 
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
@@ -728,3 +787,4 @@ storage/app/private/
 - D4 (high-official priority): DESIGNED — position backfill + `config/priority.php` (awaiting execution)
 - D5 storage reorg: D5b/D5c private-disk migration + D5a CSM auto-PDF polish chain + D5d `csm:generate-pdfs` backfill — ✅ committed (`3a940d3` latest of chain)
 - **D6 ticket auto-archive: ✅ committed `0b791b8`** — `archive_pdf_path` column, afterCommit trigger sa completion, `tickets:generate-archive-pdfs` backfill (34/0), sigImg closure fix, 4 feature tests pass
+- **D2 Ticket Aging: ✅ DONE (Sept 9 2026)** — chain `5050937` → `dd8d178` → `b8d3267` → `362d7bc` → `ba4a009` → `f7b00f3` → `68fedeb` → `bc21a6d` → `9b8ef54`. Accessors + chips sa lahat ng lists + calendar aging + unfinished-first + URGENT-in-unfinished + terminal-age hidden + Work Orders badge. Full suite **297/297 green**.
