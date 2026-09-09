@@ -51,7 +51,7 @@ class ListPmTasksAction
             'scheduled' => $allTasks->where('status', 'Scheduled')->count(),
             'ongoing'   => $allTasks->where('status', 'Ongoing')->count(),
             'completed' => $allTasks->where('status', 'Completed')->count(),
-            'overdue'   => $allTasks->where('status', 'Scheduled')->filter(fn ($t) => $t->created_at->diffInDays(now()) > 7)->count(),
+            'overdue'   => $allTasks->where('status', 'Scheduled')->filter(fn ($t) => $t->is_aging_overdue)->count(),
         ];
 
         return view('requests.maintenance.pm-tasks', compact('pmTasks', 'stats'));

@@ -62,6 +62,13 @@
     .status-completed { background: #ecfdf5; color: #065f46; border-color: rgba(16, 185, 129, 0.2); }
     .badge-overdue { display: inline-block; padding: 3px 8px; border-radius: 20px; font-size: 9px; font-weight: 800; text-transform: uppercase; background: #fee2e2; color: #991b1b; margin-left: 5px; }
 
+    /* D2: ticket age chip (bucket-colored) — under the request number */
+    .age-chip { display: inline-flex; align-items: center; gap: 4px; padding: 1px 8px; border-radius: 10px; font-size: 10px; font-weight: 700; margin-top: 3px; }
+    .age-green  { background: #ecfdf5; color: #047857; }
+    .age-yellow { background: #fef9c3; color: #854d0e; }
+    .age-orange { background: #ffedd5; color: #9a3412; }
+    .age-red    { background: #fee2e2; color: #991b1b; }
+
     /* Asset Tag */
     .asset-tag { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: #475569; font-weight: 600; background: #f1f5f9; border-radius: 4px; padding: 2px 7px; margin-top: 3px; }
     .asset-tag i { color: #0038A8; font-size: 10px; }
@@ -208,7 +215,7 @@
                         <tbody>
                             @foreach($pmTasks as $task)
                             @php
-                                $isOverdue = $task->status === 'Scheduled' && $task->created_at->diffInDays(now()) > 7;
+                                $isOverdue = $task->is_aging_overdue; // D2: single source of truth (F6)
                                 $rowClass  = $isOverdue ? 'pm-row pm-row-overdue' : 'pm-row';
                                 $badgeClass  = match($task->status) {
                                     'Scheduled' => 'status-pending',
@@ -230,6 +237,9 @@
                                     <a href="{{ $editRoute }}" class="pm-td-link">
                                         {{ $task->display_number ?? $task->request_number }}
                                     </a>
+                                    @if($task->should_show_age)
+                                        <br><span class="age-chip age-{{ $task->aging_bucket }}"><i class="fa-regular fa-clock"></i> {{ $task->age_display }}</span>
+                                    @endif
                                 </td>
                                 <td class="pm-td-name">{{ $task->requestor_name }}</td>
                                 <td class="pm-td-office">{{ $task->office ?? '—' }}</td>
