@@ -71,10 +71,18 @@ class GetRequestsDataAction
         $countQuery = clone $query;
 
         $requests = $query->with(['assignedTo:id,full_name', 'user:id,full_name,position'])
-            // Unfinished-first: Pending/Ongoing/waiting float, Completed sinks.
+            // Unfinished-first, then URGENT (high official) leads the active group.
             ->unfinishedFirst()
+            ->officialsFirst()
             ->orderBy('created_at', 'desc')
-            ->select(['id', 'user_id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at', 'completed_at'])
+            // Qualified columns — officialsFirst joins `users as official_users`,
+            // so bare `id`/`status` would be ambiguous.
+            ->select([
+                'requests.id', 'requests.user_id', 'requests.request_number',
+                'requests.description', 'requests.requestor_name', 'requests.office',
+                'requests.assigned_to', 'requests.status', 'requests.created_at',
+                'requests.completed_at',
+            ])
             ->paginate($perPage, ['*'], 'page', $page);
 
         $hasFilters = $request->filled('search') || $request->filled('department') ||

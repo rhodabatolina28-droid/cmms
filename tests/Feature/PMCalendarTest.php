@@ -433,6 +433,53 @@ class PMCalendarTest extends TestCase
         );
     }
 
+    /**
+     * 1h. D2 fix: completed PM tickets must NOT carry age in the calendar's
+     * per-ticket rows — previously they showed "8d 4h" even after completion,
+     * because age_bucket/age_display bypassed the should_show_age gate.
+     */
+    public function test_completed_pm_ticket_hides_age_in_calendar_tickets()
+    {
+        // Both users in the SAME division — generate() processes one focus
+        // division per cycle, so different divisions would yield only 1 ticket.
+        $this->createUserWithAsset('AGING DIVISION A');
+        $this->createUserWithAsset('AGING DIVISION A');
+        $this->pmService->generate($this->schedule);
+
+        $requests = RequestModel::where('type', 'Preventive Maintenance')
+            ->where('is_auto_generated', true)
+            ->get();
+        $this->assertGreaterThanOrEqual(2, $requests->count());
+
+        $first = $requests->first();
+        $first->created_at = now()->subDays(8);
+        $first->save();
+        $first->update(['status' => 'Completed']);
+
+        $second = $requests->firstWhere('id', '!=', $first->id);
+        $second->created_at = now()->subDays(8);
+        $second->save();
+
+        $action  = app(GetMaintenanceCalendarDataAction::class);
+        $httpReq = Request::create('/calendar/events', 'GET', [
+            'month' => now()->month, 'year' => now()->year, 'filter' => 'pm',
+        ]);
+        $result = $action->execute($httpReq);
+
+        $allTickets = collect($result['events'])
+            ->where('event_type', 'pm')
+            ->pluck('tickets')
+            ->flatten(1);
+
+        $completedTicket = $allTickets->firstWhere('id', $first->id);
+        $this->assertNotNull($completedTicket, 'Completed ticket must appear in the calendar');
+        $this->assertNull($completedTicket['age_bucket'], 'Completed ticket must NOT carry age_bucket');
+        $this->assertNull($completedTicket['age_display'], 'Completed ticket must NOT carry age_display');
+
+        $activeTicket = $allTickets->firstWhere('id', $second->id);
+        $this->assertSame('red', $activeTicket['age_bucket'], 'Active aging ticket must stay red');
+    }
+
     // =========================================================================
     // SECTION 2: Manual Queue — Create, Reschedule, Cancel
     // =========================================================================

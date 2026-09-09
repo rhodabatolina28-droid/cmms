@@ -59,8 +59,10 @@ class AdminDashboardAction
             });
         }
 
-        // Unfinished-first: Pending/Ongoing/waiting float, Completed sinks.
-        $requests = $requestsQuery->with('user')->unfinishedFirst()->orderBy('created_at', 'desc')->limit(10)->get();
+        // Unfinished-first, then URGENT leads the active group. CLONE — the
+        // original builder is reused below for stats (groupBy would collide
+        // with officialsFirst's join/select under only_full_group_by).
+        $requests = (clone $requestsQuery)->with('user')->unfinishedFirst()->officialsFirst()->orderBy('created_at', 'desc')->limit(10)->get();
 
         // Fetch scoped users - division level
         $usersQuery = User::query();

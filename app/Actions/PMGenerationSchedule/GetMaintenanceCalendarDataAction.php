@@ -314,9 +314,10 @@ class GetMaintenanceCalendarDataAction
                     'assignee' => $req->assignedTo?->full_name ?? 'Unassigned',
                     'assigned_at' => $req->assigned_at?->toDateString(),
                     'completed_at' => $req->completed_at?->toDateString(),
-                    // D2: per-ticket age (null when terminal — F5)
-                    'age_bucket' => $req->aging_bucket,
-                    'age_display' => $req->age_display,
+                    // D2: per-ticket age — gated by should_show_age so completed/
+                    // cancelled/rejected tickets carry null (history, not alarm).
+                    'age_bucket' => $req->should_show_age ? $req->aging_bucket : null,
+                    'age_display' => $req->should_show_age ? $req->age_display : null,
                     'age_minutes' => $req->should_show_age ? $req->age_in_minutes : null,
                     'details_url' => route('maintenance.show', $req->id),
                 ];

@@ -40,6 +40,7 @@ class SuperAdminDashboardAction
         $recentRequests = (clone $userRequests)
             ->with('user')
             ->unfinishedFirst()
+            ->officialsFirst()
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();

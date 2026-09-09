@@ -44,7 +44,15 @@ class GetOrdersDataAction
         $sortedItems = collect($orders->items())->sortBy(function($order) {
             $orderMap = ['Scheduled' => 0, 'Ongoing' => 1, 'Awaiting Signature' => 2, 'Completed' => 3];
             return $orderMap[$order->status] ?? 99;
-        })->values();
+        })->values()->map(function ($order) {
+            // D2: aging fields — null for terminal statuses (history, not alarm).
+            // array_merge OVERRIDES the serialized accessor values (the age
+            // accessors recompute from created_at and ignore stored attributes).
+            return array_merge($order->toArray(), [
+                'age_bucket'  => $order->should_show_age ? $order->aging_bucket : null,
+                'age_display' => $order->should_show_age ? $order->age_display : null,
+            ]);
+        });
 
         return response()->json([
             'success'      => true,

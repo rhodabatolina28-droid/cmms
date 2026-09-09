@@ -197,4 +197,115 @@ class UnfinishedFirstTest extends TestCase
             'Overdue card must count BOTH the aging PM and the aging ICT (fresh excluded)'
         );
     }
+
+    public function test_master_list_puts_urgent_on_top(): void
+    {
+        $sa = $this->user('super_admin');
+        $official = $this->user('user', 'Chief, RID');
+        $regular = $this->user();
+
+        // The regular ticket is NEWEST — created_at-desc alone would bury the
+        // official's. Urgent (high official) must lead the unfinished group.
+        $regularActive = $this->ticket($regular, ['status' => 'Ongoing']);
+        $this->backdate($regularActive, '1 hour');
+
+        $urgent = $this->ticket($official, ['status' => 'Ongoing']);
+        $this->backdate($urgent, '3 days');
+
+        $this->actingAs($sa);
+        $json = app(GetRequestsDataAction::class)
+            ->execute(Request::create('/requests/data', 'GET'))
+            ->getData(true);
+
+        $this->assertSame(
+            $urgent->id,
+            $json['requests'][0]['id'],
+            'URGENT (high official) ticket must float above regular unfinished in Master List'
+        );
+    }
+
+    public function test_sa_dashboard_recent_puts_urgent_on_top(): void
+    {
+        $sa = $this->user('super_admin');
+        $official = $this->user('user', 'OIC-Executive Director IV');
+        $regular = $this->user();
+
+        $regularActive = $this->ticket($regular, ['status' => 'Ongoing']);
+        $this->backdate($regularActive, '1 hour');
+
+        $urgent = $this->ticket($official, ['status' => 'Pending']);
+        $this->backdate($urgent, '2 days');
+
+        $response = $this->actingAs($sa)->get(route('dashboard.super-admin'));
+        $response->assertOk();
+
+        $recent = $response->viewData('recentRequests');
+        $this->assertSame(
+            $urgent->id,
+            $recent->first()->id,
+            'URGENT ticket must lead the Recent Office Requests widget'
+        );
+    }
+
+    public function test_admin_dashboard_recent_puts_urgent_on_top(): void
+    {
+        $admin = $this->user('admin');
+        $official = $this->user('user', 'Director II, Technical Services');
+        $regular = $this->user();
+
+        $regularActive = $this->ticket($regular, ['status' => 'Ongoing']);
+        $this->backdate($regularActive, '1 hour');
+
+        $urgent = $this->ticket($official, ['status' => 'Ongoing']);
+        $this->backdate($urgent, '2 days');
+
+        $response = $this->actingAs($admin)->get(route('dashboard.admin'));
+        $response->assertOk();
+
+        $recent = $response->viewData('requests');
+        $this->assertSame(
+            $urgent->id,
+            $recent->first()->id,
+            'URGENT ticket must lead the Division Admin Recent widget'
+        );
+    }
+
+    public function test_pm_work_orders_data_carries_age_fields(): void
+    {
+        $sa = $this->user('super_admin');
+        $requestor = $this->user();
+
+        // Aging Scheduled order → red bucket.
+        $old = $this->ticket($requestor, [
+            'type' => 'Preventive Maintenance',
+            'status' => 'Scheduled',
+            'is_auto_generated' => true,
+        ]);
+        $this->backdate($old, '8 days');
+
+        // Completed order → age must be null (history, not alarm).
+        $done = $this->ticket($requestor, [
+            'type' => 'Preventive Maintenance',
+            'status' => 'Completed',
+            'is_auto_generated' => true,
+        ]);
+        $this->backdate($done, '12 days');
+
+        $this->actingAs($sa);
+        $json = app(\App\Actions\PMSchedule\GetOrdersDataAction::class)
+            ->execute(Request::create('/pm-schedules/orders/data', 'GET'))
+            ->getData(true);
+
+        $orders = collect($json['orders']);
+        $oldOrder = $orders->firstWhere('id', $old->id);
+        $doneOrder = $orders->firstWhere('id', $done->id);
+
+        $this->assertNotNull($oldOrder, 'Aging order must be in the payload');
+        $this->assertSame('red', $oldOrder['age_bucket']);
+        $this->assertNotNull($oldOrder['age_display']);
+
+        $this->assertNotNull($doneOrder, 'Completed order must be in the payload');
+        $this->assertNull($doneOrder['age_bucket'], 'Completed order must NOT carry age_bucket');
+        $this->assertNull($doneOrder['age_display'], 'Completed order must NOT carry age_display');
+    }
 }
