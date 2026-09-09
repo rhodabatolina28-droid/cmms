@@ -250,6 +250,109 @@ class PMFlowTest extends TestCase
     }
 
     // =========================================================================
+    // TEST 5b: Eligibility gate must use the SAME filters as generation
+    // (finding 1 — checkAndAdvance counted users that generation excludes,
+    //  permanently stalling the cycle when PM generation runs automatic)
+    // =========================================================================
+
+    public function test_excluded_category_assets_do_not_block_division_advance()
+    {
+        // Schedule only covers Laptops — Printer assets must NOT count as
+        // eligible users in the advance gate.
+        $this->schedule->update(['asset_categories' => ['Laptop']]);
+
+        ['user' => $userA] = $this->createUserWithAsset('DIVISION A', null, '2020-01-01'); // Laptop
+        ['user' => $userB] = $this->createUserWithAsset('DIVISION B', null, '2023-01-01'); // Laptop
+
+        // UserC shares DIVISION A but only owns a Printer — generation will
+        // never create a ticket for him, so he must never block the advance.
+        $userC = $this->makeUser([
+            'office'     => 'DIVISION A',
+            'department' => 'DIVISION A',
+        ]);
+        InventoryAsset::create([
+            'category'         => 'Printer/Scanner',
+            'item_name'        => 'Test Printer',
+            'serial_number'    => 'SN-PRN-' . time(),
+            'property_number'  => 'PN-PRN-' . time(),
+            'par_number'       => 'PAR-PRN-' . time(),
+            'brand'            => 'TestBrand',
+            'model'            => 'TestModel',
+            'acquisition_cost' => 20000,
+            'status'           => 'Active',
+            'assigned_to_user' => $userC->id,
+            'office'           => 'DIVISION A',
+            'department'       => 'DIVISION A',
+            'date_acquired'    => '2019-01-01',
+        ]);
+
+        $created = $this->pmService->generate($this->schedule);
+        $this->schedule->refresh();
+        // generate() only serves the focus division (DIVISION A). The Printer
+        // user (userC) must be skipped by the category filter — so exactly 1.
+        $this->assertCount(1, $created, 'Only the Laptop user should get a ticket; Printer user excluded');
+        $this->assertEquals('DIVISION A', $this->schedule->current_focus_division);
+
+        RequestModel::where('user_id', $userA->id)->update(['status' => 'Completed']);
+        [$nextDiv, $cycleComplete] = $this->pmService->checkAndAdvance($this->schedule);
+
+        $this->assertEquals(
+            'DIVISION B',
+            $nextDiv,
+            'Advance must NOT be blocked by a user whose asset category is excluded from the schedule'
+        );
+        $this->assertFalse($cycleComplete);
+    }
+
+    public function test_assets_in_other_branch_do_not_block_division_advance()
+    {
+        // Actor (schedule creator) is bound to Main Office — a same-division
+        // user in another branch must never be counted by the advance gate.
+        $this->superAdmin->update(['branch' => 'Main Office']);
+        $this->schedule->update(['created_by' => $this->superAdmin->id]);
+
+        ['user' => $userA] = $this->createUserWithAsset('DIVISION A', 'Main Office', '2020-01-01');
+        ['user' => $userB] = $this->createUserWithAsset('DIVISION B', 'Main Office', '2023-01-01');
+
+        // Same division, different branch — out of scope for this actor.
+        $userC = $this->makeUser([
+            'office'     => 'DIVISION A',
+            'department' => 'DIVISION A',
+            'branch'     => 'Cebu Branch',
+        ]);
+        InventoryAsset::create([
+            'category'         => 'Laptop',
+            'item_name'        => 'Cebu Laptop',
+            'serial_number'    => 'SN-CEB-' . time(),
+            'property_number'  => 'PN-CEB-' . time(),
+            'par_number'       => 'PAR-CEB-' . time(),
+            'brand'            => 'TestBrand',
+            'model'            => 'TestModel',
+            'acquisition_cost' => 50000,
+            'status'           => 'Active',
+            'assigned_to_user' => $userC->id,
+            'office'           => 'DIVISION A',
+            'department'       => 'DIVISION A',
+            'branch'           => 'Cebu Branch',
+            'date_acquired'    => '2019-01-01',
+        ]);
+
+        $this->pmService->generate($this->schedule);
+        $this->schedule->refresh();
+        $this->assertEquals('DIVISION A', $this->schedule->current_focus_division);
+
+        RequestModel::where('user_id', $userA->id)->update(['status' => 'Completed']);
+        [$nextDiv, $cycleComplete] = $this->pmService->checkAndAdvance($this->schedule);
+
+        $this->assertEquals(
+            'DIVISION B',
+            $nextDiv,
+            'Advance must NOT be blocked by an out-of-branch user in the same division'
+        );
+        $this->assertFalse($cycleComplete);
+    }
+
+    // =========================================================================
     // TEST 6: Full cycle completes when all divisions are done
     // =========================================================================
 

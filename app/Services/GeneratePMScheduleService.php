@@ -279,9 +279,16 @@ class GeneratePMScheduleService
         // CRITICAL: Verify ALL eligible users (with Active assets) in this division
         // have been processed. This prevents advancing when some users were never
         // generated (e.g. due to division name mismatch, or other filtering issues).
+        // Finding-1 fix: the gate MUST use the SAME filters as generation —
+        // actor-branch scope + schedule asset_categories — otherwise users that
+        // generation correctly excludes (wrong category / out-of-branch assets)
+        // permanently block the division advance when the schedule runs automatic.
+        $gateActor = $this->resolveActor($schedule);
         $totalEligibleUsers = \App\Models\InventoryAsset::where('status', 'Active')
             ->whereNotNull('assigned_to_user')
             ->where('office', $focusDivision)
+            ->when($gateActor && $gateActor->branch, fn($q) => $q->where('branch', $gateActor->branch))
+            ->when(!empty($schedule->asset_categories), fn($q) => $q->whereIn('category', $schedule->asset_categories))
             ->distinct('assigned_to_user')
             ->count('assigned_to_user');
 
@@ -289,6 +296,7 @@ class GeneratePMScheduleService
             ->where('is_auto_generated', true)
             ->where('status', 'Completed')
             ->where('office', $focusDivision)
+            ->when($gateActor && $gateActor->branch, fn($q) => $q->where('branch', $gateActor->branch))
             ->when($activeCycle, fn($q) => $q->where('created_at', '>=', $activeCycle->started_at))
             ->distinct('user_id')
             ->count('user_id');

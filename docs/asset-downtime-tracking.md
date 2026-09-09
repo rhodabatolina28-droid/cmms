@@ -209,12 +209,23 @@ bucket-based aging na nakikita sa LAHAT ng ticket views — para mas actionable 
 - Kung lumagpas sa window ang isang division: nananatili siyang focus division (🔴 Overdue) —
   ang `next_scheduled_at` hindi bumabago hangga't hindi tapos
 
-#### D2.4 ⚠️ Related bug — Consent/auto-advance hindi kumpleto (REPORTED, hindi pa naayos)
+#### D2.4 ⚠️ Related bug — Consent/auto-advance hindi kumpleto (ROOT CAUSE FOUND → Finding-1 gate FIXED)
 > "nag run ako ng PM pero hanggang 2 divisions lang ako, sa iba hindi pa na-trigger"
-- **Sanang imbestigahan:** `GeneratePMScheduleService::checkAndAdvance()` + division progression —
-  bakit hindi nag-a-advance sa lahat ng divisions (Consent A flow)
-- **Bago i-implement ang D2.3 no-skip rule, ayusin muna ito** — kung sira ang advance logic, ang
-  window/no-skip rules ay walang pagpapagana
+- **Root cause (verified sa live data + tests):** `checkAndAdvance()` eligibility gate
+  (L282-286) ay **hindi gumagamit ng parehong filters ng generation** — binibilang
+  nito LAHAT ng Active-asset users sa division, samantalang ang generation ay may
+  `asset_categories` filter + actor-branch scope. Kahit isang excluded user
+  (hal. Printer asset habang Laptop-only ang schedule, o kapanahon sa ibang branch)
+  ay sapat nang i-stall/permanently i-block ang division advance.
+- **✅ FIXED (test-first):** ang gate ay gumagamit na ngayon ng parehong filters —
+  `resolveActor()` branch scope + `asset_categories` whereIn — kasabay ng
+  branch filter sa completed-count. Tests: `PMFlowTest::
+  test_excluded_category_assets_do_not_block_division_advance` +
+  `test_assets_in_other_branch_do_not_block_division_advance` (RED → GREEN, 17/17 suite pass).
+- **Tandaan:** hindi ito ang "hanggang 2 divisions" — ang live data ay tama pala
+  (COA/RID/FMD tapos na, VAD in-progress pa). Ang bug ay matutuloy lang sana
+  kapag automatic na + may category/branch mismatch. D2.3 no-skip rule ay
+  safe nang i-implement.
 
 #### D2.5 Order of work (test-first per phase)
 1. **D2-a:** `age_in_hours` + `aging_bucket` accessors sa `Request` + tests
