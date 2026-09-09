@@ -426,7 +426,11 @@ class GetMaintenanceCalendarDataAction
         $pmCount = count(array_filter($events, fn($e) => $e['event_type'] === 'pm'));
         $ictCount = count(array_filter($events, fn($e) => $e['event_type'] === 'ict'));
         $doneCount = count(array_filter($events, fn($e) => $e['status'] === 'Completed'));
-        $overdueCount = count(array_filter($events, fn($e) => $e['status'] === 'Overdue'));
+        // D2: "Overdue" = PM schedule-level Overdue rows + ANY active ticket
+        // (ICT or PM) sitting in the red aging bucket (7d+). Terminal tickets
+        // carry age_bucket = null so they can never inflate this number.
+        $overdueCount = count(array_filter($events, fn($e) => $e['status'] === 'Overdue'
+            || ($e['age_bucket'] ?? null) === 'red'));
 
         return [
             'events' => $events,

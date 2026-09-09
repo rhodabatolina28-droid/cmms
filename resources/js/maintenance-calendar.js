@@ -130,7 +130,9 @@
         const pmCount  = filtered.filter(e => e.event_type === 'pm').length;
         const ictCount = filtered.filter(e => e.event_type === 'ict').length;
         const done     = filtered.filter(e => (e.status || '').toLowerCase() === 'completed').length;
-        const overdue  = filtered.filter(e => (e.status || '').toLowerCase() === 'overdue').length;
+        // D2: mirrors the server rule — schedule-level Overdue + red-bucket (7d+)
+        // active tickets count as overdue, for BOTH PM and ICT events.
+        const overdue  = filtered.filter(e => (e.status || '').toLowerCase() === 'overdue' || e.age_bucket === 'red').length;
         renderMonthlySummary({ pm: pmCount, ict: ictCount, done, overdue });
         updateSummary({ pm: pmCount, ict: ictCount, done, overdue });
     }

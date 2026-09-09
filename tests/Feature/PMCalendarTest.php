@@ -381,6 +381,58 @@ class PMCalendarTest extends TestCase
         $this->assertEquals($ictCount, $result['summary']['ict'], 'ICT summary count should match filtered ICT events');
     }
 
+    /**
+     * 1g. D2: the summary "Overdue" counter must include red-bucket (7d+)
+     * ACTIVE tickets of BOTH types — previously an aging ICT ticket never
+     * showed up in the Overdue number (only PM schedule-level rows did).
+     */
+    public function test_overdue_summary_counts_red_bucket_aging_tickets()
+    {
+        $ictUser = $this->makeUser(['role' => 'user', 'office' => 'ICT DIVISION']);
+        $repair = \App\Models\RepairRequest::create([
+            'form_no'                    => 'ICT-TEST-002',
+            'end_user_last_name'         => 'User',
+            'end_user_first_name'        => 'Aging',
+            'end_user_sex'               => 'MALE',
+            'division_office'            => 'ICT DIVISION',
+            'end_user_email'             => 'ict2@test.com',
+            'employee_no'                => 'EMP-002',
+            'repair_description'         => 'Still broken after 8 days',
+        ]);
+
+        $req = RequestModel::create([
+            'request_number'              => 'ICT-TEST-002',
+            'user_id'                     => $ictUser->id,
+            'requestor_name'              => $ictUser->full_name,
+            'type'                        => 'ICT',
+            'status'                      => 'Ongoing',
+            'office'                      => 'ICT DIVISION',
+            'detail_id'                   => $repair->id,
+            'division_admin_review_status'=> 'Approved',
+            'asset_id'                    => 0,
+        ]);
+
+        // 8 days old → red aging bucket. Direct property assignment (NOT mass
+        // update) — 'created_at' is not fillable, so update() would silently
+        // discard it and the ticket would stay fresh (green). Query the
+        // ticket's OWN month so the test cannot flake near a month boundary.
+        $eventDate = now()->subDays(8);
+        $req->created_at = $eventDate;
+        $req->save();
+
+        $action  = app(GetMaintenanceCalendarDataAction::class);
+        $httpReq = Request::create('/calendar/events', 'GET', [
+            'month' => $eventDate->month, 'year' => $eventDate->year, 'filter' => 'all',
+        ]);
+        $result = $action->execute($httpReq);
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $result['summary']['overdue'],
+            'A 7d+ active ICT ticket must count toward the Overdue summary'
+        );
+    }
+
     // =========================================================================
     // SECTION 2: Manual Queue — Create, Reschedule, Cancel
     // =========================================================================
