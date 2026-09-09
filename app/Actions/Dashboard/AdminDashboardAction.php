@@ -59,7 +59,8 @@ class AdminDashboardAction
             });
         }
 
-        $requests = $requestsQuery->with('user')->orderBy('created_at', 'desc')->limit(10)->get();
+        // Unfinished-first: Pending/Ongoing/waiting float, Completed sinks.
+        $requests = $requestsQuery->with('user')->unfinishedFirst()->orderBy('created_at', 'desc')->limit(10)->get();
 
         // Fetch scoped users - division level
         $usersQuery = User::query();

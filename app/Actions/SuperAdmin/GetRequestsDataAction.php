@@ -71,6 +71,8 @@ class GetRequestsDataAction
         $countQuery = clone $query;
 
         $requests = $query->with(['assignedTo:id,full_name', 'user:id,full_name,position'])
+            // Unfinished-first: Pending/Ongoing/waiting float, Completed sinks.
+            ->unfinishedFirst()
             ->orderBy('created_at', 'desc')
             ->select(['id', 'user_id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at', 'completed_at'])
             ->paginate($perPage, ['*'], 'page', $page);

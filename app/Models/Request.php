@@ -334,6 +334,28 @@ class Request extends Model
             );
     }
 
+    /**
+     * Unfinished-first ordering (locked rule): Pending/Ongoing/waiting tickets
+     * FLOAT to the top of every list; Completed/Cancelled/Rejected SINK to the
+     * bottom, so unfinished work is never buried under freshly-finished rows.
+     * Chain it BEFORE officialsFirst()/orderBy('created_at') — the first orderBy
+     * applied becomes the primary sort key.
+     */
+    public function scopeUnfinishedFirst($query)
+    {
+        return $query->orderByRaw(
+            'CASE WHEN status IN (?, ?, ?, ?, ?, ?) THEN 0 ELSE 1 END',
+            [
+                self::STATUS_PENDING,
+                self::STATUS_ONGOING,
+                self::STATUS_SCHEDULED,
+                self::STATUS_AWAITING_PARTS,
+                self::STATUS_AWAITING_SIGNATURE,
+                self::STATUS_REFERRED_EXTERNAL,
+            ]
+        );
+    }
+
     // Helpers
     public function isPending()
     {

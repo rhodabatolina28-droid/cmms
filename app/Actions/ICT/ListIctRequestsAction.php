@@ -21,7 +21,8 @@ class ListIctRequestsAction
 
         if ($user->role === 'user') {
             $query->where('type', 'ICT')->where('user_id', $user->id);
-            $requests = $query->orderBy('created_at', 'desc')->paginate(20);
+            // Unfinished-first: Pending/Ongoing/waiting float, Completed sinks.
+            $requests = $query->unfinishedFirst()->orderBy('created_at', 'desc')->paginate(20);
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
             }
@@ -29,7 +30,8 @@ class ListIctRequestsAction
         } elseif ($user->role === 'it') {
             // D4b: officials-first queue — official tickets jump to the top.
             $query->where('type', 'ICT')->where('assigned_to', $user->id);
-            $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
+            // Unfinished-first FIRST (primary key), then officials within the active group.
+            $requests = $query->unfinishedFirst()->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
             if ($request->wantsJson() || $request->expectsJson()) {
                 return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
             }
@@ -44,7 +46,8 @@ class ListIctRequestsAction
                         $q->where('office', $user->office);
                     }
                 });
-                $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
+                // Unfinished-first FIRST (primary key), then officials within the group.
+                $requests = $query->unfinishedFirst()->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
                 if ($request->wantsJson() || $request->expectsJson()) {
                     return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
                 }
@@ -57,6 +60,7 @@ class ListIctRequestsAction
                             $q->where('branch', $user->branch);
                         }
                     })
+                    ->unfinishedFirst()
                     ->officialsFirst()
                     ->orderBy('created_at', 'desc')
                     ->paginate(20);
@@ -67,7 +71,8 @@ class ListIctRequestsAction
             }
         }
 
-        $requests = $query->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
+        // Unfinished-first (primary key), then officials, then newest.
+        $requests = $query->unfinishedFirst()->officialsFirst()->orderBy('created_at', 'desc')->paginate(20);
         if ($request->wantsJson() || $request->expectsJson()) {
             return response()->json(['success' => true, 'requests' => $requests->items(), 'total' => $requests->total(), 'last_page' => $requests->lastPage(), 'current_page' => $requests->currentPage()]);
         }

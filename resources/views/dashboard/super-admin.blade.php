@@ -453,10 +453,10 @@
                 </div>
             @endif
         </div>
-        <div class="stat-card-premium stat-overdue {{ $stats['overdue_pms'] > 0 ? 'stat-overdue-alert' : '' }}">
+        <div class="stat-card-premium stat-overdue {{ $stats['overdue_tickets'] > 0 ? 'stat-overdue-alert' : '' }}">
             <i class="fa-solid fa-clock stat-bg-icon"></i>
-            <span class="stat-label">Overdue PMs</span>
-            <div class="stat-value">{{ $stats['overdue_pms'] }}</div>
+            <span class="stat-label">Overdue Tickets</span>
+            <div class="stat-value">{{ $stats['overdue_tickets'] }}</div>
         </div>
     </div>
 

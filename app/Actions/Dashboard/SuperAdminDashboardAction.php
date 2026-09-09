@@ -35,9 +35,11 @@ class SuperAdminDashboardAction
             ->where('type', '!=', 'Preventive Maintenance')
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED);
 
-        // Recent System Activity (Only user-submitted)
+        // Recent Office Requests — unfinished-first so aging Pending/Ongoing
+        // tickets are never buried under freshly-Completed ones.
         $recentRequests = (clone $userRequests)
             ->with('user')
+            ->unfinishedFirst()
             ->orderBy('created_at', 'desc')
             ->limit(10)
             ->get();
@@ -66,11 +68,18 @@ class SuperAdminDashboardAction
             $departmentStats['Other Offices'] = $otherTotal;
         }
             
-        // Overdue PMs
-        $overduePMsCount = RequestModel::query()
-            ->where('type', 'Preventive Maintenance')
-            ->where('status', RequestModel::STATUS_SCHEDULED)
-            ->where('is_auto_generated', true)
+        // Overdue Tickets (PM + ICT): any ACTIVE ticket sitting 7+ days — the
+        // D2 red bucket. Previously only auto-generated Scheduled PMs counted,
+        // so aging ICT tickets never showed on the stat card.
+        $overdueTicketsCount = RequestModel::query()
+            ->whereIn('status', [
+                RequestModel::STATUS_PENDING,
+                RequestModel::STATUS_ONGOING,
+                RequestModel::STATUS_SCHEDULED,
+                RequestModel::STATUS_AWAITING_PARTS,
+                RequestModel::STATUS_AWAITING_SIGNATURE,
+                RequestModel::STATUS_REFERRED_EXTERNAL,
+            ])
             ->where('created_at', '<', now()->subDays(7))
             ->whereHas('user', function ($query) use ($user) {
                 if ($user->branch) {
@@ -111,7 +120,7 @@ class SuperAdminDashboardAction
                 ->when($user->branch, fn ($query) => $query->where('branch', $user->branch))
                 ->count(),
             'total_assets' => $assetBreakdown['active'], // Active ONLY
-            'overdue_pms'  => $overduePMsCount,
+            'overdue_tickets' => $overdueTicketsCount,
         ];
 
         // Warranty alerts — handle missing column gracefully
