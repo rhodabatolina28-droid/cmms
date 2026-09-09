@@ -70,9 +70,9 @@ class GetRequestsDataAction
         // Clone before paginate so we can still do count queries
         $countQuery = clone $query;
 
-        $requests = $query->with(['assignedTo:id,full_name'])
+        $requests = $query->with(['assignedTo:id,full_name', 'user:id,full_name,position'])
             ->orderBy('created_at', 'desc')
-            ->select(['id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at', 'completed_at'])
+            ->select(['id', 'user_id', 'request_number', 'description', 'requestor_name', 'office', 'assigned_to', 'status', 'created_at', 'completed_at'])
             ->paginate($perPage, ['*'], 'page', $page);
 
         $hasFilters = $request->filled('search') || $request->filled('department') ||

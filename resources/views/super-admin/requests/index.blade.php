@@ -470,10 +470,19 @@ function renderRequestsTable(requests) {
         const isAssignedToMe = req.assigned_to && req.assigned_to.id === window.CMMS_USER_ID;
         const rowClass = isAssignedToMe ? 'tr-hover-row sa-row-assigned' : 'tr-hover-row';
 
+        // D2: bucket-colored age chip (F5 — active tickets only)
+        let ageChip = '';
+        if (req.should_show_age) {
+            const ageColors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
+            const [ageBg, ageFg] = ageColors[req.aging_bucket] || ageColors.green;
+            ageChip = `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:${ageBg};color:${ageFg};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${req.age_display}</div>`;
+        }
+
         return `<tr class="${rowClass}">
             <td>
                 <div class="sa-td-id">${req.display_number || req.request_number}</div>
                 ${req.user && req.user.is_high_official ? '<div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>' : ''}
+                ${ageChip}
                 <div class="sa-td-desc">${req.description || ''}</div>
             </td>
             <td class="sa-td-office">${req.office || 'N/A'}</td>

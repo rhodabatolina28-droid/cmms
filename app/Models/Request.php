@@ -12,6 +12,9 @@ class Request extends Model
 
     protected $table = 'requests';
 
+    // D2: aging fields travel with every JSON serialization (Master List API)
+    protected $appends = ['age_display', 'aging_bucket', 'should_show_age'];
+
     // Status Constants
     public const STATUS_SCHEDULED = 'Scheduled';
     public const STATUS_PENDING = 'Pending';

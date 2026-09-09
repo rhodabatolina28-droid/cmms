@@ -253,6 +253,7 @@
                                 @if($req->user?->is_high_official)
                                     <div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>
                                 @endif
+                                <div>@include('partials.ticket-age-chip', ['req' => $req])</div>
                             </td>
                             <td class="td-desc" title="{{ $req->description }}">
                                 {{ $req->description ?: 'N/A' }}
@@ -314,7 +315,7 @@ function filterRequests() {
 
         const requestId = row.cells[0].textContent.toLowerCase();
         const description = row.cells[1].textContent.toLowerCase();
-        const status = row.cells[3].textContent.trim();
+        const status = row.cells[4].textContent.trim(); // F2 fix: cells[3] is "Completed At" — status lives in cells[4]
 
         const matchesSearch = requestId.includes(searchInput) || description.includes(searchInput);
         const matchesStatus = statusFilter === "" || status === statusFilter;

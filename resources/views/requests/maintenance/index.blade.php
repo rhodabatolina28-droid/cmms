@@ -96,6 +96,7 @@
                             @if(!empty($req->is_auto_generated))
                                 <span class="badge-auto">Auto</span>
                             @endif
+                            <div>@include('partials.ticket-age-chip', ['req' => $req])</div>
                         </td>
                         <td class="maint-td-name">{{ $req->requestor_name }}</td>
                         <td class="maint-td-office">{{ $req->office }}</td>
