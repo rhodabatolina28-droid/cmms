@@ -112,4 +112,27 @@ class HighOfficialQueueTest extends TestCase
             ->assertSee('ICT-2026-0021')
             ->assertSee('Urgent');
     }
+
+    public function test_urgent_badge_hides_once_ticket_reaches_terminal_status(): void
+    {
+        // D4b + F5: the URGENT badge is an alarm — a Completed/Cancelled/Rejected
+        // ticket is history and must not keep flashing red on the lists.
+        $official = $this->user('Director II, Technical Services');
+        $ticket = $this->ictTicket($official, 'REQ-NCR-RCMB-2026-0031', now()->subDays(8));
+
+        $this->assertTrue($ticket->is_urgent_visible, 'Active ticket must show the badge');
+        $this->assertTrue($ticket->should_show_age);
+
+        foreach (['Completed', 'Cancelled', 'Rejected'] as $terminal) {
+            $ticket->update(['status' => $terminal]);
+            $ticket->refresh();
+            $this->assertFalse($ticket->is_urgent_visible, "URGENT badge must hide on {$terminal}");
+            $this->assertFalse($ticket->should_show_age, "Age chip must hide on {$terminal}");
+        }
+
+        // Back to an active status (e.g. reopened flow) — the badge returns.
+        $ticket->update(['status' => 'Awaiting Parts']);
+        $ticket->refresh();
+        $this->assertTrue($ticket->is_urgent_visible);
+    }
 }

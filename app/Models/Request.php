@@ -203,10 +203,11 @@ class Request extends Model
     }
 
     /**
-     * D2-a (F5): age chips appear on ACTIVE tickets only — Completed/Cancelled/
-     * Rejected are history, not alarms.
+     * D2-a (F5) / D4b: THE definition of an "active" ticket — terminal statuses
+     * (Completed/Cancelled/Rejected) are history, not alarms. Shared source of
+     * truth for age chips AND the URGENT high-official badge.
      */
-    public function getShouldShowAgeAttribute(): bool
+    public function getIsActiveTicketAttribute(): bool
     {
         return in_array($this->status, [
             self::STATUS_PENDING,
@@ -216,6 +217,24 @@ class Request extends Model
             self::STATUS_AWAITING_SIGNATURE,
             self::STATUS_REFERRED_EXTERNAL,
         ], true);
+    }
+
+    /**
+     * D2-a (F5): age chips appear on ACTIVE tickets only — Completed/Cancelled/
+     * Rejected are history, not alarms.
+     */
+    public function getShouldShowAgeAttribute(): bool
+    {
+        return $this->is_active_ticket;
+    }
+
+    /**
+     * D4b: the URGENT (high-official) badge is an alarm too — it must disappear
+     * once the ticket reaches a terminal status, exactly like the age chip.
+     */
+    public function getIsUrgentVisibleAttribute(): bool
+    {
+        return $this->is_active_ticket;
     }
 
     // Relationships
