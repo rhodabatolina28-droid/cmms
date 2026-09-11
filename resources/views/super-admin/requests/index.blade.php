@@ -188,6 +188,7 @@
         .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
         .sa-td-desc { font-size: 11px; color: #64748b; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .sa-td-office { font-weight: 700; color: #475569; }
+        .sa-td-type { font-weight: 700; font-size: 12px; color: #475569; }
         .sa-type-pill { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .sa-type-ict { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
         .sa-type-pm { background: #f5f3ff; color: #8b5cf6; border: 1px solid #ede9fe; }
@@ -498,7 +499,7 @@ function renderRequestsTable(requests) {
                 ${ageChip}
                 <div class="sa-td-desc">${req.description || ''}</div>
             </td>
-            <td class="sa-td-center">${req.linked_asset?.category || '&mdash;'}</td>
+            <td class="sa-td-type">${req.linked_asset?.category || '&mdash;'}</td>
             <td class="sa-td-office">${req.office || 'N/A'}</td>
             <td class="sa-td-requestor">
                 ${req.requestor_name}

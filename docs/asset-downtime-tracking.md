@@ -860,3 +860,9 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
   colpans 7→8/8→9, **IT `filterRequests()` cells[4]→cells[5] shift** (F2 comment updated).
   Learned: ang editor-em-dash insert ay naging 3-char mojibake — i-replace ng proper U+2014.
   Full suite **305/305 green** (1189 assertions, 46s).
+- **D8.3a Alignment fix: ✅ TAPOS (Sept 11 2026)** — ang Type values ay misaligned: header
+  `TYPE` = `text-align: left` pero values = `center`, at neighbors = `baseline` (top) pero
+  Type = `middle` → lumalagap sa baba sa tall rows. Fix: dedicated type classes — IT
+  `td-type` (existing, unused) · admin `ad-td-type` (existing, unused) · SA `sa-td-type`
+  (bago: `font-weight:700; font-size:12px; color:#475569`) — lahat **left + baseline**,
+  pantay sa header at katabing cells sa lahat ng roles. Na-lock sa tests (`assertSee('td-type')`).

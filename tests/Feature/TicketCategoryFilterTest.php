@@ -147,6 +147,7 @@ class TicketCategoryFilterTest extends TestCase
             ->assertOk()
             ->assertSee('All Categories')
             ->assertSee('<th>Type</th>', false)
+            ->assertSee('td-type', false)
             ->assertSee('Laptop');
 
         // Admin view (server-rendered rows + client-side filter)
@@ -155,6 +156,7 @@ class TicketCategoryFilterTest extends TestCase
             ->assertOk()
             ->assertSee('All Categories')
             ->assertSee('<th>Type</th>', false)
+            ->assertSee('ad-td-type', false)
             ->assertSee('Laptop');
 
         // SA view (JS-rendered rows — static thead + ribbon must carry the new column/filter)
@@ -162,6 +164,7 @@ class TicketCategoryFilterTest extends TestCase
         $this->actingAs($sa)->get(route('ict.index'))
             ->assertOk()
             ->assertSee('All Categories')
-            ->assertSee('<th>Type</th>', false);
+            ->assertSee('<th>Type</th>', false)
+            ->assertSee('sa-td-type', false);
     }
 }

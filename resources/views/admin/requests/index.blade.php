@@ -456,7 +456,7 @@
                                 <div class="ad-td-sub">#{{ $req->id }}</div>
                             </td>
                             <td class="ad-td-name">{{ $req->requestor_name }}</td>
-                            <td class="ad-td-center">{{ $req->linkedAsset?->category ?? '—' }}</td>
+                            <td class="ad-td-type">{{ $req->linkedAsset?->category ?? '—' }}</td>
                             <td class="ad-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
                             <td class="ad-td-date">{{ $req->completed_at ? $req->completed_at->format('M d, Y | h:i A') : '—' }}</td>
                             <td class="ad-td-center">

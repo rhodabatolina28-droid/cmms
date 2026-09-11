@@ -269,7 +269,7 @@
                             <td class="td-desc" title="{{ $req->description }}">
                                 {{ $req->description ?: 'N/A' }}
                             </td>
-                            <td class="td-center">{{ $req->linkedAsset?->category ?? '—' }}</td>
+                            <td class="td-type">{{ $req->linkedAsset?->category ?? '—' }}</td>
                             <td class="td-date">
                                 {{ $req->created_at->format('M d, Y') }}
                             </td>
