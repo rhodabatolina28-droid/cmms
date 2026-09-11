@@ -850,4 +850,13 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
   responsive rule + inline listener + window export). Codebase grep = **0 refs** (incl. rebuilt
   minified `inventory-*.js` = 0) · blade lint clean · `npm run build` OK (manifest fresh) ·
   Inventory suite **15/15 green** (87 assertions). Kasama sa commit ang D8 doc.
-- **D8.3 Category column + filter: (next)**
+- **D8.3 Category column + filter: ✅ TAPOS (Sept 11 2026)** — test-first (`TicketCategoryFilterTest`,
+  4 tests / 22 assertions): JSON filter + eager load + render assertions. Edits:
+  `ListIctRequestsAction` (+`linkedAsset:asset_id,category` eager load) · `GetRequestsDataAction`
+  (+category `whereHas` filter, +`linked_asset_id` sa select, +`filled('category')` sa `hasFilters`,
+  +eager load) · 3 Master List blades (IT/admin/SA): slim **Type** text column (walang icon —
+  `linkedAsset?->category ?? —`), `All Categories ▾` dropdown sa ribbon, `data-category` row attribute
+  (IT/admin), JS filter match, SA `params.set('category')` + stats `isFiltered` + listener,
+  colpans 7→8/8→9, **IT `filterRequests()` cells[4]→cells[5] shift** (F2 comment updated).
+  Learned: ang editor-em-dash insert ay naging 3-char mojibake — i-replace ng proper U+2014.
+  Full suite **305/305 green** (1189 assertions, 46s).

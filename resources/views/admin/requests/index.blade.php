@@ -409,6 +409,17 @@
                     <option value="Completed">Completed</option>
                     <option value="Rejected">Rejected</option>
                 </select>
+
+                <select id="filterCategory" class="ribbon-input ad-filter-status">
+                    <option value="">All Categories</option>
+                    <option value="Desktop">Desktop</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Printer/Scanner">Printer/Scanner</option>
+                    <option value="Peripherals">Peripherals</option>
+                    <option value="Network/Server">Network/Server</option>
+                    <option value="Others">Others</option>
+                </select>
             </div>
 
             <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
@@ -418,6 +429,7 @@
                         <tr>
                             <th>Request ID</th>
                             <th>Requestor</th>
+                            <th>Type</th>
                             <th>Date Filed</th>
                             <th>Completed At</th>
                             <th class="ad-td-center">Status</th>
@@ -433,6 +445,7 @@
                             data-request-status="{{ $req->status }}"
                             data-request-remarks="{{ e($req->remarks ?? '') }}"
                             data-assigned-to="{{ $req->assigned_to ?? '' }}"
+                            data-category="{{ $req->linkedAsset?->category ?? '' }}"
                         >
                             <td>
                                 <div class="ad-td-id">{{ $req->display_number ?? $req->request_number }}</div>
@@ -443,6 +456,7 @@
                                 <div class="ad-td-sub">#{{ $req->id }}</div>
                             </td>
                             <td class="ad-td-name">{{ $req->requestor_name }}</td>
+                            <td class="ad-td-center">{{ $req->linkedAsset?->category ?? '—' }}</td>
                             <td class="ad-td-date">{{ $req->created_at->format('M d, Y | h:i A') }}</td>
                             <td class="ad-td-date">{{ $req->completed_at ? $req->completed_at->format('M d, Y | h:i A') : '—' }}</td>
                             <td class="ad-td-center">
@@ -465,7 +479,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="ad-empty">
+                            <td colspan="8" class="ad-empty">
                                 <i class="fa-solid fa-inbox ad-empty-icon"></i>
                                 <span class="ad-empty-text">No requests recorded here.</span>
                             </td>
@@ -488,6 +502,7 @@
 function filterRequests() {
     const searchInput = document.getElementById('searchRequest').value.toLowerCase();
     const statusFilter = document.getElementById('filterStatus').value;
+    const categoryFilter = document.getElementById('filterCategory').value;
     const tableRows = document.querySelectorAll('#requestTable tr');
 
     tableRows.forEach(row => {
@@ -497,16 +512,19 @@ function filterRequests() {
         const requestor = row.cells[1].textContent.toLowerCase();
         const statusSpan = row.querySelector('.status-pill');
         const status = statusSpan ? statusSpan.textContent.trim() : "";
+        const rowCategory = row.getAttribute('data-category') || '';
 
         const matchesSearch = id.includes(searchInput) || requestor.includes(searchInput);
         const matchesStatus = statusFilter === "" || status === statusFilter;
+        const matchesCategory = categoryFilter === "" || rowCategory === categoryFilter;
 
-        row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+        row.style.display = (matchesSearch && matchesStatus && matchesCategory) ? "" : "none";
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchRequest').addEventListener('keyup', filterRequests);
     document.getElementById('filterStatus').addEventListener('change', filterRequests);
+    document.getElementById('filterCategory').addEventListener('change', filterRequests);
 });
 </script>
 @endsection

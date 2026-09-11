@@ -17,7 +17,7 @@ class ListIctRequestsAction
     public function execute(Request $request)
     {
         $user = Auth::user();
-        $query = RequestModel::with(['user', 'repairRequest', 'assignedTo']);
+        $query = RequestModel::with(['user', 'repairRequest', 'assignedTo', 'linkedAsset:asset_id,category']);
 
         if ($user->role === 'user') {
             $query->where('type', 'ICT')->where('user_id', $user->id);

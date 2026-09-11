@@ -58,6 +58,11 @@ class GetRequestsDataAction
             $query->where('status', $status);
         }
 
+        // D8.3: Category filter — linked asset type (registry "Type" column)
+        if ($category = $request->input('category')) {
+            $query->whereHas('linkedAsset', fn ($q) => $q->where('category', $category));
+        }
+
         // My Assigned filter
         $myAssigned = $request->boolean('my_assigned');
         if ($myAssigned) {
@@ -70,7 +75,7 @@ class GetRequestsDataAction
         // Clone before paginate so we can still do count queries
         $countQuery = clone $query;
 
-        $requests = $query->with(['assignedTo:id,full_name', 'user:id,full_name,position'])
+        $requests = $query->with(['assignedTo:id,full_name', 'user:id,full_name,position', 'linkedAsset:asset_id,category'])
             // Unfinished-first, then URGENT (high official) leads the active group.
             ->unfinishedFirst()
             ->officialsFirst()
@@ -81,13 +86,13 @@ class GetRequestsDataAction
                 'requests.id', 'requests.user_id', 'requests.request_number',
                 'requests.description', 'requests.requestor_name', 'requests.office',
                 'requests.assigned_to', 'requests.status', 'requests.created_at',
-                'requests.completed_at',
+                'requests.completed_at', 'requests.linked_asset_id',
             ])
             ->paginate($perPage, ['*'], 'page', $page);
 
         $hasFilters = $request->filled('search') || $request->filled('department') ||
                       $request->filled('division') || $request->filled('status') ||
-                      $myAssigned;
+                      $request->filled('category') || $myAssigned;
 
         $filteredStats = $hasFilters ? [
             'total'     => $requests->total(),

@@ -338,6 +338,17 @@
                     <option value="Completed">Completed</option>
                 </select>
 
+                <select id="filterCategory" class="ribbon-input sa-filter-select-sm">
+                    <option value="">All Categories</option>
+                    <option value="Desktop">Desktop</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Printer/Scanner">Printer/Scanner</option>
+                    <option value="Peripherals">Peripherals</option>
+                    <option value="Network/Server">Network/Server</option>
+                    <option value="Others">Others</option>
+                </select>
+
                 <button id="myAssignedToggle" class="sa-my-assigned-btn">
                     <i class="fa-solid fa-user-check"></i> My Assigned
                 </button>
@@ -350,6 +361,7 @@
                     <thead>
                         <tr>
                             <th>Request ID</th>
+                            <th>Type</th>
                             <th>Office/Division</th>
                             <th>Requestor</th>
                             <th>Assigned IT</th>
@@ -360,7 +372,7 @@
                         </tr>
                     </thead>
                     <tbody id="masterRequestTable">
-                        <tr><td colspan="8" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
+                        <tr><td colspan="9" style="text-align:center;padding:30px;color:#94a3b8;">Loading...</td></tr>
                     </tbody>
                 </table>
                 <div id="requestsPagination" class="sa-pagination"></div>
@@ -402,6 +414,7 @@ async function loadRequests(page) {
     params.set('department', document.getElementById('filterDepartment').value);
     params.set('division', document.getElementById('filterDivision').value);
     params.set('status', document.getElementById('filterStatus').value);
+        params.set('category', document.getElementById('filterCategory').value);
     params.set('my_assigned', myAssignedOnly ? '1' : '0');
     params.set('page', page);
     params.set('per_page', 20);
@@ -412,7 +425,7 @@ async function loadRequests(page) {
 
     const tbody = document.getElementById('masterRequestTable');
     if (requestsIsFirstLoad) {
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
     } else {
         tbody.classList.add('fading');
     }
@@ -434,19 +447,19 @@ async function loadRequests(page) {
             updateRequestStats(result.stats, result.filtered_stats);
         } else {
             tbody.classList.remove('fading');
-            tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#ef4444;">Failed to load requests.</td></tr>';
         }
     } catch (e) {
         if (e.name === 'AbortError') return;
         tbody.classList.remove('fading');
-        tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" style="text-align:center;padding:24px;color:#ef4444;">Error loading requests.</td></tr>';
     }
 }
 
 function renderRequestsTable(requests) {
     const tbody = document.getElementById('masterRequestTable');
     if (!requests.length) {
-        tbody.innerHTML = '<tr><td colspan="8" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="sa-empty"><i class="fa-solid fa-inbox sa-empty-icon"></i><span class="sa-empty-text">No requests found.</span></td></tr>';
         tbody.classList.remove('fading');
         return;
     }
@@ -485,6 +498,7 @@ function renderRequestsTable(requests) {
                 ${ageChip}
                 <div class="sa-td-desc">${req.description || ''}</div>
             </td>
+            <td class="sa-td-center">${req.linked_asset?.category || '&mdash;'}</td>
             <td class="sa-td-office">${req.office || 'N/A'}</td>
             <td class="sa-td-requestor">
                 ${req.requestor_name}
@@ -551,6 +565,7 @@ function updateRequestStats(stats, filteredStats) {
         document.getElementById('filterDepartment').value ||
         document.getElementById('filterDivision').value ||
         document.getElementById('filterStatus').value ||
+        document.getElementById('filterCategory').value ||
         myAssignedOnly;
     const s = isFiltered ? filteredStats : stats;
     document.getElementById('statPending').textContent   = s ? s.pending : '--';
@@ -593,6 +608,7 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     document.getElementById('filterDivision').addEventListener('change', () => loadRequests(1));
     document.getElementById('filterStatus').addEventListener('change', () => loadRequests(1));
+    document.getElementById('filterCategory').addEventListener('change', () => loadRequests(1));
     document.getElementById('exportBtn').addEventListener('click', exportData);
     document.getElementById('myAssignedToggle').addEventListener('click', toggleMyAssigned);
 });

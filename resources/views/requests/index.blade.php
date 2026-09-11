@@ -230,6 +230,16 @@
                     <option value="Completed">Completed</option>
                     <option value="Rejected">Rejected</option>
                 </select>
+                <select id="filterCategory" class="ribbon-input filter-select">
+                    <option value="">All Categories</option>
+                    <option value="Desktop">Desktop</option>
+                    <option value="Laptop">Laptop</option>
+                    <option value="Monitor">Monitor</option>
+                    <option value="Printer/Scanner">Printer/Scanner</option>
+                    <option value="Peripherals">Peripherals</option>
+                    <option value="Network/Server">Network/Server</option>
+                    <option value="Others">Others</option>
+                </select>
             </div>
 
             <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
@@ -239,6 +249,7 @@
                         <tr>
                             <th>Request ID</th>
                             <th>Description</th>
+                            <th>Type</th>
                             <th>Date Requested</th>
                             <th>Completed At</th>
                             <th class="th-status">Current Status</th>
@@ -248,7 +259,7 @@
                     </thead>
                     <tbody>
                         @forelse($requests as $req)
-                        <tr class="tr-hover-row">
+                        <tr class="tr-hover-row" data-category="{{ $req->linkedAsset?->category ?? '' }}">
                             <td class="td-id">{{ $req->display_number ?? $req->request_number }}
                                 @if($req->user?->is_high_official && $req->is_urgent_visible)
                                     <div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>
@@ -258,6 +269,7 @@
                             <td class="td-desc" title="{{ $req->description }}">
                                 {{ $req->description ?: 'N/A' }}
                             </td>
+                            <td class="td-center">{{ $req->linkedAsset?->category ?? '—' }}</td>
                             <td class="td-date">
                                 {{ $req->created_at->format('M d, Y') }}
                             </td>
@@ -280,7 +292,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="7" class="empty-row">
+                            <td colspan="8" class="empty-row">
                                 <i class="fa-solid fa-clipboard-question empty-icon-big"></i>
                                 No requests found in your repository.
                                 @if(Auth::user()->role === 'user')
@@ -308,6 +320,7 @@
 function filterRequests() {
     const searchInput = document.getElementById('searchRequest').value.toLowerCase();
     const statusFilter = document.getElementById('filterStatus').value;
+    const categoryFilter = document.getElementById('filterCategory').value;
     const tableRows = document.querySelectorAll('tbody tr');
 
     tableRows.forEach(row => {
@@ -315,17 +328,22 @@ function filterRequests() {
 
         const requestId = row.cells[0].textContent.toLowerCase();
         const description = row.cells[1].textContent.toLowerCase();
-        const status = row.cells[4].textContent.trim(); // F2 fix: cells[3] is "Completed At" — status lives in cells[4]
+        const rowCategory = row.getAttribute('data-category') || '';
+        // F2 fix (updated D8.3): "Type" column added at index 2, so Status
+        // shifted from cells[4] to cells[5] (cells[3] is "Completed At").
+        const status = row.cells[5].textContent.trim();
 
         const matchesSearch = requestId.includes(searchInput) || description.includes(searchInput);
         const matchesStatus = statusFilter === "" || status === statusFilter;
+        const matchesCategory = categoryFilter === "" || rowCategory === categoryFilter;
 
-        row.style.display = (matchesSearch && matchesStatus) ? "" : "none";
+        row.style.display = (matchesSearch && matchesStatus && matchesCategory) ? "" : "none";
     });
 }
 document.addEventListener('DOMContentLoaded', function() {
     document.getElementById('searchRequest').addEventListener('keyup', filterRequests);
     document.getElementById('filterStatus').addEventListener('change', filterRequests);
+    document.getElementById('filterCategory').addEventListener('change', filterRequests);
 });
 </script>
 @endsection
