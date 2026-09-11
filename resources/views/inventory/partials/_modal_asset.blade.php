@@ -24,7 +24,6 @@
                             <option value="Printer/Scanner">Printer/Scanner</option>
                             <option value="Peripherals">Peripherals</option>
                             <option value="Network/Server">Network/Server</option>
-                            <option value="IT Parts / Components">IT Parts / Components</option>
                             <option value="Others">Others</option>
                         </select>
                     </div>
@@ -489,36 +488,6 @@
 
 
                 <div id="generalSpecsGroup">
-                    <!-- IT Parts / Components Quick-Fill -->
-                    <div id="itPartsSection" class="it-parts-box">
-                        <div class="it-parts-title">
-                            <i class="fa-solid fa-screwdriver-wrench"></i> IT Part / Component Details
-                        </div>
-                        <div class="it-parts-grid">
-                            <div>
-                                <label class="it-part-label">Part Type</label>
-                                <select id="itPartType" class="form-input-gov">
-                                    <option value="">-- Select Part Type --</option>
-                                    <option value="RAM">RAM (Memory)</option>
-                                    <option value="SSD">SSD (Solid State Drive)</option>
-                                    <option value="HDD">HDD (Hard Disk Drive)</option>
-                                    <option value="GPU">GPU (Graphics Card)</option>
-                                    <option value="CPU">CPU (Processor)</option>
-                                    <option value="PSU">PSU (Power Supply Unit)</option>
-                                    <option value="Motherboard">Motherboard</option>
-                                    <option value="Battery">Battery (Laptop)</option>
-                                    <option value="Cooling Fan">Cooling Fan</option>
-                                    <option value="Network Card">Network Card / Wi-Fi Adapter</option>
-                                    <option value="Keyboard">Keyboard (Replacement)</option>
-                                    <option value="Other Part">Other</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="it-part-label">Capacity / Speed / Size</label>
-                                <input type="text" id="itPartSpec" class="form-input-gov" placeholder="e.g. 8GB DDR4, 512GB NVMe, RTX 3050" oninput="itPartTypeChange()">
-                            </div>
-                        </div>
-                    </div>
                     <label class="form-label-gov">Other Details / Remarks</label>
                     <textarea id="generalSpecifications" class="form-input-gov textarea-md" placeholder="Additional technical details..."></textarea>
                 </div>

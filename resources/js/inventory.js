@@ -416,7 +416,6 @@ function toggleSpecsForm() {
     const monitorSpecs = document.getElementById("monitorSpecsContainer");
     const networkSpecs = document.getElementById("networkSpecsContainer");
     const generalSpecs = document.getElementById("generalSpecsGroup");
-    const itPartsSection = document.getElementById("itPartsSection");
     const desktopAccessories = document.getElementById("desktopAccessoriesSection");
     const laptopBattery = document.getElementById("laptopBatterySection");
 
@@ -424,7 +423,6 @@ function toggleSpecsForm() {
     if (monitorSpecs) monitorSpecs.style.display = "none";
     if (networkSpecs) networkSpecs.style.display = "none";
     if (generalSpecs) generalSpecs.style.display = "none";
-    if (itPartsSection) itPartsSection.style.display = "none";
 
     if ((category === "Desktop" || category === "Laptop" || category === "Desktop/Laptop") && dynamicSpecs) {
         dynamicSpecs.style.display = "block";
@@ -437,19 +435,7 @@ function toggleSpecsForm() {
         networkSpecs.style.display = "block";
     } else if (generalSpecs) {
         generalSpecs.style.display = "block";
-        if (category === "IT Parts / Components" && itPartsSection) {
-            itPartsSection.style.display = "block";
-        }
     }
-}
-
-function itPartTypeChange() {
-    const type = document.getElementById("itPartType")?.value;
-    const spec = document.getElementById("itPartSpec")?.value?.trim();
-    const textarea = document.getElementById("generalSpecifications");
-    if (!textarea || !type) return;
-    const combined = spec ? `${type} — ${spec}` : type;
-    textarea.value = combined;
 }
 
 function toggleNetworkDeviceSpecs() {
@@ -1088,7 +1074,6 @@ window.onFilterChange = onFilterChange;
 window.renderPagination = renderPagination;
 window.goToPage = goToPage;
 window.toggleSpecsForm = toggleSpecsForm;
-window.itPartTypeChange = itPartTypeChange;
 window.toggleNetworkDeviceSpecs = toggleNetworkDeviceSpecs;
 window.setInputVal = setInputVal;
 window.openAddAssetModal = openAddAssetModal;

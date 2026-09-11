@@ -457,10 +457,6 @@
         .accessories-section { margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
         .section-uppercase { font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 10px; }
         .laptop-battery-section { display: none; margin-top: 16px; padding-top: 14px; border-top: 1px solid #e2e8f0; }
-        .it-parts-box { display: none; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 14px 16px; margin-bottom: 16px; }
-        .it-parts-title { font-size: 11px; font-weight: 800; color: #1d4ed8; text-transform: uppercase; margin-bottom: 10px; }
-        .it-parts-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        .it-part-label { font-size: 11px; font-weight: 700; color: #475569; display: block; margin-bottom: 4px; }
         .textarea-md { min-height: 80px; resize: vertical; }
         .textarea-sm { min-height: 70px; resize: vertical; }
         .textarea-xs { min-height: 60px; resize: vertical; }
@@ -569,7 +565,6 @@
             .acc-grid-2 { grid-template-columns: 1fr !important; gap: 10px !important; }
             .net-grid { grid-template-columns: 1fr !important; }
             .equip-grid { grid-template-columns: 1fr !important; }
-            .it-parts-grid { grid-template-columns: 1fr !important; }
             .modal-body > div[style*="grid-template-columns"] { grid-template-columns: 1fr !important; }
             .form-label-gov { font-size: 10px !important; }
             .section-title-sm { font-size: 10px !important; }
@@ -768,9 +763,6 @@
     window.addEventListener('load', function() {
         const transferForm = document.getElementById('transferForm');
         if (transferForm) transferForm.addEventListener('submit', window.saveTransfer);
-
-        const itPartType = document.getElementById('itPartType');
-        if (itPartType) itPartType.addEventListener('change', window.itPartTypeChange);
 
         const addAssetBtn = document.getElementById('addAssetBtn');
         if (addAssetBtn) addAssetBtn.addEventListener('click', window.openAddAssetModal);

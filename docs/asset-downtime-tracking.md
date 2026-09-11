@@ -801,3 +801,53 @@ storage/app/private/
 - D5 storage reorg: D5b/D5c private-disk migration + D5a CSM auto-PDF polish chain + D5d `csm:generate-pdfs` backfill — ✅ committed (`3a940d3` latest of chain)
 - **D6 ticket auto-archive: ✅ committed `0b791b8`** — `archive_pdf_path` column, afterCommit trigger sa completion, `tickets:generate-archive-pdfs` backfill (34/0), sigImg closure fix, 4 feature tests pass
 - **D2 Ticket Aging: ✅ DONE (Sept 9 2026)** — chain `5050937` → `dd8d178` → `b8d3267` → `362d7bc` → `ba4a009` → `f7b00f3` → `68fedeb` → `bc21a6d` → `9b8ef54`. Accessors + chips sa lahat ng lists + calendar aging + unfinished-first + URGENT-in-unfinished + terminal-age hidden + Work Orders badge. Full suite **297/297 green**.
+
+---
+
+## 8. D8 — Master List Category Column + IT Parts/Components Removal (Sept 2026) — GAGAWIN
+
+### D8.1 Ano at bakit
+- **Category column + filter sa 3 Master Lists** (IT, Admin Division, Super-Admin) — dedicated slim
+  **"Type"** text column (walang icon — gov registry convention: COA/DICT templates ay labeled columns,
+  hindi badges-in-cell) + `All Categories ▾` dropdown sa filter ribbon (tabi ng All Divisions/Departments).
+- Ground: 8 fixed categories mula sa Register Asset modal (`Desktop · Laptop · Monitor · Printer/Scanner ·
+  Peripherals · Network/Server · Others` pagkatapos ng D8.2 removal), 406 live assets walang out-of-list value.
+- **Kasabay: alisin ang "IT Parts / Components" asset category** — may dedikadong Parts/Consumables module na
+  (`inventory/parts.blade.php` + PartsStockUnits), doon na ang mga parts. Zero live data ang category
+  (0 assets, 0 requests) kaya pure front-end removal, walang migration.
+
+### D8.2 IT Parts / Components removal map (11 puntos, 3 files)
+| File | Linya | Ano |
+|---|---|---|
+| `inventory/partials/_modal_asset.blade.php` | L27 | `<option value="IT Parts / Components">` sa category select |
+| `inventory/partials/_modal_asset.blade.php` | L492-521 | Buong itPartsSection quick-fill block (Part Type + Capacity/Specs) |
+| `inventory/index.blade.php` | L460-463 | CSS `.it-parts-box/-title/-grid/-part-label` — ✅ TINANGGAL |
+| `inventory/index.blade.php` | L572 | Responsive `.it-parts-grid` rule — ✅ TINANGGAL |
+| `inventory/index.blade.php` | L772-774 | Inline `itPartType` change listener — ✅ TINANGGAL |
+| `resources/js/inventory.js` | L419 | `itPartsSection` declaration |
+| `resources/js/inventory.js` | L427 | hide line sa `toggleSpecsForm()` |
+| `resources/js/inventory.js` | L440-442 | show block kapag category = "IT Parts / Components" |
+| `resources/js/inventory.js` | L446-453 | `itPartTypeChange()` function (may mojibake — regex via PowerShell) |
+| `resources/js/inventory.js` | L1091 | `window.itPartTypeChange = itPartTypeChange;` export |
+
+**Verified safe:** server validation ay free-string (`required|string|max:100`, walang `in:` list) ·
+Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `config/`, `tests/`.
+
+### D8.3 Category column + filter plan (test-first)
+1. **Tests muna** — `TicketCategoryFilterTest`: eager-loaded category sa row data; SA/Admin
+   server-side `category` filter + `filtered_stats` kasama ang `hasFilters` hook
+2. **Actions** — `ListIctRequestsAction` + `GetRequestsDataAction`: `with(['linkedAsset:asset_id,category'])`
+   + `requests.linked_asset_id` sa explicit select list + `whereHas('linkedAsset', category)`
+3. **IT blade** — slim **Type** column (text only: `$req->linkedAsset?->category ?? '—'`) + ribbon dropdown +
+   JS `data-category` match + **`cells[4]` → `cells[5]` shift sa `filterRequests()`** (may F2 comment na
+   sensitive ang indices — itetest ito)
+4. **SA/Admin blades** — same column + `params.set('category', ...)` sa server-side `loadRequests()`
+5. Verify (grep 0 refs + lint + build + suite) → commit kada phase
+
+### D8.4 Execution log
+- **D8.2 IT Parts / Components removal: ✅ TAPOS (Sept 11 2026)** — lahat ng 11 puntos tinanggal
+  (dropdown option + quick-fill block + 5 toggleSpecsForm/itPartTypeChange JS points + CSS block +
+  responsive rule + inline listener + window export). Codebase grep = **0 refs** (incl. rebuilt
+  minified `inventory-*.js` = 0) · blade lint clean · `npm run build` OK (manifest fresh) ·
+  Inventory suite **15/15 green** (87 assertions). Kasama sa commit ang D8 doc.
+- **D8.3 Category column + filter: (next)**
