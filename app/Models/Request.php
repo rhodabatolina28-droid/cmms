@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Carbon\CarbonInterface;
 
 class Request extends Model
 {
@@ -25,6 +26,10 @@ class Request extends Model
     public const STATUS_AWAITING_PARTS = 'Awaiting Parts';
     public const STATUS_AWAITING_SIGNATURE = 'Awaiting Signature';
     public const STATUS_REFERRED_EXTERNAL = 'Referred - External';
+
+    // D2-e: PM service window - a Scheduled PM becomes 'Overdue' once it has sat
+    // for more than 3 WORKING days (Mon-Fri; weekends excluded).
+    public const PM_SERVICE_WINDOW_WORKING_DAYS = 3;
 
     protected $fillable = [
         'user_id',
@@ -193,13 +198,40 @@ class Request extends Model
     }
 
     /**
-     * D2-a (F6): THE overdue definition — a Scheduled PM task sitting 7d+.
+     * D2-e (F6): THE overdue definition — a Scheduled PM task that has sat for
+     * more than the 3-WORKING-DAY service window (Mon-Fri; weekends excluded).
      * Replaces the duplicated diffInDays(now()) > 7 rules in ListPmTasksAction
      * and pm-tasks.blade.php so stats and row highlighting can never disagree.
      */
     public function getIsAgingOverdueAttribute(): bool
     {
-        return $this->status === self::STATUS_SCHEDULED && $this->aging_bucket === 'red';
+        return $this->status === self::STATUS_SCHEDULED
+            && self::workingDaysBetween($this->created_at, now())
+                > self::PM_SERVICE_WINDOW_WORKING_DAYS;
+    }
+
+    /**
+     * D2-e: count of WORKING days between two dates. Days after `from` up to
+     * and including `to`; Saturdays and Sundays are skipped. Philippine public
+     * holidays are not modeled (matches the rest of the codebase). Loop capped
+     * as a failsafe so a wildly-dated row can never hang a request.
+     */
+    public static function workingDaysBetween(CarbonInterface $from, CarbonInterface $to): int
+    {
+        $cursor = \Carbon\Carbon::parse($from->toDateString())->addDay();
+        $end    = \Carbon\Carbon::parse($to->toDateString());
+
+        $days  = 0;
+        $guard = 0;
+        while ($cursor->lte($end) && $guard < 3660) {
+            if (!$cursor->isWeekend()) {
+                $days++;
+            }
+            $cursor->addDay();
+            $guard++;
+        }
+
+        return $days;
     }
 
     /**

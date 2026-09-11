@@ -51,6 +51,7 @@ class GetOrdersDataAction
             return array_merge($order->toArray(), [
                 'age_bucket'  => $order->should_show_age ? $order->aging_bucket : null,
                 'age_display' => $order->should_show_age ? $order->age_display : null,
+                'overdue'     => $order->is_aging_overdue,
             ]);
         });
 

@@ -142,4 +142,73 @@ class TicketAgingTest extends TestCase
             $this->assertFalse($this->ticket(['status' => $status])->should_show_age, "{$status} hides age");
         }
     }
+
+    // =========================================================================
+    // D2-e - PM service window (3 WORKING days, weekends excluded)
+    // =========================================================================
+
+    /** Backdate a Scheduled ticket so it is exactly N WORKING days old (skips weekends). */
+    private function agedByWorkingDays(int $workingDays): Request
+    {
+        Carbon::setTestNow(now());
+
+        $date = Carbon::now();
+        $counted = 0;
+        while ($counted < $workingDays) {
+            $date = $date->subDay();
+            if (!$date->isWeekend()) {
+                $counted++;
+            }
+        }
+
+        $ticket = $this->ticket(['status' => 'Scheduled']);
+        $ticket->created_at = $date;
+        $ticket->save();
+        $ticket->refresh();
+
+        return $ticket;
+    }
+
+    public function test_is_aging_overdue_uses_working_day_window(): void
+    {
+        // D2-e: overdue = Scheduled + more than 3 WORKING days (Mon-Fri).
+        $this->assertTrue(
+            $this->agedByWorkingDays(4)->is_aging_overdue,
+            '4 working days crosses the 3-day service window'
+        );
+
+        $this->assertFalse(
+            $this->agedByWorkingDays(3)->is_aging_overdue,
+            'Exactly 3 working days is within the window (strictly greater than 3)'
+        );
+
+        $this->assertFalse(
+            $this->agedByWorkingDays(1)->is_aging_overdue,
+            'Fresh ticket is never overdue'
+        );
+
+        // Status gate still applies - an Ongoing ticket ages but is not overdue.
+        $ongoing = $this->agedByWorkingDays(4);
+        $ongoing->update(['status' => 'Ongoing']);
+        $ongoing->refresh();
+        $this->assertFalse($ongoing->is_aging_overdue, 'Ongoing is never overdue');
+    }
+
+    public function test_working_days_between_skips_weekends(): void
+    {
+        // Deterministic: Mon 2026-09-07 -> Sat 2026-09-12 = Tue,Wed,Thu,Fri = 4.
+        $this->assertSame(4, Request::workingDaysBetween(
+            Carbon::parse('2026-09-07'), Carbon::parse('2026-09-12')
+        ));
+
+        // Thu -> Mon crosses a weekend: Fri + Mon only = 2 working days.
+        $this->assertSame(2, Request::workingDaysBetween(
+            Carbon::parse('2026-09-10'), Carbon::parse('2026-09-14')
+        ));
+
+        // Same-day span = 0 (no days after `from`).
+        $this->assertSame(0, Request::workingDaysBetween(
+            Carbon::parse('2026-09-10'), Carbon::parse('2026-09-10')
+        ));
+    }
 }

@@ -631,4 +631,62 @@ class PMFlowTest extends TestCase
             'next_scheduled_at rolled too far beyond completed_date + 3 months'
         );
     }
+
+    // =========================================================================
+    // D2-e - No-skip rule: an OVERDUE (but unfinished) division must NOT
+    // advance the cycle. Only completing it lets the cycle move on.
+    // =========================================================================
+
+    /** Backdate a request so it is exactly N WORKING days old (skips weekends). */
+    private function ageRequestWorkingDays(RequestModel $req, int $workingDays): RequestModel
+    {
+        $date = Carbon::now();
+        $counted = 0;
+        while ($counted < $workingDays) {
+            $date = $date->subDay();
+            if (!$date->isWeekend()) {
+                $counted++;
+            }
+        }
+
+        $req->created_at = $date;
+        $req->save();
+
+        return $req;
+    }
+
+    public function test_overdue_unfinished_division_does_not_advance(): void
+    {
+        ['user' => $userA] = $this->createUserWithAsset('DIVISION A', null, '2020-01-01');
+        ['user' => $userB] = $this->createUserWithAsset('DIVISION B', null, '2023-01-01');
+
+        $this->pmService->generate($this->schedule);
+        $this->schedule->refresh();
+        $this->assertEquals('DIVISION A', $this->schedule->current_focus_division);
+
+        // Make DIVISION A's work order OVERDUE (>3 working days, still open).
+        $reqA = RequestModel::where('user_id', $userA->id)->where('status', 'Scheduled')->first();
+        $this->assertNotNull($reqA, 'Fixture must generate a Scheduled order for user A');
+        $this->ageRequestWorkingDays($reqA, 5);
+        $reqA->refresh();
+        $this->assertTrue($reqA->is_aging_overdue, 'Fixture must be overdue to test the no-skip rule');
+
+        // No-skip: despite being overdue, the cycle must NOT advance.
+        [$nextDiv, $cycleComplete] = $this->pmService->checkAndAdvance($this->schedule);
+        $this->assertNull($nextDiv, 'Overdue but unfinished division must not advance the cycle');
+        $this->assertFalse($cycleComplete);
+        $this->schedule->refresh();
+        $this->assertEquals('DIVISION A', $this->schedule->current_focus_division, 'Focus stays on the overdue division');
+
+        // Complete the work -> saka the cycle advances to the next division.
+        // (Restore created_at to NOW so the completed ticket still belongs to
+        // this cycle - the age rollback above would otherwise exclude it from
+        // the completed-count membership gate on the next advance.)
+        $reqA->update(['status' => 'Completed']);
+        $reqA->created_at = Carbon::now();
+        $reqA->save();
+        [$nextDiv, $cycleComplete] = $this->pmService->checkAndAdvance($this->schedule);
+        $this->assertEquals('DIVISION B', $nextDiv, 'Advance only after the overdue division is completed');
+        $this->assertFalse($cycleComplete);
+    }
 }

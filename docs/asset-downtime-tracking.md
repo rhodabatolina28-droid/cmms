@@ -182,10 +182,9 @@ php artisan downtime:repair
 - **⚠️ D3 prerequisite (BLOCKER):** no priority values exist in the system yet
   (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10). Kailangan muna ng decision: ano ang P1-P4
   definition + kung saan i-input (request form? auto by high-official?) bago magsimula ang D3.
-- **D2-e (service window 3 working days + no-skip)** — ang advance-gate bug fix ay tapos na
-  (`66e52fc`), pero ang window-logic mismo ay naka-hold (tingnan ang D2.6 Remaining)
+- **D2-e (service window) — ✅ DONE (Sept 9)** — isang Scheduled PM ay Overdue lampas sumanda sa >3 WORKING days (weekends excluded); no-skip naka-lock ng tests (tingnan ang D2.6)
 
-### D2 — Ticket Aging — ✅ DONE (Sept 9 2026 · execution log sa D2.6) <!-- ang "NEXT" ay nailipat na sa D3 -->
+### D2 — Ticket Aging — ✅ DONE (Sept 9 2026 · execution log sa D2.6, kabilang ang D2-e service window) <!-- ang "NEXT" ay nailipat na sa D3 -->
 
 **Layunin:** palitan ang hardcoded 7-day Overdue rule (`ListPmTasksAction.php:54`) ng unified,
 bucket-based aging na nakikita sa LAHAT ng ticket views — para mas actionable at pare-pareho.
@@ -278,9 +277,23 @@ Test-first lahat; full suite green pagkatapos ng bawat phase.
    "Age" column sa `orders.blade.php`, pero consistent pala ang ilalagay sa **ilalim ng request #**
    (gaya ng ICT lists) — tanggalin ang extra column, badge → sariling cell under the order number.
 
-**Remaining (D2 scope):**
-- **D2-e** (service window + no-skip enforcement) — ang advance-gate fix ay tapos na
-  (`66e52fc`), pero ang 3-working-day window logic mismo ay **hindi pa implemented**
+**D2-e — PM Service Window — ✅ DONE (Sept 9 2026)**
+- **Rule:** a Scheduled PM is **Overdue** once it has sat for MORE than 3 WORKING days
+  (Mon-Fri; **weekends excluded**). `Request::PM_SERVICE_WINDOW_WORKING_DAYS = 3`.
+- `Request::workingDaysBetween(from, to)` — count of working days after `from` up to and
+  including `to` (Carbon `isWeekend()` skip; loop capped 3660 as failsafe).
+- `is_aging_overdue` redefined: `Scheduled && workingDaysBetween(created_at, now) > 3`
+  (replaces the old 7-calendar-day red-bucket rule — the 🎨 age-chip buckets stay as-is,
+  they are display-only; the OVERDUE flag is the service-window alarm).
+- **PM Work Orders:** `GetOrdersDataAction` now returns `overdue` (server-computed);
+  `orders.blade.php` client-side `diffDays > 7` rule REMOVED — row highlight/count can
+  never disagree with the badge.
+- **No-skip stays locked:** `checkAndAdvance()` blocks on ANY unfinished request, so an
+  overdue division keeps focus until its PMs are done (`PMFlowTest::
+  test_overdue_unfinished_division_does_not_advance`).
+- Tests: `TicketAgingTest::test_is_aging_overdue_uses_working_day_window` +
+  `test_working_days_between_skips_weekends` + `PMFlowTest::test_overdue_unfinished_division_does_not_advance`
+  + `UnfinishedFirstTest::test_pm_work_orders_carry_overdue_flag` — full suite green.
 
 ### D4 — High-Official Immediate Priority (ICT) — ✅ COMPLETE (D4a + D4c + D4b done · D4d backfill: user data entry)
 

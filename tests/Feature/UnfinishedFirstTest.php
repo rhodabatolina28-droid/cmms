@@ -308,4 +308,63 @@ class UnfinishedFirstTest extends TestCase
         $this->assertNull($doneOrder['age_bucket'], 'Completed order must NOT carry age_bucket');
         $this->assertNull($doneOrder['age_display'], 'Completed order must NOT carry age_display');
     }
+
+    /** Backdate a ticket by N WORKING days (skips weekends) - D2-e. */
+    private function backdateWorkingDays(RequestModel $ticket, int $workingDays): void
+    {
+        $date = now();
+        $counted = 0;
+        while ($counted < $workingDays) {
+            $date = $date->subDay();
+            if (!$date->isWeekend()) {
+                $counted++;
+            }
+        }
+
+        $ticket->created_at = $date;
+        $ticket->save();
+    }
+
+    public function test_pm_work_orders_carry_overdue_flag(): void
+    {
+        $sa = $this->user('super_admin');
+        $requestor = $this->user();
+
+        // Aging Scheduled order (>3 working days) -> overdue flag true.
+        $old = $this->ticket($requestor, [
+            'type' => 'Preventive Maintenance',
+            'status' => 'Scheduled',
+            'is_auto_generated' => true,
+        ]);
+        $this->backdateWorkingDays($old, 5);
+
+        // Fresh Scheduled order -> not overdue.
+        $fresh = $this->ticket($requestor, [
+            'type' => 'Preventive Maintenance',
+            'status' => 'Scheduled',
+            'is_auto_generated' => true,
+        ]);
+
+        $this->actingAs($sa);
+        $json = app(\App\Actions\PMSchedule\GetOrdersDataAction::class)
+            ->execute(Request::create('/pm-schedules/orders/data', 'GET'))
+            ->getData(true);
+
+        $orders = collect($json['orders']);
+        $this->assertSame(true, $orders->firstWhere('id', $old->id)['overdue'], 'Aging Scheduled order must be flagged overdue');
+        $this->assertSame(false, $orders->firstWhere('id', $fresh->id)['overdue'], 'Fresh Scheduled order is not overdue');
+
+        // Completed order -> never overdue regardless of how old it is.
+        $done = $this->ticket($requestor, [
+            'type' => 'Preventive Maintenance',
+            'status' => 'Completed',
+            'is_auto_generated' => true,
+        ]);
+        $this->backdateWorkingDays($done, 9);
+
+        $json2 = app(\App\Actions\PMSchedule\GetOrdersDataAction::class)
+            ->execute(Request::create('/pm-schedules/orders/data', 'GET'))
+            ->getData(true);
+        $this->assertSame(false, collect($json2['orders'])->firstWhere('id', $done->id)['overdue'], 'Completed order is never overdue');
+    }
 }

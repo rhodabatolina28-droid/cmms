@@ -177,10 +177,10 @@ async function loadOrders(page) {
 }
 
 function isOverdue(order) {
-    if (order.status !== 'Scheduled') return false;
-    const created = new Date(order.created_at);
-    const diffDays = (Date.now() - created.getTime()) / (1000 * 60 * 60 * 24);
-    return diffDays > 7;
+    // D2-e: overdue now comes from the SERVER (is_aging_overdue = Scheduled +
+    // > 3 WORKING days). The old client-side `diffDays > 7` rule is removed so
+    // the row highlight can never disagree with the stats badge.
+    return order.overdue === true;
 }
 
 function renderOrdersTable(orders) {
