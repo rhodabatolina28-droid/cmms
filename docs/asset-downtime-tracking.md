@@ -176,12 +176,16 @@ php artisan downtime:repair
 ---
 
 ## 5. Out of Scope (future phases — do NOT mix into X1-X4)
-- **D3 SLA-lite — 🔜 NEXT** (pagkatapos ng D2-e): priority (P1-P4) usage, response/resolution targets,
-  breach badges, MTTR/MTBF, availability %; requires aging (D2 — ✅ done Sept 9) and accurate downtime
-  (this doc — ✅ done)
-- **⚠️ D3 prerequisite (BLOCKER):** no priority values exist in the system yet
-  (`CMMS_DEEP_REVIEW_SEPT2026.md` #17: SLA = 0/10). Kailangan muna ng decision: ano ang P1-P4
-  definition + kung saan i-input (request form? auto by high-official?) bago magsimula ang D3.
+- **D3 SLA-lite — ⏸️ DEFERRED (Sept 11 2026 — desisyon ng may-ari, naka-justify sa live data):**
+  P1-P4 priority triage ay HINDI idagdag. Rasyonale: (1) kumpleto na ang D4 high-official priority
+  (officials-first + URGENT + queue jump + age chips) — sapat para sa tunay na daloy; (2) 14
+  completed ICT lang sa buong kasaysayan, lahat maliliit — WALANG buong-opisina na outage event;
+  (3) ang P1/P3 badge ay madoble lang sa URGENT badge. Kaya: WALANG priority column, WALANG
+  setter dialog, WALANG P2/P4. **Babalikan lang kapag:** may naganap na buong-opisina na outage
+  (kahit beses lang) · humingi ang pamamahala ng response/resolution metrics · lumagpas na sa
+  ~50-100 ICT/buwan. Kapag bumalik: ICT-only, IT-side triage + parts-pause (ang Awaiting Parts/
+  Awaiting Signature/Referred-External ay hindi binibilang laban sa IT — response = assigned_at,
+  resolution = completed_at).
 - **D2-e (service window) — ✅ DONE (Sept 9)** — isang Scheduled PM ay Overdue lampas sumanda sa >3 WORKING days (weekends excluded); no-skip naka-lock ng tests (tingnan ang D2.6)
 
 ### D2 — Ticket Aging — ✅ DONE (Sept 9 2026 · execution log sa D2.6, kabilang ang D2-e service window) <!-- ang "NEXT" ay nailipat na sa D3 -->
@@ -801,6 +805,9 @@ storage/app/private/
 - D5 storage reorg: D5b/D5c private-disk migration + D5a CSM auto-PDF polish chain + D5d `csm:generate-pdfs` backfill — ✅ committed (`3a940d3` latest of chain)
 - **D6 ticket auto-archive: ✅ committed `0b791b8`** — `archive_pdf_path` column, afterCommit trigger sa completion, `tickets:generate-archive-pdfs` backfill (34/0), sigImg closure fix, 4 feature tests pass
 - **D2 Ticket Aging: ✅ DONE (Sept 9 2026)** — chain `5050937` → `dd8d178` → `b8d3267` → `362d7bc` → `ba4a009` → `f7b00f3` → `68fedeb` → `bc21a6d` → `9b8ef54`. Accessors + chips sa lahat ng lists + calendar aging + unfinished-first + URGENT-in-unfinished + terminal-age hidden + Work Orders badge. Full suite **297/297 green**.
+- **D8 Master List Category Column: ✅ committed (Sept 10-11 2026)** — category column + filter + Type column sa 3 Master Lists + IT Parts/Components category removal + Type alignment fix (dedicated td classes, left+baseline sa lahat ng roles)
+- **D3 SLA-lite (P1-P4): ⏸️ DEFERRED (Sept 11 2026)** — hindi idagdag (rationale sa Section 5); babalikan lang sa mga trigger doon
+- **D9 KPI Dashboard: PLANO (Sept 11 2026)** — 3 cards (MTTR · P1% · Parts Usage), walang bagong table/column, placement + alignment rules sa Section 9
 
 ---
 
@@ -866,3 +873,51 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
   `td-type` (existing, unused) · admin `ad-td-type` (existing, unused) · SA `sa-td-type`
   (bago: `font-weight:700; font-size:12px; color:#475569`) — lahat **left + baseline**,
   pantay sa header at katabing cells sa lahat ng roles. Na-lock sa tests (`assertSee('td-type')`).
+
+---
+
+## 9. D9 — Maintenance KPI Dashboard (3 cards) — PLANO (Sept 11 2026)
+
+### D9.1 Ano at bakit
+- **3 bagong KPI cards** sa mga dashboard (SA/IT/Admin): **MTTR** (mean time to resolve, buwanang
+  average sa araw) · **P1 %** (bahagi ng high-official request, kumpara sa total) · **Parts Usage**
+  (buwanang count ng order/issue ng pyesa).
+- Tugma sa deep review scorecard: #9 Reporting & Analytics = 4/10 — ang pinakahina na may
+  **handang datos na ngayon** (X1-X4 downtime split + D8 category column).
+- **WALANG bagong table/column** — purong pagbubuod mula sa umiiral na requests table
+  (completed_at, created_at, high-official flag, status) at parts.
+
+### D9.2 Mga patakarang pagkakaayos (na-verify laban sa mga kasalukuyang dashboard)
+| Patakaran | Dahilan (na-verify sa mga blade) |
+|---|---|
+| **WALANG dobleng numero** — ang Pending/Ongoing/Completed/Total/Overdue counts ay HINDI uulitin sa KPI | Ang live stat cards (stat-card-premium) sa lahat ng 3 dashboard ay mayroon na nito — doble lang kung uulitin |
+| **Pwesto: pagitan ng stat cards at analytics grid** | Reading order: LIVE (ngayon) → BUWAN (trend) → charts (malalim) |
+| **Parehong pamilya ng disenyo** — cards = stat-card-premium, header = analytics-title + icon-blue | Isang visual language, walang dayuhan |
+| **Chart.js ay naka-load na** (SA dashboard L600 CDN) | Ang mga chart sa Phase 2 ay WALANG bagong library — gawing katulad ng mga kulay: #0038A8 + #93c5fd |
+
+
+
+### D9.3 Ang 3 cards (mock-up na naka-lock)
+```
+┏━ 🔧 MAINTENANCE KPI — BUWAN ━━━━━━━━━━ Setyembre ▼ ┓
+┃  ⏱️ MTTR       │ 📄 P1 %      │ 🔩 PARTS USAGE    ┃
+┃    4.2 araw    │    35%       │    128            ┃
+┃   ▼ 0.8 vs Ago │  = 12/34     │   ▲ 15 vs Ago     ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+```
+| Card | Formula | Source |
+|---|---|---|
+| MTTR | AVG(completed_at − created_at) ng mga naipanatili sa buwan, sa araw | requests table |
+| P1 % | count(high-official) / count(ICT tickets) sa buwan | requests + user flag (D4) |
+| Parts Usage | count ng mga order/issue ng pyesa sa buwan | parts |
+
+### D9.4 Mga yugto (test-first)
+1. **D9.1** — KpiController (o method sa kasalukuyang Dashboard action) + isang aggregated na buwanang query + tests (tumpak na mga numero sa kilalang datos)
+2. **D9.2** — 3 cards sa SA dashboard + buwanang dropdown (6-buwan backfill) + render tests
+3. **D9.3** — 3 cards sa IT + Admin dashboards (na-scope ayon sa tungkulin) + mga tests
+4. **D9.4** — dokumentasyon + buong suite + commit kada phase
+- **Phase 2 (kalaunan):** 6-buwan trend charts (nakaload na Chart.js, walang bagong library) +
+  hiwalay na buong report view na may buwanang talahanayan + PDF/CSV.
+
+### D9.5 Log ng pagpapatupad
+- (itatala kada phase)
