@@ -920,4 +920,4 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
   hiwalay na buong report view na may buwanang talahanayan + PDF/CSV.
 
 ### D9.5 Log ng pagpapatupad
-- **D9.1+D9.2 SIMULA (Sept 11 2026)** — rollback point: 96784e5 (malinis, naka-push) · test-first: KpiDashboardTest (exact numbers + SA render) · GetMaintenanceKpiAction (6-buwan: MTTR/P1%/Parts, kpi_month GET param) + wire-in sa SuperAdminDashboardAction · SA blade KPI section (insert bago ang WORKSPACE GRID marker, stat-card family colors #0038A8)
+- **D9.1+D9.2 ✅ TAPOS (Sept 11 2026)** — test-first (KpiDashboardTest 2 passed / 15 assertions): GetMaintenanceKpiAction (6-buwan window; MTTR via abs diffInHours — Carbon 3 signed trap; P1 share via is_high_official accessor; Parts OUT movements; kpi_month GET param, default current) + wire-in sa SuperAdminDashboardAction compact + SA blade KPI section (analytics-box family, buwanang dropdown GET form, trend chips green/red, FK-safe test data: parts_stock parent row bago ang movements). Rollback: git revert ng D9 commit. Susunod: D9.3 IT + Admin dashboards (role-scoped).

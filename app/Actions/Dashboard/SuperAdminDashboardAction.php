@@ -183,6 +183,8 @@ class SuperAdminDashboardAction
             $csmResponseRate = 0;
         }
 
-        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount', 'assetBreakdown'));
+        $kpi = (new GetMaintenanceKpiAction)->execute();
+
+        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount', 'assetBreakdown', 'kpi'));
     }
 }
