@@ -123,12 +123,13 @@ class KpiDashboardTest extends TestCase
             ->get(route("dashboard.super-admin"))
             ->assertOk()
             ->assertSee("Maintenance KPI")
-            ->assertSee("MTTR")
-            ->assertSee("MTBF")
+            // renamed plain-language labels (D9.7): acronyms nananatili sa subtitles
+            ->assertSee("Avg. Downtime")
+            ->assertSee("Days Between Failures")
             ->assertSee("1.0")
-            ->assertSee("Avg. time to restore")
-            ->assertSee("MTTR Trend")
-            ->assertSee("MTBF Trend");
+            ->assertSee("Mean time to repair")
+            ->assertSee("Avg. Downtime")
+            ->assertSee("Days Between Failures");
     }
 
     public function test_trend_marks_censored_months_for_no_breakdowns(): void
@@ -259,5 +260,90 @@ class KpiDashboardTest extends TestCase
             // ▼ arrow (value down) sa worsening — dati ▲ ang naka-render
             // (escape=false: literal na HTML entity ang hinahanap sa output)
             ->assertSee("&#9660;", false);
+    }
+
+    public function test_overdue_pms_counts_only_late_scheduled_pm(): void
+    {
+        // D9.7: ang Overdue PMs ay Scheduled PM lang na lampas sa 3-working-day
+        // service window (D2-e is_aging_overdue rule). PM never uses
+        // Pending/Ongoing, kaya walang double-count sa ICT overdue card.
+        $sa = $this->user(["role" => "super_admin"]);
+        $requestor = $this->user();
+
+        $mkPm = function (string $number, string $status, string $createdAt) use ($requestor): RequestModel {
+            $t = RequestModel::create([
+                "user_id" => $requestor->id,
+                "request_number" => $number,
+                "type" => "Preventive Maintenance",
+                "requestor_name" => $requestor->full_name,
+                "region" => "NCR",
+                "branch" => "Main Office",
+                "office" => "RESEARCH AND INFORMATION DIVISION",
+                "status" => $status,
+                "is_deleted" => false,
+                "description" => "Overdue PM test " . $number,
+                "division_admin_review_status" => "Approved",
+            ]);
+            $t->created_at = $createdAt;
+            $t->save();
+            return $t->refresh();
+        };
+
+        // 8 days old = min. 4 working days > 3 -> OVERDUE
+        $late = $mkPm("REQ-NCR-RCMB-2026-0801", "Scheduled", now()->subDays(8)->format("Y-m-d H:i:s"));
+        // 1 day old = 0-1 working days -> hindi pa overdue
+        $fresh = $mkPm("REQ-NCR-RCMB-2026-0802", "Scheduled", now()->subDay()->format("Y-m-d H:i:s"));
+        // Completed = excluded (status filter)
+        $mkPm("REQ-NCR-RCMB-2026-0803", "Completed", now()->subDays(10)->format("Y-m-d H:i:s"));
+
+        $this->assertTrue($late->is_aging_overdue);
+        $this->assertFalse($fresh->is_aging_overdue);
+
+        $this->actingAs($sa);
+        $view = (new \App\Actions\Dashboard\SuperAdminDashboardAction)->execute();
+        $stats = $view->getData()["stats"];
+
+        $this->assertSame(1, $stats["overdue_pms"]);
+    }
+
+    public function test_dashboard_renders_new_cards_and_renamed_kpis(): void
+    {
+        // D9.7: bagong CSM Satisfaction card + amber PM-overdue subtext sa
+        // Overdue card + plain-language KPI labels. Laihat ng lumang acronym
+        // trend titles ay dapat mawala.
+        $sa = $this->user(["role" => "super_admin"]);
+        $requestor = $this->user();
+
+        $pm = RequestModel::create([
+            "user_id" => $requestor->id,
+            "request_number" => "REQ-NCR-RCMB-2026-0811",
+            "type" => "Preventive Maintenance",
+            "requestor_name" => $requestor->full_name,
+            "region" => "NCR",
+            "branch" => "Main Office",
+            "office" => "RESEARCH AND INFORMATION DIVISION",
+            "status" => "Scheduled",
+            "is_deleted" => false,
+            "description" => "Render test late PM",
+            "division_admin_review_status" => "Approved",
+        ]);
+        $pm->created_at = now()->subDays(8)->format("Y-m-d H:i:s");
+        $pm->save();
+
+        $this->actingAs($sa)
+            ->get(route("dashboard.super-admin"))
+            ->assertOk()
+            // bagong cards
+            ->assertSee("CSM Satisfaction")
+            ->assertSee("PM overdue")
+            // renamed KPI labels
+            ->assertSee("Avg. Downtime")
+            ->assertSee("Days Between Failures")
+            ->assertSee("Avg. Downtime")
+            ->assertSee("Days Between Failures")
+            // lumang acronym trend titles at ang redundant Service Quality widget ay dapat wala na
+            ->assertDontSee("MTTR Trend")
+            ->assertDontSee("MTBF Trend")
+            ->assertDontSee("Service Quality");
     }
 }

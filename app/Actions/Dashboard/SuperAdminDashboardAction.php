@@ -83,6 +83,22 @@ class SuperAdminDashboardAction
             ])
             ->where('created_at', '<', now()->subDays(7))
             ->count();
+        // Overdue PMs (D2-e rule): auto-generated Scheduled PM tickets past their
+        // 3-working-day service window (is_aging_overdue). PM never uses
+        // Pending/Ongoing, kaya hindi double-count ang card na ito sa ICT
+        // overdue card sa taas. Separate amber subtext sa Overdue card.
+        $overduePmsCount = RequestModel::query()
+            ->where('type', 'Preventive Maintenance')
+            ->where('status', RequestModel::STATUS_SCHEDULED)
+            ->where('division_admin_review_status', 'Approved')
+            ->whereHas('user', function ($query) use ($user) {
+                if ($user->branch) {
+                    $query->where('branch', $user->branch);
+                }
+            })
+            ->get()
+            ->filter(fn ($t) => $t->is_aging_overdue)
+            ->count();
             
         // Real asset status breakdown (region/branch scoped) — single source of truth
         // for BOTH the stat cards and the asset-status doughnut chart.
@@ -117,6 +133,7 @@ class SuperAdminDashboardAction
                 ->count(),
             'total_assets' => $assetBreakdown['active'], // Active ONLY
             'overdue_tickets' => $overdueTicketsCount,
+            'overdue_pms' => $overduePmsCount,
         ];
 
         // Warranty alerts — handle missing column gracefully

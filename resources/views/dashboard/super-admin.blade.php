@@ -486,10 +486,23 @@
             <i class="fa-solid fa-clock stat-bg-icon"></i>
             <span class="stat-label">Overdue Tickets</span>
             <div class="stat-value">{{ $stats['overdue_tickets'] }}</div>
+            @if(($stats['overdue_pms'] ?? 0) > 0)
+                <div style="font-size:10px; color:#b45309; font-weight:700; margin-top:4px;">
+                    <i class="fa-solid fa-calendar-check" style="margin-right:3px;"></i>{{ $stats['overdue_pms'] }} PM overdue
+                </div>
+            @endif
+        </div>
+        <div class="stat-card-premium stat-assets">
+            <i class="fa-solid fa-face-smile stat-bg-icon"></i>
+            <span class="stat-label">CSM Satisfaction</span>
+            <div class="stat-value">
+                @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
+            </div>
+            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedIctCount }} completed ICT responded &middot; {{ $csmResponseRate }}%</div>
         </div>
     </div>
 
-    <!-- D9: MAINTENANCE KPI - Monthly (MTTR / MTBF) -->
+    <!-- D9: MAINTENANCE KPI - Monthly (Avg. Downtime / Days Between Failures) -->
     <div class="analytics-box" style="padding: 20px 24px; margin-bottom: 18px;">
         <div class="analytics-title" style="margin-bottom: 4px;">
             <i class="fa-solid fa-chart-simple icon-blue"></i>
@@ -506,11 +519,11 @@
         <div class="kpi-card-grid">
             <div class="stat-card-premium stat-total">
                 <i class="fa-regular fa-clock stat-bg-icon"></i>
-                <span class="stat-label">MTTR</span>
+                <span class="stat-label">Avg. Downtime</span>
                 <div class="stat-value">
                     @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
                 </div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Avg. time to restore a failed asset</div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Mean time to repair (MTTR) &mdash; lower is better</div>
                 @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
                     @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
                     @if($mttrDiff > 0)
@@ -524,11 +537,11 @@
             </div>
             <div class="stat-card-premium stat-assets">
                 <i class="fa-solid fa-infinity stat-bg-icon"></i>
-                <span class="stat-label">MTBF</span>
+                <span class="stat-label">Days Between Failures</span>
                 <div class="stat-value">
                     @if($kpi["mtbf_days"] !== null){{ number_format($kpi["mtbf_days"], 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #10b981;">No failures this month</span> @endif
                 </div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Time between breakdowns</div>
+                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Mean time between failures (MTBF) &mdash; higher is better</div>
                 @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
                     @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
                     @if($mtbfDiff > 0)
@@ -575,7 +588,7 @@
                             <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-arrow-trend-up icon-blue"></i>
-                        MTTR Trend
+                        Avg. Downtime
                         <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
                         <span class="kpi-trend-chip" id="mttrLatestChip" style="display: none; margin-left: auto;"></span>
                     </div>
@@ -588,7 +601,7 @@
                 <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-arrow-trend-down icon-blue"></i>
-                        MTBF Trend
+                        Days Between Failures
                         <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
                         <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto;"></span>
                     </div>
@@ -680,25 +693,6 @@
                     <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Maintenance Calendar</div><div style="font-size:10px; color:#64748b;">View schedules timeline</div></div>
                 </a>
-            </div>
-
-            <!-- CSM Snapshot (Phase 1) -->
-            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 20px;">
-                <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; font-weight: 800; color:#64748b; text-transform:uppercase;">Service Quality (CSM)</h3>
-                <div style="display:flex; align-items:center; gap:15px;">
-                    <div style="width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; display:flex; align-items:center; justify-content:center; font-size: 18px; font-weight: 800; box-shadow: 0 4px 10px rgba(245, 158, 11, 0.3);">
-                        {{ $csmAverage }}
-                    </div>
-                    <div style="flex:1;">
-                        <div style="display:flex; color:#f59e0b; font-size:12px; margin-bottom:4px; gap: 2px;">
-                            @for($i=1; $i<=5; $i++)
-                                <i class="fa-solid fa-star" style="{{ $i <= round($csmAverage) ? '' : 'color:#e2e8f0;' }}"></i>
-                            @endfor
-                        </div>
-                        <div style="font-size:13px; font-weight:700; color:#1e293b;">Overall Satisfaction</div>
-                        <div style="font-size:12px; color:#64748b;">{{ $csmResponses }}/{{ $completedIctCount }} completed ICT tickets responded ({{ $csmResponseRate }}%)</div>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
@@ -934,7 +928,7 @@
 
     });
 
-    // D9: MTTR + MTBF 6-month trends (null = gap; hollow marker = censored no-breakdown month)
+    // D9: 6-month trends (null = gap; hollow marker = censored no-breakdown month)
     const kpiTrend = @json($kpi["trend"]);
     const kpiTooltipBase = { backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8, displayColors: false };
     const kpiTrendScales = {
@@ -974,7 +968,7 @@
             data: {
                 labels: kpiTrend.months,
                 datasets: [{
-                    label: "MTTR (days)",
+                    label: "Avg. downtime",
                     data: kpiTrend.mttr,
                     borderColor: "#0038A8",
                     borderWidth: 2.5,
@@ -1032,7 +1026,7 @@
             data: {
                 labels: kpiTrend.months,
                 datasets: [{
-                    label: "MTBF (days)",
+                    label: "Days between failures",
                     data: kpiTrend.mtbf,
                     borderColor: kpiMtbfColor,
                     borderWidth: 2.5,
@@ -1073,7 +1067,7 @@
                             label: ctx => {
                                 const i = ctx.dataIndex;
                                 if (i !== undefined && kpiTrend.censored[i]) {
-                                    return " No breakdowns (MTBF >= " + ctx.parsed.y + " days)";
+                                    return " No breakdowns (>= " + ctx.parsed.y + " days between failures)";
                                 }
                                 return " " + ctx.parsed.y + " days between breakdowns";
                             }
@@ -1092,7 +1086,7 @@
     // blangkong canvas ang MTBF na parang nabali ang chart.
     (function mountKpiEmptyStates() {
         const hasBreakdown = (arr) => (arr || []).some(v => v !== null && v !== undefined);
-        [["mttrChart", "MTTR", kpiTrend.mttr], ["mtbfChart", "MTBF", kpiTrend.mtbf]].forEach(([id, name, series]) => {
+        [["mttrChart", "downtime trend", kpiTrend.mttr], ["mtbfChart", "failure trend", kpiTrend.mtbf]].forEach(([id, name, series]) => {
             if (hasBreakdown(series)) return; // may data — walang kailangan
             const cv = document.getElementById(id);
             if (!cv) return;
@@ -1101,7 +1095,7 @@
             holder.style.position = "relative";
             const empty = document.createElement("div");
             empty.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;text-align:center;";
-            empty.innerHTML = '<i class="fa-solid fa-shield-heart" style="font-size:32px;color:#e2e8f0;"></i><div>No breakdowns in the last 6 months.</div><div style="font-size:11px;font-weight:500;">The ' + name + ' trend will appear here once failures are recorded.</div>';
+            empty.innerHTML = '<i class="fa-solid fa-shield-heart" style="font-size:32px;color:#e2e8f0;"></i><div>No breakdowns in the last 6 months.</div><div style="font-size:11px;font-weight:500;">The ' + name + ' will appear here once failures are recorded.</div>';
             holder.appendChild(empty);
         });
     })();
