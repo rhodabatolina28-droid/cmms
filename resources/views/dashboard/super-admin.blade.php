@@ -404,6 +404,17 @@
         .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 3px; width: 100%; margin-top: 6px; overflow: hidden; }
         .progress-bar-fill { background: #0038A8; height: 100%; border-radius: 3px; }
 
+        /* D9 polish: latest-month value chip sa trend card headers */
+        .kpi-trend-chip {
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: none;
+            white-space: nowrap;
+        }
+
         /* D9: responsive caps - 4 analytics boxes lock to 2 columns (no 3+1 wrap) */
         .analytics-gov-grid {
             grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -417,6 +428,13 @@
         }
         @media screen and (max-width: 767px) {
             .kpi-card-grid { grid-template-columns: 1fr !important; }
+            /* D9 polish: trend charts STACK full-width sa phones — ang 2-col lock
+               ay para sa desktop lang; sa 375px screen ang ~160px na chart columns
+               ay hindi mababasa. */
+            .analytics-gov-grid { grid-template-columns: 1fr !important; }
+            /* Trend line charts: 260px ang sapat kapag full-width (ang generic
+               360px rule ay para sa bar chart na may mahahabang office labels). */
+            .analytics-box .chart-box-trend { height: 260px !important; }
         }
 
     </style>
@@ -563,10 +581,11 @@
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-arrow-trend-up icon-blue"></i>
                         MTTR Trend
-                        <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                        <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                        <span class="kpi-trend-chip" id="mttrLatestChip" style="display: none; margin-left: auto;"></span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Average downtime each month, in days.</p>
-                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
+                    <div class="chart-box-bar chart-box-trend" style="height: 200px; width: 100%; position: relative;">
                         <canvas id="mttrChart"></canvas>
                     </div>
                 </div>
@@ -575,10 +594,11 @@
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-arrow-trend-down icon-blue"></i>
                         MTBF Trend
-                        <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                        <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                        <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto;"></span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Days between breakdowns (hollow = no breakdowns that month).</p>
-                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
+                    <div class="chart-box-bar chart-box-trend" style="height: 200px; width: 100%; position: relative;">
                         <canvas id="mtbfChart"></canvas>
                     </div>
                 </div>
@@ -925,12 +945,20 @@
     const kpiTrendScales = {
         y: {
             beginAtZero: true,
-            ticks: { color: "#94a3b8", callback: v => v + "d", maxTicksLimit: 6 },
+            /* grace: binibigyan ng headroom ang tuktok — hindi na dumidikit ang
+               line sa pinakamataas na gridline kapag buwanang value ang max. */
+            grace: "25%",
+            ticks: {
+                color: "#94a3b8",
+                font: { size: 10, weight: "600" },
+                callback: v => v + "d",
+                maxTicksLimit: 6
+            },
             grid: { color: "#e2e8f0", borderDash: [4, 4], drawTicks: false },
             border: { display: false }
         },
         x: {
-            ticks: { color: "#64748b", maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+            ticks: { color: "#64748b", font: { size: 10, weight: "600" }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
             grid: { display: false },
             border: { color: "#e2e8f0" }
         }
@@ -962,12 +990,17 @@
                     pointBackgroundColor: "#0038A8",
                     pointBorderColor: "#ffffff",
                     pointBorderWidth: 2,
+                    pointHoverBorderWidth: 3,
+                    pointHoverBorderColor: "#ffffff",
+                    pointStyle: "circle",
+                    borderJoinStyle: "round",
                     spanGaps: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 700, easing: "easeOutQuart" },
                 interaction: kpiInteraction,
                 plugins: {
                     legend: { display: false },
@@ -1016,12 +1049,17 @@
                     pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#10b981"),
                     pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#059669"),
                     pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#ffffff"),
-                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2)
+                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2),
+                    pointHoverBorderWidth: 3,
+                    pointHoverBorderColor: "#ffffff",
+                    pointStyle: "circle",
+                    borderJoinStyle: "round"
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                animation: { duration: 700, easing: "easeOutQuart" },
                 interaction: kpiInteraction,
                 plugins: {
                     legend: { display: false },
@@ -1062,6 +1100,31 @@
             empty.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;text-align:center;";
             empty.innerHTML = '<i class="fa-solid fa-shield-heart" style="font-size:32px;color:#e2e8f0;"></i><div>No breakdowns in the last 6 months.</div><div style="font-size:11px;font-weight:500;">The ' + name + ' trend will appear here once failures are recorded.</div>';
             holder.appendChild(empty);
+        });
+    })();
+
+    // D9 polish: latest-month value chip sa header ng bawat trend card.
+    // Kunin ang pinakahuling buwan na may value (huling non-null); kung puro
+    // null ang series, nananatiling nakatago ang chip (ang empty-state overlay
+    // na ang bahala sa blangkong canvas).
+    (function mountKpiChips() {
+        const fmt = (v) => (v === null || v === undefined) ? null : (Number.isInteger(v) ? v + "d" : Number(v).toFixed(1) + "d");
+        [
+            ["mttrLatestChip", kpiTrend.mttr, kpiTrend.censored, "rgba(0, 56, 168, 0.08)", "#0038A8", false],
+            ["mtbfLatestChip", kpiTrend.mtbf, kpiTrend.censored, "rgba(16, 185, 129, 0.10)", "#059669", true]
+        ].forEach(([id, series, censored, bg, fg, showGe]) => {
+            const el = document.getElementById(id);
+            if (!el) return;
+            let idx = -1;
+            (series || []).forEach((v, i) => { if (v !== null && v !== undefined) idx = i; });
+            if (idx < 0) return;
+            const prefix = (showGe && censored && censored[idx]) ? "\u2265 " : "";
+            const val = fmt(series[idx]);
+            if (val === null) return;
+            el.textContent = kpiTrend.months[idx] + " \u00b7 " + prefix + val;
+            el.style.background = bg;
+            el.style.color = fg;
+            el.style.display = "";
         });
     })();
 
