@@ -588,7 +588,7 @@
                             <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px; flex-wrap: nowrap;">
                         <i class="fa-solid fa-arrow-trend-up icon-blue"></i>
-                        <span style="white-space: nowrap;">Avg. Downtime</span>
+                        <span style="white-space: nowrap;">MTTR</span>
                         <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none; flex-shrink: 0; white-space: nowrap;">6 months</span>
                         <span class="kpi-trend-chip" id="mttrLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
                     </div>
@@ -601,7 +601,7 @@
                 <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px; flex-wrap: nowrap;">
                         <i class="fa-solid fa-arrow-trend-down icon-blue"></i>
-                        <span style="white-space: nowrap;">Days Between Failures</span>
+                        <span style="white-space: nowrap;">MTBF</span>
                         <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none; flex-shrink: 0; white-space: nowrap;">6 months</span>
                         <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
                     </div>
@@ -1118,13 +1118,10 @@
             const prefix = (showGe && censored && censored[idx]) ? "\u2265 " : "";
             const val = fmt(series[idx]);
             if (val === null) return;
-            // compact chip: "MTTR · Sep · 3.1d" — iisang line lang (maiikling
-            // buwan name; ang full label ("September 2026") ay napapapalabas
-            // sa pag-wrap ng title row). Ang metric acronym sa una para
-            // malinaw kung alin ang chip.
-            const metric = id === "mttrLatestChip" ? "MTTR" : "MTBF";
+            // compact chip: "Sep · 3.1d" — iisang line lang. Ang acronym ay nasa
+            // title na mismo ("MTTR"), kaya hindi na kailangang ulitin sa chip.
             const shortMonth = (kpiTrend.months[idx] || "----").substring(0, 3);
-            el.textContent = metric + " \u00b7 " + shortMonth + " \u00b7 " + prefix + val;
+            el.textContent = shortMonth + " \u00b7 " + prefix + val;
             el.style.background = bg;
             el.style.color = fg;
             el.style.display = "";
