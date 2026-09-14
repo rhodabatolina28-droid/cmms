@@ -460,47 +460,49 @@
         </div>
     </div>
 
-    <!-- D9: MAINTENANCE KPI - Buwan (MTTR / P1 share / Parts usage) -->
+    <!-- D9: MAINTENANCE KPI - Monthly (MTTR / P1 share / Parts usage) -->
     <div class="analytics-box" style="padding: 20px 24px; margin-bottom: 18px;">
-        <div class="analytics-title" style="margin-bottom: 14px;">
+        <div class="analytics-title" style="margin-bottom: 4px;">
             <i class="fa-solid fa-chart-simple icon-blue"></i>
-            Maintenance KPI &mdash; Buwan
-            <form method="GET" action="{{ route("dashboard.super-admin") }}" style="margin-left: auto;">
+            Maintenance KPI
+            <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">Monthly</span>
+        </div>
+        <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0;">Average time to resolve, official-request share, and monthly parts usage.</p>
+        <form method="GET" action="{{ route("dashboard.super-admin") }}" style="margin-left: auto;">
                 <select name="kpi_month" onchange="this.form.submit()" style="padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; font-weight: 700; color: #1e293b; background: white;">
                     @foreach($kpi["months"] as $key => $label)
                         <option value="{{ $key }}" @if($key === $kpi["selected"]) selected @endif>{{ $label }}</option>
                     @endforeach
                 </select>
-            </form>
-        </div>
+        </form>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px;">
                 <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
                     <i class="fa-regular fa-clock" style="color: #0038A8;"></i> MTTR
                 </div>
                 <div style="font-size: 26px; font-weight: 800; color: #0038A8; margin: 6px 0;">
-                    @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }} araw@else<span style="color: #94a3b8;">&mdash;</span>@endif
+                    @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;"> days</span>@else<span style="color: #94a3b8;">&mdash;</span>@endif
                 </div>
                 @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
                     @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
                     @if($mttrDiff > 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #047857;">&#9660; {{ abs($mttrDiff) }} araw mas mabilis vs nakaraang buwan</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #047857;">&#9660; {{ abs($mttrDiff) }} days faster than last month</div>
                     @elseif($mttrDiff < 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c;">&#9650; {{ abs($mttrDiff) }} araw mas mabagal vs nakaraang buwan</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c;">&#9650; {{ abs($mttrDiff) }} days slower than last month</div>
                     @else
-                        <div style="font-size: 11px; font-weight: 700; color: #64748b;">Walang pagbabago vs nakaraang buwan</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #64748b;">No change from last month</div>
                     @endif
                 @endif
             </div>
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px;">
                 <div style="font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.5px;">
-                    <i class="fa-regular fa-user" style="color: #0038A8;"></i> P1 &mdash; High Official Share
+                    <i class="fa-regular fa-user" style="color: #0038A8;"></i> P1 &mdash; Official Share
                 </div>
                 <div style="font-size: 26px; font-weight: 800; color: #0038A8; margin: 6px 0;">
                     @if($kpi["p1_total"] > 0){{ $kpi["p1_share"] }}%@else<span style="color: #94a3b8;">&mdash;</span>@endif
                 </div>
                 <div style="font-size: 11px; font-weight: 700; color: #64748b;">
-                    {{ $kpi["p1_count"] }} opisyal na request sa {{ $kpi["p1_total"] }} ICT tickets
+                    {{ $kpi["p1_count"] }} of {{ $kpi["p1_total"] }} ICT tickets from officials
                 </div>
             </div>
             <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; padding: 16px 18px;">
@@ -509,7 +511,7 @@
                 </div>
                 <div style="font-size: 26px; font-weight: 800; color: #0038A8; margin: 6px 0;">{{ $kpi["parts_usage"] }}</div>
                 <div style="font-size: 11px; font-weight: 700; color: #64748b;">
-                    @if($kpi["parts_prev"] !== null)Nakaraang buwan: {{ $kpi["parts_prev"] }}@else Walang datos sa nakaraang buwan @endif
+                    @if($kpi["parts_prev"] !== null)Last month: {{ $kpi["parts_prev"] }}@else No data for last month @endif
                 </div>
             </div>
         </div>
