@@ -921,6 +921,21 @@
 
     // D9: MTTR + MTBF 6-month trends (null = gap; hollow marker = censored no-breakdown month)
     const kpiTrend = @json($kpi["trend"]);
+    const kpiTooltipBase = { backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8, displayColors: false };
+    const kpiTrendScales = {
+        y: {
+            beginAtZero: true,
+            ticks: { color: "#94a3b8", callback: v => v + "d", maxTicksLimit: 6 },
+            grid: { color: "#e2e8f0", borderDash: [4, 4], drawTicks: false },
+            border: { display: false }
+        },
+        x: {
+            ticks: { color: "#64748b", maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+            grid: { display: false },
+            border: { color: "#e2e8f0" }
+        }
+    };
+    const kpiInteraction = { mode: "index", intersect: false };
     const ctxMttr = document.getElementById("mttrChart");
     if (ctxMttr) {
         new Chart(ctxMttr, {
@@ -931,24 +946,46 @@
                     label: "MTTR (days)",
                     data: kpiTrend.mttr,
                     borderColor: "#0038A8",
-                    backgroundColor: "rgba(0, 56, 168, 0.10)",
+                    borderWidth: 2.5,
+                    backgroundColor: (ctx) => {
+                        const { chartArea, ctx: c } = ctx.chart;
+                        if (!chartArea) return "rgba(0, 56, 168, 0.08)";
+                        const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        g.addColorStop(0, "rgba(0, 56, 168, 0.20)");
+                        g.addColorStop(1, "rgba(0, 56, 168, 0)");
+                        return g;
+                    },
                     fill: true,
-                    tension: 0.25,
+                    tension: 0.3,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
+                    pointBackgroundColor: "#0038A8",
+                    pointBorderColor: "#ffffff",
+                    pointBorderWidth: 2,
                     spanGaps: false
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: kpiInteraction,
                 plugins: {
                     legend: { display: false },
-                    tooltip: { backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8 }
+                    tooltip: {
+                        ...kpiTooltipBase,
+                        callbacks: {
+                            title: items => items[0]?.label ?? "",
+                            label: ctx => {
+                                const i = ctx.dataIndex;
+                                if (kpiTrend.mttr[i] === null || kpiTrend.mttr[i] === undefined) {
+                                    return " No breakdowns recorded this month";
+                                }
+                                return " Average downtime: " + ctx.parsed.y + " days";
+                            }
+                        }
+                    }
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: "#94a3b8" }, grid: { color: "#e2e8f0" } },
-                    x: { ticks: { color: "#94a3b8" } }
-                }
+                scales: kpiTrendScales
             }
         });
     }
@@ -962,41 +999,71 @@
                     label: "MTBF (days)",
                     data: kpiTrend.mtbf,
                     borderColor: "#10b981",
-                    backgroundColor: "rgba(16, 185, 129, 0.10)",
+                    borderWidth: 2.5,
+                    backgroundColor: (ctx) => {
+                        const { chartArea, ctx: c } = ctx.chart;
+                        if (!chartArea) return "rgba(16, 185, 129, 0.08)";
+                        const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
+                        g.addColorStop(0, "rgba(16, 185, 129, 0.20)");
+                        g.addColorStop(1, "rgba(16, 185, 129, 0)");
+                        return g;
+                    },
                     fill: true,
-                    tension: 0.25,
+                    tension: 0.3,
                     spanGaps: false,
                     pointRadius: 4,
+                    pointHoverRadius: 6,
                     pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#10b981"),
-                    pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#10b981"),
-                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 0)
+                    pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#059669"),
+                    pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#ffffff"),
+                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2)
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                interaction: kpiInteraction,
                 plugins: {
                     legend: { display: false },
                     tooltip: {
-                        backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8,
+                        ...kpiTooltipBase,
                         callbacks: {
+                            title: items => items[0]?.label ?? "",
                             label: ctx => {
                                 const i = ctx.dataIndex;
                                 if (i !== undefined && kpiTrend.censored[i]) {
-                                    return "No breakdowns (MTBF >= " + ctx.parsed.y + " days)";
+                                    return " No breakdowns (MTBF >= " + ctx.parsed.y + " days)";
                                 }
-                                return ctx.parsed.y + " days between breakdowns";
+                                return " " + ctx.parsed.y + " days between breakdowns";
                             }
                         }
                     }
                 },
-                scales: {
-                    y: { beginAtZero: true, ticks: { color: "#94a3b8" }, grid: { color: "#e2e8f0" } },
-                    x: { ticks: { color: "#94a3b8" } }
-                }
+                scales: kpiTrendScales
             }
         });
     }
+
+    // D9: empty-state overlays — PER-CHART: kapag puro null ang sariling series
+    // ng isang chart (hal. walang breakdown buong 6-month window), magpakita ng
+    // malinaw na "No breakdowns recorded" imbes na blangkong canvas. Dati
+    // all-or-nothing ito — kung may MTTR data pero wala ang MTBF, nagiging
+    // blangkong canvas ang MTBF na parang nabali ang chart.
+    (function mountKpiEmptyStates() {
+        const hasBreakdown = (arr) => (arr || []).some(v => v !== null && v !== undefined);
+        [["mttrChart", "MTTR", kpiTrend.mttr], ["mtbfChart", "MTBF", kpiTrend.mtbf]].forEach(([id, name, series]) => {
+            if (hasBreakdown(series)) return; // may data — walang kailangan
+            const cv = document.getElementById(id);
+            if (!cv) return;
+            cv.style.display = "none";
+            const holder = cv.parentElement;
+            holder.style.position = "relative";
+            const empty = document.createElement("div");
+            empty.style.cssText = "position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:#94a3b8;font-size:13px;font-weight:600;text-align:center;";
+            empty.innerHTML = '<i class="fa-solid fa-shield-heart" style="font-size:32px;color:#e2e8f0;"></i><div>No breakdowns in the last 6 months.</div><div style="font-size:11px;font-weight:500;">The ' + name + ' trend will appear here once failures are recorded.</div>';
+            holder.appendChild(empty);
+        });
+    })();
 
 </script>
 @endsection
