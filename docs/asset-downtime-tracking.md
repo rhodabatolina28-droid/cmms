@@ -876,16 +876,14 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
 
 ---
 
-## 9. D9 — Maintenance KPI Dashboard (3 cards) — PLANO (Sept 11 2026)
+## 9. D9 — Maintenance KPI Dashboard (MTTR + MTBF) — PLANO (Sept 11 2026, naka-revise)
 
 ### D9.1 Ano at bakit
-- **3 bagong KPI cards** sa mga dashboard (SA/IT/Admin): **MTTR** (mean time to resolve, buwanang
-  average sa araw) · **P1 %** (bahagi ng high-official request, kumpara sa total) · **Parts Usage**
-  (buwanang count ng order/issue ng pyesa).
+- **2 KPI cards** (naka-revise Sept 11 2026): **MTTR** (mean time TO REPAIR = avg downtime_duration, buwanang, sa araw — ISO 55000 standard, kaparehong data ng asset profile) · **MTBF** (mean time between failures = araw sa buwan ÷ bilang ng completed ICT na may downtime window; failure = breakdown, hindi request-only; 0 failures → "No failures this month"). **SLA% dapat wala muna** — naka-align sa D3 deferral (walang target, kulang pa ang data, walang management demand).
 - Tugma sa deep review scorecard: #9 Reporting & Analytics = 4/10 — ang pinakahina na may
   **handang datos na ngayon** (X1-X4 downtime split + D8 category column).
 - **WALANG bagong table/column** — purong pagbubuod mula sa umiiral na requests table
-  (completed_at, created_at, high-official flag, status) at parts.
+  (downtime_duration, downtime_start, status) — ang downtime data na naayos (X1-X4) ang sususustainan ng MTTR at MTBF.
 
 ### D9.2 Mga patakarang pagkakaayos (na-verify laban sa mga kasalukuyang dashboard)
 | Patakaran | Dahilan (na-verify sa mga blade) |
@@ -897,27 +895,30 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
 
 
 
-### D9.3 Ang 3 cards (mock-up na naka-lock)
+- ### D9.3 Ang 2 cards (mock-up na naka-lock, naka-revise)
 ```
-┏━ 🔧 MAINTENANCE KPI — BUWAN ━━━━━━━━━━ Setyembre ▼ ┓
-┃  ⏱️ MTTR       │ 📄 P1 %      │ 🔩 PARTS USAGE    ┃
-┃    4.2 araw    │    35%       │    128            ┃
-┃   ▼ 0.8 vs Ago │  = 12/34     │   ▲ 15 vs Ago     ┃
-┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
++----------------------------------------------+
+|  Maintenance KPI - Monthly  [Set 2026 v]    |
+|                                              |
+|  [MTTR days]          [MTBF days]            |
+|     2.9                   14.0               |
+|   v 1.0 faster         ^ 3.2 shorter        |
+|   than last month      than last month       |
+|                        (red = pangminandaan) |
++----------------------------------------------+
 ```
-| Card | Formula | Source |
-|---|---|---|
-| MTTR | AVG(completed_at − created_at) ng mga naipanatili sa buwan, sa araw | requests table |
-| P1 % | count(high-official) / count(ICT tickets) sa buwan | requests + user flag (D4) |
-| Parts Usage | count ng mga order/issue ng pyesa sa buwan | parts |
-
+| Card | Formula | Source | Alignment |
+|---|---|---|---|
+| MTTR | avg(downtime_duration)/1440 ng completed ICT na may downtime sa buwan (1 decimal) | requests.downtime_duration (X1-X4) | ISO 55000 "time to restore" = kaparehong numero ng asset profile downtime |
+| MTBF | araw sa buwan ÷ count ng failures (completed ICT na may downtime_duration; 0 -> null, "No failures this month") | requests.downtime_duration | Failure = breakdown (downtime window), hindi request-only — tumutugma sa "downtime = ICT lang" locked decision |
 ### D9.4 Mga yugto (test-first)
 1. **D9.1** — KpiController (o method sa kasalukuyang Dashboard action) + isang aggregated na buwanang query + tests (tumpak na mga numero sa kilalang datos)
-2. **D9.2** — 3 cards sa SA dashboard + buwanang dropdown (6-buwan backfill) + render tests
-3. **D9.3** — 3 cards sa IT + Admin dashboards (na-scope ayon sa tungkulin) + mga tests
+2. **D9.2 (rev)** — 2 cards (MTTR + MTBF) sa SA dashboard + buwanang dropdown (6-buwan backfill) + render tests
+3. **D9.3** — 2 cards sa IT + Admin dashboards (na-scope ayon sa tungkulin) + mga tests
 4. **D9.4** — dokumentasyon + buong suite + commit kada phase
 - **Phase 2 (kalaunan):** 6-buwan trend charts (nakaload na Chart.js, walang bagong library) +
   hiwalay na buong report view na may buwanang talahanayan + PDF/CSV.
 
 ### D9.5 Log ng pagpapatupad
-- **D9.1+D9.2 ✅ TAPOS (Sept 11 2026)** — test-first (KpiDashboardTest 2 passed / 15 assertions): GetMaintenanceKpiAction (6-buwan window; MTTR via abs diffInHours — Carbon 3 signed trap; P1 share via is_high_official accessor; Parts OUT movements; kpi_month GET param, default current) + wire-in sa SuperAdminDashboardAction compact + SA blade KPI section (analytics-box family, buwanang dropdown GET form, trend chips green/red, FK-safe test data: parts_stock parent row bago ang movements). Rollback: git revert ng D9 commit. Susunod: D9.3 IT + Admin dashboards (role-scoped).
+- **D9.1+D9.2 ✅ TAPOS (Sept 11 2026)** — test-first (KpiDashboardTest 2 passed / 15 assertions): GetMaintenanceKpiAction (6-buwan window; MTTR via abs diffInHours — Carbon 3 signed trap; P1 share via is_high_official accessor; Parts OUT movements; kpi_month GET param, default current) + wire-in sa SuperAdminDashboardAction compact + SA blade KPI section (analytics-box family, buwanang dropdown GET form, trend chips green/red, FK-safe test data: parts_stock parent row bago ang movements). Rollback: git revert ng D9 commit.
+- **D9-rev: MTTR + MTBF lang (Sept 11 2026)** — SLA% dapat wala muna (naka-align sa D3 deferral) · tanggal ang P1% at Parts Usage · MTTR naka-redefine = avg(downtime_duration)/1440 (live 2.9 araw — ISO 55000 "time to restore", consistent sa asset profile) · MTBF = araw sa buwan ÷ failures na may downtime_duration (live 14/14 ✓). Deep-reviewed: failure = breakdown (downtime), hindi request-only; dalawang card ay gumagamit ng sariling downtime data (X1-X4). Susunod: D9.3 IT + Admin (role-scoped).
