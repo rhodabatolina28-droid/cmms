@@ -974,6 +974,46 @@
             ctx.restore();
         }
     };
+    // D9.8b: BASELINE — dashed horizontal line sa mean ng mga VALID na buwan
+    // (MTTR: buwang may breakdown; MTBF: hindi censored — dahil ang censored
+    // value ay ">= X days" lower bound, bias ang pagkakasama). Instant na
+    // "mas maganda/mas masahol kaysa sa average" na reference. Walang valid
+    // na buwan = walang baseline (walang ipapakitang maling reference).
+    const kpiMeanOf = (series, excludeCensored) => {
+        const vals = [];
+        (series || []).forEach((v, i) => {
+            if (v === null || v === undefined) return;
+            if (excludeCensored && kpiTrend.censored[i]) return;
+            vals.push(v);
+        });
+        return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    };
+    const kpiMttrBaseline = kpiMeanOf(kpiTrend.mttr, false);
+    const kpiMtbfBaseline = kpiMeanOf(kpiTrend.mtbf, true);
+    const kpiBaselinePlugin = (baseline, color) => ({
+        id: "kpiBaselineLine",
+        afterDatasetsDraw(chart) {
+            if (baseline === null || baseline === undefined) return;
+            const yScale = chart.scales.y;
+            if (baseline < yScale.min || baseline > yScale.max) return;
+            const { ctx, chartArea } = chart;
+            const y = yScale.getPixelForValue(baseline);
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([6, 4]);
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1.5;
+            ctx.moveTo(chartArea.left, y);
+            ctx.lineTo(chartArea.right, y);
+            ctx.stroke();
+            ctx.fillStyle = color;
+            ctx.font = "600 10px Arial, Helvetica, sans-serif";
+            ctx.textAlign = "right";
+            ctx.textBaseline = "bottom";
+            ctx.fillText("avg " + baseline.toFixed(1) + "d", chartArea.right - 4, y - 3);
+            ctx.restore();
+        }
+    });
     // Fix 3: kapag BUMABA ang MTBF kumpara sa nakaraang buwan (mas madalas na
     // breakdown = negative outcome), ang line graph at chip ay magiging RED —
     // dati laging green sila kahit nag-c-crash ang MTBF (hal. 30+ → 2.3 days).
@@ -1037,9 +1077,12 @@
                         }
                     }
                 },
-                scales: kpiTrendScales
-            },
-            plugins: [kpiHoverLine]
+                scales: {
+                    ...kpiTrendScales,
+                    y: { ...kpiTrendScales.y, suggestedMax: kpiMttrBaseline !== null ? kpiMttrBaseline : undefined }
+                },
+                plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMttrBaseline, "rgba(0, 56, 168, 0.55)")]
+            }
         });
     }
     const ctxMtbf = document.getElementById("mtbfChart");
@@ -1104,9 +1147,12 @@
                         }
                     }
                 },
-                scales: kpiTrendScales
-            },
-            plugins: [kpiHoverLine]
+                scales: {
+                    ...kpiTrendScales,
+                    y: { ...kpiTrendScales.y, suggestedMax: kpiMtbfBaseline !== null ? kpiMtbfBaseline : undefined }
+                },
+                plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMtbfBaseline, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.55)" : "rgba(16, 185, 129, 0.55)")]
+            }
         });
     }
 
