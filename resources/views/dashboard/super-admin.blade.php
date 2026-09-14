@@ -953,6 +953,27 @@
         }
     };
     const kpiInteraction = { mode: "index", intersect: false };
+    // D9.8: hover crosshair — patayong dashed guide line sa aktwal na buwan
+    // na hinihover, para madaling i-align ang tooltip sa trend (shared ng
+    // MTTR at MTBF charts).
+    const kpiHoverLine = {
+        id: "kpiHoverLine",
+        afterDatasetsDraw(chart) {
+            const active = chart.tooltip ? chart.tooltip.getActiveElements() : [];
+            if (!active || !active.length) return;
+            const { ctx, chartArea } = chart;
+            const x = active[0].element.x;
+            ctx.save();
+            ctx.beginPath();
+            ctx.setLineDash([4, 4]);
+            ctx.strokeStyle = "rgba(15, 23, 42, 0.25)";
+            ctx.lineWidth = 1;
+            ctx.moveTo(x, chartArea.top);
+            ctx.lineTo(x, chartArea.bottom);
+            ctx.stroke();
+            ctx.restore();
+        }
+    };
     // Fix 3: kapag BUMABA ang MTBF kumpara sa nakaraang buwan (mas madalas na
     // breakdown = negative outcome), ang line graph at chip ay magiging RED —
     // dati laging green sila kahit nag-c-crash ang MTBF (hal. 30+ → 2.3 days).
@@ -971,7 +992,8 @@
                     label: "Avg. downtime",
                     data: kpiTrend.mttr,
                     borderColor: "#0038A8",
-                    borderWidth: 2.5,
+                    borderWidth: 3,
+                    borderCapStyle: "round",
                     backgroundColor: (ctx) => {
                         const { chartArea, ctx: c } = ctx.chart;
                         if (!chartArea) return "rgba(0, 56, 168, 0.08)";
@@ -1016,7 +1038,8 @@
                     }
                 },
                 scales: kpiTrendScales
-            }
+            },
+            plugins: [kpiHoverLine]
         });
     }
     const ctxMtbf = document.getElementById("mtbfChart");
@@ -1029,7 +1052,8 @@
                     label: "Days between failures",
                     data: kpiTrend.mtbf,
                     borderColor: kpiMtbfColor,
-                    borderWidth: 2.5,
+                    borderWidth: 3,
+                    borderCapStyle: "round",
                     backgroundColor: (ctx) => {
                         const { chartArea, ctx: c } = ctx.chart;
                         if (!chartArea) return kpiMtbfSoft;
@@ -1045,12 +1069,18 @@
                     pointHoverRadius: 6,
                     pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfColor),
                     pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfDark),
-                    pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#ffffff"),
+                    pointBorderColor: kpiTrend.censored.map(c => c ? kpiMtbfColor : "#ffffff"),
                     pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2),
                     pointHoverBorderWidth: 3,
                     pointHoverBorderColor: "#ffffff",
                     pointStyle: "circle",
-                    borderJoinStyle: "round"
+                    borderJoinStyle: "round",
+                    // D9.8: DASHED segment papunta/paglabang censored month —
+                    // tama lang, dahil ">= X days" ang value (lower bound),
+                    // hindi eksaktong bilang. Solid ang normal na segments.
+                    segment: {
+                        borderDash: ctx => (kpiTrend.censored[ctx.p0DataIndex] || kpiTrend.censored[ctx.p1DataIndex]) ? [5, 5] : undefined
+                    }
                 }]
             },
             options: {
@@ -1075,7 +1105,8 @@
                     }
                 },
                 scales: kpiTrendScales
-            }
+            },
+            plugins: [kpiHoverLine]
         });
     }
 
