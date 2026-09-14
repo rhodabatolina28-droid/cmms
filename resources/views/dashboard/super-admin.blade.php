@@ -403,6 +403,22 @@
         .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-gray, .table-cell-dark, .table-cell-center { padding: 13px 10px; font-size: 13px; }
         .progress-bar-bg { background: #e2e8f0; height: 6px; border-radius: 3px; width: 100%; margin-top: 6px; overflow: hidden; }
         .progress-bar-fill { background: #0038A8; height: 100%; border-radius: 3px; }
+
+        /* D9: responsive caps - 4 analytics boxes lock to 2 columns (no 3+1 wrap) */
+        .analytics-gov-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+
+        /* D9: KPI cards - 2 columns desktop, stack on mobile */
+        .kpi-card-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+        }
+        @media screen and (max-width: 767px) {
+            .kpi-card-grid { grid-template-columns: 1fr !important; }
+        }
+
     </style>
 @endsection
 
@@ -474,7 +490,7 @@
             </form>
         </div>
         <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0;">How long a failed asset stays down, and how often breakdowns occur.</p>
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+        <div class="kpi-card-grid">
             <div class="stat-card-premium stat-total">
                 <i class="fa-regular fa-clock stat-bg-icon"></i>
                 <span class="stat-label">MTTR</span>
@@ -520,7 +536,7 @@
         <!-- LEFT: ANALYTICS AND TABLE -->
         <div>
             <!-- ANALYTICS GRID -->
-            <div class="analytics-grid" style="grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));">
+            <div class="analytics-grid analytics-gov-grid">
                 <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-chart-bar icon-blue"></i>
