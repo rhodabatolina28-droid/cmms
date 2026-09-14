@@ -920,4 +920,4 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
   hiwalay na buong report view na may buwanang talahanayan + PDF/CSV.
 
 ### D9.5 Log ng pagpapatupad
-- (itatala kada phase)
+- **D9.1+D9.2 SIMULA (Sept 11 2026)** — rollback point: 96784e5 (malinis, naka-push) · test-first: KpiDashboardTest (exact numbers + SA render) · GetMaintenanceKpiAction (6-buwan: MTTR/P1%/Parts, kpi_month GET param) + wire-in sa SuperAdminDashboardAction · SA blade KPI section (insert bago ang WORKSPACE GRID marker, stat-card family colors #0038A8)
