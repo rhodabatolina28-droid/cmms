@@ -4,15 +4,16 @@ namespace App\Actions\Dashboard;
 
 use App\Models\Request as RequestModel;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 
 class GetMaintenanceKpiAction
 {
     /**
-     * D9: Maintenance KPI - buwanang (6-month window).
-     * MTTR       = avg hours(created_at to completed_at) of completed ICT tickets, in days
-     * P1 share   = high-official ICT tickets (User::is_high_official, D4) / total ICT in month
-     * PartsUsage = count of OUT movements (qty_change < 0) in parts_stock_movements
+     * D9 (rev) - Maintenance KPI: MTTR + MTBF (2 cards).
+     * Failure definition (naka-lock): completed ICT WITH a downtime window
+     * (downtime_duration NOT NULL) - breakdowns only, request-only tickets excluded.
+     * MTTR = avg(downtime_duration)/1440 of failures in the month (ISO 55000 time-to-restore;
+     *        kabaligtod sa asset profile downtime numbers - isang data source)
+     * MTBF = days in month / failure count (null when no failures)
      * Selected month via kpi_month GET param (default: current month).
      */
     public function execute(): array
@@ -43,41 +44,28 @@ class GetMaintenanceKpiAction
         foreach ($months as $key => $label) {
             [$y, $m] = explode("-", $key);
 
-            // MTTR - completed in this month (abs: Carbon 3 signed diffs, same trap as the B1 fix)
-            $completed = (clone $base)
+            // Failures = completed ICT WITH a downtime window (breakdowns only)
+            $failures = (clone $base)
                 ->where("status", "Completed")
+                ->whereNotNull("downtime_duration")
                 ->whereYear("completed_at", $y)
                 ->whereMonth("completed_at", $m)
-                ->get(["created_at", "completed_at"]);
+                ->get(["downtime_duration"]);
+
+            $count = $failures->count();
             $mttrDays = null;
-            if ($completed->isNotEmpty()) {
-                $totalHours = $completed->sum(fn ($r) => abs($r->completed_at->diffInHours($r->created_at)));
-                $mttrDays = round($totalHours / $completed->count() / 24, 1);
+            $mtbfDays = null;
+            if ($count > 0) {
+                $totalMinutes = $failures->sum(fn ($r) => $r->downtime_duration);
+                $mttrDays = round($totalMinutes / $count / 1440, 1);
+                $daysInMonth = \Carbon\Carbon::parse($key . "-01")->daysInMonth();
+                $mtbfDays = round($daysInMonth / $count, 1);
             }
-
-            // P1 share - created in this month
-            $monthTickets = (clone $base)
-                ->whereYear("created_at", $y)
-                ->whereMonth("created_at", $m)
-                ->with("user:id,position")
-                ->get(["id", "user_id"]);
-            $p1Count = $monthTickets->filter(fn ($t) => $t->user && $t->user->is_high_official)->count();
-            $p1Total = $monthTickets->count();
-
-            // Parts usage - OUT movements in this month
-            $partsUsage = DB::table("parts_stock_movements")
-                ->where("qty_change", "<", 0)
-                ->whereYear("created_at", $y)
-                ->whereMonth("created_at", $m)
-                ->count();
 
             $perMonth[$key] = [
                 "label" => $label,
                 "mttr_days" => $mttrDays,
-                "p1_share" => $p1Total > 0 ? (int) round($p1Count / $p1Total * 100) : null,
-                "p1_count" => $p1Count,
-                "p1_total" => $p1Total,
-                "parts_usage" => $partsUsage,
+                "mtbf_days" => $mtbfDays,
             ];
         }
 
@@ -93,11 +81,8 @@ class GetMaintenanceKpiAction
             "selected_label" => $cur["label"],
             "mttr_days" => $cur["mttr_days"],
             "mttr_prev" => $prev["mttr_days"] ?? null,
-            "p1_share" => $cur["p1_share"],
-            "p1_count" => $cur["p1_count"],
-            "p1_total" => $cur["p1_total"],
-            "parts_usage" => $cur["parts_usage"],
-            "parts_prev" => $prev["parts_usage"] ?? null,
+            "mtbf_days" => $cur["mtbf_days"],
+            "mtbf_prev" => $prev["mtbf_days"] ?? null,
         ];
     }
 }
