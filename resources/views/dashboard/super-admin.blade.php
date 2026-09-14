@@ -543,7 +543,31 @@
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
-            </div>
+                            <div class="analytics-box" style="padding: 24px 26px;">
+                    <div class="analytics-title" style="margin-bottom: 4px;">
+                        <i class="fa-solid fa-arrow-trend-up icon-blue"></i>
+                        MTTR Trend
+                        <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                    </div>
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Average downtime each month, in days.</p>
+                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
+                        <canvas id="mttrChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="analytics-box" style="padding: 24px 26px;">
+                    <div class="analytics-title" style="margin-bottom: 4px;">
+                        <i class="fa-solid fa-arrow-trend-down icon-blue"></i>
+                        MTBF Trend
+                        <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">6 months</span>
+                    </div>
+                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Days between breakdowns (hollow = no breakdowns that month).</p>
+                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
+                        <canvas id="mtbfChart"></canvas>
+                    </div>
+                </div>
+
+</div>
 
             <!-- SYSTEM WIDE TABLE -->
             <div class="premium-table-box">
@@ -878,5 +902,85 @@
         }
 
     });
+
+    // D9: MTTR + MTBF 6-month trends (null = gap; hollow marker = censored no-breakdown month)
+    const kpiTrend = @json($kpi["trend"]);
+    const ctxMttr = document.getElementById("mttrChart");
+    if (ctxMttr) {
+        new Chart(ctxMttr, {
+            type: "line",
+            data: {
+                labels: kpiTrend.months,
+                datasets: [{
+                    label: "MTTR (days)",
+                    data: kpiTrend.mttr,
+                    borderColor: "#0038A8",
+                    backgroundColor: "rgba(0, 56, 168, 0.10)",
+                    fill: true,
+                    tension: 0.25,
+                    pointRadius: 4,
+                    spanGaps: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: { backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8 }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: "#94a3b8" }, grid: { color: "#e2e8f0" } },
+                    x: { ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+    const ctxMtbf = document.getElementById("mtbfChart");
+    if (ctxMtbf) {
+        new Chart(ctxMtbf, {
+            type: "line",
+            data: {
+                labels: kpiTrend.months,
+                datasets: [{
+                    label: "MTBF (days)",
+                    data: kpiTrend.mtbf,
+                    borderColor: "#10b981",
+                    backgroundColor: "rgba(16, 185, 129, 0.10)",
+                    fill: true,
+                    tension: 0.25,
+                    spanGaps: false,
+                    pointRadius: 4,
+                    pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#10b981"),
+                    pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#10b981"),
+                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 0)
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8,
+                        callbacks: {
+                            label: ctx => {
+                                const i = ctx.dataIndex;
+                                if (i !== undefined && kpiTrend.censored[i]) {
+                                    return "No breakdowns (MTBF >= " + ctx.parsed.y + " days)";
+                                }
+                                return ctx.parsed.y + " days between breakdowns";
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: { beginAtZero: true, ticks: { color: "#94a3b8" }, grid: { color: "#e2e8f0" } },
+                    x: { ticks: { color: "#94a3b8" } }
+                }
+            }
+        });
+    }
+
 </script>
 @endsection

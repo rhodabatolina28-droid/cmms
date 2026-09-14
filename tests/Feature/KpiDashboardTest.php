@@ -91,6 +91,12 @@ class KpiDashboardTest extends TestCase
         // MTBF = month days / 2 failures (request-only ticket excluded)
         $this->assertSame(round($curDays / 2, 1), $kpi["mtbf_days"]);
         $this->assertSame(round($prevDays / 1, 1), $kpi["mtbf_prev"]);
+        // trend series (6 months ascending; index 5 = current, 4 = prev, 0 = oldest)
+        $this->assertSame(1.5, $kpi["trend"]["mttr"][5]);
+        $this->assertSame(round($curDays / 2, 1), $kpi["trend"]["mtbf"][5]);
+        $this->assertFalse($kpi["trend"]["censored"][5]);
+        $this->assertSame(round($prevDays / 1, 1), $kpi["trend"]["mtbf"][4]);
+        $this->assertNull($kpi["trend"]["mttr"][0]);
     }
 
     public function test_zero_failure_month_reports_no_failures(): void
@@ -120,6 +126,39 @@ class KpiDashboardTest extends TestCase
             ->assertSee("MTTR")
             ->assertSee("MTBF")
             ->assertSee("1.0")
-            ->assertSee("Avg. time to restore");
+            ->assertSee("Avg. time to restore")
+            ->assertSee("MTTR Trend")
+            ->assertSee("MTBF Trend");
+    }
+
+    public function test_trend_marks_censored_months_for_no_breakdowns(): void
+    {
+        $sa = $this->user(["role" => "super_admin"]);
+        $requestor = $this->user();
+
+        $cur = now()->startOfMonth()->addHours(10);
+        $curDays = now()->startOfMonth()->daysInMonth();
+        $prev2 = now()->subMonths(2)->startOfMonth();
+
+        // current month: only a request-only completed ticket (no downtime) -> censored
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0031", null, $cur->format("Y-m-d H:i:s"), $cur->copy()->addHours(6)->format("Y-m-d H:i:s"));
+
+        // two months back: 1 breakdown, 2880 min = 2 days (index 3 -> plus the 2 empty months)
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0051", 2880, $prev2->copy()->addHours(10)->format("Y-m-d H:i:s"), $prev2->copy()->addHours(10)->addHours(48)->format("Y-m-d H:i:s"));
+
+        $this->actingAs($sa);
+        $kpi = (new \App\Actions\Dashboard\GetMaintenanceKpiAction)->execute();
+
+        // index 5 = current month: censored (completed but no breakdown)
+        $this->assertSame(round($curDays, 1), $kpi["trend"]["mtbf"][5]);
+        $this->assertTrue($kpi["trend"]["censored"][5]);
+        $this->assertNull($kpi["trend"]["mttr"][5]);
+        // index 4 = prev month: no observation -> gap
+        $this->assertNull($kpi["trend"]["mtbf"][4]);
+        $this->assertFalse($kpi["trend"]["censored"][4]);
+        // index 3 = two months back: solid breakdown, MTTR 2.0
+        $this->assertSame(round($prev2->daysInMonth(), 1), $kpi["trend"]["mtbf"][3]);
+        $this->assertSame(2.0, $kpi["trend"]["mttr"][3]);
+        $this->assertFalse($kpi["trend"]["censored"][3]);
     }
 }

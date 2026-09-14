@@ -53,20 +53,35 @@ class GetMaintenanceKpiAction
                 ->get(["downtime_duration"]);
 
             $count = $failures->count();
+            $completedCount = (clone $base)->where("status", "Completed")->whereYear("completed_at", $y)->whereMonth("completed_at", $m)->count();
             $mttrDays = null;
             $mtbfDays = null;
+            $censored = false;
             if ($count > 0) {
                 $totalMinutes = $failures->sum(fn ($r) => $r->downtime_duration);
                 $mttrDays = round($totalMinutes / $count / 1440, 1);
                 $daysInMonth = \Carbon\Carbon::parse($key . "-01")->daysInMonth();
                 $mtbfDays = round($daysInMonth / $count, 1);
+            } elseif ($completedCount > 0) {
+                // Censored month: observed N days with NO breakdown -> MTBF >= N days
+                $mtbfDays = round(\Carbon\Carbon::parse($key . "-01")->daysInMonth(), 1);
+                $censored = true;
             }
 
             $perMonth[$key] = [
                 "label" => $label,
                 "mttr_days" => $mttrDays,
                 "mtbf_days" => $mtbfDays,
+                "censored" => $censored,
             ];
+        }
+
+        $trend = ["months" => [], "mttr" => [], "mtbf" => [], "censored" => []];
+        foreach ($perMonth as $key => $pm) {
+            $trend["months"][] = $pm["label"];
+            $trend["mttr"][] = $pm["mttr_days"];
+            $trend["mtbf"][] = $pm["mtbf_days"];
+            $trend["censored"][] = $pm["censored"];
         }
 
         $keys = array_keys($perMonth);
@@ -83,6 +98,7 @@ class GetMaintenanceKpiAction
             "mttr_prev" => $prev["mttr_days"] ?? null,
             "mtbf_days" => $cur["mtbf_days"],
             "mtbf_prev" => $prev["mtbf_days"] ?? null,
+            "trend" => $trend,
         ];
     }
 }
