@@ -167,12 +167,15 @@ class UnfinishedFirstTest extends TestCase
         $this->assertSame($active->id, $recent->first()->id, 'Division Admin Recent must lead with unfinished tickets');
     }
 
-    public function test_overdue_stat_card_counts_both_pm_and_ict(): void
+    public function test_overdue_stat_card_counts_only_open_pending_ongoing(): void
     {
+        // UPDATED (Overdue fix): ang card ay Pending/Ongoing LANG — dapat hindi
+        // lumampas sa Pending + Ongoing. Ang aging Scheduled PM ay mananatiling
+        // visible sa Master List via D2 age chips, hindi sa card na ito.
         $sa = $this->user('super_admin');
         $requestor = $this->user();
 
-        // Overdue PM: auto-generated Scheduled sitting 8 days.
+        // Aging Scheduled PM — EXCLUDED sa bagong rule (may sariling D2 chips).
         $pm = $this->ticket($requestor, [
             'type' => 'Preventive Maintenance',
             'status' => 'Scheduled',
@@ -180,7 +183,7 @@ class UnfinishedFirstTest extends TestCase
         ]);
         $this->backdate($pm, '8 days');
 
-        // Overdue ICT: Ongoing for 9 days — previously NEVER counted.
+        // Overdue ICT: Ongoing for 9 days — ito lang ang may bilang.
         $ict = $this->ticket($requestor, ['status' => 'Ongoing']);
         $this->backdate($ict, '9 days');
 
@@ -192,9 +195,14 @@ class UnfinishedFirstTest extends TestCase
 
         $stats = $response->viewData('stats');
         $this->assertSame(
-            2,
+            1,
             $stats['overdue_tickets'],
-            'Overdue card must count BOTH the aging PM and the aging ICT (fresh excluded)'
+            'Overdue card must count ONLY the aging open Pending/Ongoing ticket (Scheduled PM excluded, fresh excluded)'
+        );
+        $this->assertLessThanOrEqual(
+            $stats['pending'] + $stats['ongoing'],
+            $stats['overdue_tickets'],
+            'Overdue must never exceed Pending + Ongoing'
         );
     }
 

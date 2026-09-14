@@ -69,24 +69,19 @@ class SuperAdminDashboardAction
             $departmentStats['Other Offices'] = $otherTotal;
         }
             
-        // Overdue Tickets (PM + ICT): any ACTIVE ticket sitting 7+ days — the
-        // D2 red bucket. Previously only auto-generated Scheduled PMs counted,
-        // so aging ICT tickets never showed on the stat card.
-        $overdueTicketsCount = RequestModel::query()
+        // Overdue Tickets (ICT): still-open Pending/Ongoing tickets sitting 7+
+        // days (same D2 red-bucket basis: created_at + 7d - no due_date column).
+        // Uses the SAME scope as the Pending/Ongoing stat cards ($userRequests)
+        // so the card can never exceed Pending + Ongoing. Previously the raw
+        // query included Scheduled PM / Awaiting Parts / Awaiting Signature /
+        // Referred-External tickets - the card showed 8 while the cards above
+        // summed to 4, which read as double counting.
+        $overdueTicketsCount = (clone $userRequests)
             ->whereIn('status', [
                 RequestModel::STATUS_PENDING,
                 RequestModel::STATUS_ONGOING,
-                RequestModel::STATUS_SCHEDULED,
-                RequestModel::STATUS_AWAITING_PARTS,
-                RequestModel::STATUS_AWAITING_SIGNATURE,
-                RequestModel::STATUS_REFERRED_EXTERNAL,
             ])
             ->where('created_at', '<', now()->subDays(7))
-            ->whereHas('user', function ($query) use ($user) {
-                if ($user->branch) {
-                    $query->where('branch', $user->branch);
-                }
-            })
             ->count();
             
         // Real asset status breakdown (region/branch scoped) — single source of truth

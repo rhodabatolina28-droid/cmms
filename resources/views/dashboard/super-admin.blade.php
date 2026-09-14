@@ -481,11 +481,6 @@
             <i class="fa-solid fa-server stat-bg-icon"></i>
             <span class="stat-label">Active Assets</span>
             <div class="stat-value">{{ $stats['total_assets'] }}</div>
-            @if(($assetBreakdown['under_repair'] ?? 0) > 0)
-                <div style="font-size:10px; color:#c2410c; font-weight:700; margin-top:4px;">
-                    <i class="fa-solid fa-wrench" style="margin-right:3px;"></i>{{ $assetBreakdown['under_repair'] }} under repair
-                </div>
-            @endif
         </div>
         <div class="stat-card-premium stat-overdue {{ $stats['overdue_tickets'] > 0 ? 'stat-overdue-alert' : '' }}">
             <i class="fa-solid fa-clock stat-bg-icon"></i>
@@ -537,9 +532,9 @@
                 @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
                     @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
                     @if($mtbfDiff > 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #047857; margin-top: 4px;">&#9660; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #047857; margin-top: 4px;">&#9650; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</div>
                     @elseif($mtbfDiff < 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c; margin-top: 4px;">&#9650; {{ abs($mtbfDiff) }} days shorter (more frequent)</div>
+                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c; margin-top: 4px;">&#9660; {{ abs($mtbfDiff) }} days shorter (more frequent breakdowns)</div>
                     @else
                         <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 4px;">No change from last month</div>
                     @endif
@@ -964,6 +959,14 @@
         }
     };
     const kpiInteraction = { mode: "index", intersect: false };
+    // Fix 3: kapag BUMABA ang MTBF kumpara sa nakaraang buwan (mas madalas na
+    // breakdown = negative outcome), ang line graph at chip ay magiging RED —
+    // dati laging green sila kahit nag-c-crash ang MTBF (hal. 30+ → 2.3 days).
+    const kpiMtbfWorsened = @json($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0 && $kpi["mtbf_days"] < $kpi["mtbf_prev"]);
+    const kpiMtbfColor = kpiMtbfWorsened ? "#dc2626" : "#10b981";
+    const kpiMtbfDark = kpiMtbfWorsened ? "#b91c1c" : "#059669";
+    const kpiMtbfSoft = kpiMtbfWorsened ? "rgba(220, 38, 38, 0.08)" : "rgba(16, 185, 129, 0.08)";
+    const kpiMtbfGradTop = kpiMtbfWorsened ? "rgba(220, 38, 38, 0.20)" : "rgba(16, 185, 129, 0.20)";
     const ctxMttr = document.getElementById("mttrChart");
     if (ctxMttr) {
         new Chart(ctxMttr, {
@@ -1031,14 +1034,14 @@
                 datasets: [{
                     label: "MTBF (days)",
                     data: kpiTrend.mtbf,
-                    borderColor: "#10b981",
+                    borderColor: kpiMtbfColor,
                     borderWidth: 2.5,
                     backgroundColor: (ctx) => {
                         const { chartArea, ctx: c } = ctx.chart;
-                        if (!chartArea) return "rgba(16, 185, 129, 0.08)";
+                        if (!chartArea) return kpiMtbfSoft;
                         const g = c.createLinearGradient(0, chartArea.top, 0, chartArea.bottom);
-                        g.addColorStop(0, "rgba(16, 185, 129, 0.20)");
-                        g.addColorStop(1, "rgba(16, 185, 129, 0)");
+                        g.addColorStop(0, kpiMtbfGradTop);
+                        g.addColorStop(1, "rgba(0, 0, 0, 0)");
                         return g;
                     },
                     fill: true,
@@ -1046,8 +1049,8 @@
                     spanGaps: false,
                     pointRadius: 4,
                     pointHoverRadius: 6,
-                    pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#10b981"),
-                    pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : "#059669"),
+                    pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfColor),
+                    pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfDark),
                     pointBorderColor: kpiTrend.censored.map(c => c ? "#10b981" : "#ffffff"),
                     pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2),
                     pointHoverBorderWidth: 3,
@@ -1111,7 +1114,7 @@
         const fmt = (v) => (v === null || v === undefined) ? null : (Number.isInteger(v) ? v + "d" : Number(v).toFixed(1) + "d");
         [
             ["mttrLatestChip", kpiTrend.mttr, kpiTrend.censored, "rgba(0, 56, 168, 0.08)", "#0038A8", false],
-            ["mtbfLatestChip", kpiTrend.mtbf, kpiTrend.censored, "rgba(16, 185, 129, 0.10)", "#059669", true]
+            ["mtbfLatestChip", kpiTrend.mtbf, kpiTrend.censored, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.10)" : "rgba(16, 185, 129, 0.10)", kpiMtbfWorsened ? "#b91c1c" : "#059669", true]
         ].forEach(([id, series, censored, bg, fg, showGe]) => {
             const el = document.getElementById(id);
             if (!el) return;

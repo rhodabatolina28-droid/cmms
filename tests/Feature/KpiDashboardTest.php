@@ -161,4 +161,103 @@ class KpiDashboardTest extends TestCase
         $this->assertSame(2.0, $kpi["trend"]["mttr"][3]);
         $this->assertFalse($kpi["trend"]["censored"][3]);
     }
+
+    public function test_overdue_counts_only_open_pending_ongoing_tickets(): void
+    {
+        // Fix 1: ang Overdue card ay dapat hindi lalampas sa Pending + Ongoing.
+        // Dati: raw query kasama ang Scheduled PM / Awaiting Parts / Awaiting
+        // Signature / Referred-External (8) habang ang stat cards ay user-
+        // submitted Pending+Ongoing lang (4) — mukhang double counting.
+        $sa = $this->user(["role" => "super_admin"]);
+        $requestor = $this->user();
+        $old = now()->subDays(10)->format("Y-m-d H:i:s");
+
+        $make = function (string $number, string $type, string $status) use ($requestor): RequestModel {
+            return RequestModel::create([
+                "user_id" => $requestor->id,
+                "request_number" => $number,
+                "type" => $type,
+                "requestor_name" => $requestor->full_name,
+                "region" => "NCR",
+                "branch" => "Main Office",
+                "office" => "RESEARCH AND INFORMATION DIVISION",
+                "status" => $status,
+                "is_deleted" => false,
+                "description" => "Overdue test " . $number,
+                "division_admin_review_status" => "Approved",
+            ]);
+        };
+
+        // Overdue: Pending, 10 days old
+        $pending = $make("REQ-NCR-RCMB-2026-0601", "ICT", "Pending");
+        $pending->created_at = $old; $pending->save();
+
+        // Excluded: Scheduled PM, 10 days old (mananatili sa D2 aging chips, hindi sa card)
+        $scheduled = $make("REQ-NCR-RCMB-2026-0602", "Preventive Maintenance", "Scheduled");
+        $scheduled->created_at = $old; $scheduled->save();
+
+        // Excluded: Awaiting Parts, 10 days old
+        $awaiting = $make("REQ-NCR-RCMB-2026-0603", "ICT", "Awaiting Parts");
+        $awaiting->created_at = $old; $awaiting->save();
+
+        // Hindi pa overdue: Pending, 3 days old
+        $make("REQ-NCR-RCMB-2026-0604", "ICT", "Pending");
+
+        $this->actingAs($sa);
+        $view = (new \App\Actions\Dashboard\SuperAdminDashboardAction)->execute();
+        $stats = $view->getData()["stats"];
+
+        $this->assertSame(1, $stats["overdue_tickets"]);
+        $this->assertLessThanOrEqual(
+            $stats["pending"] + $stats["ongoing"],
+            $stats["overdue_tickets"],
+            "Overdue must never exceed Pending + Ongoing"
+        );
+    }
+
+    public function test_active_assets_card_omits_under_repair_subnote(): void
+    {
+        // Fix 2: ang "4 under repair" subtext sa loob ng Active Assets card ay
+        // nagmumukhang kasama sa Active count. Ang Under Repair ay HIWALAY na
+        // enum states (For Repair / Under Maintenance) — may sariling slice sa
+        // doughnut, kaya hindi na kailangan ang subnote (option b).
+        $sa = $this->user(["role" => "super_admin"]);
+        $this->actingAs($sa)
+            ->get(route("dashboard.super-admin"))
+            ->assertOk()
+            ->assertSee("Active Assets")
+            // lowercase phrase — HINDI tatamaan ang doughnut label na 'Under Repair'
+            ->assertDontSee("under repair");
+    }
+
+    public function test_mtbf_decline_shows_warning_indicator(): void
+    {
+        // Fix 3: pagbaba ng MTBF = mas madalas na breakdown (BAD) — dapat red/
+        // warning: red line + red chip + ▼ red delta text. Dati laging green
+        // ang line/chip at baligtad ang ▲/▼ arrows.
+        $sa = $this->user(["role" => "super_admin"]);
+        $requestor = $this->user();
+
+        $cur = now()->startOfMonth()->addHours(10);
+        $prev = now()->subMonth()->startOfMonth();
+
+        // prev month: 1 breakdown -> mataas na MTBF (~daysInMonth)
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0711", 1440, $prev->format("Y-m-d H:i:s"), $prev->copy()->addHours(24)->format("Y-m-d H:i:s"));
+
+        // current month: 3 breakdowns -> MTBF = curDays/3, MAS MABABA kaysa prev
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0712", 1440, $cur->format("Y-m-d H:i:s"), $cur->copy()->addHours(24)->format("Y-m-d H:i:s"));
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0713", 1440, $cur->copy()->addHours(2)->format("Y-m-d H:i:s"), $cur->copy()->addHours(2)->addHours(24)->format("Y-m-d H:i:s"));
+        $this->ictTicket($requestor, "REQ-NCR-RCMB-2026-0714", 1440, $cur->copy()->addHours(4)->format("Y-m-d H:i:s"), $cur->copy()->addHours(4)->addHours(24)->format("Y-m-d H:i:s"));
+
+        $this->actingAs($sa)
+            ->get(route("dashboard.super-admin"))
+            ->assertOk()
+            // worsening delta text (red) — dati baligtad ang arrow nito
+            ->assertSee("days shorter")
+            // red indicator color sa line graph + chip (kapag worsened)
+            ->assertSee("dc2626")
+            // ▼ arrow (value down) sa worsening — dati ▲ ang naka-render
+            // (escape=false: literal na HTML entity ang hinahanap sa output)
+            ->assertSee("&#9660;", false);
+    }
 }
