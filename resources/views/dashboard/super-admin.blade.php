@@ -511,60 +511,6 @@
         </div>
     </div>
 
-    <!-- D9: MAINTENANCE KPI - Monthly (Avg. Downtime / Days Between Failures) -->
-    <div class="analytics-box" style="padding: 20px 24px; margin-bottom: 18px;">
-        <div class="analytics-title" style="margin-bottom: 4px;">
-            <i class="fa-solid fa-chart-simple icon-blue"></i>
-            Maintenance KPI
-            <form method="GET" action="{{ route("dashboard.super-admin") }}" style="margin-left: auto;">
-                <select name="kpi_month" onchange="this.form.submit()" style="padding: 4px 10px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 12px; font-weight: 700; color: #1e293b; background: white;">
-                    @foreach($kpi["months"] as $key => $label)
-                        <option value="{{ $key }}" @if($key === $kpi["selected"]) selected @endif>{{ $label }}</option>
-                    @endforeach
-                </select>
-            </form>
-        </div>
-        <p style="font-size: 12px; color: #64748b; margin: 0 0 14px 0;">How long a failed asset stays down, and how often breakdowns occur.</p>
-        <div class="kpi-card-grid">
-            <div class="stat-card-premium stat-total">
-                <i class="fa-regular fa-clock stat-bg-icon"></i>
-                <span class="stat-label">Avg. Downtime</span>
-                <div class="stat-value">
-                    @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
-                </div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Mean time to repair (MTTR) &mdash; lower is better</div>
-                @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
-                    @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
-                    @if($mttrDiff > 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #047857; margin-top: 4px;">&#9660; {{ abs($mttrDiff) }} days faster than last month</div>
-                    @elseif($mttrDiff < 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c; margin-top: 4px;">&#9650; {{ abs($mttrDiff) }} days slower than last month</div>
-                    @else
-                        <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 4px;">No change from last month</div>
-                    @endif
-                @endif
-            </div>
-            <div class="stat-card-premium stat-assets">
-                <i class="fa-solid fa-infinity stat-bg-icon"></i>
-                <span class="stat-label">Days Between Failures</span>
-                <div class="stat-value">
-                    @if($kpi["mtbf_days"] !== null){{ number_format($kpi["mtbf_days"], 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #10b981;">No failures this month</span> @endif
-                </div>
-                <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 2px;">Mean time between failures (MTBF) &mdash; higher is better</div>
-                @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
-                    @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
-                    @if($mtbfDiff > 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #047857; margin-top: 4px;">&#9650; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</div>
-                    @elseif($mtbfDiff < 0)
-                        <div style="font-size: 11px; font-weight: 700; color: #b91c1c; margin-top: 4px;">&#9660; {{ abs($mtbfDiff) }} days shorter (more frequent breakdowns)</div>
-                    @else
-                        <div style="font-size: 11px; font-weight: 700; color: #64748b; margin-top: 4px;">No change from last month</div>
-                    @endif
-                @endif
-            </div>
-        </div>
-    </div>
-
     <!-- WORKSPACE GRID -->
     <div class="admin-workspace-grid">
         
@@ -594,28 +540,69 @@
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
-                            <div class="analytics-box" style="padding: 24px 26px;">
-                    <div class="analytics-title" style="margin-bottom: 4px; flex-wrap: nowrap;">
-                        <i class="fa-solid fa-arrow-trend-up icon-blue"></i>
-                        <span style="white-space: nowrap;">MTTR</span>
-                        <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none; flex-shrink: 0; white-space: nowrap;">6 months</span>
-                        <span class="kpi-trend-chip" id="mttrLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
+                <div class="analytics-box" style="padding: 22px 24px;">
+                    <div class="analytics-title" style="margin-bottom: 8px; flex-wrap: nowrap;">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                            <i class="fa-solid fa-clock icon-blue"></i>
+                            <span style="white-space: nowrap; font-weight: 700;">Avg. Downtime</span>
+                            <span style="font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap;">(MTTR)</span>
+                        </div>
+                        <form method="GET" action="{{ route("dashboard.super-admin") }}" style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Maintenance KPI:</span>
+                            <select name="kpi_month" onchange="this.form.submit()" style="padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #1e293b; background: white; cursor: pointer;">
+                                @foreach($kpi["months"] as $key => $label)
+                                    <option value="{{ $key }}" @if($key === $kpi["selected"]) selected @endif>{{ $label }}</option>
+                                @endforeach
+                            </select>
+                        </form>
                     </div>
-                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Average downtime each month, in days.</p>
-                    <div class="chart-box-bar chart-box-trend" style="height: 200px; width: 100%; position: relative;">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
+                        <div style="font-size: 26px; font-weight: 800; color: #0038A8; line-height: 1.1;">
+                            @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
+                        </div>
+                        @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
+                            @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
+                            @if($mttrDiff > 0)
+                                <span style="font-size: 11px; font-weight: 700; color: #047857; background: rgba(4,120,87,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9660; {{ abs($mttrDiff) }} days faster than last month</span>
+                            @elseif($mttrDiff < 0)
+                                <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: rgba(185,28,28,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9650; {{ abs($mttrDiff) }} days slower than last month</span>
+                            @else
+                                <span style="font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap;">No change from last month</span>
+                            @endif
+                        @endif
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0 0 14px 0;">Mean time to repair &mdash; lower is better.</p>
+                    <div class="chart-box-bar chart-box-trend" style="height: 185px; width: 100%; position: relative;">
                         <canvas id="mttrChart"></canvas>
                     </div>
                 </div>
 
-                <div class="analytics-box" style="padding: 24px 26px;">
-                    <div class="analytics-title" style="margin-bottom: 4px; flex-wrap: nowrap;">
-                        <i class="fa-solid fa-arrow-trend-down icon-blue" id="mtbfTitleIcon"></i>
-                        <span style="white-space: nowrap;">MTBF</span>
-                        <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none; flex-shrink: 0; white-space: nowrap;">6 months</span>
+                <div class="analytics-box" style="padding: 22px 24px;">
+                    <div class="analytics-title" style="margin-bottom: 8px; flex-wrap: nowrap;">
+                        <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
+                            <i class="fa-solid fa-arrow-trend-down icon-blue" id="mtbfTitleIcon"></i>
+                            <span style="white-space: nowrap; font-weight: 700;">Days Between Failures</span>
+                            <span style="font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap;">(MTBF)</span>
+                        </div>
                         <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
                     </div>
-                    <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Days between breakdowns (hollow = no breakdowns that month).</p>
-                    <div class="chart-box-bar chart-box-trend" style="height: 200px; width: 100%; position: relative;">
+                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
+                        <div style="font-size: 26px; font-weight: 800; color: {{ $kpi['mtbf_days'] !== null && $kpi['mtbf_prev'] !== null && $kpi['mtbf_prev'] > 0 && $kpi['mtbf_days'] < $kpi['mtbf_prev'] ? '#dc2626' : '#059669' }}; line-height: 1.1;">
+                            @if($kpi["mtbf_days"] !== null){{ number_format($kpi["mtbf_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #10b981; font-size: 18px;">No failures this month</span> @endif
+                        </div>
+                        @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
+                            @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
+                            @if($mtbfDiff > 0)
+                                <span style="font-size: 11px; font-weight: 700; color: #047857; background: rgba(4,120,87,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9650; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</span>
+                            @elseif($mtbfDiff < 0)
+                                <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: rgba(185,28,28,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9660; {{ abs($mtbfDiff) }} days shorter (more frequent breakdowns)</span>
+                            @else
+                                <span style="font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap;">No change from last month</span>
+                            @endif
+                        @endif
+                    </div>
+                    <p style="font-size: 11px; color: #64748b; margin: 0 0 14px 0;">Mean time between failures &mdash; higher is better (hollow = no breakdowns that month).</p>
+                    <div class="chart-box-bar chart-box-trend" style="height: 185px; width: 100%; position: relative;">
                         <canvas id="mtbfChart"></canvas>
                     </div>
                 </div>
