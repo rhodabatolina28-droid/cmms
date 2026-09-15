@@ -138,7 +138,10 @@
         /* STATS GRID MODERN */
         .stats-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+            /* D9.9: 6 cards sa ISANG row sa desktop — hindi na bumababa ang
+               CSM Satisfaction sa ikalawang row. minmax(0,1fr) = pantay na
+               hati, walang overflow. */
+            grid-template-columns: repeat(6, minmax(0, 1fr));
             gap: clamp(12px, 1.5vw, 20px);
             margin-bottom: clamp(20px, 2.5vw, 30px);
         }
@@ -320,6 +323,9 @@
         @media screen and (max-width: 1000px) {
             .admin-workspace-grid { grid-template-columns: 1fr !important; }
             .analytics-grid { grid-template-columns: 1fr !important; }
+            /* D9.9: sa mas maliit na screen, 3 columns x 2 rows ang stats —
+               readable pa rin, hindi siksik */
+            .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
         }
         @media screen and (max-width: 767px) {
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
@@ -1043,7 +1049,7 @@
                         return g;
                     },
                     fill: true,
-                    tension: 0.3,
+                    tension: 0,
                     pointRadius: 4,
                     pointHoverRadius: 6,
                     pointBackgroundColor: "#0038A8",
@@ -1106,7 +1112,7 @@
                         return g;
                     },
                     fill: true,
-                    tension: 0.3,
+                    tension: 0,
                     spanGaps: false,
                     pointRadius: 4,
                     pointHoverRadius: 6,
