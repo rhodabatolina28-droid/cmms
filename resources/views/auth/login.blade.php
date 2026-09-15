@@ -6,6 +6,9 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>Login - CMMS</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     @vite(['resources/css/login.css'])
     <style nonce="{{ $cspNonce }}">
@@ -63,11 +66,6 @@
         </a>
 
         <div class="login-box">
-            <!-- Brand badge -->
-            <div class="brand-badge">
-                ICT System
-            </div>
-
             <div class="logo-container">
                 <img src="{{ asset('images/ncmb-logo.png') }}" alt="NCMB Logo" class="login-logo">
             </div>
@@ -77,46 +75,47 @@
                 <p class="subtitle">Enter your credentials to access the portal</p>
             </div>
 
+            @if($errors->any())
+                <div class="error-box error-box--visible" style="margin-bottom: 20px;">
+                    <i class="fa-solid fa-circle-exclamation" style="font-size: 16px; flex-shrink: 0;"></i>
+                    <div>
+                        {{ $errors->first('email') ?: ($errors->first('password') ?: 'Invalid credentials. Please try again.') }}
+                    </div>
+                </div>
+            @endif
+
             <div id="errorBox" class="error-box"></div>
 
             <form id="loginForm" method="POST" action="{{ route('login') }}">
                 @csrf
                 <input type="hidden" name="redirect" value="{{ $redirect ?? '' }}">
 
-            <div class="form-group">
-                <label for="email">Email</label>
-                <input type="email" id="email" name="email" value="{{ old('email') }}" required placeholder="you@example.com">
-                @error('email')
-                    <div class="error">{{ $message }}</div>
-                @enderror
-            </div>
-
-            <div class="form-group">
-                <label for="password">Password</label>
-                <div class="password-wrapper">
-                    <input type="password" id="password" name="password" required placeholder="Enter your password">
-                    <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
-                        <i class="fas fa-eye"></i>
-                    </button>
+                <div class="form-group">
+                    <label for="email">Email Address</label>
+                    <input type="email" id="email" name="email" value="{{ old('email') }}" required placeholder="you@example.com" autofocus autocomplete="email">
                 </div>
-                @error('password')
-                    <div class="error">{{ $message }}</div>
-                @enderror
-            </div>
 
-            <button type="submit" class="btn-login">
-                Login
-            </button>
-        </form>
+                <div class="form-group">
+                    <label for="password">Password</label>
+                    <div class="password-wrapper">
+                        <input type="password" id="password" name="password" required placeholder="Enter your password" autocomplete="current-password">
+                        <button type="button" class="password-toggle" id="togglePassword" aria-label="Toggle password visibility">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
 
-        @if($errors->any())
-            <div style="text-align:center; margin-top:20px;">
-                <span style="color:#94a3b8; font-size:12px;">
-                    Need help signing in? Please contact <strong style="color:#0038A8;">ICT Unit</strong>.
+                <button type="submit" class="btn-login" id="btnLogin" style="margin-top: 6px;">
+                    Sign In
+                </button>
+            </form>
+
+            <div style="text-align: center; margin-top: 24px; padding-top: 18px; border-top: 1px solid #f1f5f9;">
+                <span style="color: #94a3b8; font-size: 12px;">
+                    Need help accessing your account? Contact your <strong style="color: #0038A8; font-weight: 700;">ICT Administrator</strong>.
                 </span>
             </div>
-        @endif
-    </div>
+        </div>
 
     @vite(['resources/js/login.js'])
     <script nonce="{{ $cspNonce }}">

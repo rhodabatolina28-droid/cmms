@@ -42,24 +42,61 @@ input:-webkit-autofill:active {
     -webkit-text-fill-color: #1f2937 !important;
 }
 
+/* Hide native Edge/Chrome password reveal icon */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+    display: none;
+}
+
 input:focus {
     outline: none;
-    border-color: #1e40af;
-    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.1);
+    border-color: #0038A8;
+    box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.12);
+}
+
+/* Form Options (Remember Me) */
+.form-options {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 4px;
+    margin-bottom: 22px;
+    font-size: 13px;
+}
+
+.remember-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #4b5563;
+    cursor: pointer;
+    user-select: none;
+    font-weight: 500;
+    margin-bottom: 0;
+    font-size: 13px;
+}
+
+.remember-label input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    accent-color: #0038A8;
+    cursor: pointer;
+    border-radius: 4px;
+    margin: 0;
 }
 
 /* Button */
 .btn-login {
     width: 100%;
     padding: 13px;
-    background: linear-gradient(135deg, #1e40af 0%, #0038A8 100%);
+    background: #0038A8;
     color: white;
     border: none;
     border-radius: 8px;
-    font-size: 15px;
+    font-size: 14px;
     font-weight: 700;
     cursor: pointer;
-    font-family: Arial, sans-serif;
+    font-family: inherit;
     transition: all 0.2s ease;
     display: inline-flex;
     align-items: center;
@@ -69,8 +106,9 @@ input:focus {
 }
 
 .btn-login:hover {
-    background: linear-gradient(135deg, #002366 0%, #002366 100%);
-    box-shadow: 0 4px 12px rgba(0, 35, 102, 0.3);
+    background: #002366;
+    box-shadow: 0 4px 12px rgba(0, 35, 102, 0.25);
+    transform: translateY(-1px);
 }
 
 .btn-login:active {
@@ -79,18 +117,22 @@ input:focus {
 
 /* Error Box */
 .error-box {
-    margin-top: 15px;
-    padding: 10px;
-    background: #FFEBEE;
-    color: #C62828;
-    border-radius: 4px;
+    margin-bottom: 20px;
+    padding: 12px 14px;
+    background: #fef2f2;
+    color: #991b1b;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
     font-size: 13px;
     display: none;
-    text-align: center;
+    text-align: left;
+    line-height: 1.4;
 }
 
 .error-box--visible {
-    display: block;
+    display: flex;
+    align-items: center;
+    gap: 10px;
 }
 
 .error {

@@ -18,7 +18,7 @@ loginForm.addEventListener("submit", function (e) {
 
     if (!email || !password) {
         e.preventDefault();
-        errorBox.innerHTML = "<p>Email and password are required</p>";
+        errorBox.innerHTML = '<i class="fa-solid fa-circle-exclamation" style="font-size: 16px; flex-shrink: 0;"></i><div>Email and password are required.</div>';
         errorBox.classList.add("error-box--visible");
         return;
     }

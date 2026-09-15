@@ -25,7 +25,8 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request)
     {
-        $credentials = $request->validated();
+        $credentials = $request->only('email', 'password');
+        $remember = $request->boolean('remember');
 
         // Anti-Brute Force Protection (Rate Limiting)
         $throttleKey = mb_strtolower($request->input('email')) . '|' . $request->ip();
@@ -54,7 +55,7 @@ class AuthController extends Controller
             ])->onlyInput('email');
         }
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt($credentials, $remember)) {
             RateLimiter::clear($throttleKey);
             RateLimiter::clear($ipKey);
 
