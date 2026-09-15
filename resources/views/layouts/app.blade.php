@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
@@ -73,14 +73,16 @@
         .time-clock-icon { width: 34px; height: 34px; background: #eff6ff; color: #0038A8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0, 56, 168, 0.1); }
 
         /* Notification items (JS templates) */
-        .notif-item { padding: 15px 20px; border-bottom: 1px solid #f1f5f9; transition: background 0.2s; position: relative; }
+        .notif-item { padding: 14px 18px; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease; position: relative; cursor: pointer; }
+        .notif-item:hover { background: #f8fafc; }
         .notif-item-inner { display: flex; gap: 12px; }
         .notif-dot { width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
         .notif-type { font-weight: 700; color: #1e293b; font-size: 13px; }
-        .notif-msg { font-size: 12px; color: #64748b; line-height: 1.4; margin: 4px 0; }
-        .notif-meta { font-size: 11px; color: #94a3b8; display: flex; align-items: center; gap: 10px; margin-top: 6px; }
+        .notif-msg { font-size: 12px; color: #64748b; line-height: 1.4; margin: 4px 0; word-break: break-word; }
+        .notif-meta { font-size: 11px; color: #94a3b8; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
         .notif-mark-read { color: #2563eb; text-decoration: none; font-weight: 700; }
-        .mark-read { color: #2563eb; text-decoration: none; font-weight: 700; }
+        .mark-read { color: #2563eb; text-decoration: none; font-weight: 700; font-size: 11px; }
+        .mark-read:hover { text-decoration: underline; color: #1d4ed8; }
         .notif-empty-alt { padding: 40px 20px; text-align: center; color: #94a3b8; }
         .notif-empty-alt-icon { font-size: 24px; display: block; margin-bottom: 10px; opacity: 0.5; }
         .notif-empty-alt-text { font-size: 13px; margin: 0; }
@@ -88,18 +90,23 @@
         /* Notification */
         .notification-wrapper { position: relative; display: flex; align-items: center; }
         #notifBell { cursor: pointer; color: #475569; font-size: 20px; position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; border: 1px solid #e2e8f0; transition: all 0.2s; }
-        .notif-badge { display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 10px; min-width: 18px; height: 18px; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); }
+        .notif-badge { display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 10px; min-width: 18px; height: 18px; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); padding: 0 4px; }
         #notifDropdown { padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; }
-        .notif-header { padding: 18px 20px; background: white; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
+        .notif-header { padding: 16px 20px; background: white; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
         .notif-header-left { display: flex; align-items: center; gap: 8px; }
         .notif-header-title { margin:0; font-size: 15px; font-weight: 800; color: #1e293b; }
         .notif-count-label { background: #eff6ff; color: #2563eb; font-size: 11px; padding: 2px 8px; border-radius: 10px; font-weight: 700; }
         #markAllRead { font-size: 12px; color: #2563eb; text-decoration: none; font-weight: 600; transition: color 0.2s; }
-        #notifContent { background: white; max-height: 350px; overflow-y: auto; }
+        #markAllRead:hover { text-decoration: underline; color: #1d4ed8; }
+        #notifContent { background: white; max-height: 380px; overflow-y: auto; overscroll-behavior: contain; }
+        #notifContent::-webkit-scrollbar { width: 6px; }
+        #notifContent::-webkit-scrollbar-track { background: #f8fafc; }
+        #notifContent::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        #notifContent::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .notif-empty { padding: 40px 20px; text-align: center; color: #94a3b8; }
         .notif-empty-icon { font-size: 24px; display: block; margin-bottom: 10px; opacity: 0.5; }
         .notif-empty-text { font-size: 13px; margin: 0; }
-        .notif-footer { padding: 15px 20px; border-top: 1px solid #f1f5f9; background: #f8fafc; text-align: center; }
+        .notif-footer { padding: 14px 20px; border-top: 1px solid #f1f5f9; background: #f8fafc; text-align: center; }
         .notif-footer-link { color: #475569; text-decoration: none; font-size: 13px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 6px; }
         .notif-footer-arrow { font-size: 11px; }
 
@@ -515,39 +522,74 @@
         const notifContent = document.getElementById('notifContent');
         const markAllRead = document.getElementById('markAllRead');
 
-        function fetchNotifications() {
-            fetch('{{ route("notifications.get") }}', {
+        let notifOffset = 0;
+        const notifBatchLimit = 50;
+        let notifHasMore = false;
+        let notifLoading = false;
+
+        function buildNotifItemHtml(n) {
+            const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString(undefined, {
+                month: 'short',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            }) : '';
+            return `
+                <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}">
+                    <div class="notif-item-inner">
+                        <div class="notif-dot"></div>
+                        <div style="flex: 1; min-width: 0;">
+                            <div class="notif-type">${n.type || 'Notification'}</div>
+                            <div class="notif-msg">${n.message}</div>
+                            <div class="notif-meta">
+                                <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
+                                <a href="#" class="mark-read" data-id="${n.id}">Mark as read</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function fetchNotifications(reset) {
+            if (reset === undefined) reset = true;
+            if (reset) {
+                notifOffset = 0;
+            }
+            notifLoading = true;
+            fetch('{{ route("notifications.get") }}?offset=' + notifOffset + '&limit=' + notifBatchLimit, {
                 credentials: 'include'
             })
                 .then(response => response.json())
                 .then(data => {
+                    notifLoading = false;
                     const countLabel = document.getElementById('notifCountLabel');
                     if (data.count > 0) {
-                        if (notifCount) { notifCount.textContent = data.count; notifCount.style.display = 'flex'; }
+                        if (notifCount) {
+                            notifCount.textContent = data.count > 99 ? '99+' : data.count;
+                            notifCount.style.display = 'flex';
+                        }
                         if (countLabel) countLabel.textContent = data.count + ' New';
-                        
+
                         let html = '';
-                        data.notifications.forEach(n => {
-                            html += `
-                                <div class="notif-item unread" data-id="${n.id}">
-                                    <div class="notif-item-inner">
-                                        <div class="notif-dot"></div>
-                                        <div>
-                                            <div class="notif-type">${n.type}</div>
-                                            <div class="notif-msg">${n.message}</div>
-                                            <div class="notif-meta">
-                                                <span><i class="fa-regular fa-clock"></i> ${new Date(n.created_at).toLocaleDateString()}</span>
-                                                <a href="#" class="mark-read" data-id="${n.id}">Mark as read</a>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            `;
-                        });
-                        if (notifContent) notifContent.innerHTML = html;
+                        if (data.notifications && data.notifications.length > 0) {
+                            data.notifications.forEach(n => {
+                                html += buildNotifItemHtml(n);
+                            });
+                        }
+
+                        if (reset) {
+                            if (notifContent) notifContent.innerHTML = html;
+                            notifOffset = data.notifications ? data.notifications.length : 0;
+                        } else {
+                            if (notifContent) notifContent.insertAdjacentHTML('beforeend', html);
+                            notifOffset += data.notifications ? data.notifications.length : 0;
+                        }
+                        notifHasMore = Boolean(data.has_more);
                     } else {
                         if (notifCount) notifCount.style.display = 'none';
                         if (countLabel) countLabel.textContent = '0 New';
+                        notifHasMore = false;
                         if (notifContent) notifContent.innerHTML = `
                             <div class="notif-empty-alt">
                                 <i class="fa-solid fa-bell-slash notif-empty-alt-icon"></i>
@@ -556,25 +598,69 @@
                         `;
                     }
                 })
-                .catch(() => console.error('Failed to fetch notifications'));
+                .catch(() => {
+                    notifLoading = false;
+                    console.error('Failed to fetch notifications');
+                });
+        }
+
+        function loadMoreNotifications() {
+            if (notifLoading || !notifHasMore) return;
+            notifLoading = true;
+            fetch('{{ route("notifications.get") }}?offset=' + notifOffset + '&limit=' + notifBatchLimit, {
+                credentials: 'include'
+            })
+                .then(response => response.json())
+                .then(data => {
+                    notifLoading = false;
+                    if (data.notifications && data.notifications.length > 0) {
+                        let html = '';
+                        data.notifications.forEach(n => {
+                            html += buildNotifItemHtml(n);
+                        });
+                        if (notifContent) notifContent.insertAdjacentHTML('beforeend', html);
+                        notifOffset += data.notifications.length;
+                        notifHasMore = Boolean(data.has_more);
+                    } else {
+                        notifHasMore = false;
+                    }
+                })
+                .catch(() => {
+                    notifLoading = false;
+                });
+        }
+
+        // Infinite scroll for notification dropdown list
+        if (notifContent) {
+            notifContent.addEventListener('scroll', function() {
+                if (notifContent.scrollTop + notifContent.clientHeight >= notifContent.scrollHeight - 30) {
+                    loadMoreNotifications();
+                }
+            });
         }
 
         if (notifBell) {
             notifBell.addEventListener('click', (e) => {
                 e.stopPropagation();
-                notifDropdown.style.display = notifDropdown.style.display === 'block' ? 'none' : 'block';
-                fetchNotifications();
+                const isOpen = notifDropdown.style.display === 'block';
+                notifDropdown.style.display = isOpen ? 'none' : 'block';
+                if (!isOpen) {
+                    fetchNotifications(true);
+                }
             });
         }
 
-        document.addEventListener('click', () => {
-            if (notifDropdown) notifDropdown.style.display = 'none';
+        document.addEventListener('click', (e) => {
+            if (notifDropdown && !notifDropdown.contains(e.target) && !notifBell.contains(e.target)) {
+                notifDropdown.style.display = 'none';
+            }
         });
 
         if (notifDropdown) {
             notifDropdown.addEventListener('click', (e) => {
                 if (e.target.classList.contains('mark-read')) {
                     e.preventDefault();
+                    e.stopPropagation();
                     const id = e.target.getAttribute('data-id');
                     fetch("{{ route('notifications.read', ':id') }}".replace(':id', id), {
                         method: 'POST',
@@ -583,7 +669,28 @@
                             'X-CSRF-TOKEN': '{{ csrf_token() }}',
                             'X-Requested-With': 'XMLHttpRequest'
                         }
-                    }).then(() => fetchNotifications()).catch(() => console.error('Failed to mark notification as read'));
+                    }).then(() => fetchNotifications(true)).catch(() => console.error('Failed to mark notification as read'));
+                    return;
+                }
+
+                // If user clicks the notification card itself, navigate to its URL (if present)
+                const item = e.target.closest('.notif-item');
+                if (item) {
+                    const url = item.getAttribute('data-url');
+                    const id = item.getAttribute('data-id');
+                    if (url && url !== '#' && url !== '') {
+                        // Mark as read in background, then navigate
+                        fetch("{{ route('notifications.read', ':id') }}".replace(':id', id), {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: {
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'X-Requested-With': 'XMLHttpRequest'
+                            }
+                        }).finally(() => {
+                            window.location.href = url;
+                        });
+                    }
                 }
             });
         }
@@ -598,13 +705,13 @@
                         'X-CSRF-TOKEN': '{{ csrf_token() }}',
                         'X-Requested-With': 'XMLHttpRequest'
                     }
-                }).then(() => fetchNotifications()).catch(() => console.error('Failed to mark all as read'));
+                }).then(() => fetchNotifications(true)).catch(() => console.error('Failed to mark all as read'));
             });
         }
 
         if (notifBell) {
-            fetchNotifications();
-            setInterval(fetchNotifications, 60000);
+            fetchNotifications(true);
+            setInterval(() => fetchNotifications(true), 60000);
         }
 
         (function preserveSidebarScroll() {
