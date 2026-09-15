@@ -79,7 +79,7 @@
             color: white;
             position: relative;
             overflow: hidden;
-            margin-bottom: clamp(20px, 2.5vw, 30px);
+            margin-bottom: clamp(14px, 1.8vw, 20px);
             box-shadow: 0 10px 25px rgba(0, 40, 120, 0.25);
         }
 
@@ -142,14 +142,14 @@
                CSM Satisfaction sa ikalawang row. minmax(0,1fr) = pantay na
                hati, walang overflow. */
             grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-            gap: clamp(12px, 1.5vw, 16px);
-            margin-bottom: 18px;
+            gap: clamp(10px, 1.2vw, 14px);
+            margin-bottom: 12px;
         }
 
         .stat-card-premium {
             background: white;
             border-radius: 12px;
-            padding: clamp(16px, 1.5vw, 20px);
+            padding: clamp(12px, 1.2vw, 16px);
             border: 1px solid rgba(0,0,0,0.05);
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             position: relative;
@@ -196,7 +196,7 @@
             text-transform: uppercase;
             letter-spacing: 0.8px;
             display: block;
-            margin-bottom: 8px;
+            margin-bottom: 5px;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
@@ -212,8 +212,8 @@
         .analytics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: clamp(15px, 2vw, 25px);
-            margin-bottom: clamp(20px, 2.5vw, 30px);
+            gap: clamp(12px, 1.5vw, 18px);
+            margin-bottom: clamp(14px, 1.8vw, 20px);
         }
 
         .analytics-box {
