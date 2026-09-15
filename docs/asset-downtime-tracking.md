@@ -936,3 +936,6 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
 
 - **D9.10b Polish KPI trend charts: TAPOS (Sept 15 2026, commit `234d089`)** — (1) **Baseline pill badges**: Pinalitan ang raw text ng rounded white pill badges na may 1px colored border para sa `avg 1.6d` at `avg 16.6d` — malinaw at hindi nasasapawan ng gridlines o step lines. (2) **Dynamic MTBF header icon**: Ang `<i class="fa-solid fa-arrow-trend-down">` ay nagiging red din kapag lumala ang failure interval (`kpiMtbfWorsened`), 100% cohesive sa red chip at line. Tests: KpiDashboardTest 9/9 (52 assertions).
 
+- **D9.11 Dashboard space optimization (All-in-one KPI widgets): TAPOS (Sept 15 2026, commit `0e61352`)** — (1) Tinanggal ang hiwalay na higanteng `Maintenance KPI` box na kumakain ng ~200px na vertical space; (2) Inilipat ang malalaking numero (`3.1 days` at `2.3 days`), comparison deltas, subtitiles, at ang buwanang dropdown (`Maintenance KPI: [September 2026 ▾]`) sa mismong **header ng MTTR at MTBF chart cards** sa Analytics Grid bilang modernong all-in-one KPI widgets. (3) Umaakyat pataas ang analytics grid at recent tickets table, kaya mas mabilis basahin nang hindi nag-i-scroll. Tests: KpiDashboardTest 9/9 (52 assertions).
+
+
