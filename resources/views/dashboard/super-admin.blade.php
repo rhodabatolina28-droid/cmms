@@ -141,7 +141,7 @@
             /* D9.9: 6 cards sa ISANG row sa desktop — hindi na bumababa ang
                CSM Satisfaction sa ikalawang row. minmax(0,1fr) = pantay na
                hati, walang overflow. */
-            grid-template-columns: repeat(6, minmax(0, 1fr));
+            grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
             gap: clamp(12px, 1.5vw, 20px);
             margin-bottom: clamp(20px, 2.5vw, 30px);
         }
@@ -197,6 +197,9 @@
             letter-spacing: 0.8px;
             display: block;
             margin-bottom: 8px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .stat-value {
@@ -932,8 +935,6 @@
             }
         }
 
-    });
-
     // D9: 6-month trends (null = gap; hollow marker = censored no-breakdown month)
     const kpiTrend = @json($kpi["trend"]);
     const kpiTooltipBase = { backgroundColor: "#0f172a", titleColor: "#94a3b8", bodyColor: "#ffffff", padding: 12, cornerRadius: 8, displayColors: false };
@@ -1086,9 +1087,9 @@
                 scales: {
                     ...kpiTrendScales,
                     y: { ...kpiTrendScales.y, suggestedMax: kpiMttrBaseline !== null ? kpiMttrBaseline : undefined }
-                },
-                plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMttrBaseline, "rgba(0, 56, 168, 0.55)")]
-            }
+                }
+            },
+            plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMttrBaseline, "rgba(0, 56, 168, 0.55)")]
         });
     }
     const ctxMtbf = document.getElementById("mtbfChart");
@@ -1156,9 +1157,9 @@
                 scales: {
                     ...kpiTrendScales,
                     y: { ...kpiTrendScales.y, suggestedMax: kpiMtbfBaseline !== null ? kpiMtbfBaseline : undefined }
-                },
-                plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMtbfBaseline, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.55)" : "rgba(16, 185, 129, 0.55)")]
-            }
+                }
+            },
+            plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMtbfBaseline, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.55)" : "rgba(16, 185, 129, 0.55)")]
         });
     }
 
@@ -1210,6 +1211,8 @@
             el.style.display = "";
         });
     })();
+
+}); // end DOMContentLoaded
 
 </script>
 @endsection
