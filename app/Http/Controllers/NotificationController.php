@@ -10,7 +10,8 @@ class NotificationController extends Controller
 {
     public function getNotifications(Request $request)
     {
-        $userId = Auth::id();
+        $user = Auth::user();
+        $userId = $user ? $user->id : 0;
 
         // Badge: true unread total (no limit) so the red bubble is accurate.
         $count = Notification::where('user_id', $userId)
@@ -25,10 +26,46 @@ class NotificationController extends Controller
 
         $query = Notification::where('user_id', $userId)
             ->where('is_read', false)
+            ->with(['request.user'])
             ->orderBy('created_at', 'desc');
 
         $totalUnread = $query->count();
-        $notifications = $query->skip($offset)->take($limit)->get();
+        $rawNotifications = $query->skip($offset)->take($limit)->get();
+
+        $notifications = $rawNotifications->map(function ($n) use ($user) {
+            $targetUrl = $this->resolveTargetUrl($n, $user);
+            $reqNum = null;
+            $sender = null;
+
+            if ($n->request) {
+                $reqNum = $n->request->request_number;
+                if ($n->request->user) {
+                    $sender = $n->request->user->full_name ?: $n->request->user->name;
+                }
+            } elseif (preg_match('/REQ-[A-Z0-9-]+/', $n->message, $m)) {
+                $reqNum = $m[0];
+            } elseif (preg_match('/PR-[A-Z0-9-]+/', $n->message, $m)) {
+                $reqNum = $m[0];
+            }
+
+            // Extract sender from message if not found on relation
+            if (!$sender) {
+                if (preg_match('/(?:from|Admin|staff|personnel)\s+([A-Z\s]{3,30}?)(?:\s+in|\s+forwarded|\s+has|\s+\(|\.)/i', $n->message, $sm)) {
+                    $sender = trim($sm[1]);
+                }
+            }
+
+            return [
+                'id' => $n->id,
+                'type' => $n->type ?: 'Notification',
+                'message' => $n->message,
+                'url' => $targetUrl,
+                'request_number' => $reqNum,
+                'sender' => $sender,
+                'created_at' => $n->created_at ? $n->created_at->toISOString() : null,
+                'time_ago' => $n->created_at ? $n->created_at->diffForHumans() : '',
+            ];
+        });
 
         return response()->json([
             'notifications' => $notifications,
@@ -36,6 +73,65 @@ class NotificationController extends Controller
             'total' => $totalUnread,
             'has_more' => ($offset + $notifications->count()) < $totalUnread,
         ]);
+    }
+
+    protected function resolveTargetUrl($notification, $user)
+    {
+        if (!empty($notification->url) && $notification->url !== '#') {
+            return $notification->url;
+        }
+
+        if ($notification->request_id && $notification->request) {
+            $req = $notification->request;
+            if ($req->type === 'ICT') {
+                if ($user && in_array($user->role, ['super_admin', 'admin'])) {
+                    return route('ict.show', $req->id);
+                }
+                return route('ict.edit', $req->id);
+            } else {
+                if ($user && in_array($user->role, ['super_admin', 'it', 'admin'])) {
+                    return route('maintenance.show', $req->id);
+                }
+                return route('maintenance.edit', $req->id);
+            }
+        }
+
+        $msg = $notification->message ?? '';
+        $type = $notification->type ?? '';
+
+        if (preg_match('/REQ-[A-Z0-9-]+/', $msg, $m)) {
+            $foundReq = \App\Models\Request::where('request_number', $m[0])->first();
+            if ($foundReq) {
+                if ($foundReq->type === 'ICT') {
+                    return ($user && in_array($user->role, ['super_admin', 'admin']))
+                        ? route('ict.show', $foundReq->id)
+                        : route('ict.edit', $foundReq->id);
+                }
+                return route('maintenance.show', $foundReq->id);
+            }
+        }
+
+        if (preg_match('/PR-[A-Z0-9-]+/', $msg, $m)) {
+            $pr = \App\Models\PurchaseRequest::where('pr_number', $m[0])->first();
+            if ($pr) {
+                return route('purchase_requests.show', $pr->id);
+            }
+            return route('requisitions.index');
+        }
+
+        if (str_contains($type, 'Parts') || str_contains($type, 'Requisition')) {
+            return route('requisitions.index');
+        }
+
+        if (str_contains($type, 'PR ') || str_contains($type, 'Purchase')) {
+            return route('requisitions.index');
+        }
+
+        if (str_contains($type, 'PM ') || str_contains($type, 'Preventive')) {
+            return route('pm-schedules.index');
+        }
+
+        return route('ict.index');
     }
 
     public function markAsRead($id)

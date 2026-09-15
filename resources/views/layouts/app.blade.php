@@ -73,16 +73,23 @@
         .time-clock-icon { width: 34px; height: 34px; background: #eff6ff; color: #0038A8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0, 56, 168, 0.1); }
 
         /* Notification items (JS templates) */
-        .notif-item { padding: 14px 18px; border-bottom: 1px solid #f1f5f9; transition: background 0.15s ease; position: relative; cursor: pointer; }
-        .notif-item:hover { background: #f8fafc; }
-        .notif-item-inner { display: flex; gap: 12px; }
-        .notif-dot { width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-top: 5px; flex-shrink: 0; }
-        .notif-type { font-weight: 700; color: #1e293b; font-size: 13px; }
-        .notif-msg { font-size: 12px; color: #64748b; line-height: 1.4; margin: 4px 0; word-break: break-word; }
-        .notif-meta { font-size: 11px; color: #94a3b8; display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 6px; }
-        .notif-mark-read { color: #2563eb; text-decoration: none; font-weight: 700; }
-        .mark-read { color: #2563eb; text-decoration: none; font-weight: 700; font-size: 11px; }
-        .mark-read:hover { text-decoration: underline; color: #1d4ed8; }
+        .notif-item { padding: 13px 18px; border-bottom: 1px solid #f1f5f9; transition: all 0.15s ease; position: relative; cursor: pointer; border-left: 3px solid transparent; }
+        .notif-item:hover { background: #f0f7ff; border-left-color: #0038A8; }
+        .notif-item-inner { display: flex; gap: 10px; }
+        .notif-dot { width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
+        .notif-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
+        .notif-type-tag { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .notif-type { font-weight: 700; color: #1e293b; font-size: 13px; line-height: 1.2; }
+        .notif-req-badge { background: #e0e7ff; color: #3730a3; font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; font-family: monospace; letter-spacing: 0.3px; }
+        .notif-time { font-size: 10px; color: #94a3b8; font-weight: 600; white-space: nowrap; }
+        .notif-msg { font-size: 12px; color: #475569; line-height: 1.4; margin: 3px 0 5px 0; word-break: break-word; }
+        .notif-sender-info { display: flex; align-items: center; gap: 5px; font-size: 11px; color: #475569; margin: 4px 0 6px 0; background: #f8fafc; padding: 3px 8px; border-radius: 5px; border: 1px solid #e2e8f0; }
+        .notif-sender-info i { color: #0038A8; font-size: 11px; }
+        .notif-actions-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; padding-top: 6px; border-top: 1px dashed #e2e8f0; }
+        .notif-view-link { font-size: 11px; font-weight: 700; color: #0038A8; display: inline-flex; align-items: center; gap: 4px; }
+        .notif-item:hover .notif-view-link { color: #1d4ed8; text-decoration: underline; }
+        .mark-read { color: #64748b; text-decoration: none; font-weight: 600; font-size: 11px; transition: color 0.15s; }
+        .mark-read:hover { text-decoration: underline; color: #dc2626; }
         .notif-empty-alt { padding: 40px 20px; text-align: center; color: #94a3b8; }
         .notif-empty-alt-icon { font-size: 24px; display: block; margin-bottom: 10px; opacity: 0.5; }
         .notif-empty-alt-text { font-size: 13px; margin: 0; }
@@ -91,7 +98,7 @@
         .notification-wrapper { position: relative; display: flex; align-items: center; }
         #notifBell { cursor: pointer; color: #475569; font-size: 20px; position: relative; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; background: #fff; border-radius: 50%; border: 1px solid #e2e8f0; transition: all 0.2s; }
         .notif-badge { display: none; position: absolute; top: -2px; right: -2px; background: #ef4444; color: white; font-size: 10px; min-width: 18px; height: 18px; align-items: center; justify-content: center; border-radius: 50%; font-weight: 800; border: 2px solid white; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3); padding: 0 4px; }
-        #notifDropdown { padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.1); border: 1px solid #f1f5f9; }
+        #notifDropdown { width: clamp(320px, 30vw, 400px); padding: 0; border-radius: 16px; overflow: hidden; box-shadow: 0 10px 40px rgba(0,0,0,0.12); border: 1px solid #e2e8f0; }
         .notif-header { padding: 16px 20px; background: white; border-bottom: 1px solid #f1f5f9; display: flex; justify-content: space-between; align-items: center; }
         .notif-header-left { display: flex; align-items: center; gap: 8px; }
         .notif-header-title { margin:0; font-size: 15px; font-weight: 800; color: #1e293b; }
@@ -528,22 +535,41 @@
         let notifLoading = false;
 
         function buildNotifItemHtml(n) {
-            const dateStr = n.created_at ? new Date(n.created_at).toLocaleDateString(undefined, {
+            const timeDisplay = n.time_ago || (n.created_at ? new Date(n.created_at).toLocaleDateString(undefined, {
                 month: 'short',
                 day: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
-            }) : '';
+            }) : '');
+
+            const reqBadge = n.request_number ? `
+                <span class="notif-req-badge">${n.request_number}</span>
+            ` : '';
+
+            const senderRow = n.sender ? `
+                <div class="notif-sender-info">
+                    <i class="fa-solid fa-user-circle"></i>
+                    <span>From: <strong>${n.sender}</strong></span>
+                </div>
+            ` : '';
+
             return `
-                <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}">
+                <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}" title="Click to open ticket / details">
                     <div class="notif-item-inner">
                         <div class="notif-dot"></div>
                         <div style="flex: 1; min-width: 0;">
-                            <div class="notif-type">${n.type || 'Notification'}</div>
+                            <div class="notif-header-row">
+                                <div class="notif-type-tag">
+                                    <span class="notif-type">${n.type || 'Notification'}</span>
+                                    ${reqBadge}
+                                </div>
+                                <span class="notif-time">${timeDisplay}</span>
+                            </div>
                             <div class="notif-msg">${n.message}</div>
-                            <div class="notif-meta">
-                                <span><i class="fa-regular fa-clock"></i> ${dateStr}</span>
-                                <a href="#" class="mark-read" data-id="${n.id}">Mark as read</a>
+                            ${senderRow}
+                            <div class="notif-actions-row">
+                                <span class="notif-view-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Ticket</span>
+                                <a href="#" class="mark-read" data-id="${n.id}" title="Mark as read without opening">Mark as read</a>
                             </div>
                         </div>
                     </div>
