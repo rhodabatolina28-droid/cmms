@@ -954,7 +954,21 @@
             border: { display: false }
         },
         x: {
-            ticks: { color: "#64748b", font: { size: 10, weight: "600" }, maxRotation: 0, autoSkip: true, maxTicksLimit: 6 },
+            ticks: {
+                color: "#64748b",
+                font: { size: 10, weight: "600" },
+                maxRotation: 0,
+                autoSkip: false,
+                callback: function(val, index) {
+                    const m = kpiTrend.months[index];
+                    if (!m) return "";
+                    const parts = m.split(" ");
+                    if (parts.length >= 2) {
+                        return parts[0].substring(0, 3) + " '" + parts[1].substring(2);
+                    }
+                    return m.substring(0, 3);
+                }
+            },
             grid: { display: false },
             border: { color: "#e2e8f0" }
         }
@@ -1050,9 +1064,9 @@
                         return g;
                     },
                     fill: true,
-                    tension: 0,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
+                    stepped: 'middle',
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
                     pointBackgroundColor: "#0038A8",
                     pointBorderColor: "#ffffff",
                     pointBorderWidth: 2,
@@ -1113,10 +1127,10 @@
                         return g;
                     },
                     fill: true,
-                    tension: 0,
+                    stepped: 'middle',
                     spanGaps: false,
-                    pointRadius: 4,
-                    pointHoverRadius: 6,
+                    pointRadius: 5,
+                    pointHoverRadius: 7,
                     pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfColor),
                     pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfDark),
                     pointBorderColor: kpiTrend.censored.map(c => c ? kpiMtbfColor : "#ffffff"),
@@ -1146,6 +1160,9 @@
                             title: items => items[0]?.label ?? "",
                             label: ctx => {
                                 const i = ctx.dataIndex;
+                                if (kpiTrend.mtbf[i] === null || kpiTrend.mtbf[i] === undefined) {
+                                    return " No ticket records this month";
+                                }
                                 if (i !== undefined && kpiTrend.censored[i]) {
                                     return " No breakdowns (>= " + ctx.parsed.y + " days between failures)";
                                 }
