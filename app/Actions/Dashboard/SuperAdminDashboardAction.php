@@ -5,6 +5,7 @@ namespace App\Actions\Dashboard;
 use App\Models\Request as RequestModel;
 use App\Models\User;
 use App\Models\InventoryAsset;
+use App\Models\PMSchedule;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -195,8 +196,35 @@ class SuperAdminDashboardAction
             $csmResponseRate = 0;
         }
 
+        // Active PM Cycles count (for Operations Overview replacement card)
+        try {
+            $activePmCycles = PMSchedule::where('is_active', true)->count();
+        } catch (\Exception $e) {
+            $activePmCycles = 0;
+        }
+
+        // Today's new requests count
+        $todayRequests = (clone $userRequests)
+            ->whereDate('created_at', today())
+            ->count();
+
+        // Completed requests this week
+        $completedThisWeek = (clone $userRequests)
+            ->where('status', RequestModel::STATUS_COMPLETED)
+            ->where('updated_at', '>=', now()->startOfWeek())
+            ->count();
+
+        // Total request count for dashboard table label
+        $totalRequestCount = (clone $userRequests)->count();
+
         $kpi = (new GetMaintenanceKpiAction)->execute();
 
-        return view('dashboard.super-admin', compact('recentRequests', 'stats', 'departmentStats', 'warrantyExpiring', 'warrantyExpired', 'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount', 'assetBreakdown', 'kpi'));
+        return view('dashboard.super-admin', compact(
+            'recentRequests', 'stats', 'departmentStats',
+            'warrantyExpiring', 'warrantyExpired',
+            'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount',
+            'assetBreakdown', 'kpi',
+            'activePmCycles', 'todayRequests', 'completedThisWeek', 'totalRequestCount'
+        ));
     }
 }

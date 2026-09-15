@@ -188,6 +188,9 @@
         .stat-ongoing .stat-bg-icon { color: #3b82f6; }
         .stat-assets .stat-bg-icon { color: #10b981; }
         .stat-overdue .stat-bg-icon { color: #ef4444; }
+        /* Q1: CSM Satisfaction — distinct amber/star color */
+        .stat-csm .stat-bg-icon { color: #f59e0b; }
+        .stat-csm .stat-value { color: #92400e; }
 
         .stat-label {
             font-size: clamp(11px, 0.85vw, 12px);
@@ -323,13 +326,21 @@
         .action-center-danger p { color: #b91c1c; }
 
         /* LAYOUT & UTILITIES */
-        @media screen and (max-width: 1000px) {
+        /* Q4: tightened breakpoint — 900px instead of 1000px prevents
+           premature single-column stacking on 1024px laptops */
+        @media screen and (max-width: 900px) {
             .admin-workspace-grid { grid-template-columns: 1fr !important; }
             .analytics-grid { grid-template-columns: 1fr !important; }
-            /* D9.9: sa mas maliit na screen, 3 columns x 2 rows ang stats —
-               readable pa rin, hindi siksik */
             .stats-grid { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
         }
+        /* M2: show-more table rows */
+        .extra-request-row { display: none; }
+        .extra-request-row.visible { display: table-row; }
+        /* Management tool link accents */
+        .mt-link-purple { background: #f5f3ff !important; color: #7c3aed !important; }
+        .mt-link-amber  { background: #fffbeb !important; color: #d97706 !important; }
+        .mt-link-green  { background: #f0fdf4 !important; color: #16a34a !important; }
+        .mt-link-blue   { background: #eff6ff !important; color: #3b82f6 !important; }
         @media screen and (max-width: 767px) {
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 16px !important; }
             .welcome-hero { padding: 18px 16px !important; border-radius: 12px !important; }
@@ -501,13 +512,13 @@
                 </div>
             @endif
         </div>
-        <div class="stat-card-premium stat-assets">
-            <i class="fa-solid fa-face-smile stat-bg-icon"></i>
+        <div class="stat-card-premium stat-csm">
+            <i class="fa-solid fa-star stat-bg-icon"></i>
             <span class="stat-label">CSM Satisfaction</span>
             <div class="stat-value">
                 @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
             </div>
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedIctCount }} completed ICT responded &middot; {{ $csmResponseRate }}%</div>
+            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
         </div>
     </div>
 
@@ -612,11 +623,16 @@
             <!-- SYSTEM WIDE TABLE -->
             <div class="premium-table-box">
                 <div class="flex-sb mb-25">
-                    <h3 class="table-title">Recent Office Requests</h3>
+                    <div>
+                        <h3 class="table-title">Recent Office Requests</h3>
+                        <div style="font-size: 11px; color: #94a3b8; font-weight: 600; margin-top: 3px;">
+                            Showing <span id="visibleRowCount">8</span> of {{ $totalRequestCount }} total requests
+                        </div>
+                    </div>
                     <a href="{{ route('ict.index') }}" class="link-master">View Master List</a>
                 </div>
                 <div class="scroll-x">
-                    <table class="table-full">
+                    <table class="table-full" id="recentRequestsTable">
                         <thead>
                             <tr class="table-header tr-header-bottom">
                                 <th>Tracking #</th>
@@ -628,13 +644,13 @@
                         </thead>
                         <tbody>
                             @php
-                            $sortedRecent = $recentRequests->take(8)->sortBy(function($r) {
+                            $sortedRecent = $recentRequests->sortBy(function($r) {
                                 $map = ['Pending' => 0, 'Scheduled' => 0, 'Ongoing' => 1, 'Completed' => 2];
                                 return $map[$r->status] ?? 99;
                             });
                             @endphp
-                            @forelse($sortedRecent as $req)
-                                <tr class="tr-hover-row table-row-border">
+                            @forelse($sortedRecent as $index => $req)
+                                <tr class="tr-hover-row table-row-border {{ $index >= 8 ? 'extra-request-row' : '' }}">
                                     <td class="table-cell-bold">
                                         <a href="{{ route($req->type === 'ICT' ? 'ict.show' : 'maintenance.show', $req->id) }}" class="link-inherit">
                                             {{ $req->display_number ?? $req->request_number }}
@@ -662,104 +678,110 @@
                         </tbody>
                     </table>
                 </div>
+                @if($recentRequests->count() > 8)
+                <div style="text-align: center; padding: 14px 0 4px;">
+                    <button id="showMoreBtn" onclick="toggleMoreRows()" style="background: #f1f5f9; border: 1px solid #e2e8f0; color: #475569; padding: 7px 20px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;">
+                        <i class="fa-solid fa-chevron-down" id="showMoreIcon"></i>
+                        Show {{ $recentRequests->count() - 8 }} more
+                    </button>
+                </div>
+                @endif
             </div>
         </div>
 
         <!-- RIGHT: MANAGEMENT TOOLS -->
-        <div>
+        <div style="display: flex; flex-direction: column; gap: 18px;">
+
+            <!-- Q2: Management Tools — distinct icon colors per link -->
             <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                 <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; color:#64748b;">Management Tools</h3>
-                
+
                 <a href="{{ route('ict.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-clipboard-list"></i></div>
+                    <div class="mt-link-blue" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-clipboard-list"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Master List</div><div style="font-size:10px; color:#64748b;">All system requests</div></div>
+                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
                 </a>
 
                 <a href="{{ route('super_admin.users') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-users-gear"></i></div>
+                    <div class="mt-link-purple" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-users-gear"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Manage Users</div><div style="font-size:10px; color:#64748b;">System access control</div></div>
+                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
                 </a>
 
                 <a href="{{ route('pm-schedules.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-check"></i></div>
+                    <div class="mt-link-amber" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-check"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">PM Schedules</div><div style="font-size:10px; color:#64748b;">Preventive maintenance</div></div>
+                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
                 </a>
 
                 <a href="{{ route('pm-schedules.calendar') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
+                    <div class="mt-link-green" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Maintenance Calendar</div><div style="font-size:10px; color:#64748b;">View schedules timeline</div></div>
+                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
                 </a>
             </div>
 
-            <!-- QUICK OPERATIONS & ATTENTION CARD -->
-            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 18px;">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">Operations Overview</h3>
+            <!-- M1: Operations Overview → replaced with genuinely new data -->
+            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex: 1;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
+                    <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">System Activity</h3>
                     <span style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">Live</span>
                 </div>
 
-                <!-- Overdue PMs -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                <!-- New Requests Today -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#fef3c7' : '#f0fdf4' }}; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-inbox"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">PM Overdue</div>
-                            <div style="font-size: 10px; color: #64748b;">Scheduled &gt; 3 days</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">New Today</div>
+                            <div style="font-size: 10px; color: #64748b;">Requests submitted today</div>
                         </div>
                     </div>
-                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#10b981' }};">
-                        {{ $stats['overdue_pms'] ?? 0 }}
-                    </a>
+                    <span style="font-size: 18px; font-weight: 800; color: {{ $todayRequests > 0 ? '#3b82f6' : '#94a3b8' }};">{{ $todayRequests }}</span>
                 </div>
 
-                <!-- Overdue Tickets -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                <!-- Completed This Week -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ $stats['overdue_tickets'] > 0 ? '#fee2e2' : '#f0fdf4' }}; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-circle-check"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Overdue Tickets</div>
-                            <div style="font-size: 10px; color: #64748b;">Pending/Ongoing aging</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Completed This Week</div>
+                            <div style="font-size: 10px; color: #64748b;">Since Monday</div>
                         </div>
                     </div>
-                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#10b981' }};">
-                        {{ $stats['overdue_tickets'] }}
-                    </a>
+                    <span style="font-size: 18px; font-weight: 800; color: {{ $completedThisWeek > 0 ? '#10b981' : '#94a3b8' }};">{{ $completedThisWeek }}</span>
                 </div>
 
-                <!-- Pending Queue -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                <!-- Active PM Schedules -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ $stats['pending'] > 0 ? '#fffbeb' : '#f8fafc' }}; color: {{ $stats['pending'] > 0 ? '#d97706' : '#94a3b8' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                            <i class="fa-regular fa-hourglass-half"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-calendar-clock"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Pending Queue</div>
-                            <div style="font-size: 10px; color: #64748b;">New incoming requests</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Active PM Schedules</div>
+                            <div style="font-size: 10px; color: #64748b;">Currently running cycles</div>
                         </div>
                     </div>
-                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ $stats['pending'] > 0 ? '#d97706' : '#64748b' }};">
-                        {{ $stats['pending'] }}
-                    </a>
+                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $activePmCycles > 0 ? '#d97706' : '#94a3b8' }};">{{ $activePmCycles }}</a>
                 </div>
 
-                <!-- CSM Satisfaction Rating -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0;">
+                <!-- Assets Under Repair -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; color: #0038A8; display: flex; align-items: center; justify-content: center; font-size: 12px;">
-                            <i class="fa-solid fa-star"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#fef2f2' : '#f0fdf4' }}; color: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-screwdriver-wrench"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">CSM Satisfaction</div>
-                            <div style="font-size: 10px; color: #64748b;">{{ $csmResponses }}/{{ $completedIctCount }} responses ({{ $csmResponseRate }}%)</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Assets Under Repair</div>
+                            <div style="font-size: 10px; color: #64748b;">For Repair + Under Maintenance</div>
                         </div>
                     </div>
-                    <span style="font-size: 13px; font-weight: 800; color: #0038A8;">
-                        @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 10px; color: #64748b;">/5</span>@else &mdash; @endif
-                    </span>
+                    <a href="{{ route('super_admin.inventory') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#dc2626' : '#10b981' }};">{{ $assetBreakdown['under_repair'] ?? 0 }}</a>
                 </div>
             </div>
         </div>
@@ -770,7 +792,29 @@
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js" nonce="{{ $cspNonce }}"></script>
 <script nonce="{{ $cspNonce }}">
+    // M2: Show More / Show Less toggle for Recent Requests table
+    var showingAll = false;
+    function toggleMoreRows() {
+        showingAll = !showingAll;
+        var extraRows = document.querySelectorAll('.extra-request-row');
+        var btn = document.getElementById('showMoreBtn');
+        var icon = document.getElementById('showMoreIcon');
+        var countEl = document.getElementById('visibleRowCount');
+        var total = {{ $recentRequests->count() }};
+        extraRows.forEach(function(row) {
+            row.classList.toggle('visible', showingAll);
+        });
+        if (showingAll) {
+            btn.innerHTML = '<i class="fa-solid fa-chevron-up" id="showMoreIcon"></i> Show less';
+            if (countEl) countEl.textContent = total;
+        } else {
+            btn.innerHTML = '<i class="fa-solid fa-chevron-down" id="showMoreIcon"></i> Show ' + extraRows.length + ' more';
+            if (countEl) countEl.textContent = Math.min(8, total);
+        }
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
+
         // ─── Prepare Data for Bar Chart ──────────────────────────────────────────
         const departmentData = @json($departmentStats);
         const rawLabels = Object.keys(departmentData);
