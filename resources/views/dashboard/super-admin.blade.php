@@ -210,6 +210,66 @@
             color: #1e293b;
         }
 
+        /* Management Tools (Clean & Icon-Free) */
+        .mgmt-tool-link {
+            display: block;
+            padding: 10px 12px;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #1e293b;
+            border: 1px solid transparent;
+            transition: all 0.15s ease;
+            margin-bottom: 4px;
+        }
+        .mgmt-tool-link:last-child {
+            margin-bottom: 0;
+        }
+        .mgmt-tool-link:hover {
+            background: #f8fafc;
+            border-color: #e2e8f0;
+        }
+        .mgmt-tool-title {
+            font-size: 13px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+        .mgmt-tool-desc {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+
+        /* Operations Overview (Clean & Icon-Free) */
+        .ops-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 11px 0;
+            border-bottom: 1px solid #f1f5f9;
+        }
+        .ops-row:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .ops-label {
+            font-size: 12px;
+            font-weight: 700;
+            color: #1e293b;
+            line-height: 1.3;
+        }
+        .ops-sub {
+            font-size: 10px;
+            color: #64748b;
+            margin-top: 2px;
+        }
+        .ops-val {
+            font-size: 17px;
+            font-weight: 800;
+            text-decoration: none;
+            line-height: 1;
+        }
+
         /* ANALYTICS GRID */
         .analytics-grid {
             display: grid;
@@ -688,106 +748,82 @@
             </div>
         </div>
 
-        <!-- RIGHT: MANAGEMENT TOOLS -->
+        <!-- RIGHT: MANAGEMENT TOOLS & OPERATIONS OVERVIEW -->
         <div style="display: flex; flex-direction: column; gap: 18px;">
 
-            <!-- Q2: Management Tools — distinct icon colors per link -->
+            <!-- Management Tools (clean, icon-free) -->
             <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
-                <h3 class="table-title" style="margin-bottom: 15px; font-size: 12px; color:#64748b;">Management Tools</h3>
+                <h3 class="table-title" style="margin-bottom: 14px; font-size: 12px; color:#64748b;">Management Tools</h3>
 
-                <a href="{{ route('ict.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div class="mt-link-blue" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-clipboard-list"></i></div>
-                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Master List</div><div style="font-size:10px; color:#64748b;">All system requests</div></div>
-                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
+                <a href="{{ route('ict.index') }}" class="mgmt-tool-link">
+                    <div class="mgmt-tool-title">Master List</div>
+                    <div class="mgmt-tool-desc">All system requests</div>
                 </a>
 
-                <a href="{{ route('super_admin.users') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div class="mt-link-purple" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-users-gear"></i></div>
-                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Manage Users</div><div style="font-size:10px; color:#64748b;">System access control</div></div>
-                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
+                <a href="{{ route('super_admin.users') }}" class="mgmt-tool-link">
+                    <div class="mgmt-tool-title">Manage Users</div>
+                    <div class="mgmt-tool-desc">System access control</div>
                 </a>
 
-                <a href="{{ route('pm-schedules.index') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div class="mt-link-amber" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-check"></i></div>
-                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">PM Schedules</div><div style="font-size:10px; color:#64748b;">Preventive maintenance</div></div>
-                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
+                <a href="{{ route('pm-schedules.index') }}" class="mgmt-tool-link">
+                    <div class="mgmt-tool-title">PM Schedules</div>
+                    <div class="mgmt-tool-desc">Preventive maintenance</div>
                 </a>
 
-                <a href="{{ route('pm-schedules.calendar') }}" style="display:flex; align-items:center; gap:12px; padding:12px; border-radius:8px; text-decoration:none; color:#1e293b; transition:all 0.2s; border:1px solid transparent;" onmouseover="this.style.background='#f1f5f9'; this.style.borderColor='#e2e8f0';" onmouseout="this.style.background='transparent'; this.style.borderColor='transparent';">
-                    <div class="mt-link-green" style="width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
-                    <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Maintenance Calendar</div><div style="font-size:10px; color:#64748b;">View schedules timeline</div></div>
-                    <i class="fa-solid fa-chevron-right" style="font-size:10px; color:#cbd5e1;"></i>
+                <a href="{{ route('pm-schedules.calendar') }}" class="mgmt-tool-link">
+                    <div class="mgmt-tool-title">Maintenance Calendar</div>
+                    <div class="mgmt-tool-desc">View schedules timeline</div>
                 </a>
             </div>
 
-            <!-- Operations Overview (improved) -->
-            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex: 1;">
+            <!-- Operations Overview (clean, icon-free) -->
+            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
                     <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">Operations Overview</h3>
                     <span style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">Live</span>
                 </div>
 
                 <!-- PM Overdue -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#fef3c7' : '#f0fdf4' }}; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-clock-rotate-left"></i>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">PM Overdue</div>
-                            <div style="font-size: 10px; color: #64748b;">Scheduled &gt; 3 days past window</div>
-                        </div>
+                <div class="ops-row">
+                    <div>
+                        <div class="ops-label">PM Overdue</div>
+                        <div class="ops-sub">Scheduled &gt; 3 days past window</div>
                     </div>
-                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#10b981' }};">
+                    <a href="{{ route('pm-schedules.index') }}" class="ops-val" style="color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#10b981' }};">
                         {{ $stats['overdue_pms'] ?? 0 }}
                     </a>
                 </div>
 
                 <!-- Overdue Tickets -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ $stats['overdue_tickets'] > 0 ? '#fee2e2' : '#f0fdf4' }}; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-triangle-exclamation"></i>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Overdue Tickets</div>
-                            <div style="font-size: 10px; color: #64748b;">Pending/Ongoing aging 7+ days</div>
-                        </div>
+                <div class="ops-row">
+                    <div>
+                        <div class="ops-label">Overdue Tickets</div>
+                        <div class="ops-sub">Pending/Ongoing aging 7+ days</div>
                     </div>
-                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#10b981' }};">
+                    <a href="{{ route('ict.index') }}" class="ops-val" style="color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#10b981' }};">
                         {{ $stats['overdue_tickets'] }}
                     </a>
                 </div>
 
                 <!-- Pending Queue -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ $stats['pending'] > 0 ? '#fffbeb' : '#f8fafc' }}; color: {{ $stats['pending'] > 0 ? '#d97706' : '#94a3b8' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-regular fa-hourglass-half"></i>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Pending Queue</div>
-                            <div style="font-size: 10px; color: #64748b;">New incoming requests</div>
-                        </div>
+                <div class="ops-row">
+                    <div>
+                        <div class="ops-label">Pending Queue</div>
+                        <div class="ops-sub">New incoming requests</div>
                     </div>
-                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $stats['pending'] > 0 ? '#d97706' : '#64748b' }};">
+                    <a href="{{ route('ict.index') }}" class="ops-val" style="color: {{ $stats['pending'] > 0 ? '#d97706' : '#64748b' }};">
                         {{ $stats['pending'] }}
                     </a>
                 </div>
 
                 <!-- CSM Satisfaction -->
-                <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
-                    <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #fffbeb; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-star"></i>
-                        </div>
-                        <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">CSM Satisfaction</div>
-                            <div style="font-size: 10px; color: #64748b;">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
-                        </div>
+                <div class="ops-row">
+                    <div>
+                        <div class="ops-label">CSM Satisfaction</div>
+                        <div class="ops-sub">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
                     </div>
-                    <span style="font-size: 18px; font-weight: 800; color: #0038A8;">
-                        @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 10px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
+                    <span class="ops-val" style="color: #1e293b;">
+                        @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 11px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
                     </span>
                 </div>
             </div>
