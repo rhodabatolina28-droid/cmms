@@ -212,8 +212,8 @@
         .analytics-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: clamp(12px, 1.5vw, 18px);
-            margin-bottom: clamp(14px, 1.8vw, 20px);
+            gap: clamp(15px, 2vw, 25px);
+            margin-bottom: clamp(20px, 2.5vw, 30px);
         }
 
         .analytics-box {
