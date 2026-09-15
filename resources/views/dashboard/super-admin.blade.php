@@ -74,41 +74,44 @@
         /* PREMIUM WELCOME HERO — DEEP NAVY / NCMB BLUE */
         .welcome-hero {
             background: linear-gradient(135deg, #0f172a 0%, #002878 100%);
-            border-radius: clamp(10px, 1.2vw, 15px);
-            padding: clamp(20px, 3vw, 35px);
+            border-radius: 12px;
+            padding: 16px 22px;
             color: white;
             position: relative;
             overflow: hidden;
-            margin-bottom: clamp(20px, 2.5vw, 30px);
-            box-shadow: 0 10px 25px rgba(0, 40, 120, 0.25);
+            margin-bottom: 18px;
+            box-shadow: 0 4px 15px rgba(0, 40, 120, 0.18);
         }
 
         .hero-role {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: 1px;
             text-transform: uppercase;
             opacity: 0.84;
         }
         .hero-name {
-            margin: 6px 0;
-            font-size: clamp(26px, 2.1vw, 34px);
+            margin: 2px 0 4px;
+            font-size: 22px;
+            font-weight: 800;
             line-height: 1.2;
         }
         .hero-desc {
             max-width: 720px;
             margin: 0;
-            font-size: 14px;
-            line-height: 1.55;
+            font-size: 13px;
+            line-height: 1.4;
+            opacity: 0.9;
         }
         .hero-stats-label {
-            font-size: 12px;
+            font-size: 11px;
             font-weight: 800;
             letter-spacing: 0.6px;
             text-transform: uppercase;
+            opacity: 0.84;
         }
         .hero-stats-value {
-            font-size: 28px;
+            font-size: 24px;
             font-weight: 800;
             line-height: 1.15;
         }
@@ -142,8 +145,8 @@
                CSM Satisfaction sa ikalawang row. minmax(0,1fr) = pantay na
                hati, walang overflow. */
             grid-template-columns: repeat(6, minmax(0, 1fr)) !important;
-            gap: clamp(12px, 1.5vw, 20px);
-            margin-bottom: clamp(20px, 2.5vw, 30px);
+            gap: clamp(12px, 1.5vw, 16px);
+            margin-bottom: 18px;
         }
 
         .stat-card-premium {
@@ -525,18 +528,18 @@
                         <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Top offices by request volume.</p>
-                    <div class="chart-box-bar" style="height: 280px; width: 100%; position: relative;">
+                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
                         <canvas id="officeChart"></canvas>
                     </div>
                 </div>
 
-                <div class="analytics-box" style="padding: 24px 26px;">
+                <div class="analytics-box" style="padding: 22px 24px;">
                     <div class="analytics-title" style="margin-bottom: 4px;">
                         <i class="fa-solid fa-chart-pie icon-blue"></i>
                         Asset Status Overview
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
-                    <div class="chart-box-doughnut" style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
+                    <div class="chart-box-doughnut" style="height: 200px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
@@ -689,6 +692,78 @@
                     <div style="background:#eff6ff; color:#3b82f6; width:32px; height:32px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="fa-solid fa-calendar-days"></i></div>
                     <div style="flex:1;"><div style="font-size:13px; font-weight:700;">Maintenance Calendar</div><div style="font-size:10px; color:#64748b;">View schedules timeline</div></div>
                 </a>
+            </div>
+
+            <!-- QUICK OPERATIONS & ATTENTION CARD -->
+            <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); margin-top: 18px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">Operations Overview</h3>
+                    <span style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">Live</span>
+                </div>
+
+                <!-- Overdue PMs -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#fef3c7' : '#f0fdf4' }}; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">PM Overdue</div>
+                            <div style="font-size: 10px; color: #64748b;">Scheduled &gt; 3 days</div>
+                        </div>
+                    </div>
+                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#10b981' }};">
+                        {{ $stats['overdue_pms'] ?? 0 }}
+                    </a>
+                </div>
+
+                <!-- Overdue Tickets -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ $stats['overdue_tickets'] > 0 ? '#fee2e2' : '#f0fdf4' }}; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Overdue Tickets</div>
+                            <div style="font-size: 10px; color: #64748b;">Pending/Ongoing aging</div>
+                        </div>
+                    </div>
+                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#10b981' }};">
+                        {{ $stats['overdue_tickets'] }}
+                    </a>
+                </div>
+
+                <!-- Pending Queue -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0; border-bottom: 1px solid #f1f5f9;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: {{ $stats['pending'] > 0 ? '#fffbeb' : '#f8fafc' }}; color: {{ $stats['pending'] > 0 ? '#d97706' : '#94a3b8' }}; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            <i class="fa-regular fa-hourglass-half"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Pending Queue</div>
+                            <div style="font-size: 10px; color: #64748b;">New incoming requests</div>
+                        </div>
+                    </div>
+                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 13px; font-weight: 800; color: {{ $stats['pending'] > 0 ? '#d97706' : '#64748b' }};">
+                        {{ $stats['pending'] }}
+                    </a>
+                </div>
+
+                <!-- CSM Satisfaction Rating -->
+                <div style="display: flex; align-items: center; justify-content: space-between; padding: 9px 0;">
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <div style="width: 28px; height: 28px; border-radius: 6px; background: #eff6ff; color: #0038A8; display: flex; align-items: center; justify-content: center; font-size: 12px;">
+                            <i class="fa-solid fa-star"></i>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">CSM Satisfaction</div>
+                            <div style="font-size: 10px; color: #64748b;">{{ $csmResponses }}/{{ $completedIctCount }} responses ({{ $csmResponseRate }}%)</div>
+                        </div>
+                    </div>
+                    <span style="font-size: 13px; font-weight: 800; color: #0038A8;">
+                        @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 10px; color: #64748b;">/5</span>@else &mdash; @endif
+                    </span>
+                </div>
             </div>
         </div>
     </div>
