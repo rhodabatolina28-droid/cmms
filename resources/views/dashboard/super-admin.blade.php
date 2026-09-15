@@ -525,7 +525,7 @@
                         <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Top offices by request volume.</p>
-                    <div class="chart-box-bar" style="height: 200px; width: 100%; position: relative;">
+                    <div class="chart-box-bar" style="height: 280px; width: 100%; position: relative;">
                         <canvas id="officeChart"></canvas>
                     </div>
                 </div>
@@ -536,7 +536,7 @@
                         Asset Status Overview
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
-                    <div class="chart-box-doughnut" style="height: 200px; width: 100%; position: relative; display: flex; justify-content: center;">
+                    <div class="chart-box-doughnut" style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
