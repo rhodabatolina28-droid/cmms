@@ -609,7 +609,7 @@
 
                 <div class="analytics-box" style="padding: 24px 26px;">
                     <div class="analytics-title" style="margin-bottom: 4px; flex-wrap: nowrap;">
-                        <i class="fa-solid fa-arrow-trend-down icon-blue"></i>
+                        <i class="fa-solid fa-arrow-trend-down icon-blue" id="mtbfTitleIcon"></i>
                         <span style="white-space: nowrap;">MTBF</span>
                         <span style="font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none; flex-shrink: 0; white-space: nowrap;">6 months</span>
                         <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
@@ -1027,11 +1027,34 @@
             ctx.moveTo(chartArea.left, y);
             ctx.lineTo(chartArea.right, y);
             ctx.stroke();
+
+            // Clean pill badge for baseline label
+            const text = "avg " + baseline.toFixed(1) + "d";
+            ctx.font = "700 9.5px Arial, Helvetica, sans-serif";
+            const textMetrics = ctx.measureText(text);
+            const badgeW = textMetrics.width + 12;
+            const badgeH = 16;
+            const badgeX = chartArea.right - badgeW - 2;
+            const badgeY = y - badgeH / 2;
+
+            ctx.fillStyle = "#ffffff";
+            ctx.strokeStyle = color;
+            ctx.lineWidth = 1;
+            ctx.setLineDash([]);
+            if (ctx.roundRect) {
+                ctx.beginPath();
+                ctx.roundRect(badgeX, badgeY, badgeW, badgeH, 4);
+                ctx.fill();
+                ctx.stroke();
+            } else {
+                ctx.fillRect(badgeX, badgeY, badgeW, badgeH);
+                ctx.strokeRect(badgeX, badgeY, badgeW, badgeH);
+            }
+
             ctx.fillStyle = color;
-            ctx.font = "600 10px Arial, Helvetica, sans-serif";
-            ctx.textAlign = "right";
-            ctx.textBaseline = "bottom";
-            ctx.fillText("avg " + baseline.toFixed(1) + "d", chartArea.right - 4, y - 3);
+            ctx.textAlign = "center";
+            ctx.textBaseline = "middle";
+            ctx.fillText(text, badgeX + badgeW / 2, y + 0.5);
             ctx.restore();
         }
     });
@@ -1227,6 +1250,12 @@
             el.style.color = fg;
             el.style.display = "";
         });
+
+        const mtbfIcon = document.getElementById("mtbfTitleIcon");
+        if (mtbfIcon) {
+            mtbfIcon.style.color = kpiMtbfColor;
+            mtbfIcon.classList.remove("icon-blue");
+        }
     })();
 
 }); // end DOMContentLoaded
