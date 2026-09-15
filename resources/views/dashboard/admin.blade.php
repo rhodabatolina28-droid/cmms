@@ -58,9 +58,9 @@
         }
 
         .stat-card-premium:hover {
-            transform: translateY(-5px);
-            box-shadow: 0 12px 20px -8px rgba(0, 56, 168, 0.15);
-            border-color: rgba(0, 56, 168, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 16px -4px rgba(0, 0, 0, 0.08);
+            border-color: #cbd5e1;
         }
 
         .stat-bg-icon {
@@ -76,15 +76,6 @@
         .stat-card-premium:hover .stat-bg-icon {
             transform: rotate(0) scale(1.1);
             opacity: 0.06;
-        }
-
-        .stat-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
         }
 
         .stat-label {
@@ -107,9 +98,9 @@
         .premium-table-box {
             background: white;
             border-radius: 15px;
-            padding: 25px;
+            padding: 24px;
             border: 1px solid rgba(0,0,0,0.05);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
         }
 
         .status-pill {
@@ -118,10 +109,15 @@
             font-size: 10px;
             font-weight: 800;
             text-transform: uppercase;
+            letter-spacing: 0.5px;
+            display: inline-block;
         }
-        .status-pending { background: #fffbeb; color: #92400e; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .status-ongoing { background: #eff6ff; color: #1e40af; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.2); }
-        .status-completed { background: #ecfdf5; color: #065f46; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-pending   { background: #fffbeb; color: #92400e; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.2); }
+        .status-ongoing   { background: #eff6ff; color: #1e40af; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.2); }
+        .status-completed { background: #ecfdf5; color: #065f46; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.2); }
+        .status-rejected  { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.12); }
+        .status-cancelled { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .status-other     { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
 
         /* QUICK ACTION BUTTONS */
         .btn-action-premium {
@@ -130,12 +126,12 @@
             gap: 12px;
             background: #f8fafc;
             border: 1px solid #e2e8f0;
-            padding: 16px;
+            padding: 14px 16px;
             border-radius: 10px;
             text-decoration: none;
             color: #1e293b;
             font-weight: 700;
-            font-size: 14px;
+            font-size: 13px;
             transition: all 0.2s;
         }
 
@@ -146,33 +142,68 @@
             transform: translateY(-2px);
         }
 
+        .btn-action-premium:hover i {
+            color: white !important;
+        }
+
+        .btn-table-action {
+            display: inline-flex;
+            align-items: center;
+            padding: 5px 12px;
+            background: #f1f5f9;
+            color: #0038A8;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 6px;
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .btn-table-action:hover {
+            background: #0038A8;
+            color: white;
+        }
+
         .queue-panel {
             background: white;
             border: 1px solid rgba(0,0,0,0.05);
             border-radius: 12px;
             padding: 16px;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.04);
             margin-bottom: 20px;
         }
 
         .queue-item {
             display: block;
             text-decoration: none;
-            padding: 12px 0;
+            padding: 10px 0;
             border-bottom: 1px solid #f1f5f9;
+            transition: background 0.15s;
+        }
+
+        .queue-item:hover {
+            background: #f8fafc;
         }
 
         .queue-item:last-child {
             border-bottom: 0;
         }
 
-        @media screen and (max-width: 800px) {
+        .admin-workspace-grid {
+            display: grid;
+            grid-template-columns: minmax(0, 1fr) 340px;
+            gap: 25px;
+            align-items: start;
+        }
+
+        @media screen and (max-width: 991px) {
             .admin-workspace-grid {
                 grid-template-columns: 1fr !important;
             }
         }
+
         .tr-hover-row { transition: all 0.2s; position: relative; }
-        .tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .tr-hover-row:hover { background: #f8fafc !important; }
         .tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
 
         /* Utility classes */
@@ -186,71 +217,67 @@
         .text-red { color: #dc2626; }
         .text-green { color: #10b981; }
         .text-dark { color: #1e293b; }
-        .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
-        .status-pending   { background: #fffbeb; color: #92400e; box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.2); }
-        .status-ongoing   { background: #eff6ff; color: #1e40af; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); border: 1px solid rgba(59, 130, 246, 0.2); }
-        .status-completed { background: #ecfdf5; color: #065f46; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.2); }
-        .status-rejected  { background: #fef2f2; color: #991b1b; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
-        .status-cancelled { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
-        .status-other     { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+        .table-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.8px; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
+        .link-master:hover { text-decoration: underline; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }
-        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .table-header th { padding: 12px 10px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
-        .table-header th.center { text-align: center; }
-        .table-header th.right { text-align: right; }
+        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
+        .table-header.center { text-align: center; }
+        .table-header.right { text-align: right; }
         .table-row-header { text-align: left; border-bottom: 2px solid #f1f5f9; }
-        .table-row-border { border-bottom: 1px solid #f8fafc; transition: background 0.2s; }
-        .table-cell { padding: 16px 10px; }
-        .table-cell-bold { padding: 16px 10px; font-weight: 800; color: #0038A8; }
-        .table-cell-gray { padding: 16px 10px; color: #64748b; font-size: 13px; }
-        .table-cell-dark { padding: 16px 10px; color: #1e293b; font-weight: 600; }
-        .table-cell-center { padding: 16px 10px; text-align: center; }
-        .table-cell-right { padding: 16px 10px; text-align: right; }
+        .table-row-border { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
+        .table-cell { padding: 14px 10px; }
+        .table-cell-bold { padding: 14px 10px; font-weight: 800; color: #0038A8; }
+        .table-cell-gray { padding: 14px 10px; color: #64748b; font-size: 13px; }
+        .table-cell-dark { padding: 14px 10px; color: #1e293b; font-weight: 600; }
+        .table-cell-center { padding: 14px 10px; text-align: center; }
+        .table-cell-right { padding: 14px 10px; text-align: right; }
         .empty-cell { padding: 40px; text-align: center; color: #94a3b8; }
         .icon-link { color: #94a3b8; }
-        .ribbon-label { margin-bottom: 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .section-label { margin: 30px 0 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .hero-role { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.7; }
-        .hero-name { font-size: 32px; font-weight: 800; margin: 0; }
-        .hero-desc { margin: 10px 0 0; opacity: 0.8; font-size: 15px; }
-        .hero-stats-box { text-align: right; background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 12px; backdrop-filter: blur(10px); }
-        .hero-stats-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-        .hero-stats-value { font-size: 18px; font-weight: 800; }
+        .ribbon-label { margin-bottom: 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .section-label { margin: 24px 0 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .hero-role { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.75; }
+        .hero-name { font-size: 30px; font-weight: 800; margin: 0; }
+        .hero-desc { margin: 10px 0 0; opacity: 0.85; font-size: 14px; }
+        .hero-stats-box { text-align: right; background: rgba(255,255,255,0.1); padding: 14px 22px; border-radius: 12px; backdrop-filter: blur(10px); }
+        .hero-stats-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; }
+        .hero-stats-value { font-size: 16px; font-weight: 800; }
         .mb-0 { margin-bottom: 0; }
         .mb-10 { margin-bottom: 10px; }
-        .mb-25 { margin-bottom: 25px; }
+        .mb-25 { margin-bottom: 20px; }
         .sub-label { font-size: 11px; color: #64748b; margin-top: 4px; }
-        .badge-sm { border-radius: 999px; padding: 3px 8px; font-size: 11px; font-weight: 800; }
+        .badge-sm { border-radius: 999px; padding: 2px 8px; font-size: 11px; font-weight: 800; }
         .badge-red { background: #fee2e2; color: #991b1b; }
         .badge-green { background: #dcfce7; color: #166534; }
-        .admin-workspace-grid { display: grid; gap: 25px; }
-        .job-number { font-size: 13px; font-weight: 800; color: #1e293b; }
+        .job-number { font-size: 13px; font-weight: 800; color: #1e293b; font-family: monospace; }
         .job-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
-        .assign-link { color: #0038A8; font-size: 12px; font-weight: 800; }
-        .empty-queue { padding: 16px 0 6px; color: #64748b; font-size: 13px; line-height: 1.5; }
-        .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 15px; font-size: 12px; color: #475569; }
+        .assign-link { color: #0038A8; font-size: 12px; font-weight: 800; text-decoration: none; }
+        .assign-link:hover { text-decoration: underline; }
+        .empty-queue { padding: 12px 0 4px; color: #64748b; font-size: 12px; line-height: 1.5; }
+        .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 12px; color: #475569; }
         .info-min { min-width: 140px; }
         .info-label { color: #64748b; }
         @media screen and (max-width: 767px) {
-            .admin-workspace-grid { grid-template-columns: 1fr !important; }
-            .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
-            .workbench-grid { grid-template-columns: 1fr !important; }
-            .card-header-accent { flex-direction: column !important; gap: 10px !important; }
+            .stats-grid { grid-template-columns: repeat(2,1fr) !important; gap: 10px !important; }
             .info-box { padding: 12px !important; font-size: 13px !important; }
             .assign-link { font-size: 13px !important; min-height: 44px !important; display: inline-flex !important; align-items: center !important; }
-            input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
-            .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 48px !important; font-size: 14px !important; }
-
-            /* ── Hero stack ── */
             .welcome-hero .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
             .hero-name { font-size: 24px !important; }
             .hero-stats-box { width: 100% !important; text-align: left !important; padding: 12px 16px !important; }
-
-            /* ── Spacing polish ── */
             .premium-table-box { padding: 14px !important; }
-            .queue-panel .btn-action-premium { padding: 10px 12px !important; }
+
+            /* Mobile-only table scroll */
+            .scroll-x {
+                overflow-x: auto !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+            .scroll-x .table-full {
+                min-width: 650px !important;
+            }
+            .scroll-x th, .scroll-x td {
+                white-space: nowrap !important;
+            }
         }
     </style>
 @endsection
@@ -295,7 +322,7 @@
         <div class="stat-card-premium stat-total">
             <i class="fa-solid fa-users-gear stat-bg-icon"></i>
             <span class="stat-label">Jobs - Unassigned</span>
-            <div class="stat-value {{ ($stats['unassigned_jobs'] ?? 0) > 0 ? 'text-red' : 'text-green' }}">{{ $stats['unassigned_jobs'] ?? 0 }}</div>
+            <div class="stat-value">{{ $stats['unassigned_jobs'] ?? 0 }}</div>
             <div class="sub-label">Assign via Manage Requests</div>
         </div>
     </div>
@@ -305,8 +332,11 @@
         <!-- LEFT: DEPARTMENT/OFFICE ACTIVITY -->
         <div class="premium-table-box">
             <div class="flex-sb mb-25">
-                <h3 class="table-title">Recent {{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests</h3>
-                <a href="{{ route('ict.index') }}" class="link-master">View All</a>
+                <div>
+                    <h3 class="table-title">Recent {{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests</h3>
+                    <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Latest ICT & maintenance activities submitted by your division</div>
+                </div>
+                <a href="{{ route('ict.index') }}" class="link-master">View All Requests &rarr;</a>
             </div>
             <div class="scroll-x">
                 <table class="table-full">
@@ -314,6 +344,8 @@
                         <tr class="table-row-header">
                             <th class="table-header">Tracking #</th>
                             <th class="table-header">Requestor</th>
+                            <th class="table-header">Concern / Description</th>
+                            <th class="table-header">Date Submitted</th>
                             <th class="table-header center">Status</th>
                             <th class="table-header right">Action</th>
                         </tr>
@@ -326,18 +358,37 @@
                                     ? $statusKey : 'other';
                             @endphp
                             <tr class="tr-hover-row table-row-border">
-                                <td class="table-cell-bold">{{ $req->display_number ?? $req->request_number }}</td>
-                                <td class="table-cell-dark">{{ $req->requestor_name }}</td>
+                                <td class="table-cell-bold">
+                                    <span style="font-family: monospace; font-size: 13px; font-weight: 800;">{{ $req->display_number ?? $req->request_number }}</span>
+                                </td>
+                                <td class="table-cell-dark">
+                                    <div style="font-weight: 700; color: #1e293b;">{{ $req->requestor_name }}</div>
+                                    <div style="font-size: 11px; color: #64748b;">{{ $req->office ?: ($req->user?->office ?? 'Central Office') }}</div>
+                                </td>
+                                <td class="table-cell-gray" style="max-width: 240px;">
+                                    <div style="font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $req->description }}">
+                                        {{ $req->description ?: 'ICT Support Request' }}
+                                    </div>
+                                    <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 3px; border: 1px solid #e2e8f0;">
+                                        {{ $req->type }}
+                                    </span>
+                                </td>
+                                <td class="table-cell-gray" style="white-space: nowrap;">
+                                    <div style="font-weight: 600; color: #334155;">{{ $req->created_at ? $req->created_at->format('M d, Y') : '—' }}</div>
+                                    <div style="font-size: 11px; color: #94a3b8;">{{ $req->created_at ? $req->created_at->format('h:i A') : '' }}</div>
+                                </td>
                                 <td class="table-cell-center">
                                     <span class="status-pill status-{{ $safeStatus }}">{{ $req->status }}</span>
                                 </td>
                                 <td class="table-cell-right">
-                                    <a href="{{ route($req->getRoutePrefix() . '.show', $req->id) }}" class="icon-link"><i class="fa-solid fa-arrow-up-right-from-square"></i></a>
+                                    <a href="{{ route($req->getRoutePrefix() . '.show', $req->id) }}" class="btn-table-action" title="View Request Details">
+                                        <span>View</span>
+                                    </a>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="4" class="empty-cell" style="padding: 50px 20px;">
-                                <i class="fa-solid fa-inbox" style="font-size: 42px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
+                            <tr><td colspan="6" class="empty-cell" style="padding: 50px 20px;">
+                                <i class="fa-solid fa-inbox" style="font-size: 42px; color: #cbd5e1; margin-bottom: 15px; display: block;"></i>
                                 <div style="font-weight: 800; color: #64748b; font-size: 15px;">No Requests Yet</div>
                                 <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">Your office hasn't received any requests at the moment.</div>
                             </td></tr>
@@ -362,7 +413,7 @@
                                 <div class="job-number">{{ $job->display_number ?? $job->request_number }}</div>
                                 <div class="job-meta">{{ $job->requestor_name }}</div>
                             </div>
-                            <span class="assign-link">Assign</span>
+                            <span class="assign-link">Assign &rarr;</span>
                         </div>
                     </a>
                 @empty
@@ -371,27 +422,27 @@
             </div>
 
             @if(Auth::user()->canProcessSupply() && !empty($supplyStats))
-                <div class="queue-panel" style="margin-bottom:14px;">
+                <div class="queue-panel" style="margin-bottom:20px;">
                     <div class="flex-center-sb">
                         <div class="ribbon-label mb-0">Supply Snapshot</div>
-                        <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace</a>
+                        <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace &rarr;</a>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
-                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'pending']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
-                            <span style="display:block;font-size:20px;font-weight:900;color:#92400e;">{{ $supplyStats['pending_reqs'] ?? 0 }}</span>
-                            <span style="font-size:11px;">To review</span>
+                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'pending']) }}" class="btn-action-premium" style="margin:0;flex-direction:column;text-align:center;padding:12px 8px;">
+                            <span style="font-size:20px;font-weight:800;color:#1e293b;line-height:1.2;">{{ $supplyStats['pending_reqs'] ?? 0 }}</span>
+                            <span style="font-size:11px;color:#64748b;margin-top:2px;">To review</span>
                         </a>
-                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'approved']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
-                            <span style="display:block;font-size:20px;font-weight:900;color:#0038A8;">{{ $supplyStats['approved_reqs'] ?? 0 }}</span>
-                            <span style="font-size:11px;">Ready to issue</span>
+                        <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'approved']) }}" class="btn-action-premium" style="margin:0;flex-direction:column;text-align:center;padding:12px 8px;">
+                            <span style="font-size:20px;font-weight:800;color:#1e293b;line-height:1.2;">{{ $supplyStats['approved_reqs'] ?? 0 }}</span>
+                            <span style="font-size:11px;color:#64748b;margin-top:2px;">Ready to issue</span>
                         </a>
-                        <a href="{{ route('inventory.parts', ['status' => 'low']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
-                            <span style="display:block;font-size:20px;font-weight:900;color:#b45309;">{{ $supplyStats['low_stock'] ?? 0 }}</span>
-                            <span style="font-size:11px;">Low stock</span>
+                        <a href="{{ route('inventory.parts', ['status' => 'low']) }}" class="btn-action-premium" style="margin:0;flex-direction:column;text-align:center;padding:12px 8px;">
+                            <span style="font-size:20px;font-weight:800;color:#1e293b;line-height:1.2;">{{ $supplyStats['low_stock'] ?? 0 }}</span>
+                            <span style="font-size:11px;color:#64748b;margin-top:2px;">Low stock</span>
                         </a>
-                        <a href="{{ route('inventory.parts', ['status' => 'critical']) }}" class="btn-action-premium" style="margin:0;text-align:center;">
-                            <span style="display:block;font-size:20px;font-weight:900;color:#b91c1c;">{{ $supplyStats['critical'] ?? 0 }}</span>
-                            <span style="font-size:11px;">Critical</span>
+                        <a href="{{ route('inventory.parts', ['status' => 'critical']) }}" class="btn-action-premium" style="margin:0;flex-direction:column;text-align:center;padding:12px 8px;">
+                            <span style="font-size:20px;font-weight:800;color:#1e293b;line-height:1.2;">{{ $supplyStats['critical'] ?? 0 }}</span>
+                            <span style="font-size:11px;color:#64748b;margin-top:2px;">Critical</span>
                         </a>
                     </div>
 
