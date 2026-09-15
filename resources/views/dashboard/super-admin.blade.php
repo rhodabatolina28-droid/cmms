@@ -74,44 +74,41 @@
         /* PREMIUM WELCOME HERO — DEEP NAVY / NCMB BLUE */
         .welcome-hero {
             background: linear-gradient(135deg, #0f172a 0%, #002878 100%);
-            border-radius: 12px;
-            padding: 16px 22px;
+            border-radius: clamp(10px, 1.2vw, 15px);
+            padding: clamp(20px, 3vw, 35px);
             color: white;
             position: relative;
             overflow: hidden;
-            margin-bottom: 18px;
-            box-shadow: 0 4px 15px rgba(0, 40, 120, 0.18);
+            margin-bottom: clamp(20px, 2.5vw, 30px);
+            box-shadow: 0 10px 25px rgba(0, 40, 120, 0.25);
         }
 
         .hero-role {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             letter-spacing: 1px;
             text-transform: uppercase;
             opacity: 0.84;
         }
         .hero-name {
-            margin: 2px 0 4px;
-            font-size: 22px;
-            font-weight: 800;
+            margin: 6px 0;
+            font-size: clamp(26px, 2.1vw, 34px);
             line-height: 1.2;
         }
         .hero-desc {
             max-width: 720px;
             margin: 0;
-            font-size: 13px;
-            line-height: 1.4;
-            opacity: 0.9;
+            font-size: 14px;
+            line-height: 1.55;
         }
         .hero-stats-label {
-            font-size: 11px;
+            font-size: 12px;
             font-weight: 800;
             letter-spacing: 0.6px;
             text-transform: uppercase;
-            opacity: 0.84;
         }
         .hero-stats-value {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: 800;
             line-height: 1.15;
         }
