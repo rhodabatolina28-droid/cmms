@@ -96,14 +96,38 @@
             box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.05);
         }
 
+        .sa-table-wrap {
+            overflow-x: auto;
+            border-radius: 12px;
+            border: 1px solid #e2e8f0;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            -webkit-overflow-scrolling: touch;
+        }
+        .sa-table-wrap::-webkit-scrollbar {
+            height: 7px;
+        }
+        .sa-table-wrap::-webkit-scrollbar-track {
+            background: #f8fafc;
+            border-radius: 4px;
+        }
+        .sa-table-wrap::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        .sa-table-wrap::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+
         .gov-table-premium {
             width: 100%;
+            min-width: 1180px;
             border-collapse: collapse;
         }
 
         .gov-table-premium th {
-            background: #f1f5f9;
-            padding: 12px 15px;
+            background: #f8fafc;
+            padding: 13px 16px;
             font-size: 11px;
             font-weight: 800;
             color: #475569;
@@ -111,18 +135,47 @@
             letter-spacing: 0.5px;
             text-align: left;
             border-bottom: 2px solid #e2e8f0;
+            white-space: nowrap;
         }
 
         .gov-table-premium td {
-            padding: 12px 15px;
+            padding: 13px 16px;
             font-size: 13px;
             color: #1e293b;
             border-bottom: 1px solid #f1f5f9;
+            vertical-align: middle;
         }
 
         .gov-table-premium tr.tr-hover-row { transition: all 0.2s; position: relative; }
-        .gov-table-premium tr.tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.002); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
+        .gov-table-premium tr.tr-hover-row:hover { background: #f8fafc !important; transform: scale(1.001); box-shadow: 0 4px 6px -1px rgba(0,0,0,0.02); }
         .gov-table-premium tr.tr-hover-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
+
+        .sa-type-category {
+            display: inline-block;
+            background: #f1f5f9;
+            color: #334155;
+            border: 1px solid #e2e8f0;
+            padding: 3px 9px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            white-space: nowrap;
+        }
+
+        .sa-date-primary {
+            font-weight: 700;
+            color: #1e293b;
+            font-size: 12px;
+            white-space: nowrap;
+            line-height: 1.2;
+        }
+
+        .sa-date-sub {
+            font-size: 11px;
+            color: #94a3b8;
+            margin-top: 2px;
+            white-space: nowrap;
+        }
 
         .status-pill {
             display: inline-block;
@@ -361,15 +414,15 @@
                 <table class="gov-table-premium">
                     <thead>
                         <tr>
-                            <th>Request ID</th>
-                            <th>Type</th>
-                            <th>Office/Division</th>
-                            <th>Requestor</th>
-                            <th>Assigned IT</th>
-                            <th>Date Requested</th>
-                            <th>Completed At</th>
-                            <th class="sa-td-center">Status</th>
-                            <th class="sa-td-center">Action</th>
+                            <th style="width: 21%; min-width: 190px;">Request ID</th>
+                            <th style="width: 9%; min-width: 100px;">Type</th>
+                            <th style="width: 17%; min-width: 160px;">Office / Division</th>
+                            <th style="width: 13%; min-width: 130px;">Requestor</th>
+                            <th style="width: 13%; min-width: 130px;">Assigned IT</th>
+                            <th style="width: 10%; min-width: 120px;">Date Requested</th>
+                            <th style="width: 10%; min-width: 120px;">Completed At</th>
+                            <th class="sa-td-center" style="width: 8%; min-width: 95px;">Status</th>
+                            <th class="sa-td-center" style="width: 8%; min-width: 90px;">Action</th>
                         </tr>
                     </thead>
                     <tbody id="masterRequestTable">
@@ -492,26 +545,36 @@ function renderRequestsTable(requests) {
             ageChip = `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:${ageBg};color:${ageFg};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${req.age_display}</div>`;
         }
 
+        const descClean = (req.description || '').replace(/"/g, '&quot;');
+
         return `<tr class="${rowClass}">
             <td>
                 <div class="sa-td-id">${req.display_number || req.request_number}</div>
                 ${req.user && req.user.is_high_official && ['Pending','Ongoing','Scheduled','Awaiting Parts','Awaiting Signature','Referred - External'].includes(req.status) ? '<div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>' : ''}
                 ${ageChip}
-                <div class="sa-td-desc">${req.description || ''}</div>
+                <div class="sa-td-desc" title="${descClean}">${req.description || ''}</div>
             </td>
-            <td class="sa-td-type">${req.linked_asset?.category || '&mdash;'}</td>
+            <td class="sa-td-type">
+                ${req.linked_asset?.category ? `<span class="sa-type-category">${req.linked_asset.category}</span>` : '<span style="color:#94a3b8;">ICT</span>'}
+            </td>
             <td class="sa-td-office">${req.office || 'N/A'}</td>
             <td class="sa-td-requestor">
-                ${req.requestor_name}
-                <div class="sa-td-requestor-sub">${req.office || 'N/A'}</div>
+                <div style="font-weight: 700; color: #1e293b; font-size: 13px;">${req.requestor_name}</div>
             </td>
             <td class="sa-td-assigned">
                 ${assignedName
                     ? `<span class="${isAssignedToMe ? 'sa-assigned-highlight' : 'sa-assigned-normal'}">${isAssignedToMe ? '★ ' : ''}${assignedName}</span>`
                     : '<span class="sa-assigned-none">Unassigned</span>'}
             </td>
-            <td class="sa-td-date">${dateStr} | ${timeStr}</td>
-            <td class="sa-td-date">${completedStr}</td>
+            <td class="sa-td-date">
+                <div class="sa-date-primary">${dateStr}</div>
+                <div class="sa-date-sub">${timeStr}</div>
+            </td>
+            <td class="sa-td-date">
+                ${completed
+                    ? `<div class="sa-date-primary">${completedDateStr}</div><div class="sa-date-sub">${completedTimeStr}</div>`
+                    : '<span style="color:#94a3b8;">&mdash;</span>'}
+            </td>
             <td class="sa-td-center"><span class="status-pill ${statusClass}">${req.status}</span></td>
             <td class="sa-td-center">
                 <a href="/requests/ict/${req.id}" class="btn-action-modern">
