@@ -188,9 +188,8 @@
         .stat-ongoing .stat-bg-icon { color: #3b82f6; }
         .stat-assets .stat-bg-icon { color: #10b981; }
         .stat-overdue .stat-bg-icon { color: #ef4444; }
-        /* Q1: CSM Satisfaction — distinct amber/star color */
+        /* Q1: CSM Satisfaction — distinct amber/star icon, default value color */
         .stat-csm .stat-bg-icon { color: #f59e0b; }
-        .stat-csm .stat-value { color: #92400e; }
 
         .stat-label {
             font-size: clamp(11px, 0.85vw, 12px);
@@ -721,67 +720,75 @@
                 </a>
             </div>
 
-            <!-- M1: Operations Overview → replaced with genuinely new data -->
+            <!-- Operations Overview (improved) -->
             <div style="background: white; border-radius: 15px; padding: 20px; border: 1px solid #e2e8f0; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); flex: 1;">
                 <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px;">
-                    <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">System Activity</h3>
+                    <h3 class="table-title" style="font-size: 12px; color: #64748b; margin: 0;">Operations Overview</h3>
                     <span style="font-size: 10px; font-weight: 700; color: #059669; background: #ecfdf5; padding: 2px 6px; border-radius: 4px;">Live</span>
                 </div>
 
-                <!-- New Requests Today -->
+                <!-- PM Overdue -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #eff6ff; color: #3b82f6; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-inbox"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#fef3c7' : '#f0fdf4' }}; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-clock-rotate-left"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">New Today</div>
-                            <div style="font-size: 10px; color: #64748b;">Requests submitted today</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">PM Overdue</div>
+                            <div style="font-size: 10px; color: #64748b;">Scheduled &gt; 3 days past window</div>
                         </div>
                     </div>
-                    <span style="font-size: 18px; font-weight: 800; color: {{ $todayRequests > 0 ? '#3b82f6' : '#94a3b8' }};">{{ $todayRequests }}</span>
+                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ ($stats['overdue_pms'] ?? 0) > 0 ? '#b45309' : '#10b981' }};">
+                        {{ $stats['overdue_pms'] ?? 0 }}
+                    </a>
                 </div>
 
-                <!-- Completed This Week -->
+                <!-- Overdue Tickets -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #ecfdf5; color: #10b981; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-circle-check"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ $stats['overdue_tickets'] > 0 ? '#fee2e2' : '#f0fdf4' }}; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-triangle-exclamation"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Completed This Week</div>
-                            <div style="font-size: 10px; color: #64748b;">Since Monday</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Overdue Tickets</div>
+                            <div style="font-size: 10px; color: #64748b;">Pending/Ongoing aging 7+ days</div>
                         </div>
                     </div>
-                    <span style="font-size: 18px; font-weight: 800; color: {{ $completedThisWeek > 0 ? '#10b981' : '#94a3b8' }};">{{ $completedThisWeek }}</span>
+                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $stats['overdue_tickets'] > 0 ? '#dc2626' : '#10b981' }};">
+                        {{ $stats['overdue_tickets'] }}
+                    </a>
                 </div>
 
-                <!-- Active PM Schedules -->
+                <!-- Pending Queue -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #f1f5f9;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #fffbeb; color: #d97706; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-calendar-clock"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ $stats['pending'] > 0 ? '#fffbeb' : '#f8fafc' }}; color: {{ $stats['pending'] > 0 ? '#d97706' : '#94a3b8' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-regular fa-hourglass-half"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Active PM Schedules</div>
-                            <div style="font-size: 10px; color: #64748b;">Currently running cycles</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Pending Queue</div>
+                            <div style="font-size: 10px; color: #64748b;">New incoming requests</div>
                         </div>
                     </div>
-                    <a href="{{ route('pm-schedules.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $activePmCycles > 0 ? '#d97706' : '#94a3b8' }};">{{ $activePmCycles }}</a>
+                    <a href="{{ route('ict.index') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ $stats['pending'] > 0 ? '#d97706' : '#64748b' }};">
+                        {{ $stats['pending'] }}
+                    </a>
                 </div>
 
-                <!-- Assets Under Repair -->
+                <!-- CSM Satisfaction -->
                 <div style="display: flex; align-items: center; justify-content: space-between; padding: 10px 0;">
                     <div style="display: flex; align-items: center; gap: 10px;">
-                        <div style="width: 30px; height: 30px; border-radius: 8px; background: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#fef2f2' : '#f0fdf4' }}; color: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#dc2626' : '#16a34a' }}; display: flex; align-items: center; justify-content: center; font-size: 13px;">
-                            <i class="fa-solid fa-screwdriver-wrench"></i>
+                        <div style="width: 30px; height: 30px; border-radius: 8px; background: #fffbeb; color: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 13px;">
+                            <i class="fa-solid fa-star"></i>
                         </div>
                         <div>
-                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">Assets Under Repair</div>
-                            <div style="font-size: 10px; color: #64748b;">For Repair + Under Maintenance</div>
+                            <div style="font-size: 12px; font-weight: 700; color: #1e293b;">CSM Satisfaction</div>
+                            <div style="font-size: 10px; color: #64748b;">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
                         </div>
                     </div>
-                    <a href="{{ route('super_admin.inventory') }}" style="text-decoration: none; font-size: 18px; font-weight: 800; color: {{ ($assetBreakdown['under_repair'] ?? 0) > 0 ? '#dc2626' : '#10b981' }};">{{ $assetBreakdown['under_repair'] ?? 0 }}</a>
+                    <span style="font-size: 18px; font-weight: 800; color: #0038A8;">
+                        @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 10px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
+                    </span>
                 </div>
             </div>
         </div>
