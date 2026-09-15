@@ -71,14 +71,6 @@
             transform: rotate(0) scale(1.1);
             opacity: 0.06;
         }
-        .stat-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-        }
         .stat-label {
             display: block;
             font-size: clamp(10px, 0.8vw, 11px);
@@ -95,14 +87,15 @@
         }
         .workbench-grid {
             display: grid;
-            grid-template-columns: minmax(0, 1fr) minmax(280px, 320px);
+            grid-template-columns: minmax(0, 1fr) 320px;
             gap: clamp(16px, 2vw, 24px);
+            align-items: start;
         }
         .panel {
             background: white;
             border: 1px solid #e2e8f0;
             border-radius: 12px;
-            padding: 15px 16px;
+            padding: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.05);
         }
         .panel-title {
@@ -114,16 +107,14 @@
         }
         .panel-title h3 {
             margin: 0;
-            font-size: 13px;
-            font-weight: 900;
+            font-size: 15px;
+            font-weight: 800;
             color: #1e293b;
-            text-transform: uppercase;
-            letter-spacing: 0.8px;
         }
         .panel-link {
             color: #0038A8;
-            font-size: 12px;
-            font-weight: 900;
+            font-size: 13px;
+            font-weight: 700;
             text-decoration: none;
         }
         .job-row {
@@ -131,7 +122,7 @@
             grid-template-columns: minmax(0, 1fr) auto;
             gap: 14px;
             align-items: center;
-            padding: 10px 0;
+            padding: 12px 0;
             border-bottom: 1px solid #f1f5f9;
         }
         .job-row:last-child { border-bottom: 0; }
@@ -141,7 +132,7 @@
             gap: 7px;
             color: #0038A8;
             font-size: 13px;
-            font-weight: 900;
+            font-weight: 800;
             text-decoration: none;
         }
         .job-type {
@@ -150,15 +141,14 @@
             min-width: 34px;
             justify-content: center;
             border-radius: 4px;
-            padding: 3px 7px;
+            padding: 2px 6px;
             background: #f1f5f9;
             color: #334155;
             font-size: 10px;
-            font-weight: 900;
-            margin-right: 8px;
+            font-weight: 800;
         }
         .job-meta {
-            margin-top: 2px;
+            margin-top: 3px;
             font-size: 12px;
             color: #64748b;
             line-height: 1.35;
@@ -169,7 +159,7 @@
             padding: 4px 10px;
             border-radius: 20px;
             font-size: 10px;
-            font-weight: 900;
+            font-weight: 800;
             text-transform: uppercase;
             white-space: nowrap;
             border: 1px solid transparent;
@@ -188,16 +178,16 @@
             background: #0038A8;
             color: white;
             border-radius: 7px;
-            padding: 6px 10px;
+            padding: 6px 12px;
             text-decoration: none;
             font-size: 11px;
-            font-weight: 900;
+            font-weight: 800;
             min-height: 32px;
             transition: all 0.2s;
         }
         .action-button:hover { background: #002366; color: white; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 35, 102, 0.3); }
         .empty-state {
-            padding: 18px 12px;
+            padding: 24px 16px;
             text-align: center;
             color: #64748b;
             background: #f8fafc;
@@ -205,42 +195,35 @@
             border-radius: 8px;
             font-size: 13px;
         }
-        @media screen and (max-width: 800px) {
+        .scroll-x { overflow-x: auto; }
+        .table-full { width: 100%; border-collapse: collapse; }
+        .table-row-header { text-align: left; border-bottom: 2px solid #f1f5f9; }
+        .table-row-border { border-bottom: 1px solid #f8fafc; transition: background 0.2s; }
+        .tr-hover-row:hover { background: #f8fafc !important; }
+        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .table-header.center { text-align: center; }
+        .table-header.right { text-align: right; }
+        .table-cell { padding: 12px 10px; }
+        .table-cell-bold { padding: 12px 10px; font-weight: 800; color: #0038A8; }
+        .table-cell-center { padding: 12px 10px; text-align: center; }
+        .table-cell-right { padding: 12px 10px; text-align: right; }
+        .empty-cell { padding: 30px; text-align: center; color: #94a3b8; }
+        .job-row-single { grid-template-columns: 1fr; }
+        .job-action-full { width: 100%; }
+
+        @media screen and (max-width: 991px) {
+            .workbench-grid { grid-template-columns: 1fr !important; }
+        }
+        @media screen and (max-width: 767px) {
             .stats-grid { grid-template-columns: repeat(2, 1fr) !important; gap: 10px !important; }
             .workbench-grid { grid-template-columns: 1fr !important; }
-            .job-row { grid-template-columns: 1fr !important; }
-            .action-button { width: auto !important; min-width: 72px !important; }
+            .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+            .scroll-x .table-full { min-width: 650px !important; }
+            .scroll-x th, .scroll-x td { white-space: nowrap !important; }
             .welcome-hero { padding: 18px 16px !important; border-radius: 12px !important; }
             .flex-sb { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
             .hero-name { font-size: 20px !important; }
             .hero-desc { font-size: 13px !important; }
-            .hero-stats-box { min-width: 0 !important; width: 100% !important; }
-            .panel { padding: 12px 14px !important; }
-            .job-number { font-size: 14px !important; }
-            .action-button { min-height: 36px !important; padding: 6px 10px !important; font-size: 11px !important; }
-        }
-        .stat-value-amber { color: #f59e0b; }
-        .stat-value-dark-amber { color: #92400e; }
-        .stat-value-blue { color: #2563eb; }
-        .action-bar { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
-        .btn-pm-tasks { display: inline-flex; align-items: center; gap: 8px; padding: 10px 18px; background: #059669; color: white; border-radius: 8px; font-size: 13px; font-weight: 700; text-decoration: none; }
-        .job-status-mt { margin-top: 8px; }
-        .empty-state-icon { font-size: 28px; color: #94a3b8; margin-bottom: 10px; }
-        .empty-state-title { font-weight: 900; color: #334155; }
-        .empty-state-subtitle { margin-top: 5px; }
-        .job-row-single { grid-template-columns: 1fr; }
-        .job-action-full { width: 100%; }
-        @media screen and (max-width: 767px) {
-            .workbench-grid { grid-template-columns: 1fr !important; }
-            .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
-            .card-header-accent { flex-direction: column !important; gap: 10px !important; }
-            .action-bar { flex-direction: column !important; gap: 10px !important; }
-            .btn-pm-tasks { width: auto !important; justify-content: center !important; min-height: 36px !important; font-size: 12px !important; padding: 6px 14px !important; }
-            input, select, textarea { min-height: 44px !important; font-size: 15px !important; }
-            .btn, button:not(#sidebarToggle):not(#notifBell) { min-height: 44px !important; font-size: 13px !important; }
-            .job-action-full { width: auto !important; min-width: 72px !important; }
-
-            /* Hero stats box — left-aligned row (was right-hugging full-width) */
             .hero-stats-box {
                 text-align: left !important;
                 display: flex !important;
@@ -248,8 +231,9 @@
                 justify-content: space-between !important;
                 gap: 10px !important;
                 padding: 12px 16px !important;
+                width: 100% !important;
             }
-            /* View All — comfortable tap target */
+            .panel { padding: 14px 16px !important; }
             .panel-link {
                 display: inline-flex !important;
                 align-items: center !important;
@@ -257,7 +241,9 @@
                 padding: 6px 4px !important;
                 font-size: 13px !important;
             }
-            .job-row { padding: 12px 0 !important; }
+            .table-header { font-size: 10px !important; padding: 8px !important; }
+            .table-cell, .table-cell-bold, .table-cell-center, .table-cell-right { padding: 10px 8px !important; font-size: 12px !important; }
+            .action-button { min-height: 34px !important; padding: 6px 10px !important; font-size: 11px !important; }
         }
     </style>
 @endsection
@@ -320,12 +306,12 @@
         <div class="stat-card-premium stat-pending">
             <i class="fa-regular fa-hourglass-half stat-bg-icon"></i>
             <span class="stat-label">Pending</span>
-            <div class="stat-value stat-value-amber">{{ $stats['pending'] }}</div>
+            <div class="stat-value">{{ $stats['pending'] }}</div>
         </div>
         <div class="stat-card-premium stat-card-scheduled">
             <i class="fa-solid fa-calendar stat-bg-icon"></i>
             <span class="stat-label">Scheduled</span>
-            <div class="stat-value stat-value-dark-amber">{{ $stats['scheduled'] ?? 0 }}</div>
+            <div class="stat-value">{{ $stats['scheduled'] ?? 0 }}</div>
         </div>
         <div class="stat-card-premium stat-ongoing">
             <i class="fa-solid fa-spinner stat-bg-icon"></i>
@@ -338,38 +324,76 @@
         <div>
             <div class="panel">
                 <div class="panel-title">
-                    <h3>Assigned Job Orders</h3>
+                    <div>
+                        <h3>Assigned Job Orders</h3>
+                        <p style="margin: 3px 0 0; font-size: 12px; color: #64748b;">Active ICT and Preventive Maintenance tickets assigned to you</p>
+                    </div>
                     <a href="{{ route('ict.index') }}" class="panel-link">View All</a>
                 </div>
 
-                @forelse($requests as $job)
-                    <div class="job-row">
-                        <div>
-                            <a href="{{ $jobUrl($job) }}" class="job-number">
-                                <span class="job-type">{{ $job->type === 'ICT' ? 'ICT' : 'PM' }}</span>
-                                {{ $job->display_number ?? $job->request_number }}
-                            </a>
-                            <div class="job-meta">
-                                {{ $job->requestor_name }}
-                                @if($job->user?->is_high_official && $job->is_urgent_visible)
-                                    <span style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</span>
-                                @endif
-                            </div>
-                            <div class="job-status-mt">
-                                <span class="status-pill {{ $pillClass($job->status) }}">{{ $job->status }}</span>
-                            </div>
-                        </div>
-                        <a href="{{ $jobUrl($job) }}" class="action-button">
-                            <i class="fa-solid fa-arrow-right"></i> {{ $jobAction($job) }}
-                        </a>
-                    </div>
-                @empty
-                    <div class="empty-state">
-                        <i class="fa-solid fa-clipboard-check empty-state-icon"></i>
-                        <div class="empty-state-title">No active job orders assigned</div>
-                        <div class="empty-state-subtitle">Assigned ICT and PM work will appear here.</div>
-                    </div>
-                @endforelse
+                <div class="scroll-x" style="margin-top: 14px;">
+                    <table class="table-full">
+                        <thead>
+                            <tr class="table-row-header">
+                                <th class="table-header">Ticket #</th>
+                                <th class="table-header">Concern / Subject</th>
+                                <th class="table-header">Requestor</th>
+                                <th class="table-header">Date</th>
+                                <th class="table-header center">Status</th>
+                                <th class="table-header right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($requests as $job)
+                                <tr class="tr-hover-row table-row-border">
+                                    <td class="table-cell-bold">
+                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                            <span class="job-type">{{ $job->type === 'ICT' ? 'ICT' : 'PM' }}</span>
+                                            <a href="{{ $jobUrl($job) }}" style="color: #0038A8; text-decoration: none; font-weight: 800;">
+                                                {{ $job->display_number ?? $job->request_number }}
+                                            </a>
+                                        </div>
+                                        @if($job->user?->is_high_official && $job->is_urgent_visible)
+                                            <div style="margin-top: 4px;">
+                                                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">Urgent</span>
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="table-cell">
+                                        <div style="font-weight: 600; color: #1e293b; font-size: 13px;" title="{{ $job->description }}">
+                                            {{ \Illuminate\Support\Str::limit($job->description ?: 'Technical Support Request', 38) }}
+                                        </div>
+                                    </td>
+                                    <td class="table-cell">
+                                        <div style="font-size: 12px; font-weight: 600; color: #334155;">{{ $job->requestor_name }}</div>
+                                        <div style="font-size: 11px; color: #94a3b8;">
+                                            {{ $job->user?->office ?: ($job->user?->department ?: 'NCMB') }}
+                                        </div>
+                                    </td>
+                                    <td class="table-cell" style="font-size: 12px; color: #64748b; white-space: nowrap;">
+                                        {{ $job->created_at ? $job->created_at->format('M d, Y') : '—' }}
+                                    </td>
+                                    <td class="table-cell-center">
+                                        <span class="status-pill {{ $pillClass($job->status) }}">{{ $job->status }}</span>
+                                    </td>
+                                    <td class="table-cell-right" style="white-space: nowrap;">
+                                        <a href="{{ $jobUrl($job) }}" class="action-button">
+                                            {{ $jobAction($job) }} <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i>
+                                        </a>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="6" class="empty-cell" style="padding: 40px 20px;">
+                                        <i class="fa-solid fa-clipboard-check empty-state-icon" style="font-size: 38px; color: #cbd5e1; display: block; margin-bottom: 12px;"></i>
+                                        <div class="empty-state-title" style="font-weight: 800; color: #64748b; font-size: 14px;">No active job orders assigned</div>
+                                        <div class="empty-state-subtitle" style="font-size: 12px; color: #94a3b8; margin-top: 4px;">Assigned ICT and PM work will appear here.</div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
             </div>
 
         </div>
@@ -387,10 +411,13 @@
                                 {{ $job->type === 'ICT' ? 'Section 5 / IT signature' : 'Technician signature' }}
                             </div>
                         </div>
-                        <a href="{{ $jobUrl($job) }}" class="action-button job-action-full">Complete</a>
+                        <a href="{{ $jobUrl($job) }}" class="action-button job-action-full">Complete <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i></a>
                     </div>
                 @empty
-                    <div class="empty-state">No jobs waiting for completion details.</div>
+                    <div class="empty-state" style="padding: 24px 12px; text-align: center; color: #94a3b8; font-size: 12px; border: 1px dashed #e2e8f0; border-radius: 8px; background: #f8fafc;">
+                        <i class="fa-solid fa-check-double" style="font-size: 24px; color: #cbd5e1; display: block; margin-bottom: 8px;"></i>
+                        No jobs waiting for completion details.
+                    </div>
                 @endforelse
             </div>
         </div>

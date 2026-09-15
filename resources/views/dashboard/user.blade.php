@@ -75,15 +75,6 @@
             opacity: 0.06;
         }
 
-        .stat-card-premium::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 4px;
-            height: 100%;
-        }
-
         .stat-label {
             font-size: clamp(10px, 0.8vw, 12px);
             font-weight: 700;
@@ -113,22 +104,13 @@
             border: 1px solid rgba(0,0,0,0.05);
             transition: all 0.2s;
             box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+            justify-content: space-between;
         }
 
         .action-button-premium:hover {
             transform: translateY(-3px);
             box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
             border-color: #0038A8;
-        }
-
-        .action-icon-circle {
-            width: 45px;
-            height: 45px;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 18px;
         }
 
         /* TABLE THEME */
@@ -172,12 +154,6 @@
         .modal-title { color: #1e293b; font-weight: 900; margin: 0 0 10px; font-size: 24px; }
         .modal-text { color: #64748b; font-size: 14px; line-height: 1.6; margin: 0 0 25px; }
         .modal-btn { background: #0038A8; color: white; border: none; padding: 12px 35px; border-radius: 8px; font-weight: 800; font-size: 14px; cursor: pointer; transition: all 0.2s; box-shadow: 0 4px 6px rgba(0, 56, 168, 0.2); }
-        .banner-alert { background: #f8fafc; border: 1px dashed #cbd5e1; border-radius: 10px; padding: 15px; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
-        .banner-text { display: flex; align-items: center; gap: 10px; }
-        .banner-icon { color: #0038A8; font-size: 16px; }
-        .banner-msg { font-size: 13px; font-weight: 700; color: #334155; }
-        .survey-link { background: white; border: 1px solid #e2e8f0; color: #0038A8; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; text-decoration: none; display: inline-flex; align-items: center; gap: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.02); transition: all 0.2s; }
-        .star-icon { font-size: 9px; color: #fbbf24; }
         .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
         .scroll-x { overflow-x: auto; }
@@ -196,13 +172,10 @@
         .rate-badge { background: #fbbf24; color: #92400e; padding: 5px 12px; border-radius: 6px; font-size: 11px; font-weight: 800; text-decoration: none; margin-right: 10px; box-shadow: 0 2px 4px rgba(251, 191, 36, 0.2); }
         .icon-chevron { color: #94a3b8; }
         .ribbon-label { margin-bottom: 15px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 1px; }
-        .action-icon-blue { background: #e0e7ff; color: #4338ca; }
-        .action-icon-dark { background: #e0e7ff; color: #3730a3; }
-        .action-icon-red { background: #fee2e2; color: #b91c1c; }
         .action-title { font-weight: 800; font-size: 15px; }
         .action-subtitle { font-size: 12px; color: #64748b; }
         .action-subtitle-sm { font-size: 12px; color: #64748b; line-height: 1.4; }
-        .user-grid { display: grid; gap: 25px; }
+        .user-grid { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 25px; align-items: start; }
         .action-disabled { opacity: 0.75; cursor: default; border-color: #e2e8f0; background: #f8fafc; }
         .action-restricted { opacity: 0.65; cursor: not-allowed; pointer-events: none; border-color: #fecaca; background: #fff5f5; }
         .action-title-muted { font-weight: 800; font-size: 15px; color: #475569; }
@@ -210,6 +183,9 @@
         .action-subtitle-warn { font-size: 12px; color: #b45309; line-height: 1.4; }
         .mt-12 { margin-top: 12px; }
         .mb-20 { margin-bottom: 20px; }
+        @media screen and (max-width: 991px) {
+            .user-grid { grid-template-columns: 1fr !important; }
+        }
         @media screen and (max-width: 767px) {
             .user-grid { grid-template-columns: 1fr !important; }
             .stats-grid { grid-template-columns: repeat(2,1fr) !important; }
@@ -218,9 +194,9 @@
             .hero-desc { font-size: 12px !important; }
             .hero-status-box { align-items: flex-start !important; margin-top: 8px !important; }
             .flex-sb { flex-direction: column !important; gap: 6px !important; }
-            .banner-alert { flex-direction: column !important; align-items: flex-start !important; }
-            .survey-link { width: 100% !important; justify-content: center !important; min-height: 44px !important; }
             .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
+            .scroll-x .table-full { min-width: 650px !important; }
+            .scroll-x th, .scroll-x td { white-space: nowrap !important; }
             .table-header { font-size: 10px !important; padding: 8px !important; }
             .table-cell, .table-cell-bold, .table-cell-dept, .table-cell-center, .table-cell-right { padding: 10px 8px !important; font-size: 12px !important; }
             .rate-badge { min-height: 36px !important; display: inline-flex !important; align-items: center !important; }
@@ -306,14 +282,20 @@
         <!-- LEFT: RECENT ACTIVITY -->
         <div class="premium-table-box">
             <div class="flex-sb mb-20">
-                <h3 class="table-title">Recent Activity</h3>
-                <a href="{{ route('ict.index') }}" class="link-master">View All</a>
+                <div>
+                    <h3 class="table-title">Recent Activity</h3>
+                    <p style="margin: 3px 0 0; font-size: 12px; color: #64748b;">Your latest service and technical support requests</p>
+                </div>
+                <a href="{{ route('ict.index') }}" class="link-master">View All Requests</a>
             </div>
             <div class="scroll-x">
                 <table class="table-full">
                     <thead>
                         <tr class="table-row-header">
                             <th class="table-header">Ticket #</th>
+                            <th class="table-header">Concern / Subject</th>
+                            <th class="table-header">Assigned IT</th>
+                            <th class="table-header">Date</th>
                             <th class="table-header center">Status</th>
                             <th class="table-header right">Action</th>
                         </tr>
@@ -321,19 +303,41 @@
                     <tbody>
                         @forelse($requests as $req)
                             <tr class="tr-hover-row table-row-border">
-                                <td class="table-cell-bold">{{ $req->display_number ?? $req->request_number }}</td>
+                                <td class="table-cell-bold">
+                                    <a href="{{ $req->type == 'ICT' ? route('ict.show', $req->id) : route('maintenance.show', $req->id) }}" style="color: #0038A8; text-decoration: none;">
+                                        {{ $req->display_number ?? $req->request_number }}
+                                    </a>
+                                </td>
+                                <td class="table-cell">
+                                    <div style="font-weight: 600; color: #1e293b; font-size: 13px;" title="{{ $req->description }}">
+                                        {{ \Illuminate\Support\Str::limit($req->description ?: 'ICT Support Request', 40) }}
+                                    </div>
+                                    <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
+                                        {{ $req->type }}
+                                    </div>
+                                </td>
+                                <td class="table-cell">
+                                    @if($req->assignedTo)
+                                        <div style="font-size: 12px; font-weight: 600; color: #334155;">{{ $req->assignedTo->full_name }}</div>
+                                    @else
+                                        <span style="font-size: 11px; color: #94a3b8; font-style: italic;">Unassigned</span>
+                                    @endif
+                                </td>
+                                <td class="table-cell" style="font-size: 12px; color: #64748b; white-space: nowrap;">
+                                    {{ $req->created_at ? $req->created_at->format('M d, Y') : '—' }}
+                                </td>
                                 <td class="table-cell-center">
                                     <span class="status-pill status-{{ strtolower($req->status) }}">{{ $req->status }}</span>
                                 </td>
-                                <td class="table-cell-right">
-                                    @if($req->status === 'Completed' && !$req->csmSurvey()->exists())
+                                <td class="table-cell-right" style="white-space: nowrap;">
+                                    @if($req->status === 'Completed' && !$req->csmSurvey)
                                         <a href="{{ route('csm.create', $req->id) }}" class="rate-badge"><i class="fa-solid fa-star"></i> Rate Us</a>
                                     @endif
-                                    <a href="{{ $req->type == 'ICT' ? route('ict.show', $req->id) : route('maintenance.show', $req->id) }}" class="icon-chevron"><i class="fa-solid fa-chevron-right"></i></a>
+                                    <a href="{{ $req->type == 'ICT' ? route('ict.show', $req->id) : route('maintenance.show', $req->id) }}" class="icon-chevron" title="View details"><i class="fa-solid fa-chevron-right"></i></a>
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="3" class="empty-cell" style="padding: 40px 20px;">
+                            <tr><td colspan="6" class="empty-cell" style="padding: 40px 20px;">
                                 <i class="fa-solid fa-folder-open" style="font-size: 45px; color: #e2e8f0; margin-bottom: 15px; display: block;"></i>
                                 <div style="font-weight: 800; color: #64748b; font-size: 15px;">No Recent Requests</div>
                                 <div style="font-size: 12px; color: #94a3b8; margin-top: 5px;">You don't have any active or recent requests at the moment.</div>
@@ -349,30 +353,23 @@
             <div class="ribbon-label">Quick Actions</div>
             @if(!empty($hasAssignedAssets))
                 <a href="{{ route('ict.create') }}" class="action-button-premium">
-                    <div class="action-icon-circle action-icon-blue">
-                        <i class="fa-solid fa-desktop"></i>
-                    </div>
                     <div>
                         <div class="action-title">New Request</div>
                         <div class="action-subtitle">ICT Technical Support</div>
                     </div>
                 </a>
-                <div class="action-button-premium action-disabled mt-12">
-                    <div class="action-icon-circle action-icon-dark">
-                        <i class="fa-solid fa-calendar-clock"></i>
+
+                <a href="{{ route('profile.assets') }}" class="action-button-premium mt-12">
+                    <div style="flex: 1;">
+                        <div class="action-title">My Assigned Equipment</div>
+                        <div class="action-subtitle">{{ $stats['assets'] }} active items assigned</div>
                     </div>
-                    <div>
-                        <div class="action-title-muted">Preventive Maintenance</div>
-                        <div class="action-subtitle-sm">
-                            PM is now scheduled by your ICT Unit. Contact your Super Admin for concerns.
-                        </div>
+                    <div style="font-size: 11px; font-weight: 800; color: #0038A8; background: #eff6ff; padding: 3px 8px; border-radius: 12px;">
+                        {{ $stats['assets'] }}
                     </div>
-                </div>
+                </a>
             @else
                 <div class="action-button-premium action-restricted">
-                    <div class="action-icon-circle action-icon-red">
-                        <i class="fa-solid fa-ban"></i>
-                    </div>
                     <div>
                         <div class="action-title-red">Requests Unavailable</div>
                         <div class="action-subtitle-warn">

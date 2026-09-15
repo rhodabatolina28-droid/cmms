@@ -21,6 +21,7 @@ class UserDashboardAction
         $requests = RequestModel::where('user_id', $user->id)
             ->whereIn('type', ['ICT', 'Preventive Maintenance'])
             ->where('status', '!=', RequestModel::STATUS_SCHEDULED)
+            ->with(['assignedTo', 'csmSurvey'])
             ->orderBy('created_at', 'desc')
             ->paginate(10);
 
