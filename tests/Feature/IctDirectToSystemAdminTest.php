@@ -250,6 +250,56 @@ class IctDirectToSystemAdminTest extends TestCase
         ]);
     }
 
+    public function test_division_admin_can_no_longer_quick_update_status(): void
+    {
+        $admin = $this->user(['role' => 'admin']);
+        $it = $this->user(['role' => 'it']);
+        $requestor = $this->user();
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9011', 'Approved', ['assigned_to' => $it->id]);
+
+        $this->actingAs($admin)
+            ->postJson(route('admin.requests.update-status'), ['id' => $ticket->id, 'status' => 'Ongoing'])
+            ->assertStatus(403); // D9.20: role no longer allowed to use quick status at all
+
+        $this->assertSame('Pending', $ticket->fresh()->status, 'D9.20: division admins are view-only on requests');
+    }
+
+    public function test_supply_officer_can_still_quick_update_status(): void
+    {
+        $supply = $this->user(['role' => 'admin', 'can_supply' => true]);
+        $it = $this->user(['role' => 'it']);
+        $requestor = $this->user();
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9012', 'Approved', ['assigned_to' => $it->id]);
+
+        // 'remarks' is still accepted by the form request — sending it proves the
+        // removed `remarks` DB write no longer breaks the endpoint (D9.20 bug fix).
+        $this->actingAs($supply)
+            ->postJson(route('admin.requests.update-status'), [
+                'id' => $ticket->id,
+                'status' => 'Ongoing',
+                'remarks' => 'Supply follow-up.',
+            ])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertSame('Ongoing', $ticket->fresh()->status);
+    }
+
+    public function test_system_admin_can_quick_update_any_ticket_in_their_branch(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $it = $this->user(['role' => 'it']);
+        $requestor = $this->user(['office' => 'FINANCIAL AND MANAGEMENT DIVISION']);
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9013', 'Approved', ['assigned_to' => $it->id]);
+
+        $this->actingAs($sa)
+            ->postJson(route('admin.requests.update-status'), ['id' => $ticket->id, 'status' => 'Ongoing'])
+            ->assertOk()
+            ->assertJson(['success' => true]);
+
+        $this->assertSame('Ongoing', $ticket->fresh()->status);
+    }
+
     public function test_new_ict_notification_never_goes_back_to_the_requestor(): void
     {
         $sa = $this->user(['role' => 'super_admin']);

@@ -18,7 +18,9 @@ class QuickUpdateStatusAction
     public function execute(UpdateIctStatusRequest $request)
     {
         $admin = Auth::user();
-        if ($admin->role !== 'admin') {
+        // D9.20: quick status is for Supply Officers (supply flow) and the
+        // System Admin only — Division Admins are view-only on requests.
+        if (!$admin->canProcessSupply() && !$admin->isSuperAdmin()) {
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -39,9 +41,10 @@ class QuickUpdateStatusAction
             ], 422);
         }
 
+        // D9.20: the `remarks` column does not exist on the `requests` table —
+        // the old write threw a SQL error (500) on every quick-status update.
         $trackingRequest->update([
             'status' => $validated['status'],
-            'remarks' => $validated['remarks'],
         ]);
 
         $typeLabel = $trackingRequest->type === 'ICT' ? 'ICT request' : 'maintenance request';

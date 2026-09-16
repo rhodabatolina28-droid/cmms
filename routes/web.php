@@ -243,7 +243,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
 
     // ==========================================
     Route::post('/admin/requests/update-status', [ICTRequestController::class, 'updateStatus'])
-        ->middleware('role:admin', 'throttle:30,1')
+        ->middleware('role:admin,super_admin', 'throttle:30,1')
         ->name('admin.requests.update-status');
 
     // Inventory Reports (admin + super_admin)

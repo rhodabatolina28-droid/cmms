@@ -454,7 +454,9 @@ class RequestHelpers
 
     public static function canAdminQuickUpdateStatus(User $admin, RequestModel $ticket, string $newStatus): bool
     {
-        if (!$admin->isDivisionAdmin()) {
+        // D9.20: Division Admins are view-only on requests — only Supply Officers
+        // (supply/inventory flow) and the System Admin keep the quick-status action.
+        if (!$admin->canProcessSupply() && !$admin->isSuperAdmin()) {
             return false;
         }
 
@@ -462,7 +464,12 @@ class RequestHelpers
             return false;
         }
 
-        if (!self::ticketInAdminScope($admin, $ticket)) {
+        // System Admin acts branch-wide; supply officers stay office-scoped.
+        $inScope = $admin->isSuperAdmin()
+            ? self::ticketInSuperAdminBranch($admin, $ticket)
+            : self::ticketInAdminScope($admin, $ticket);
+
+        if (!$inScope) {
             return false;
         }
 
