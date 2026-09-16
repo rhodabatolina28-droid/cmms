@@ -18,23 +18,6 @@ class RequestNotificationService
         return $type === 'ICT' ? 'ICT Repair' : 'Preventive Maintenance';
     }
 
-    public static function notifyAdminsOfNewRequest(RequestModel $request, User $requestor, string $typeLabel): void
-    {
-        $recipients = self::cascadeDivisionAdminsForUser($requestor);
-
-        $requestorName = strtoupper($requestor->full_name ?? 'USER');
-        $message = "New {$typeLabel} from {$requestorName} ({$request->request_number}) in your division. Please review.";
-
-        foreach ($recipients as $recipient) {
-            \App\Models\Notification::send(
-                $recipient->id,
-                $request->id,
-                "New {$typeLabel} for Review",
-                $message
-            );
-        }
-    }
-
     /**
      * D9.20: ICT requests are routed straight to the System Admin, who both
      * reviews them and assigns IT. The "for Review" suffix keeps the email
@@ -223,48 +206,6 @@ class RequestNotificationService
                 "Asset {$asset->item_name} (PAR: {$asset->par_number}) has been assigned to you."
             );
         }
-    }
-
-    /**
-     * @return Collection<int, User>
-     */
-    public static function cascadeDivisionAdminsForUser(User $requestor): Collection
-    {
-        $userBranch = $requestor->branch ?? null;
-        $userOffice = $requestor->office ?? null;
-        $userDepartment = $requestor->department ?? null;
-
-        $allAdmins = collect();
-
-        // Additive: notify ALL matching levels, not just the most specific
-        if ($userBranch && $userDepartment && $userOffice) {
-            $specific = User::whereIn('role', ['admin', 'supply_officer'])
-                ->where('branch', $userBranch)
-                ->where('department', $userDepartment)
-                ->where('office', $userOffice)
-                ->where('is_active', true)
-                ->get();
-            $allAdmins = $allAdmins->concat($specific);
-        }
-
-        if ($userDepartment && $userOffice) {
-            $broader = User::whereIn('role', ['admin', 'supply_officer'])
-                ->where('department', $userDepartment)
-                ->where('office', $userOffice)
-                ->where('is_active', true)
-                ->get();
-            $allAdmins = $allAdmins->concat($broader);
-        }
-
-        if ($userOffice) {
-            $broadest = User::whereIn('role', ['admin', 'supply_officer'])
-                ->where('office', $userOffice)
-                ->where('is_active', true)
-                ->get();
-            $allAdmins = $allAdmins->concat($broadest);
-        }
-
-        return $allAdmins->unique('id');
     }
 
     /**

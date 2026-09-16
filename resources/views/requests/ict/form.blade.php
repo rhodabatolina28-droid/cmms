@@ -80,7 +80,7 @@
             }
         @endphp
 
-        @if(!empty($canAssignIt) && $isUpdate && Auth::user()->role === 'super_admin' && (!$request->assigned_to || (int)$request->assigned_to !== (int)Auth::user()->id))
+        @if(!empty($canAssignIt) && $isUpdate && Auth::user()->role === 'super_admin' && $request->reviewed_by_admin_id && !$request->assigned_to)
         <div id="assignItPanel" class="ict-assign-panel">
             <div class="ict-assign-inner">
                 <div class="ict-assign-left">
@@ -108,10 +108,7 @@
                     @endif
                 </div>
                 <div class="ict-assign-right">
-                    @if($request->assignedTo)
-                        <div class="ict-assign-current-label">Currently assigned:</div>
-                        <div class="ict-assign-current-name">{{ $request->assignedTo->full_name }}</div>
-                    @else
+                    @if(!$request->assignedTo)
                         <span class="ict-assign-unassigned">UNASSIGNED</span>
                     @endif
                     <button type="button" id="assignItBtn" class="ict-assign-btn">
@@ -122,50 +119,35 @@
         </div>
         @endif
 
-        @if(!empty($canReviewAsDivisionAdmin) && $isUpdate)
+        @if(!empty($canReviewAsDivisionAdmin) && $isUpdate && $request->status === 'Pending' && !$request->assigned_to && ($canReviewAsSystemAdmin ? !$request->reviewed_by_admin_id : true))
         <div id="divisionAdminReviewPanel" class="ict-div-review-panel">
             <div class="ict-div-review-label">
                 <i class="fa-solid fa-clipboard-check"></i> {{ $canReviewAsSystemAdmin ? 'System Admin Review' : 'Division Admin Review' }}
             </div>
             <p class="ict-div-review-text">
                 @if($canReviewAsSystemAdmin)
-                    Review this request before IT assignment. Reject it if it should not proceed; otherwise assign IT personnel below.
+                    Approve this request to proceed with IT assignment, or reject it if it should not proceed.
                 @else
                     Please review this request from your division before it is forwarded to the System Admin (IT) for assignment.
                 @endif
             </p>
             <div class="ict-div-review-body">
-                <textarea id="divisionAdminNotes" class="minimal-input ict-div-review-textarea" rows="2" placeholder="Optional notes or remarks regarding this request..."></textarea>
+                <textarea id="divisionAdminNotes" class="minimal-input ict-div-review-textarea" rows="1" placeholder="Optional notes or remarks regarding this request..."></textarea>
                 <div class="ict-div-review-actions">
                     <button type="button" class="btn-secondary division-review-btn ict-div-review-btn-reject" data-status="Rejected">
                         <i class="fa-solid fa-xmark"></i> Reject
                     </button>
-                    @if(!$canReviewAsSystemAdmin)
+                    @if($canReviewAsSystemAdmin)
+                    <button type="button" class="btn-secondary division-review-btn ict-div-review-btn-approve" data-status="Approved">
+                        <i class="fa-solid fa-check"></i> Approve
+                    </button>
+                    @else
                     <button type="button" class="btn-secondary division-review-btn ict-div-review-btn-approve" data-status="Approved">
                         <i class="fa-solid fa-check"></i> Approve & Forward
                     </button>
                     @endif
                 </div>
             </div>
-        </div>
-        @endif
-
-        @if($isUpdate && $request->division_admin_review_status && ($request->division_admin_review_status === 'Rejected' || $request->reviewed_by_admin_id))
-        <div class="ict-review-status-box">
-            <div class="ict-review-status-label">Review Status</div>
-            <div class="ict-review-status-row">
-                @if($request->division_admin_review_status === 'Approved')
-                    <span class="ict-review-approved"><i class="fa-solid fa-check-circle"></i> APPROVED</span>
-                @elseif($request->division_admin_review_status === 'Rejected')
-                    <span class="ict-review-rejected"><i class="fa-solid fa-xmark-circle"></i> REJECTED</span>
-                @endif
-                <span class="ict-review-date">on {{ \Carbon\Carbon::parse($request->reviewed_at)->format('M d, Y h:i A') }}</span>
-            </div>
-            @if($request->division_admin_notes)
-                <div class="ict-review-notes">
-                    <strong>Notes:</strong> {{ $request->division_admin_notes }}
-                </div>
-            @endif
         </div>
         @endif
 

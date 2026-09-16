@@ -314,7 +314,7 @@ class IctDirectToSystemAdminTest extends TestCase
         ]);
     }
 
-    public function test_system_admin_sees_review_panel_with_reject_only_on_auto_approved_ticket(): void
+    public function test_system_admin_reviews_first_then_assign_panel_appears_after_approval(): void
     {
         $sa = $this->user(['role' => 'super_admin']);
         $requestor = $this->user();
@@ -324,18 +324,29 @@ class IctDirectToSystemAdminTest extends TestCase
             'detail_id' => $repair->id,
         ]);
 
+        // Step 1: review panel with Approve + Reject — Assign IT hidden until approved
         $response = $this->actingAs($sa)->get(route('ict.show', $ticket->id));
         $response->assertOk();
         $response->assertSee('System Admin Review');
-        $response->assertSee('Review this request before IT assignment');
+        $response->assertSee('Approve this request to proceed with IT assignment');
+        $response->assertSee('Approve');
         $response->assertSee('Reject');
-        $response->assertDontSee('Approve &amp; Forward', false);
+        $response->assertDontSee('Save Assignment');
         // D9.20: auto-approve must not fake a human "APPROVED by Division Admin" stamp
         $response->assertDontSee('<div class="ict-review-status-box">', false);
+
+        // Step 2: after the System Admin approves, the Assign IT panel appears
+        $ticket->update(['reviewed_by_admin_id' => $sa->id, 'reviewed_at' => now()]);
+        $response = $this->actingAs($sa)->get(route('ict.show', $ticket->id));
+        $response->assertOk();
+        $response->assertSee('Assign IT Personnel');
+        $response->assertDontSee('System Admin Review');
     }
 
-    public function test_genuinely_reviewed_ticket_shows_its_review_status_box(): void
+    public function test_review_status_box_is_fully_removed_from_the_form(): void
     {
+        // D9.21: the fake "APPROVED by Division Admin" stamp was removed —
+        // no ticket (genuine or auto-approved) renders a Review Status box.
         $sa = $this->user(['role' => 'super_admin']);
         $requestor = $this->user();
         $repair = $this->repairRequest($requestor);
@@ -348,7 +359,7 @@ class IctDirectToSystemAdminTest extends TestCase
 
         $response = $this->actingAs($sa)->get(route('ict.show', $ticket->id));
         $response->assertOk();
-        $response->assertSee('Review Status');
-        $response->assertSee('APPROVED');
+        $response->assertDontSee('Review Status');
+        $response->assertDontSee('<div class="ict-review-status-box">', false);
     }
 }
