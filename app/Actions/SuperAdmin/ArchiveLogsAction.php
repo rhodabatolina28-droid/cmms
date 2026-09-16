@@ -29,7 +29,13 @@ class ArchiveLogsAction
             ->get();
 
         if ($oldLogs->isEmpty()) {
-            return back()->with('error', 'No logs older than 1 year found for archiving.');
+            $message = 'No logs older than 1 year found for archiving.';
+            // AJAX callers (Swal flow) get JSON so the UI can show the message
+            // instead of silently reloading — D9.23 fix.
+            if (request()->ajax() || request()->wantsJson()) {
+                return response()->json(['success' => false, 'message' => $message]);
+            }
+            return back()->with('error', $message);
         }
 
         // Write CSV to temp file first so data is safely captured before DB delete
@@ -69,6 +75,8 @@ class ArchiveLogsAction
         $csvFileName = 'audit_logs_archive_' . now()->format('Ymd_His') . '.csv';
         return response()->download($tempPath, $csvFileName, [
             'Content-Type' => 'text/csv',
-        ])->deleteFileAfterSend(true);
+        ])
+            ->deleteFileAfterSend(true)
+            ->header('X-Archived-Count', (string) $oldLogs->count());
     }
 }

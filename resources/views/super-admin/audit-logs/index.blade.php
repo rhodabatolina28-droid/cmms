@@ -405,9 +405,41 @@ document.addEventListener('DOMContentLoaded', function() {
             confirmButtonText: '<i class="fa-solid fa-file-export"></i> Yes, Archive & Delete',
             cancelButtonText: 'Cancel'
         }).then(function(result) {
-            if (result.isConfirmed) {
-                form.submit();
-            }
+            if (!result.isConfirmed) return;
+
+            Swal.fire({ title: 'Archiving...', allowOutsideClick: false, didOpen: function() { Swal.showLoading(); } });
+
+            fetch(form.action, {
+                method: 'POST',
+                credentials: 'include',
+                headers: {
+                    'X-CSRF-TOKEN': form.querySelector('input[name=_token]').value,
+                    'X-Requested-With': 'XMLHttpRequest',
+                    'Accept': 'application/json'
+                },
+                body: new URLSearchParams(new FormData(form))
+            }).then(function(response) {
+                var ct = response.headers.get('content-type') || '';
+                if (ct.indexOf('application/json') !== -1) {
+                    return response.json().then(function(data) {
+                        Swal.fire(data.success ? 'success' : 'info', data.message || 'Nothing to archive.', data.success ? 'success' : 'info');
+                    });
+                }
+                var count = response.headers.get('X-Archived-Count') || '';
+                return response.blob().then(function(blob) {
+                    var url = URL.createObjectURL(blob);
+                    var a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'audit_logs_archive_' + new Date().toISOString().slice(0,10).replace(/-/g,'') + '.csv';
+                    document.body.appendChild(a);
+                    a.click();
+                    a.remove();
+                    URL.revokeObjectURL(url);
+                    Swal.fire('Archived!', 'Exported and deleted ' + count + ' old logs. The CSV archive is downloading now.', 'success');
+                });
+            }).catch(function() {
+                Swal.fire('Error', 'Something went wrong while archiving logs.', 'error');
+            });
         });
     });
 });

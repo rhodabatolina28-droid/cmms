@@ -49,8 +49,11 @@ class GetRequestsDataAction
         }
 
         // Division/Office filter
+        // NOTE: must be qualified as `requests.office` — officialsFirst() joins
+        // `users as official_users`, which also has an `office` column, making a
+        // bare `office` ambiguous (SQL 1052) whenever this filter is applied.
         if ($division = $request->input('division')) {
-            $query->where('office', $division);
+            $query->where('requests.office', $division);
         }
 
         // Status filter
