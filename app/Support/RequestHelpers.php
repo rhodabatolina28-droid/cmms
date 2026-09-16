@@ -340,14 +340,21 @@ class RequestHelpers
         
         // Division admin review: own division only
         // Supply admin (Administrative): can review any ticket in their branch
+        // D9.20: the System Admin reviews/rejects branch-wide — his panel is the
+        // reject path for tickets that arrive already auto-approved.
         $canReviewAsDivisionAdmin = false;
-        if ($ticket && $user->isDivisionAdmin() && !$ticket->division_admin_review_status) {
-            if ($user->canProcessSupply()) {
-                // Supply admin reviews all tickets in branch
-                $ticketUser = $ticket->user;
-                $canReviewAsDivisionAdmin = !$ticketUser || !$user->branch || $ticketUser->branch === $user->branch;
-            } else {
-                $canReviewAsDivisionAdmin = self::ticketInAdminScope($user, $ticket);
+        if ($ticket) {
+            if ($user->isSuperAdmin()) {
+                $canReviewAsDivisionAdmin = $ticket->status !== RequestModel::STATUS_COMPLETED
+                    && self::ticketInSuperAdminBranch($user, $ticket);
+            } elseif ($user->isDivisionAdmin() && !$ticket->division_admin_review_status) {
+                if ($user->canProcessSupply()) {
+                    // Supply admin reviews all tickets in branch
+                    $ticketUser = $ticket->user;
+                    $canReviewAsDivisionAdmin = !$ticketUser || !$user->branch || $ticketUser->branch === $user->branch;
+                } else {
+                    $canReviewAsDivisionAdmin = self::ticketInAdminScope($user, $ticket);
+                }
             }
         }
         $modelToCheck = $ticket ?: RequestModel::class;
@@ -367,6 +374,7 @@ class RequestHelpers
             'canEditEndUser' => $canEditEndUser,
             'canAssignIt' => $canAssignIt,
             'canReviewAsDivisionAdmin' => $canReviewAsDivisionAdmin,
+            'canReviewAsSystemAdmin' => $ticket && $user->isSuperAdmin(),
             'canSignAcceptance' => $canSignAcceptance,
             'acceptanceBlockReason' => ($user->role === 'user' && $ticket && $repair)
                 ? self::ictAcceptanceBlockReason($repair)

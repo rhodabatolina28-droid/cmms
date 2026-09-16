@@ -1,8 +1,10 @@
 @php
     /** Format a raw DB date/datetime to yyyy-MM-dd for HTML date inputs */
-    function fmtDate($val): string {
-        if (empty($val)) return '';
-        try { return \Carbon\Carbon::parse($val)->format('Y-m-d'); } catch (\Throwable $e) { return ''; }
+    if (!function_exists('fmtDate')) {
+        function fmtDate($val): string {
+            if (empty($val)) return '';
+            try { return \Carbon\Carbon::parse($val)->format('Y-m-d'); } catch (\Throwable $e) { return ''; }
+        }
     }
 @endphp
 
@@ -123,10 +125,14 @@
         @if(!empty($canReviewAsDivisionAdmin) && $isUpdate)
         <div id="divisionAdminReviewPanel" class="ict-div-review-panel">
             <div class="ict-div-review-label">
-                <i class="fa-solid fa-clipboard-check"></i> Division Admin Review
+                <i class="fa-solid fa-clipboard-check"></i> {{ $canReviewAsSystemAdmin ? 'System Admin Review' : 'Division Admin Review' }}
             </div>
             <p class="ict-div-review-text">
-                Please review this request from your division before it is forwarded to the System Admin (IT) for assignment.
+                @if($canReviewAsSystemAdmin)
+                    Review this request before IT assignment. Reject it if it should not proceed; otherwise assign IT personnel below.
+                @else
+                    Please review this request from your division before it is forwarded to the System Admin (IT) for assignment.
+                @endif
             </p>
             <div class="ict-div-review-body">
                 <textarea id="divisionAdminNotes" class="minimal-input ict-div-review-textarea" rows="2" placeholder="Optional notes or remarks regarding this request..."></textarea>
@@ -134,17 +140,19 @@
                     <button type="button" class="btn-secondary division-review-btn ict-div-review-btn-reject" data-status="Rejected">
                         <i class="fa-solid fa-xmark"></i> Reject
                     </button>
+                    @if(!$canReviewAsSystemAdmin)
                     <button type="button" class="btn-secondary division-review-btn ict-div-review-btn-approve" data-status="Approved">
                         <i class="fa-solid fa-check"></i> Approve & Forward
                     </button>
+                    @endif
                 </div>
             </div>
         </div>
         @endif
 
-        @if($isUpdate && $request->division_admin_review_status)
+        @if($isUpdate && $request->division_admin_review_status && ($request->division_admin_review_status === 'Rejected' || $request->reviewed_by_admin_id))
         <div class="ict-review-status-box">
-            <div class="ict-review-status-label">Division Admin Review Status</div>
+            <div class="ict-review-status-label">Review Status</div>
             <div class="ict-review-status-row">
                 @if($request->division_admin_review_status === 'Approved')
                     <span class="ict-review-approved"><i class="fa-solid fa-check-circle"></i> APPROVED</span>

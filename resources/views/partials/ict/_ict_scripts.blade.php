@@ -361,7 +361,7 @@
                         if (!url) return;
 
                         let confirmMessage = status === 'Approved' 
-                            ? 'Approve and forward this request to System Admin?' 
+                            ? 'Approve this request?' 
                             : 'Reject this request?';
 
                         Swal.fire({

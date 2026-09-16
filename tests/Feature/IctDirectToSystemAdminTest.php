@@ -313,4 +313,42 @@ class IctDirectToSystemAdminTest extends TestCase
             'type' => 'New ICT Repair for Review',
         ]);
     }
+
+    public function test_system_admin_sees_review_panel_with_reject_only_on_auto_approved_ticket(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $requestor = $this->user();
+        $repair = $this->repairRequest($requestor);
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9014', 'Approved', [
+            'status' => 'Pending',
+            'detail_id' => $repair->id,
+        ]);
+
+        $response = $this->actingAs($sa)->get(route('ict.show', $ticket->id));
+        $response->assertOk();
+        $response->assertSee('System Admin Review');
+        $response->assertSee('Review this request before IT assignment');
+        $response->assertSee('Reject');
+        $response->assertDontSee('Approve &amp; Forward', false);
+        // D9.20: auto-approve must not fake a human "APPROVED by Division Admin" stamp
+        $response->assertDontSee('<div class="ict-review-status-box">', false);
+    }
+
+    public function test_genuinely_reviewed_ticket_shows_its_review_status_box(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $requestor = $this->user();
+        $repair = $this->repairRequest($requestor);
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9015', 'Approved', [
+            'status' => 'Pending',
+            'detail_id' => $repair->id,
+            'reviewed_by_admin_id' => $sa->id,
+            'reviewed_at' => now(),
+        ]);
+
+        $response = $this->actingAs($sa)->get(route('ict.show', $ticket->id));
+        $response->assertOk();
+        $response->assertSee('Review Status');
+        $response->assertSee('APPROVED');
+    }
 }
