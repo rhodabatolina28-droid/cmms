@@ -35,6 +35,33 @@ class RequestNotificationService
         }
     }
 
+    /**
+     * D9.20: ICT requests are routed straight to the System Admin, who both
+     * reviews them and assigns IT. The "for Review" suffix keeps the email
+     * alert flowing (see Notification::booted()).
+     */
+    public static function notifySystemAdminOfNewIctRequest(RequestModel $request, User $requestor): void
+    {
+        $recipients = self::cascadeSuperAdminsForUser($requestor);
+
+        $requestorName = strtoupper($requestor->full_name ?? 'USER');
+        $officeLabel = strtoupper($request->office ?: ($requestor->office ?? 'No office'));
+        $message = "New ICT Repair from {$requestorName} ({$request->request_number}) — {$officeLabel}. Please review and assign IT personnel.";
+
+        foreach ($recipients as $recipient) {
+            if ((int) $recipient->id === (int) $requestor->id) {
+                continue;
+            }
+
+            \App\Models\Notification::send(
+                $recipient->id,
+                $request->id,
+                'New ICT Repair for Review',
+                $message
+            );
+        }
+    }
+
     public static function notifySuperAdminOfForwardedRequest(RequestModel $request, User $divisionAdmin): void
     {
         $recipients = self::cascadeSuperAdminsForUser($divisionAdmin);

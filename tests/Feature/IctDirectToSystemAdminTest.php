@@ -2,6 +2,8 @@
 
 namespace Tests\Feature;
 
+use App\Models\InventoryAsset;
+use App\Models\RepairRequest;
 use App\Models\Request as RequestModel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -33,9 +35,9 @@ class IctDirectToSystemAdminTest extends TestCase
         ], $attributes));
     }
 
-    private function ictTicket(User $requestor, string $number, ?string $reviewStatus = null): RequestModel
+    private function ictTicket(User $requestor, string $number, ?string $reviewStatus = null, array $extra = []): RequestModel
     {
-        return RequestModel::create([
+        return RequestModel::create(array_merge([
             'user_id' => $requestor->id,
             'request_number' => $number,
             'type' => 'ICT',
@@ -47,6 +49,35 @@ class IctDirectToSystemAdminTest extends TestCase
             'is_deleted' => false,
             'description' => 'D9.20 flow ticket ' . $number,
             'division_admin_review_status' => $reviewStatus,
+        ], $extra));
+    }
+
+    private function assetAssignedTo(User $user): InventoryAsset
+    {
+        $this->counter++;
+
+        return InventoryAsset::create([
+            'category' => 'Laptop',
+            'item_name' => 'D920 Laptop ' . $this->counter,
+            'serial_number' => 'D920-' . $this->counter,
+            'region' => $user->region,
+            'branch' => $user->branch,
+            'office' => $user->office,
+            'status' => 'Spare',
+            'assigned_to_user' => $user->id,
+        ]);
+    }
+
+    private function repairRequest(User $requestor): RepairRequest
+    {
+        return RepairRequest::create([
+            'end_user_last_name' => 'D920',
+            'end_user_first_name' => 'Tester',
+            'end_user_sex' => 'MALE',
+            'division_office' => $requestor->office,
+            'end_user_email' => $requestor->email,
+            'employee_no' => 'EMP-D920',
+            'repair_description' => 'D9.20 test repair description',
         ]);
     }
 
@@ -156,5 +187,80 @@ class IctDirectToSystemAdminTest extends TestCase
         $this->actingAs($requestor)
             ->postJson(route('ict.review', $ticket->id), ['status' => 'Approved'])
             ->assertStatus(403);
+    }
+
+    public function test_new_ict_request_is_auto_approved_and_notifies_system_admin(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $admin = $this->user(['role' => 'admin']);
+        $requestor = $this->user();
+        $asset = $this->assetAssignedTo($requestor);
+
+        $response = $this->actingAs($requestor)->postJson(route('ict.store'), [
+            'linked_asset_id' => $asset->asset_id,
+            'endUserLastName' => 'D920',
+            'endUserFirstName' => 'Tester',
+            'endUserSex' => 'MALE',
+            'divisionOffice' => $requestor->office,
+            'endUserEmail' => $requestor->email,
+            'employeeNo' => 'EMP-D920',
+            'repairDescription' => 'D9.20 test repair description',
+        ]);
+        $response->assertOk()->assertJson(['success' => true]);
+
+        $ticket = RequestModel::where('linked_asset_id', $asset->asset_id)->firstOrFail();
+
+        $this->assertSame('Approved', $ticket->division_admin_review_status, 'D9.20: new ICT tickets skip division review');
+        $this->assertNotNull($ticket->reviewed_at);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $sa->id,
+            'request_id' => $ticket->id,
+            'type' => 'New ICT Repair for Review',
+        ]);
+
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $admin->id,
+            'request_id' => $ticket->id,
+        ]);
+    }
+
+    public function test_resubmitted_ict_request_is_auto_approved_and_notifies_system_admin(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $requestor = $this->user();
+        $repair = $this->repairRequest($requestor);
+        $ticket = $this->ictTicket($requestor, 'REQ-NCR-RCMB-2026-9008', 'Rejected', [
+            'status' => 'Rejected',
+            'detail_id' => $repair->id,
+        ]);
+
+        $response = $this->actingAs($requestor)
+            ->putJson(route('ict.update', $ticket->id), ['repairDescription' => 'Updated details after rejection.']);
+        $response->assertOk()->assertJson(['success' => true]);
+
+        $ticket->refresh();
+        $this->assertSame('Approved', $ticket->division_admin_review_status, 'D9.20: resubmits go straight back to the System Admin');
+        $this->assertSame('Pending', $ticket->status);
+
+        $this->assertDatabaseHas('notifications', [
+            'user_id' => $sa->id,
+            'request_id' => $ticket->id,
+            'type' => 'New ICT Repair for Review',
+        ]);
+    }
+
+    public function test_new_ict_notification_never_goes_back_to_the_requestor(): void
+    {
+        $sa = $this->user(['role' => 'super_admin']);
+        $ticket = $this->ictTicket($sa, 'REQ-NCR-RCMB-2026-9009', 'Approved');
+
+        \App\Services\RequestNotificationService::notifySystemAdminOfNewIctRequest($ticket, $sa);
+
+        $this->assertDatabaseMissing('notifications', [
+            'user_id' => $sa->id,
+            'request_id' => $ticket->id,
+            'type' => 'New ICT Repair for Review',
+        ]);
     }
 }

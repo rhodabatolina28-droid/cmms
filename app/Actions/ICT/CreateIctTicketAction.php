@@ -95,6 +95,11 @@ class CreateIctTicketAction
                 'office' => $mappedData['division_office'] ?? '',
                 'status' => RequestModel::STATUS_PENDING,
                 'detail_id' => $repairRequest->id,
+
+                // D9.20: ICT requests go straight to the System Admin — the
+                // division admin approval step is gone (admins are view-only).
+                'division_admin_review_status' => 'Approved',
+                'reviewed_at' => now(),
                 'linked_asset_id' => $request->input('linked_asset_id'),
             ]);
 
@@ -111,7 +116,8 @@ class CreateIctTicketAction
             DB::commit();
 
             // Notify Specific Admins using the Cascading Logic
-            RequestNotificationService::notifyAdminsOfNewRequest($trackingRequest, $user, 'ICT Request');
+            // D9.20: the System Admin is now the reviewer — notify them directly.
+            RequestNotificationService::notifySystemAdminOfNewIctRequest($trackingRequest, $user);
 
             return response()->json([
                 'success' => true,

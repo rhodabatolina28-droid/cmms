@@ -60,14 +60,13 @@ class ResubmitIctTicketAction
 
             $repairRequest->update($mappedData);
 
-            // Reset ticket to Pending and clear division review
+            // Reset to Pending and auto-approve (D9.20: straight back to the System Admin)
             $trackingRequest->update([
                 'status' => RequestModel::STATUS_PENDING,
-                'division_admin_review_status' => null,
+                'division_admin_review_status' => 'Approved', // D9.20: auto-approved — straight to the System Admin
                 'division_admin_notes' => null,
                 'reviewed_by_admin_id' => null,
-                'reviewed_at' => null,
-                'remarks' => null,
+                'reviewed_at' => now(),
             ]);
 
             if ($request->filled('linked_asset_id')) {
@@ -81,12 +80,12 @@ class ResubmitIctTicketAction
             \App\Models\Notification::send(
                 $trackingRequest->user_id, $trackingRequest->id,
                 'Request Resubmitted',
-                "Your ICT Request {$trackingRequest->request_number} has been resubmitted and is now Pending review."
+                "Your ICT Request {$trackingRequest->request_number} has been resubmitted and is now pending assignment."
             );
 
-            // Re-notify division admins of the resubmitted request
-            RequestNotificationService::notifyAdminsOfNewRequest(
-                $trackingRequest, $user, RequestNotificationService::typeLabel($trackingRequest->type)
+            // D9.20: the System Admin is the reviewer — notify them directly.
+            RequestNotificationService::notifySystemAdminOfNewIctRequest(
+                $trackingRequest, $user
             );
 
             DB::commit();
