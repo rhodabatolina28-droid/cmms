@@ -463,39 +463,41 @@
                 </div>
             @endif
 
-            <div class="ribbon-label">Management Tools</div>
-            <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
-                <i class="fa-solid fa-list-check"></i> Manage Requests
-            </a>
-            @if(Auth::user()->canProcessSupply())
-                <a href="{{ route('inventory.index') }}" class="btn-action-premium mb-10">
-                    <i class="fa-solid fa-boxes-stacked"></i> Inventory & Assets
+            <div class="queue-panel">
+                <div class="ribbon-label">Management Tools</div>
+                <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
+                    <i class="fa-solid fa-list-check"></i> Manage Requests
                 </a>
-            @endif
-            <a href="{{ route('personnel.index') }}" class="btn-action-premium">
-                <i class="fa-solid fa-users-gear"></i> Manage Personnel
-            </a>
+                @if(Auth::user()->canProcessSupply())
+                    <a href="{{ route('inventory.index') }}" class="btn-action-premium mb-10">
+                        <i class="fa-solid fa-boxes-stacked"></i> Inventory & Assets
+                    </a>
+                @endif
+                <a href="{{ route('personnel.index') }}" class="btn-action-premium">
+                    <i class="fa-solid fa-users-gear"></i> Manage Personnel
+                </a>
 
-            @php
-                $dashboardUser = Auth::user();
-                $roleLabel = $dashboardUser->role === 'super_admin' ? 'System Admin'
-                    : ($dashboardUser->role === 'it' ? 'IT Personnel'
-                    : ($dashboardUser->canProcessSupply() ? 'Supply Admin' : 'Division Admin'));
-                $scopeLabel = $dashboardUser->department ? 'Department'
-                    : ($dashboardUser->office ? 'Office' : ($dashboardUser->branch ? 'Branch' : 'Scope'));
-                $scopeValue = $dashboardUser->department ?: $dashboardUser->office ?: $dashboardUser->branch ?: 'N/A';
-            @endphp
+                @php
+                    $dashboardUser = Auth::user();
+                    $roleLabel = $dashboardUser->role === 'super_admin' ? 'System Admin'
+                        : ($dashboardUser->role === 'it' ? 'IT Personnel'
+                        : ($dashboardUser->canProcessSupply() ? 'Supply Admin' : 'Division Admin'));
+                    $scopeLabel = $dashboardUser->department ? 'Department'
+                        : ($dashboardUser->office ? 'Office' : ($dashboardUser->branch ? 'Branch' : 'Scope'));
+                    $scopeValue = $dashboardUser->department ?: $dashboardUser->office ?: $dashboardUser->branch ?: 'N/A';
+                @endphp
 
-            <div class="section-label">Division Info</div>
-            <div class="info-box">
-                <div class="flex-sb-wrap">
-                    <div class="info-min">
-                        <span>System Role:</span><br>
-                        <strong class="text-dark">{{ $roleLabel }}</strong>
-                    </div>
-                    <div class="info-min">
-                        <span class="info-label">{{ $scopeLabel }}:</span><br>
-                        <strong class="text-dark">{{ $scopeValue }}</strong>
+                <div class="section-label" style="margin-top:16px;">Division Info</div>
+                <div class="info-box">
+                    <div class="flex-sb-wrap">
+                        <div class="info-min">
+                            <span>System Role:</span><br>
+                            <strong class="text-dark">{{ $roleLabel }}</strong>
+                        </div>
+                        <div class="info-min">
+                            <span class="info-label">{{ $scopeLabel }}:</span><br>
+                            <strong class="text-dark">{{ $scopeValue }}</strong>
+                        </div>
                     </div>
                 </div>
             </div>
