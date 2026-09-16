@@ -24,7 +24,7 @@ class ProfileController extends Controller
         $user->full_name = $request->full_name;
         $user->email     = $request->email;
         // D4a guardrail: position is NO LONGER editable here. It is set only by
-        // Super Admin (User Management) / Department Admin (Personnel Management).
+        // System Admin (User Management) / Department Admin (Personnel Management).
         // Otherwise any user could type "Director" and jump the IT queue.
 
         if ($request->filled('password')) {

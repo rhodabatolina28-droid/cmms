@@ -13,7 +13,7 @@ use Illuminate\Http\UploadedFile;
  *
  * Rules (user-decided):
  *  - pdf/jpg/jpeg/png only, max ~10MB (validated in UploadPrAttachmentRequest).
- *  - Allowed uploaders: PR owner, Supply Officer, Super Admin.
+ *  - Allowed uploaders: PR owner, Supply Officer, System Admin.
  *  - IMMUTABLE once the PR is delivered - no new uploads after delivery either.
  */
 class UploadPrAttachmentAction

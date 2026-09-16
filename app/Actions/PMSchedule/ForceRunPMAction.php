@@ -59,7 +59,7 @@ class ForceRunPMAction
                     AuditLog::log(
                         'Manual PM Generation Skipped',
                         'PM Schedule',
-                        "Super admin attempted to generate PM for '{$schedule->schedule_name}' but it is not yet due until {$nextDate}",
+                        "System admin attempted to generate PM for '{$schedule->schedule_name}' but it is not yet due until {$nextDate}",
                         $user->branch ?? 'System'
                     );
                     continue;
@@ -75,7 +75,7 @@ class ForceRunPMAction
                     AuditLog::log(
                         'Manual PM Generation Skipped',
                         'PM Schedule',
-                        "Super admin attempted to generate PM for '{$schedule->schedule_name}' but it is on cooldown until {$nextDate}",
+                        "System admin attempted to generate PM for '{$schedule->schedule_name}' but it is on cooldown until {$nextDate}",
                         $user->branch ?? 'System'
                     );
                     continue;
@@ -92,7 +92,7 @@ class ForceRunPMAction
                 AuditLog::log(
                     'Manual PM Generation',
                     'PM Schedule',
-                    "Super admin manually generated {$count} PM work order(s) for '{$schedule->schedule_name}' — Division: {$division}",
+                    "System admin manually generated {$count} PM work order(s) for '{$schedule->schedule_name}' — Division: {$division}",
                     $user->branch ?? 'System'
                 );
             }

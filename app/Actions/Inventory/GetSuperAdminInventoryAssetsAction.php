@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class GetSuperAdminInventoryAssetsAction
 {
     /**
-     * Super Admin — read-only asset data API.
+     * System Admin — read-only asset data API.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse

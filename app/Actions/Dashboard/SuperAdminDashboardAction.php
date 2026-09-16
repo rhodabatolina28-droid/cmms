@@ -12,7 +12,7 @@ use Illuminate\Support\Facades\DB;
 class SuperAdminDashboardAction
 {
     /**
-     * Build the Super Admin dashboard view.
+     * Build the System Admin dashboard view.
      *
      * @return \Illuminate\Contracts\View\View
      */
@@ -20,7 +20,7 @@ class SuperAdminDashboardAction
     {
         $user = Auth::user();
 
-        // Super Admin is office-scoped (branch level only)
+        // System Admin is office-scoped (branch level only)
         // They should see ALL requests/users in their branch, not filtered by division
         // 1. ALL requests (for service distribution)
         $allRequests = RequestModel::query()

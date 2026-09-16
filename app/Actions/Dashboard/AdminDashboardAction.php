@@ -48,7 +48,7 @@ class AdminDashboardAction
                 }
             });
         } else {
-            // Super Admin: All requests (ICT + PM)
+            // System Admin: All requests (ICT + PM)
             $requestsQuery = RequestModel::whereHas('user', function($q) use ($user) {
                 if ($user->branch) {
                     $q->where('branch', $user->branch);

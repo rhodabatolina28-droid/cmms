@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class CreateRequisitionForTicketAction
 {
     /**
-     * Redirect IT/Super Admin to the requisition form for a ticket.
+     * Redirect IT/System Admin to the requisition form for a ticket.
      *
      * @param  int  $requestId
      * @return \Illuminate\Http\RedirectResponse
@@ -19,7 +19,7 @@ class CreateRequisitionForTicketAction
     {
         $user = Auth::user();
 
-        // IT or Super Admin acting as IT (assigned to ticket) can request parts
+        // IT or System Admin acting as IT (assigned to ticket) can request parts
         abort_unless(in_array($user->role, ['it', 'super_admin']), 403);
 
         $ticket = RequestModel::findOrFail($requestId);

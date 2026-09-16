@@ -1,4 +1,4 @@
-﻿<!-- EDIT USER MODAL -->
+<!-- EDIT USER MODAL -->
 <div class="modal-overlay" id="editUserModal">
     <div class="modal-card">
         <div class="modal-header">
@@ -37,7 +37,7 @@
                             <option value="admin">Division Admin</option>
                             <option value="supply_officer">Supply Officer (Administrative Div.)</option>
                             <option value="it">IT Personnel</option>
-                            <option value="super_admin">Super Admin</option>
+                            <option value="super_admin">System Admin</option>
                         </select>
                         <p class="form-help">Supply Officer role is restricted to Administrative Division only.</p>
                     </div>
@@ -123,7 +123,7 @@
                         <option value="admin">Division Admin</option>
                         <option value="supply_officer">Supply Officer / Admin (Administrative Div.)</option>
                         <option value="it">IT Personnel</option>
-                        <option value="super_admin">Super Admin</option>
+                        <option value="super_admin">System Admin</option>
                     </select>
                 </div>
 

@@ -12,7 +12,7 @@ class StoreUserAction
 {
     /**
      * Store a newly created user.
-     * Super Admin must explicitly assign office/division — no auto-fill from actor scope.
+     * System Admin must explicitly assign office/division — no auto-fill from actor scope.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Http\JsonResponse
@@ -32,7 +32,7 @@ class StoreUserAction
             $validated['can_supply'] = $request->boolean('can_supply');
         }
 
-        // Always inherit region and branch from the creating super admin
+        // Always inherit region and branch from the creating system admin
         $validated['region'] = Auth::user()->region;
         $validated['branch'] = Auth::user()->branch;
 

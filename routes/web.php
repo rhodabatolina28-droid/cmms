@@ -42,7 +42,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         ->middleware('role:admin')
         ->name('dashboard.admin');
 
-    // Super Admin Dashboard
+    // System Admin Dashboard
     Route::get('/dashboard/super-admin', [DashboardController::class, 'superAdminDashboard'])
         ->middleware('role:super_admin')
         ->name('dashboard.super-admin');
@@ -79,7 +79,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         Route::get('/requests/ict/{id}/disposal-tag', [ICTRequestController::class, 'disposalTag'])->name('ict.disposal-tag');
     });
 
-    // ICT Destroy & Review — Super Admin only (moved outside permissive group for early rejection)
+    // ICT Destroy & Review — System Admin only (moved outside permissive group for early rejection)
     Route::delete('/requests/ict/{id}', [ICTRequestController::class, 'destroy'])->name('ict.destroy')->middleware('role:super_admin', 'throttle:30,1');
     Route::post('/requests/ict/{id}/review', [ICTRequestController::class, 'review'])->name('ict.review')->middleware('role:admin', 'throttle:30,1');
 
@@ -110,7 +110,7 @@ Route::post('/requests/maintenance/{id}/repair-recommendation', [MaintenanceCont
         ->name('maintenance.start');
 
 
-    // Phase 3 — Parts requisitions (IT or Super Admin acting as IT → Supply)
+    // Phase 3 — Parts requisitions (IT or System Admin acting as IT → Supply)
     Route::get('/requests/ict/{id}/requisition', [RequisitionController::class, 'createForTicket'])
         ->middleware('role:it,super_admin')
         ->name('requisitions.create');
@@ -164,7 +164,7 @@ Route::post('/requests/maintenance/{id}/repair-recommendation', [MaintenanceCont
 
     // ==========================================
     // PURCHASE REQUESTS — PR DOCUMENT FLOW (revised 2026-08-25)
-    // Supply Officer / Super Admin / IT — controller gates per action.
+    // Supply Officer / System Admin / IT — controller gates per action.
     // Flow: form submit (submitted) -> Supply finalize -> print -> outside.
     // ==========================================
     Route::get('/purchase-requests/create', [PurchaseRequestController::class, 'createForm'])->name('purchase_requests.create')->middleware('throttle:30,1');
@@ -183,7 +183,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
     Route::delete('/pr-attachments/{attachment}', [PurchaseRequestController::class, 'deleteAttachment'])->name('purchase_requests.attachments.destroy');
 
     // ==========================================
-    // ADMIN, SUPER ADMIN & SUPPLY — INVENTORY
+    // ADMIN, SYSTEM ADMIN & SUPPLY — INVENTORY
     // ==========================================
     Route::middleware('role:admin')->group(function () {
         Route::get('/inventory/data', [InventoryController::class, 'getAssets'])->name('inventory.data');
@@ -251,7 +251,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
         ->middleware('role:admin,super_admin')
         ->name('inventory.reports');
 
-    // ADMIN & SUPER ADMIN ONLY ROUTES
+    // ADMIN & SYSTEM ADMIN ONLY ROUTES
     // ==========================================
     Route::middleware('role:admin,super_admin')->group(function () {
         // Personnel Management
@@ -283,7 +283,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
     Route::get('/survey/{requestId}', [CsmController::class, 'create'])->middleware('role:user')->name('csm.create');
     Route::post('/survey', [CsmController::class, 'store'])->middleware('role:user', 'throttle:10,1')->name('csm.store');
     
-    // PM Schedules - Super Admin ONLY
+    // PM Schedules - System Admin ONLY
     Route::middleware('role:super_admin')->group(function () {
         Route::get('/pm-schedules', [PMScheduleController::class, 'index'])->name('pm-schedules.index');
         // Create PM Schedule route removed — calendar "Add" button is now the single entry point
@@ -307,7 +307,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
         Route::post('/pm-schedules/advance', [PMScheduleController::class, 'advanceCycle'])->name('pm-schedules.advance');
         Route::delete('/pm-schedules', [PMScheduleController::class, 'destroyAll'])->name('pm-schedules.destroy-all')->middleware('throttle:10,1');
 
-        // Calendar & PM Generation Schedule (Super Admin)
+        // Calendar & PM Generation Schedule (System Admin)
         Route::get('/pm-schedules/calendar', [PMScheduleController::class, 'calendar'])->name('pm-schedules.calendar');
         Route::get('/pm-schedules/calendar/events', [PMScheduleController::class, 'calendarEvents'])->name('pm-schedules.calendar.events');
         Route::post('/pm-schedules/{pm_schedule}/schedule-later', [PMScheduleController::class, 'scheduleLater'])->name('pm-schedules.schedule-later')->middleware('throttle:30,1');
@@ -315,20 +315,20 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
         Route::post('/pm-generation-schedules/{pmGenerationSchedule}/cancel', [PMScheduleController::class, 'cancelPMGeneration'])->name('pm-generation-schedules.cancel')->middleware('throttle:30,1');
     });
 
-    // PM Tasks - IT and Super Admin can view
+    // PM Tasks - IT and System Admin can view
     Route::get('/maintenance/pm-tasks', [MaintenanceController::class, 'pmTasks'])->name('pm.tasks')->middleware('role:it,super_admin');
 
-    // PM Schedule IT Assignment — both IT and Super Admin can assign
+    // PM Schedule IT Assignment — both IT and System Admin can assign
     Route::post('/pm-schedules/{pm_schedule}/assign-it', [PMScheduleController::class, 'assignIt'])
         ->name('pm-schedules.assign-it')
         ->where('pm_schedule', '[0-9]+')
         ->middleware('role:it,super_admin', 'throttle:30,1');
 
-    // Maintenance Calendar - IT and Super Admin can view
+    // Maintenance Calendar - IT and System Admin can view
     Route::get('/maintenance/calendar', [MaintenanceController::class, 'calendar'])->name('maintenance.calendar')->middleware('role:it,super_admin');
     Route::get('/maintenance/calendar/events', [MaintenanceController::class, 'calendarEvents'])->name('maintenance.calendar.events')->middleware('role:it,super_admin');
 
-    // Super Admin Specific Routes
+    // System Admin Specific Routes
     Route::middleware('role:super_admin')->prefix('super-admin')->group(function () {
         Route::get('/users', [SuperAdminController::class, 'users'])->name('super_admin.users');
         Route::get('/users/data', [SuperAdminController::class, 'usersData'])->name('super_admin.users.data');
@@ -342,7 +342,7 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
         Route::get('/audit-logs/data', [SuperAdminController::class, 'auditLogsData'])->name('super_admin.audit_logs.data');
         Route::post('/audit-logs/archive', [SuperAdminController::class, 'archiveLogs'])->name('super_admin.audit_logs.archive')->middleware('throttle:10,1');
 
-        // Super Admin — READ-ONLY inventory oversight (no write access)
+        // System Admin — READ-ONLY inventory oversight (no write access)
         Route::get('/inventory', [InventoryController::class, 'superAdminIndex'])->name('super_admin.inventory');
         Route::get('/inventory/data', [InventoryController::class, 'superAdminGetAssets'])->name('super_admin.inventory.data');
         // Static routes BEFORE parameterized routes to avoid {assetId} catching "attachments"
@@ -351,16 +351,16 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
         Route::get('/inventory/{assetId}/history', [InventoryController::class, 'getHistory'])->name('super_admin.inventory.history');
         Route::get('/inventory/{assetId}/detail', [InventoryController::class, 'superAdminDetail'])->name('super_admin.inventory.detail');
         Route::get('/inventory/export', [InventoryController::class, 'export'])->name('super_admin.inventory.export');
-        // Super Admin disposal view removed — simplified flow handled by supply officer via confirm-scrapped
+        // System Admin disposal view removed — simplified flow handled by supply officer via confirm-scrapped
 
-        // Super Admin — READ-ONLY parts & consumables stock
+        // System Admin — READ-ONLY parts & consumables stock
         Route::get('/parts', [PartsStockController::class, 'superAdminIndex'])->name('super_admin.parts');
         Route::get('/parts/data', [PartsStockController::class, 'data'])->name('super_admin.parts.data');
         Route::get('/parts/export', [PartsStockController::class, 'export'])->name('super_admin.parts.export');
         Route::get('/parts/{part}/movements', [PartsStockController::class, 'movements'])->name('super_admin.parts.movements');
         Route::get('/parts/{part}/units', [PartsStockController::class, 'units'])->name('super_admin.parts.units');
 
-        // Super Admin — purchase requests history lives in Supply Workspace TAB 3
+        // System Admin — purchase requests history lives in Supply Workspace TAB 3
         // (requisitions.index?view=purchase-requests); document views remain at
         // /purchase-requests/{id}. No separate SA index route.
     });

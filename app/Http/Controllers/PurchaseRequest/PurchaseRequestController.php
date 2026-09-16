@@ -155,7 +155,7 @@ class PurchaseRequestController extends Controller
 
     /**
      * Authorization: who may edit a submitted PR document.
-     * Supply Officer / Super Admin — any submitted PR.
+     * Supply Officer / System Admin — any submitted PR.
      * IT — only their own. Finalized documents are locked for everyone.
      */
     private function canEdit(User $user, PurchaseRequest $pr): bool

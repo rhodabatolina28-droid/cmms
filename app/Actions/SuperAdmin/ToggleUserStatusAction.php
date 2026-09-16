@@ -21,7 +21,7 @@ class ToggleUserStatusAction
         $user = User::findOrFail($id);
         $this->abortIfOutsideOfficeScope($user);
 
-        // Prevent super admin from disabling their own account
+        // Prevent system admin from disabling their own account
         if ($user->id === Auth::id()) {
             return response()->json(['success' => false, 'message' => 'You cannot disable your own account'], 403);
         }
@@ -55,17 +55,17 @@ class ToggleUserStatusAction
     {
         $actor = Auth::user();
 
-        // Super Admin is region-scoped (prevents cross-region data leaks)
+        // System Admin is region-scoped (prevents cross-region data leaks)
         if ($actor->region && $user->region !== $actor->region) {
             abort(403, 'This user is outside your region scope.');
         }
 
-        // Super Admin is office-scoped (branch level only)
+        // System Admin is office-scoped (branch level only)
         if ($actor->branch && $user->branch !== $actor->branch) {
             abort(403, 'This user is outside your branch scope.');
         }
 
-        // Super Admin manages entire branch - no division check needed
+        // System Admin manages entire branch - no division check needed
     }
 
     /**

@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class PMNotificationService
 {
     /**
-     * Notify IT staff and Super Admins about a scheduled PM.
+     * Notify IT staff and System Admins about a scheduled PM.
      * Automatically filters by branch based on the PM request's branch.
      */
     public static function notifyITStaff(string $requestNumber, string $type, string $message)
@@ -21,7 +21,7 @@ class PMNotificationService
             $request = RequestModel::where('request_number', $requestNumber)->first();
             $branch = $request?->branch;
 
-            // Build query for IT staff and super admins only
+            // Build query for IT staff and system admins only
             $query = User::whereIn('role', ['super_admin', 'it'])
                 ->whereNotNull('email');
 
@@ -94,7 +94,7 @@ class PMNotificationService
     }
 
     /**
-     * Notify IT staff and Super Admin about a batch generation.
+     * Notify IT staff and System Admin about a batch generation.
      */
     public static function notifyITStaffOfBatch(string $division, int $count, string $branch = null)
     {

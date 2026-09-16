@@ -30,7 +30,7 @@ class ListRequisitionsAction
             return $this->itIndex($user, $httpRequest);
         }
 
-        // Super Admin: if they have active assigned tickets, show IT-style view
+        // System Admin: if they have active assigned tickets, show IT-style view
         // so they can manage parts requests for tickets they are handling
         if ($user->role === 'super_admin') {
             return $this->superAdminRequisitionIndex($user, $httpRequest);
@@ -274,12 +274,12 @@ class ListRequisitionsAction
     }
 
     /**
-     * Super Admin requisition view — shows tickets they are assigned to (acting as IT)
+     * System Admin requisition view — shows tickets they are assigned to (acting as IT)
      * and their submitted parts requests.
      */
     private function superAdminRequisitionIndex(User $superAdmin, Request $httpRequest)
     {
-        // Active ICT tickets where Super Admin is the assigned personnel
+        // Active ICT tickets where System Admin is the assigned personnel
         $activeTickets = RequestModel::with(['user', 'linkedAsset.assignedUser'])
             ->where('assigned_to', $superAdmin->id)
             ->where(function ($q) {

@@ -29,7 +29,7 @@ class PersonnelController extends Controller
                 $query->where('office', $user->office);
             }
         } elseif ($user->role === 'super_admin') {
-            // Super Admin: branch-wide, never filter by office/division
+            // System Admin: branch-wide, never filter by office/division
             if ($user->branch) {
                 $query->where('branch', $user->branch);
             }
@@ -91,7 +91,7 @@ class PersonnelController extends Controller
                 return response()->json(['error' => 'Unauthorized'], 403);
             }
         } elseif ($actor->role === 'super_admin') {
-            // Super Admin: branch-wide, no office restriction
+            // System Admin: branch-wide, no office restriction
             if ($actor->branch && $user->branch !== $actor->branch) {
                 return response()->json(['error' => 'Unauthorized'], 403);
             }

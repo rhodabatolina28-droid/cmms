@@ -24,9 +24,9 @@ class StoreRequisitionAction
     {
         $user = Auth::user();
 
-        // IT or Super Admin acting as IT can request parts
+        // IT or System Admin acting as IT can request parts
         if (!in_array($user->role, ['it', 'super_admin'])) {
-            return response()->json(['success' => false, 'message' => 'Only IT personnel or Super Admin (acting as IT) can request parts.'], 403);
+            return response()->json(['success' => false, 'message' => 'Only IT personnel or System Admin (acting as IT) can request parts.'], 403);
         }
 
         $ticket = RequestModel::findOrFail($requestId);

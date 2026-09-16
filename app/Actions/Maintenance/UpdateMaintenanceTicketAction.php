@@ -202,7 +202,7 @@ class UpdateMaintenanceTicketAction
                     \App\Models\AuditLog::log(
                         'Assigned PM Request',
                         'Requests',
-                        "Auto-assigned {$trackingRequest->request_number} to " . ($user->role === 'super_admin' ? 'Super Admin' : 'IT') . " user #{$user->id} upon form submission",
+                        "Auto-assigned {$trackingRequest->request_number} to " . ($user->role === 'super_admin' ? 'System Admin' : 'IT') . " user #{$user->id} upon form submission",
                         $trackingRequest->office
                     );
                 }

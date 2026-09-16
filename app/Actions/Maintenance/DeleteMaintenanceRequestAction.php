@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\DB;
 class DeleteMaintenanceRequestAction
 {
     /**
-     * Delete a PM request (Super Admin only).
+     * Delete a PM request (System Admin only).
      *
      * @param  int  $id
      * @return \Illuminate\Http\JsonResponse
@@ -20,7 +20,7 @@ class DeleteMaintenanceRequestAction
     {
         $user = Auth::user();
         if ($user->role !== 'super_admin') {
-            return response()->json(['success' => false, 'message' => 'Unauthorized. Only Super Admins can delete requests.'], 403);
+            return response()->json(['success' => false, 'message' => 'Unauthorized. Only System Admins can delete requests.'], 403);
         }
 
         try {

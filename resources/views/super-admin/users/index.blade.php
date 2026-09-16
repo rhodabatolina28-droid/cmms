@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'User Management | Super Admin')
+@section('title', 'User Management | System Admin')
 @section('page-title', 'User Management')
 
 @section('styles')
@@ -486,7 +486,7 @@
                     <option value="admin">Division Admin</option>
                     <option value="supply_officer">Supply Officer</option>
                     <option value="it">IT Personnel</option>
-                    <option value="super_admin">Super Admin</option>
+                    <option value="super_admin">System Admin</option>
                 </select>
 
                 <select id="filterStatus" class="ribbon-input w-120">

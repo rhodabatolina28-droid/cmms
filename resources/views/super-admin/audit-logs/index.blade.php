@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'System Audit Logs | Super Admin')
+@section('title', 'System Audit Logs | System Admin')
 @section('page-title', 'Audit Logs')
 
 @section('styles')

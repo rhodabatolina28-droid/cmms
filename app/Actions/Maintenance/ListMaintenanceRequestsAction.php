@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Auth;
 class ListMaintenanceRequestsAction
 {
     /**
-     * List PM requests (non-scheduled) for IT/Super Admin.
+     * List PM requests (non-scheduled) for IT/System Admin.
      *
      * @param  \Illuminate\Http\Request  $request
      * @return \Illuminate\Contracts\View\View|\Illuminate\Http\JsonResponse
@@ -19,7 +19,7 @@ class ListMaintenanceRequestsAction
         $user = Auth::user();
 
         if ($user->role === 'user' || $user->role === 'admin' || $user->role === 'supply_officer') {
-            abort(403, 'Preventive Maintenance requests are managed by IT personnel and Super Admin only.');
+            abort(403, 'Preventive Maintenance requests are managed by IT personnel and System Admin only.');
         }
 
         $query = RequestModel::with(['user', 'maintenanceRequest', 'assignedTo'])

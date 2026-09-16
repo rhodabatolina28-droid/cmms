@@ -14,7 +14,7 @@ class ListPurchaseRequestsAction
      * Scoping:
      *  - Supply Officer: all PRs in their region/branch (requisition-linked via
      *    the ticket, standalone via the document creator's org).
-     *  - Super Admin: everything (branch-wide view, no narrowing here).
+     *  - System Admin: everything (branch-wide view, no narrowing here).
      *  - IT: only their own requests (requested_by or created_by).
      *
      * @param  User  $user
@@ -71,7 +71,7 @@ class ListPurchaseRequestsAction
 
     private function applyOrgScope($query, User $user): void
     {
-        // Supply officers (and Super Admin) run the procurement desk: they must
+        // Supply officers (and System Admin) run the procurement desk: they must
         // see every PR they have to finalize/receive. Narrowing by the linked
         // ticket's region/branch hid real PRs — auto-generated PM tickets
         // historically carried no region (and sometimes no branch), and PRs

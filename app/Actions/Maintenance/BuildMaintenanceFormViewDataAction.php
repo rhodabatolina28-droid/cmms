@@ -42,7 +42,7 @@ class BuildMaintenanceFormViewDataAction
 
         $endUser = User::find($requestorId);
 
-        // Parts requisition context: assigned IT/Super Admin can request parts
+        // Parts requisition context: assigned IT/System Admin can request parts
         // for a PM ticket once a repair asset is linked (FOR REPAIR selection).
         $ticketRequisitions = collect();
         $canRequestPartsOnTicket = false;

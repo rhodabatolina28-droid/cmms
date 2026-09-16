@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Master System Requests | Super Admin')
+@section('title', 'Master System Requests | System Admin')
 @section('page-title', 'Master List of Requests')
 
 @section('styles')

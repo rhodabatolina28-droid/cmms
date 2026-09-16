@@ -83,7 +83,7 @@ class SuperAdminController extends Controller
 
     /**
      * Store a newly created user.
-     * Super Admin must explicitly assign office/division — no auto-fill from actor scope.
+     * System Admin must explicitly assign office/division — no auto-fill from actor scope.
      */
     public function storeUser(StoreSuperAdminUserRequest $request)
     {
@@ -161,16 +161,16 @@ class SuperAdminController extends Controller
     {
         $actor = Auth::user();
 
-        // Super Admin is region-scoped (prevents cross-region data leaks)
+        // System Admin is region-scoped (prevents cross-region data leaks)
         if ($actor->region && $user->region !== $actor->region) {
             abort(403, 'This user is outside your region scope.');
         }
 
-        // Super Admin is office-scoped (branch level only)
+        // System Admin is office-scoped (branch level only)
         if ($actor->branch && $user->branch !== $actor->branch) {
             abort(403, 'This user is outside your branch scope.');
         }
 
-        // Super Admin manages entire branch - no division check needed
+        // System Admin manages entire branch - no division check needed
     }
 }

@@ -11,7 +11,7 @@
  *  - Official list: ED IV · Deputy ED IV (OIC variants) · Director II
  *    (Technical/Internal Services) · Chief/OIC Chief of CMD · WRED · VAD ·
  *    OED · AD · FMD · RID · State Auditor III (COA — INCLUDED per user).
- *  - Guardrail: position is editable ONLY by Super Admin (User Management)
+ *  - Guardrail: position is editable ONLY by System Admin (User Management)
  *    and Department Admin (Personnel Management). Self-service profile is
  *    read-only for position — self-inflation must be impossible.
  */

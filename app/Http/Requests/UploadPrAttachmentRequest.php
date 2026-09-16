@@ -10,7 +10,7 @@ use Illuminate\Foundation\Http\FormRequest;
  */
 class UploadPrAttachmentRequest extends FormRequest
 {
-    // Authorization (owner / supply / super admin, pre-delivery) is handled
+    // Authorization (owner / supply / system admin, pre-delivery) is handled
     // inside UploadPrAttachmentAction::canUpload().
     public function authorize(): bool
     {

@@ -19,7 +19,7 @@ return [
     ],
 
     'labels' => [
-        'super_admin'    => 'Super Admin (IT)',
+        'super_admin'    => 'System Admin (RID)',
         'admin'          => 'Division Admin',
         'supply_officer' => 'Supply Officer / Admin (Administrative Div.)',
         'it'             => 'IT Personnel',

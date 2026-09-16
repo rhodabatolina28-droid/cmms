@@ -19,7 +19,7 @@ class GetUsersDataAction
         $actor = Auth::user();
 
         // ── 1) Unfiltered stats (single query with conditional counts) ──
-        // Super Admin is scoped by region AND branch to prevent cross-region data leaks.
+        // System Admin is scoped by region AND branch to prevent cross-region data leaks.
         $baseQuery = User::query()
             ->when($actor->region, fn ($q) => $q->where('region', $actor->region))
             ->when($actor->branch, fn ($q) => $q->where('branch', $actor->branch));

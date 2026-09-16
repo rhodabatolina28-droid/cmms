@@ -19,9 +19,9 @@ class DownloadDisposalTagAction
     {
         $user = Auth::user();
 
-        // Only IT and Super Admin can access the disposal tag
+        // Only IT and System Admin can access the disposal tag
         if (!in_array($user->role, ['it', 'super_admin'])) {
-            abort(403, 'Only IT personnel and Super Admin can access the disposal tag.');
+            abort(403, 'Only IT personnel and System Admin can access the disposal tag.');
         }
 
         $trackingRequest = RequestModel::with(['linkedAsset', 'user'])->findOrFail($id);

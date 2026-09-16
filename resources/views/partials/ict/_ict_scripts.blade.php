@@ -214,7 +214,7 @@
                 });
             });
 
-            // Super Admin self-assign via dropdown
+            // System Admin self-assign via dropdown
             const assignItSelect = document.getElementById('assignItSelect');
             const currentUserId = '{{ Auth::user()->id }}';
             
@@ -224,7 +224,7 @@
                     const isSelfAssigned = assignItSelect.value === currentUserId;
                     
                     // Only the assigned IT/Admin personnel can edit Section 5
-                    // Super Admin must assign themselves first before they can edit
+                    // System Admin must assign themselves first before they can edit
                     if (isSelfAssigned) {
                         // Enable IT section when self-assigned
                         itSection.classList.remove('disabled-section');
@@ -361,7 +361,7 @@
                         if (!url) return;
 
                         let confirmMessage = status === 'Approved' 
-                            ? 'Approve and forward this request to Super Admin?' 
+                            ? 'Approve and forward this request to System Admin?' 
                             : 'Reject this request?';
 
                         Swal.fire({

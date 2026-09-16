@@ -31,7 +31,7 @@ class UserPolicy
     }
 
     /**
-     * Determine if the user is a super admin.
+     * Determine if the user is a system admin.
      */
     public function isSuperAdmin(User $user): bool
     {

@@ -103,7 +103,7 @@ class ICTRequestController extends Controller
     {
         $user = \Illuminate\Support\Facades\Auth::user();
         if (!in_array($user->role, ['it', 'super_admin'])) {
-            abort(403, 'Only IT personnel and Super Admin can access the disposal tag.');
+            abort(403, 'Only IT personnel and System Admin can access the disposal tag.');
         }
 
         $trackingRequest = \App\Models\Request::with(['linkedAsset', 'user'])->findOrFail($id);

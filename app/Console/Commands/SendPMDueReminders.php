@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Log;
 class SendPMDueReminders extends Command
 {
     protected $signature   = 'pm:send-reminders';
-    protected $description = 'Send weekly pending PM summary to IT staff and Super Admin per branch';
+    protected $description = 'Send weekly pending PM summary to IT staff and System Admin per branch';
 
     public function handle(): int
     {
@@ -102,7 +102,7 @@ class SendPMDueReminders extends Command
         $summaryMessage .= "\n\nTOTAL: {$totalPending} pending / {$totalCompleted} completed\n";
         $summaryMessage .= "\nPlease log in to your CMMS dashboard to conduct the remaining PMs.";
 
-        // Notify IT staff and Super Admins in this branch only
+        // Notify IT staff and System Admins in this branch only
         $staff = User::whereIn('role', ['super_admin', 'it'])
             ->where('is_active', true)
             ->whereNotNull('email')
@@ -110,7 +110,7 @@ class SendPMDueReminders extends Command
             ->get();
 
         if ($staff->isEmpty()) {
-            $this->info("  [{$branchLabel}] No IT staff or Super Admin found — skipping.");
+            $this->info("  [{$branchLabel}] No IT staff or System Admin found — skipping.");
             return 0;
         }
 

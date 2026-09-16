@@ -115,7 +115,7 @@
                 <i class="fa-solid fa-user-gear"></i> Assign IT Personnel (PM)
             </div>
             <p class="assign-panel-text">
-                Super Admin: Assign IT to perform preventive maintenance work.
+                System Admin: Assign IT to perform preventive maintenance work.
             </p>
             <div class="assign-flex">
                 <select id="assignItSelect" class="assign-select">

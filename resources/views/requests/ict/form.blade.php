@@ -86,7 +86,7 @@
                         <i class="fa-solid fa-user-gear"></i> Assign IT Personnel
                     </div>
                     <p class="ict-assign-text">
-                        Super Admin: Select IT staff to perform technical work on this ticket.
+                        System Admin: Select IT staff to perform technical work on this ticket.
                     </p>
                     <select id="assignItSelect" class="minimal-input ict-assign-select">
                         <option value="">— Unassigned —</option>
@@ -126,7 +126,7 @@
                 <i class="fa-solid fa-clipboard-check"></i> Division Admin Review
             </div>
             <p class="ict-div-review-text">
-                Please review this request from your division before it is forwarded to the Super Admin (IT) for assignment.
+                Please review this request from your division before it is forwarded to the System Admin (IT) for assignment.
             </p>
             <div class="ict-div-review-body">
                 <textarea id="divisionAdminNotes" class="minimal-input ict-div-review-textarea" rows="2" placeholder="Optional notes or remarks regarding this request..."></textarea>
@@ -396,7 +396,7 @@
                     </a>
                 @endif
 
-                {{-- Print Disposal Tag: IT and Super Admin only when asset is For Disposal --}}
+                {{-- Print Disposal Tag: IT and System Admin only when asset is For Disposal --}}
                 @if($isUpdate && $request->linkedAsset && $request->linkedAsset->status === 'For Disposal' && in_array(Auth::user()->role, ['it', 'super_admin']))
                     <a href="{{ route('ict.disposal-tag', $request->id) }}" target="_blank" class="btn-secondary ict-btn-disposal">
                         <i class="fa-solid fa-tag"></i> Print Disposal Tag

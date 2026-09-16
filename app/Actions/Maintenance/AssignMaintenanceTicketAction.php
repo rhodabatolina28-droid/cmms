@@ -36,15 +36,15 @@ class AssignMaintenanceTicketAction
 
         $itId = $validated['assigned_to'] ?? null;
 
-        // Super Admin can assign himself if no IT available or IT not present
+        // System Admin can assign himself if no IT available or IT not present
         if ($itId) {
             $itUser = User::findOrFail($itId);
 
-            // Allow Super Admin to assign himself
+            // Allow System Admin to assign himself
             if ((int) $itId === (int) $admin->id) {
-                // Super Admin assigning himself - allowed
+                // System Admin assigning himself - allowed
                 if ($admin->role !== 'super_admin') {
-                    return response()->json(['success' => false, 'message' => 'Only Super Admin can assign themselves.'], 422);
+                    return response()->json(['success' => false, 'message' => 'Only System Admin can assign themselves.'], 422);
                 }
             } else {
                 // Assigning someone else - check if IT role and in scope
@@ -72,7 +72,7 @@ class AssignMaintenanceTicketAction
             AuditLog::log(
                 'Assigned PM Request',
                 'Requests',
-                "Assigned {$trackingRequest->request_number} to " . ($itUser->role === 'super_admin' ? 'Super Admin' : 'IT') . " user #{$itId}",
+                "Assigned {$trackingRequest->request_number} to " . ($itUser->role === 'super_admin' ? 'System Admin' : 'IT') . " user #{$itId}",
                 $trackingRequest->office
             );
         } elseif (!$itId && $previousId) {

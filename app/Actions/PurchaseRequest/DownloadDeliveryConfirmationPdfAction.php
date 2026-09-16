@@ -14,7 +14,7 @@ class DownloadDeliveryConfirmationPdfAction
      * request: document header, received items with per-piece serial /
      * property numbers and destinations,
      * and signature lines. Available to the same audience as the view-only
-     * delivery record (owner, Supply Officer, Super Admin).
+     * delivery record (owner, Supply Officer, System Admin).
      */
     public function download(PurchaseRequest $purchaseRequest, User $user)
     {

@@ -1,4 +1,4 @@
-﻿/* mobile-responsive/_phone-portrait.css — Phone portrait styles, grid stacks, topbar, modals, notifications */
+/* mobile-responsive/_phone-portrait.css — Phone portrait styles, grid stacks, topbar, modals, notifications */
 
 /* PHONE PORTRAIT STYLING AND GRID STACKS */
 @media screen and (max-width: 767px) {
@@ -1457,7 +1457,7 @@
         }
     }
 
-    /* MODAL DYNAMIC GRID AND LAYOUT STACKS (ADMIN / SUPER ADMIN CREATION FORMS) */
+    /* MODAL DYNAMIC GRID AND LAYOUT STACKS (ADMIN / SYSTEM ADMIN CREATION FORMS) */
     .modal-card div[style*="display: grid"],
     .modal-card div[style*="display:grid"] {
         grid-template-columns: 1fr !important;

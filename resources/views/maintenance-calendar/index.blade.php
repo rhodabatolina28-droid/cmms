@@ -54,7 +54,7 @@
 <div class="master-container">
     <div class="polish-card">
 
-        {{-- Card Header (matches other super admin modules) --}}
+        {{-- Card Header (matches other system admin modules) --}}
         <div class="card-header-accent">
             <div>
                 <h3 class="h3-title">
@@ -271,7 +271,7 @@
 {{-- Hidden inputs for URLs --}}
 <input type="hidden" id="calEventsUrl" value="{{ auth()->user()->role === 'super_admin' ? route('pm-schedules.calendar.events') : route('maintenance.calendar.events') }}">
 @php
-    // Include active IT personnel AND super admins (both can be assigned to conduct PM)
+    // Include active IT personnel AND system admins (both can be assigned to conduct PM)
     $itPersonnel = \App\Models\User::where('is_active', true)
         ->where(function ($q) {
             $q->where('role', 'it')

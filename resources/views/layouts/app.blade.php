@@ -206,7 +206,7 @@
                 <img src="{{ asset('images/ncmb-logo.svg') }}" alt="NCMB Logo" class="sidebar-logo-img">
                 <h1 class="sidebar-title">CMMS PORTAL</h1>
                 <p class="sidebar-role">
-                    @if(Auth::user()->role === 'super_admin') SUPER ADMIN
+                    @if(Auth::user()->role === 'super_admin') SYSTEM ADMIN
                     @elseif(Auth::user()->role === 'admin' || Auth::user()->role === 'supply_officer') 
                         {{ Auth::user()->canProcessSupply() ? 'ADMIN & SUPPLY' : 'DIVISION ADMIN' }}
                     @elseif(Auth::user()->role === 'it') IT PERSONNEL
@@ -229,7 +229,7 @@
                 <div class="nav-section-divider"></div>
 
                 @if(Auth::user()->role === 'super_admin')
-                    <!-- SUPER ADMIN MODULES -->
+                    <!-- SYSTEM ADMIN MODULES -->
                     <a href="{{ route('super_admin.users') }}" class="nav-link {{ request()->routeIs('super_admin.users') ? 'active' : '' }}" data-tooltip="User Management">
                         <i class="fa-solid fa-users-gear"></i> <span>User Management</span>
                     </a>
@@ -302,7 +302,7 @@
                     <a href="{{ route('ict.create') }}" class="nav-link {{ request()->routeIs('ict.create') ? 'active' : '' }}" data-tooltip="ICT Request">
                         <i class="fa-solid fa-desktop"></i> <span>ICT Request</span>
                     </a>
-                    {{-- PM is now scheduled by Super Admin — removed from user sidebar --}}
+                    {{-- PM is now scheduled by System Admin — removed from user sidebar --}}
                     <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') || request()->routeIs('maintenance.*') ? 'active' : '' }}" data-tooltip="My Requests">
                         <i class="fa-solid fa-list-check"></i> <span>My Requests</span>
                     </a>

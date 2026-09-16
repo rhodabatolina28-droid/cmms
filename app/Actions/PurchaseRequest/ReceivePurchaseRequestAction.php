@@ -260,7 +260,7 @@ class ReceivePurchaseRequestAction
      *
      *  - Finalized  → the receive (edit) flow: same rules as canReceive().
      *  - Delivered  → read-only view (proof of purchase + recorded lines),
-     *    open to the procurement desk (supply / super admin) and the owner.
+     *    open to the procurement desk (supply / system admin) and the owner.
      *
      * @return bool
      */

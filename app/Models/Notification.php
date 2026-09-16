@@ -36,7 +36,7 @@ class Notification extends Model
                 // PR-type notifications carry their number inside the message (they have no requests row); fall back to "N/A" for everything else
                 $requestNumber = $notification->request ? $notification->request->request_number : ($notification->prNumber() ?? 'N/A');
 
-                // Super admin: in-app only (no email flood on shared region)
+                // System admin: in-app only (no email flood on shared region)
                 if ($user->role === 'super_admin') {
                     return;
                 }
@@ -112,7 +112,7 @@ class Notification extends Model
                     \Illuminate\Support\Facades\Mail::to($user->email)->queue($mailable);
                 }
 
-                // If PM Scheduled, also notify Super Admins/IT
+                // If PM Scheduled, also notify System Admins/IT
                 if ($notification->type === 'PM Scheduled') {
                     \App\Services\PMNotificationService::notifyITStaff(
                         $requestNumber,

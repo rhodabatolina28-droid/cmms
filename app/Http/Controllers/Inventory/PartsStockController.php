@@ -41,7 +41,7 @@ class PartsStockController extends Controller
     }
 
     /**
-     * Read-only view — Super Admin oversight.
+     * Read-only view — System Admin oversight.
      */
     public function superAdminIndex(Request $request)
     {

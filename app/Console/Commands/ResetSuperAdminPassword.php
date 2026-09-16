@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Hash;
 class ResetSuperAdminPassword extends Command
 {
     protected $signature = 'admin:reset-password {email?} {password?}';
-    protected $description = 'Reset password for super admin or any user';
+    protected $description = 'Reset password for system admin or any user';
 
     public function handle()
     {

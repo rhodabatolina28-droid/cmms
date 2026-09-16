@@ -24,7 +24,7 @@ class CreateMaintenanceTicketAction
     public function execute(StoreLinkedAssetRequest $request, $user)
     {
         if (!$user->can('createMaintenance', \App\Models\Request::class)) {
-            return response()->json(['success' => false, 'message' => 'PM is now managed via schedules by your ICT Unit. Contact your Super Admin.'], 403);
+            return response()->json(['success' => false, 'message' => 'PM is now managed via schedules by your ICT Unit. Contact your System Admin.'], 403);
         }
 
         // Only check asset assignment for user role — IT/super_admin can create PM for any asset
@@ -103,7 +103,7 @@ class CreateMaintenanceTicketAction
                 'linked_asset_id' => $linkedAssetId,
             ]);
 
-            // Notify Super Admins directly for PMs (bypassing Division Admin review)
+            // Notify System Admins directly for PMs (bypassing Division Admin review)
             RequestNotificationService::notifySuperAdminsOfNewPmRequest($trackingRequest, $user);
 
             AuditLog::log(

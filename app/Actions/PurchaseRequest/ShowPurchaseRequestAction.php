@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Auth;
 
 /**
  * Renders the PR document view (Appendix 60-adapted, printable).
- * Access: Supply Officer (all in scope), Super Admin, IT (own requests only).
+ * Access: Supply Officer (all in scope), System Admin, IT (own requests only).
  */
 class ShowPurchaseRequestAction
 {

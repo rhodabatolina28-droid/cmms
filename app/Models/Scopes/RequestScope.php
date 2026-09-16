@@ -37,14 +37,14 @@ class RequestScope
                 }
             });
         } elseif ($user->role === 'super_admin') {
-            // Super Admin: ICT only (PM is in PM Schedule module)
+            // System Admin: ICT only (PM is in PM Schedule module)
             $query->where('type', 'ICT')
                 ->where('division_admin_review_status', 'Approved')
                 ->whereHas('user', function ($q) use ($user) {
                     if ($user->branch) {
                         $q->where('branch', $user->branch);
                     }
-                    // Super Admin manages entire branch - no division filter
+                    // System Admin manages entire branch - no division filter
                 });
         }
 

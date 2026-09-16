@@ -220,14 +220,14 @@ class RequestHelpers
             ->where('role', 'it')
             ->where('is_active', true);
 
-        // Filter IT personnel by Super Admin's branch scope
+        // Filter IT personnel by System Admin's branch scope
         if ($admin->branch) {
             $query->where('branch', $admin->branch);
         }
 
         $itPersonnel = $query->orderBy('full_name')->get();
         
-        // Add Super Admin himself to the list (so they can assign themselves if no IT available)
+        // Add System Admin himself to the list (so they can assign themselves if no IT available)
         $superAdminOption = User::find($admin->id);
         if ($superAdminOption) {
             $itPersonnel->prepend($superAdminOption);
@@ -316,7 +316,7 @@ class RequestHelpers
         if ($ticketUser && $ticketUser->branch !== $superAdmin->branch) {
             return false;
         }
-        // If ticket has no user (orphaned), allow super admin access
+        // If ticket has no user (orphaned), allow system admin access
         return true;
     }
 
@@ -329,7 +329,7 @@ class RequestHelpers
         ?RepairRequest $repair = null
     ): array {
         // Regular admin: view only (cannot edit technician sections)
-        // Supply officer: can view and review (forward to Super Admin)
+        // Supply officer: can view and review (forward to System Admin)
         $isRegularAdmin = $user->role === 'admin' && !$user->canProcessSupply();
         $viewOnly = $forceView
             || $isRegularAdmin
@@ -516,7 +516,7 @@ class RequestHelpers
             return false;
         }
 
-        // Super Admin acting as IT/requester is always visible to any supply officer
+        // System Admin acting as IT/requester is always visible to any supply officer
         // regardless of branch — they operate office-wide
         if ($subject->role === 'super_admin') {
             return true;
@@ -600,7 +600,7 @@ class RequestHelpers
         // Both ICT and PM-generated tickets can carry parts requests, so both
         // belong in the Job Orders tab (PM mirrors superAdminRequisitionIndex rules).
         if ($supply->role === 'super_admin') {
-            // Super admin: show all ICT/PM tickets that have requisitions
+            // System admin: show all ICT/PM tickets that have requisitions
             return $query->where(fn ($q) => $q->where('type', 'ICT')
                 ->orWhere('type', 'Preventive Maintenance'))
                 ->whereHas('requisitions');

@@ -20,7 +20,7 @@ class ArchiveLogsAction
         $cutoffDate = \Carbon\Carbon::now()->subYear();
         $actor = Auth::user();
 
-        // Super Admin archives logs for their entire branch.
+        // System Admin archives logs for their entire branch.
         // Note: audit_logs uses the 'region' column to store branch/office scope info.
         $oldLogs = AuditLog::with('user')
             ->when($actor->branch, fn ($query) => $query->where('region', $actor->branch))
@@ -51,7 +51,7 @@ class ArchiveLogsAction
         }
         fclose($tempFile);
 
-        // Delete the logs from DB (Super Admin scope: entire branch).
+        // Delete the logs from DB (System Admin scope: entire branch).
         // Note: audit_logs uses the 'region' column to store branch/office scope info.
         AuditLog::query()
             ->when($actor->branch, fn ($query) => $query->where('region', $actor->branch))

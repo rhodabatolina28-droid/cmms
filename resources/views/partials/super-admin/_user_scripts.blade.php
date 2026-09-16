@@ -1,4 +1,4 @@
-﻿@section('scripts')
+@section('scripts')
 <script nonce="{{ $cspNonce }}">
 // â”€â”€ AJAX User Management â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
 let usersCurrentPage = 1;
@@ -72,7 +72,7 @@ function renderUsersTable(users) {
 
     const roleLabels = {
         user: 'User', admin: 'Division Admin', supply_officer: 'Supply Officer',
-        it: 'IT Personnel', super_admin: 'Super Admin'
+        it: 'IT Personnel', super_admin: 'System Admin'
     };
 
     tbody.innerHTML = users.map(u => {

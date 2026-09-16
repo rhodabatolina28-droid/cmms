@@ -10,7 +10,7 @@ use Illuminate\Support\Facades\Auth;
 class ShowSuperAdminInventoryDetailAction
 {
     /**
-     * Super Admin — read-only asset detail page.
+     * System Admin — read-only asset detail page.
      *
      * @param  int  $assetId
      * @return \Illuminate\Contracts\View\View

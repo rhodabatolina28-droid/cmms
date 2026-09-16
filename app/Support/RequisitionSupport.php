@@ -102,7 +102,7 @@ class RequisitionSupport
     }
 
     /**
-     * IT or Super Admin (acting as IT) can submit requisition if:
+     * IT or System Admin (acting as IT) can submit requisition if:
      * - Assigned to the ticket
      * - Ticket is ICT, or an eligible PM (type Preventive Maintenance) with a linked asset
      * - Ticket is not completed/cancelled

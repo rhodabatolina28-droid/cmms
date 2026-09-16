@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Lightweight endpoint so assigned IT/Super Admin can save the FOR REPAIR
+ * Lightweight endpoint so assigned IT/System Admin can save the FOR REPAIR
  * recommendation (checkbox + selected repair asset + parts notes) WITHOUT
  * completing the whole PM form (signatures, checklist, etc.).
  *

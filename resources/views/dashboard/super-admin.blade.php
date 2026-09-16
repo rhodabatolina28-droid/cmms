@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Super Admin Dashboard | NCMB ICT System')
+@section('title', 'System Admin Dashboard | NCMB ICT System')
 @section('page-title', 'Dashboard')
 
 @section('styles')
@@ -522,7 +522,7 @@
 @section('content')
 <div class="dashboard-container">
 
-    <!-- WELCOME HERO (SUPER ADMIN) -->
+    <!-- WELCOME HERO (SYSTEM ADMIN) -->
     <div class="welcome-hero">
         <div class="flex-sb">
             <div>

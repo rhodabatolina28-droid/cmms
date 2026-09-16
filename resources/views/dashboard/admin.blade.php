@@ -478,7 +478,7 @@
 
             @php
                 $dashboardUser = Auth::user();
-                $roleLabel = $dashboardUser->role === 'super_admin' ? 'Super Admin'
+                $roleLabel = $dashboardUser->role === 'super_admin' ? 'System Admin'
                     : ($dashboardUser->role === 'it' ? 'IT Personnel'
                     : ($dashboardUser->canProcessSupply() ? 'Supply Admin' : 'Division Admin'));
                 $scopeLabel = $dashboardUser->department ? 'Department'

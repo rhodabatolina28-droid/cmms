@@ -16,7 +16,7 @@ class CreateMaintenanceFormAction
     {
         $user = Auth::user();
         if (!$user->can('createMaintenance', \App\Models\Request::class)) {
-            abort(403, 'PM is now managed via schedules by your ICT Unit. Contact your Super Admin.');
+            abort(403, 'PM is now managed via schedules by your ICT Unit. Contact your System Admin.');
         }
 
         $flags = \App\Support\RequestHelpers::maintenanceFormFlags($user);

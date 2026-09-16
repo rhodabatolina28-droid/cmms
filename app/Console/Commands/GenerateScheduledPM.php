@@ -141,7 +141,7 @@ class GenerateScheduledPM extends Command
                 $totalGenerated += $count;
                 $division = $schedule->fresh()->current_focus_division ?? 'N/A';
 
-                // ── MONITORING: Alert super admin if generation produced 0 requests ──
+                // ── MONITORING: Alert system admin if generation produced 0 requests ──
                 // This happens when the schedule is due but no eligible users were found
                 // (e.g. all assets disposed, wrong branch config, data issue)
                 if ($count === 0) {
@@ -163,7 +163,7 @@ class GenerateScheduledPM extends Command
                 $this->error("  Failed: {$schedule->schedule_name} - {$e->getMessage()}");
                 Log::error("PM Schedule auto-generation failed for schedule #{$schedule->id}: {$e->getMessage()}");
 
-                // ── MONITORING: Alert super admin on generation failure ──
+                // ── MONITORING: Alert system admin on generation failure ──
                 $message = "PM Schedule '{$schedule->schedule_name}' FAILED to generate work orders. "
                     . "Error: {$e->getMessage()}. Please check the system logs.";
                 $this->notifySuperAdmins($schedule, $message);
@@ -183,10 +183,10 @@ class GenerateScheduledPM extends Command
     }
 
     /**
-     * Notify all super admins in the schedule's branch about a PM monitoring alert.
-     * Sends both in-app notification AND email so super admin is alerted
+     * Notify all system admins in the schedule's branch about a PM monitoring alert.
+     * Sends both in-app notification AND email so system admin is alerted
      * even when not logged in — critical for cron failure detection.
-     * Each branch's super admin only receives alerts for their own branch.
+     * Each branch's system admin only receives alerts for their own branch.
      * Does NOT crash the command if notification fails.
      */
     private function processManualQueue(GeneratePMScheduleService $service): void
@@ -314,8 +314,8 @@ class GenerateScheduledPM extends Command
                 : null;
             $branch = $creator?->branch;
 
-            // Only notify super admins in the same branch as the schedule
-            // This ensures a super admin from one region doesn't get alerts for another region
+            // Only notify system admins in the same branch as the schedule
+            // This ensures a system admin from one region doesn't get alerts for another region
             $superAdmins = \App\Models\User::where('role', 'super_admin')
                 ->where('is_active', true)
                 ->when($creator?->region, fn($q) => $q->where('region', $creator->region))
@@ -350,7 +350,7 @@ class GenerateScheduledPM extends Command
                     $message
                 );
 
-                // Email alert — so super admin is notified even when not logged in
+                // Email alert — so system admin is notified even when not logged in
                 if ($admin->email) {
                     try {
                         $subject = str_contains($message, 'FAILED')

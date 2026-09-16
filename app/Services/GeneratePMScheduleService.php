@@ -207,7 +207,7 @@ class GeneratePMScheduleService
                 $actor?->branch
             );
 
-            // Notify IT staff and Super Admin about the batch
+            // Notify IT staff and System Admin about the batch
             \App\Services\PMNotificationService::notifyITStaffOfBatch(
                 $focusDivision,
                 count($created),

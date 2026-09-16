@@ -45,7 +45,7 @@ class RequestPolicy
         return false;
     }
 
-    /** Only Super Admin can assign ICT or PM tickets to IT personnel. Division Admin cannot assign IT. */
+    /** Only System Admin can assign ICT or PM tickets to IT personnel. Division Admin cannot assign IT. */
 
     public function assignTicket(User $user, RequestModel $ticket): bool
     {
@@ -66,11 +66,11 @@ class RequestPolicy
             return false;
         }
 
-        // Super Admin may assign IT personnel
+        // System Admin may assign IT personnel
         return true;
     }
 
-    /** Only Super Admin can view/assign IT personnel. Division Admin cannot see the IT list. */
+    /** Only System Admin can view/assign IT personnel. Division Admin cannot see the IT list. */
 
     public function editIctEndUser(User $user, ?RequestModel $ticket = null): bool
     {

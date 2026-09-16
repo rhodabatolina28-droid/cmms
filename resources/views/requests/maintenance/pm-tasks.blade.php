@@ -197,7 +197,7 @@
                     <div class="pm-empty">
                         <div class="pm-empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
                         <h3 class="pm-empty-title">No PM Tasks Assigned</h3>
-                        <p class="pm-empty-text">PM tasks will appear here once assigned to you by the Super Admin.</p>
+                        <p class="pm-empty-text">PM tasks will appear here once assigned to you by the System Admin.</p>
                     </div>
                 @else
                     <table class="pm-table">
@@ -261,7 +261,7 @@
                                 </td>
 
                                 <td class="pm-td-action">
-                                    {{-- Same pattern as Super Admin PM Work Orders:
+                                    {{-- Same pattern as System Admin PM Work Orders:
                                          Scheduled (assigned to me) -> Start, else -> View --}}
                                     @if($task->status === 'Scheduled')
                                         {{-- Start button triggers SweetAlert confirmation --}}

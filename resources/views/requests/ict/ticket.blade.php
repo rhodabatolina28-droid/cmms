@@ -125,7 +125,7 @@
             <i class="fa-solid fa-arrow-left"></i> Back to List
         </a>
 
-        {{-- Disposal actions: IT and Super Admin only --}}
+        {{-- Disposal actions: IT and System Admin only --}}
         @if(in_array(Auth::user()->role, ['it', 'super_admin']) && $request->linkedAsset && $request->linkedAsset->status !== 'For Disposal' && !in_array($request->linkedAsset->status, ['Scrapped', 'Disposed', 'Pending']))
         <form id="disposalForm" action="{{ route('ict.recommend-disposal', $request->id) }}" method="POST" class="tkt-form-inline">
             @csrf

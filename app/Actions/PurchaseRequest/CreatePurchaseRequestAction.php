@@ -14,7 +14,7 @@ use Illuminate\Support\Facades\DB;
  * Creates a PR document (status: submitted) from the PR form.
  *
  * Two entry points:
- *  - createFromForm(): the PR Form page (IT / Super Admin / Supply Officer)
+ *  - createFromForm(): the PR Form page (IT / System Admin / Supply Officer)
  *  - prefillFromRequisition(): builds form data from a requisition's deficit
  *    lines, used to pre-fill the form (?requisition_id=N).
  */

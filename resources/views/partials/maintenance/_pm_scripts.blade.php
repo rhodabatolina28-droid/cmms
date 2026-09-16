@@ -286,7 +286,7 @@
                 });
             }
 
-            // Super Admin self-assign via dropdown
+            // System Admin self-assign via dropdown
             const assignItSelect = document.getElementById('assignItSelect');
             const currentUserId = '{{ Auth::user()->id }}';
             

@@ -16,7 +16,7 @@ class AssignPMScheduleITAction
      * All existing PM work orders in the current division are updated
      * with the assigned IT. Future work orders will also use this IT.
      *
-     * Both Super Admin and IT can perform this assignment.
+     * Both System Admin and IT can perform this assignment.
      *
      * @param  PMSchedule  $schedule
      * @param  int  $itUserId

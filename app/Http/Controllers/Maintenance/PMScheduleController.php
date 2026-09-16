@@ -141,7 +141,7 @@ class PMScheduleController extends Controller
     {
         $user = Auth::user();
         if (!$user || $user->role !== 'super_admin') {
-            abort(403, 'Only Super Admins can view PM Work Orders.');
+            abort(403, 'Only System Admins can view PM Work Orders.');
         }
 
         return view('pm-schedules.orders');
@@ -214,7 +214,7 @@ class PMScheduleController extends Controller
 
     /**
      * Assign an IT personnel to the PM schedule's current division.
-     * Both Super Admin and IT can perform this assignment.
+     * Both System Admin and IT can perform this assignment.
      */
     public function assignIt(Request $request, PMSchedule $pmSchedule)
     {
