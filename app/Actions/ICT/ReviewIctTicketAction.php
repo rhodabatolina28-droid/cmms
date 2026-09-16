@@ -22,8 +22,10 @@ class ReviewIctTicketAction
         $trackingRequest = RequestModel::findOrFail($id);
         
         $admin = Auth::user();
-        if (!$admin->isDivisionAdmin()) {
-            return response()->json(['success' => false, 'message' => 'Only Division Admins can review requests.'], 403);
+        $isSuperAdmin = $admin->isSuperAdmin();
+
+        if (!$admin->isDivisionAdmin() && !$isSuperAdmin) {
+            return response()->json(['success' => false, 'message' => 'Only Division Admins and System Admins can review requests.'], 403);
         }
 
         // Verify the request belongs to the admin's scope (division or branch for supply admin)
@@ -34,7 +36,13 @@ class ReviewIctTicketAction
         
         // Supply admin (Administrative) can review all tickets in branch
         // Regular division admin can only review tickets from their own division
-        if ($admin->canProcessSupply()) {
+        if ($isSuperAdmin) {
+            // D9.20: the System Admin is the reviewer for every division in their
+            // branch (ICT requests are routed straight to them) — branch scope.
+            if (!\App\Support\RequestHelpers::ticketInSuperAdminBranch($admin, $trackingRequest)) {
+                return response()->json(['success' => false, 'message' => 'This request is outside your branch scope.'], 403);
+            }
+        } elseif ($admin->canProcessSupply()) {
             if ($admin->branch && $ticketUser->branch !== $admin->branch) {
                 return response()->json(['success' => false, 'message' => 'This request is outside your branch scope.'], 403);
             }
@@ -44,8 +52,9 @@ class ReviewIctTicketAction
             }
         }
 
-        // Prevent re-review
-        if ($trackingRequest->division_admin_review_status !== null) {
+        // Prevent re-review (D9.20: the System Admin may override an already
+        // auto-approved ticket — that is their reject path)
+        if (!$isSuperAdmin && $trackingRequest->division_admin_review_status !== null) {
             return response()->json(['success' => false, 'message' => 'This request has already been reviewed.'], 422);
         }
 
@@ -53,29 +62,36 @@ class ReviewIctTicketAction
 
         $trackingRequest->update([
             'division_admin_review_status' => $validated['status'],
-            'division_admin_notes' => $validated['notes'],
+            'division_admin_notes' => $validated['notes'] ?? null,
             'reviewed_by_admin_id' => $admin->id,
             'reviewed_at' => now(),
         ]);
 
         if ($validated['status'] === 'Approved') {
-            RequestNotificationService::notifySuperAdminOfForwardedRequest($trackingRequest, $admin);
+            // D9.20: the System Admin IS the reviewer — no self-notification.
+            if (!$isSuperAdmin) {
+                RequestNotificationService::notifySuperAdminOfForwardedRequest($trackingRequest, $admin);
+            }
         } else {
             // If rejected, update the main status to Rejected as well
             $trackingRequest->update(['status' => RequestModel::STATUS_REJECTED]);
+
+            $reviewerLabel = $isSuperAdmin ? 'the System Admin' : 'your Division Admin';
             
             \App\Models\Notification::send(
                 $trackingRequest->user_id,
                 $trackingRequest->id,
                 'Request Rejected',
-                "Your ICT Request {$trackingRequest->request_number} was rejected by your Division Admin. Reason: " . ($validated['notes'] ?: 'No reason provided.')
+                "Your ICT Request {$trackingRequest->request_number} was rejected by {$reviewerLabel}. Reason: " . ($validated['notes'] ?: 'No reason provided.')
             );
         }
 
+        $reviewerTitle = $isSuperAdmin ? 'System Admin' : 'Division Admin';
+
         AuditLog::log(
-            'Division Admin Review',
+            "{$reviewerTitle} Review",
             'Requests',
-            "Division Admin reviewed {$trackingRequest->request_number} (Status: {$validated['status']})",
+            "{$reviewerTitle} reviewed {$trackingRequest->request_number} (Status: {$validated['status']})",
             $trackingRequest->office
         );
 

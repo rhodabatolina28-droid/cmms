@@ -36,8 +36,10 @@ class Notification extends Model
                 // PR-type notifications carry their number inside the message (they have no requests row); fall back to "N/A" for everything else
                 $requestNumber = $notification->request ? $notification->request->request_number : ($notification->prNumber() ?? 'N/A');
 
-                // System admin: in-app only (no email flood on shared region)
-                if ($user->role === 'super_admin') {
+                // System admin: in-app only (no email flood on shared region).
+                // D9.20: exception — ICT requests are routed straight to the System
+                // Admin for review/assignment, so "for Review" types must also email.
+                if ($user->role === 'super_admin' && !str_ends_with((string) $notification->type, 'for Review')) {
                     return;
                 }
 

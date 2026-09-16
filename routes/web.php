@@ -81,7 +81,7 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
 
     // ICT Destroy & Review — System Admin only (moved outside permissive group for early rejection)
     Route::delete('/requests/ict/{id}', [ICTRequestController::class, 'destroy'])->name('ict.destroy')->middleware('role:super_admin', 'throttle:30,1');
-    Route::post('/requests/ict/{id}/review', [ICTRequestController::class, 'review'])->name('ict.review')->middleware('role:admin', 'throttle:30,1');
+    Route::post('/requests/ict/{id}/review', [ICTRequestController::class, 'review'])->name('ict.review')->middleware('role:admin,super_admin', 'throttle:30,1');
 
     // Maintenance Requests (all roles — controller handles internal role logic)
     Route::get('/requests/maintenance', [MaintenanceController::class, 'index'])->name('maintenance.index')->middleware('role:user,it,admin,super_admin');
