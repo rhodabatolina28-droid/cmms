@@ -82,46 +82,82 @@ class Request extends Model
         'completed_at' => 'datetime',
     ];
 
-    // Get display format: PM-NCR-RCMB-2026-0001 → PM-2026-0001
-    //                        REQ-NCR-RCMB-2026-001 → ICT-2026-001
-    // For multi-location: PM-NCR-RCMB-2026-0001 → PM-NCR-RCMB-2026-0001 (full)
+    /**
+     * Split a request number into display parts.
+     *
+     * D9.24 format:  REQ-2026-09-16-0001      -> [1]=YYYY [2]=MM [3]=DD [4]=NNNN
+     * Legacy format: REQ-NCR-RCMB-2026-0001   -> [1]=region [2]=branch [3]=YYYY [4]=NNNN
+     *
+     * Legacy numbers must keep rendering, so both shapes are supported.
+     */
+    private static function parseRequestNumber(?string $requestNumber): array
+    {
+        $parts = explode('-', (string) $requestNumber);
+        $rawPrefix = ($parts[0] ?? '') !== '' ? $parts[0] : 'PM';
+        $displayPrefix = $rawPrefix === 'REQ' ? 'ICT' : $rawPrefix;
+
+        // D9.24 date-based format: [0]=REQ/PM, [1]=2026, [2]=09, [3]=16, [4]=0001
+        if (isset($parts[1], $parts[2], $parts[3], $parts[4])
+            && ctype_digit($parts[1])
+            && strlen($parts[1]) === 4) {
+            return [
+                'prefix' => $displayPrefix,
+                'year' => $parts[1],
+                'number' => $parts[4],
+                'date' => $parts[1] . '-' . $parts[2] . '-' . $parts[3],
+                'region' => '',
+                'branch' => '',
+            ];
+        }
+
+        // Legacy region/branch format: [0]=REQ/PM, [1]=NCR, [2]=RCMB, [3]=2026, [4]=0001
+        return [
+            'prefix' => $displayPrefix,
+            'year' => $parts[3] ?? date('Y'),
+            'number' => $parts[4] ?? '001',
+            'date' => null,
+            'region' => $parts[1] ?? '',
+            'branch' => $parts[2] ?? '',
+        ];
+    }
+
+    // Get display format: REQ-2026-09-16-0001 -> ICT-2026-09-16-0001
+    //              legacy: REQ-NCR-RCMB-2026-0001 -> ICT-2026-0001
     public function getDisplayNumberAttribute(): string
     {
-        $parts = explode('-', $this->request_number);
-        // Database format: PM-NCR-RCMB-2026-0001 or REQ-NCR-RCMB-2026-001
-        // Parts: [0]=PM/REQ, [1]=NCR, [2]=RCMB, [3]=2026, [4]=0001
-        $dbPrefix = $parts[0] ?? 'PM';
-        $year = $parts[3] ?? date('Y');
-        $number = $parts[4] ?? '001';
-        
-        // Convert REQ to ICT for display
-        $displayPrefix = $dbPrefix === 'REQ' ? 'ICT' : $dbPrefix;
-        
-        // Short format: ICT-2026-0001 or PM-2026-0001
-        $short = "{$displayPrefix}-{$year}-{$number}";
-        
-        // Full format with region and branch: ICT-NCR-RCMB-2026-0001
-        $region = $parts[1] ?? '';
-        $branch = $parts[2] ?? '';
-        $full = "{$displayPrefix}-{$region}-{$branch}-{$year}-{$number}";
-        
-        // Return short format for display (ICT-2026-0001 or PM-2026-0001)
-        return $short;
+        $p = self::parseRequestNumber($this->request_number);
+
+        if ($p['date']) {
+            return $p['prefix'] . '-' . $p['date'] . '-' . $p['number'];
+        }
+
+        return $p['prefix'] . '-' . $p['year'] . '-' . $p['number'];
     }
-    
+
     // Get full display format with region and branch (for multi-location backend)
     public function getFullDisplayNumberAttribute(): string
     {
-        $parts = explode('-', $this->request_number);
-        $dbPrefix = $parts[0] ?? 'PM';
-        $year = $parts[3] ?? date('Y');
-        $number = $parts[4] ?? '001';
-        
-        $displayPrefix = $dbPrefix === 'REQ' ? 'ICT' : $dbPrefix;
-        $region = $parts[1] ?? '';
-        $branch = $parts[2] ?? '';
-        
-        return "{$displayPrefix}-{$region}-{$branch}-{$year}-{$number}";
+        $p = self::parseRequestNumber($this->request_number);
+
+        if ($p['date']) {
+            // D9.24: region/branch live in the request columns, not in the number.
+            $segments = [$p['prefix']];
+
+            if (!empty($this->region)) {
+                $segments[] = strtoupper($this->region);
+            }
+
+            if (!empty($this->branch)) {
+                $segments[] = \App\Support\RequestHelpers::getBranchCode($this->branch);
+            }
+
+            $segments[] = $p['date'];
+            $segments[] = $p['number'];
+
+            return implode('-', $segments);
+        }
+
+        return $p['prefix'] . '-' . $p['region'] . '-' . $p['branch'] . '-' . $p['year'] . '-' . $p['number'];
     }
 
     // Downtime accessors

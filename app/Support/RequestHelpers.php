@@ -19,24 +19,25 @@ class RequestHelpers
 {
     /**
      * Generate a unique request number for ICT or PM tickets.
-     * Format: {PREFIX}-{REGION}-{BRANCHCODE}-{YEAR}-{NUMBER}
+     *
+     * D9.24 format: {PREFIX}-{YYYY}-{MM}-{DD}-{NNNN}  e.g. REQ-2026-09-16-0001
+     * Legacy numbers (REQ-NCR-RCMB-2026-0001) remain valid and displayable.
+     *
+     * The counter restarts every day, per prefix, and is guarded by a MySQL
+     * advisory lock so concurrent requests cannot reuse a number.
      *
      * @param string $type 'ICT' or 'PM'
-     * @param User|null $actorUser Used in cron context where Auth::user() is null
+     * @param User|null $actorUser Retained for backwards compatibility. The
+     *                             number no longer embeds region/branch codes.
      */
     public static function generateRequestNumber(string $type, ?User $actorUser = null): string
     {
         $prefix = $type === 'ICT' ? 'REQ' : 'PM';
-        $year = date('Y');
+        $datePart = now()->format('Y-m-d');
+        $searchPrefix = "{$prefix}-{$datePart}";
 
-        $user = $actorUser ?? Auth::user();
-        $region = strtoupper($user->region ?? 'SYS');
-        $branchCode = self::getBranchCode($user->branch);
-
-        $searchPrefix = "{$prefix}-{$region}-{$branchCode}-{$year}";
-
-        // Use MySQL advisory lock to prevent race conditions
-        $lockName = "request_number_{$region}_{$branchCode}_{$year}";
+        // Use MySQL advisory lock to prevent race conditions (per prefix, per day)
+        $lockName = 'request_number_' . $prefix . '_' . now()->format('Y_m_d');
         $lockTimeout = 10;
 
         $acquired = DB::select("SELECT GET_LOCK(?, ?) AS acquired", [$lockName, $lockTimeout]);
@@ -57,7 +58,7 @@ class RequestHelpers
                 $next = (int) end($parts) + 1;
             }
 
-            return "{$prefix}-{$region}-{$branchCode}-{$year}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
+            return "{$searchPrefix}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
         } finally {
             DB::select("SELECT RELEASE_LOCK(?)", [$lockName]);
         }
