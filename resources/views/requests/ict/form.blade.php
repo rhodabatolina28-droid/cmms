@@ -305,7 +305,7 @@
                     <div class="form-col">
                         <div class="form-group compact">
                             <label class="required">
-                                End-User Signature over Printed Name:
+                                END-USER SIGNATURE OVER PRINTED NAME:
                             </label>
 
                             <div class="signature-wrapper">
@@ -337,7 +337,7 @@
 
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="endUserDate" class="required">Date:</label>
+                            <label for="endUserDate" class="required">DATE:</label>
                             <input type="date" id="endUserDate" name="endUserDate" value="{{ fmtDate($repairRequest->end_user_date ?? null) ?: date('Y-m-d') }}" required {{ ($isView || !$canEditEndUser) ? 'disabled' : '' }}>
                         </div>
                     </div>

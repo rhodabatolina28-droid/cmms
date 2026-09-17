@@ -8,7 +8,7 @@
                 <div class="form-row compact-row">
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label>RECEIVED by:</label>
+                            <label>RECEIVED BY:</label>
                                 @php
                                     $autoItName = '';
                                     $autoItLastName = '';
@@ -35,20 +35,20 @@
                                         <label class="inline-label">FIRST NAME</label>
                                         <input type="text" id="itReceivedFirstName" name="itReceivedFirstName" value="{{ $repairRequest->it_received_first_name ?? $autoItFirstName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                                     </div>
-                                </div>
-                                <div class="form-group compact ict-mt-8">
-                                    <input type="text" id="itReceivedMiddleName" name="itReceivedMiddleName"
-                                        placeholder="MIDDLE NAME" value="{{ $repairRequest->it_received_middle_name ?? $autoItMiddleName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                    <div class="form-col">
+                                        <label class="inline-label">MIDDLE NAME</label>
+                                        <input type="text" id="itReceivedMiddleName" name="itReceivedMiddleName" value="{{ $repairRequest->it_received_middle_name ?? $autoItMiddleName }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                    </div>
                                 </div>
                         </div>
 
                         <div class="form-group compact">
-                            <label for="initialDiagnosis">Initial Diagnosis:</label>
+                            <label for="initialDiagnosis">INITIAL DIAGNOSIS:</label>
                             <textarea id="initialDiagnosis" name="initialDiagnosis" rows="3" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>{{ $repairRequest->initial_diagnosis ?? '' }}</textarea>
                         </div>
 
                         <div class="form-group compact">
-                            <label>Repair Type:</label>
+                            <label>REPAIR TYPE:</label>
                             @php
                                 $repairTypes = json_decode($repairRequest->repair_type ?? '[]', true) ?: [];
                                 $typeModeOptions = ['INTERNAL REPAIR', 'EXTERNAL REPAIR', 'REFERRED TO SERVICE PROVIDER'];
@@ -210,7 +210,7 @@
                     </div>
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label>Technician Signature over Printed Name:</label>
+                            <label>TECHNICIAN SIGNATURE OVER PRINTED NAME:</label>
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->technician_signature))
@@ -230,7 +230,7 @@
                             </div>
                         </div>
                         <div class="form-group compact">
-                            <label for="technicianDate">Date:</label>
+                            <label for="technicianDate">DATE:</label>
                             <input type="date" id="technicianDate" name="technicianDate" value="{{ fmtDate($repairRequest->technician_date ?? null) }}" {{ (!$isAdmin || $isView || !$spSectionActive) ? 'disabled' : '' }}>
                         </div>
                     </div>
@@ -281,7 +281,7 @@
                 <div class="form-row compact-row">
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label>IT Personnel Signature over Printed Name:</label>
+                            <label>IT PERSONNEL SIGNATURE OVER PRINTED NAME:</label>
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->it_personnel_signature))
@@ -306,7 +306,7 @@
 
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="itPersonnelDate">Date:</label>
+                            <label for="itPersonnelDate">DATE:</label>
                             <input type="date" id="itPersonnelDate" name="itPersonnelDate" value="{{ fmtDate($repairRequest->it_personnel_date ?? null) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                         </div>
                     </div>
@@ -339,7 +339,7 @@
                 <div class="form-row compact-row">
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="endUserAcceptanceSignature">End-User Signature over Printed Name:</label>
+                            <label for="endUserAcceptanceSignature">END-USER SIGNATURE OVER PRINTED NAME:</label>
                             <div class="signature-wrapper">
                                 <div class="signature-container">
                                     @if(!empty($repairRequest->end_user_acceptance_signature))
@@ -361,7 +361,7 @@
                     </div>
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="endUserAcceptanceDate">Date:</label>
+                            <label for="endUserAcceptanceDate">DATE:</label>
                             <input type="date" id="endUserAcceptanceDate" name="endUserAcceptanceDate" value="{{ fmtDate($repairRequest->end_user_acceptance_date ?? null) ?: date('Y-m-d') }}" {{ !$canSignAcceptance ? 'disabled' : '' }}>
                         </div>
                     </div>

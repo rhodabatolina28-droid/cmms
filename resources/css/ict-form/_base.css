@@ -128,14 +128,6 @@ label.inline-label {
     margin-bottom: 4px;
 }
 
-.required::after {
-    content: " *";
-    color: #000000;
-    font-weight: 800;
-    font-size: 15px;
-    margin-left: 2px;
-}
-
 input,
 select,
 textarea {
