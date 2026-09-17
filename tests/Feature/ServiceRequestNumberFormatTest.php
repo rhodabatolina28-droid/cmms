@@ -141,4 +141,25 @@ class ServiceRequestNumberFormatTest extends TestCase
 
         $this->assertSame('ICT-2026-09-16-0004', $ticket->full_display_number);
     }
-}
+
+    public function test_sequence_continues_across_days_within_the_same_year(): void
+    {
+        $year = now()->format('Y');
+
+        $this->ticket("REQ-{$year}-01-05-0007");
+
+        $number = RequestHelpers::generateRequestNumber('ICT', $this->user());
+
+        $this->assertStringEndsWith('-0008', $number, 'The counter must continue across days within the same year.');
+    }
+
+    public function test_sequence_restarts_in_a_new_year(): void
+    {
+        $lastYear = (string) ((int) now()->format('Y') - 1);
+
+        $this->ticket("REQ-{$lastYear}-12-31-0009");
+
+        $number = RequestHelpers::generateRequestNumber('ICT', $this->user());
+
+        $this->assertStringEndsWith('-0001', $number, 'The counter must restart when the year changes.');
+    }}
