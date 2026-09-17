@@ -194,25 +194,46 @@
                 });
             });
 
-            // Service Provider checkbox wiring
-            document.querySelectorAll('.repair-type-cb').forEach(cb => {
-                cb.addEventListener('change', function () {
-                    const spBanner = document.getElementById('referredSpBanner');
-                    const spSection = document.getElementById('serviceProviderSection');
-                    const anySpChecked = document.querySelector('.repair-type-cb[data-triggers-sp="1"]:checked');
-                    if (spBanner) spBanner.style.display = anySpChecked ? 'block' : 'none';
-                    if (spSection) {
-                        const keepActive = spSection.dataset.keepActive === '1';
-                        if (anySpChecked || keepActive) {
-                            spSection.classList.remove('disabled-section');
-                            spSection.querySelectorAll('input, textarea, select').forEach(el => el.removeAttribute('disabled'));
-                        } else {
-                            spSection.classList.add('disabled-section');
-                            spSection.querySelectorAll('input, textarea, select').forEach(el => el.setAttribute('disabled', 'disabled'));
-                        }
+            // Repair Type dropdowns wiring (D9.27: replaced the 5 checkboxes)
+            const repairTypeMode = document.getElementById('repairTypeMode');
+            const repairTypeWarranty = document.getElementById('repairTypeWarranty');
+            const rtModeHidden = document.getElementById('repairTypeModeHidden');
+            const rtWarrantyHidden = document.getElementById('repairTypeWarrantyHidden');
+
+            const syncRepairTypeHidden = (sel, hidden) => {
+                if (!sel || !hidden) return;
+                hidden.value = sel.value;
+                hidden.disabled = !sel.value; // disabled = excluded from submission
+            };
+
+            const syncSpState = () => {
+                const spBanner = document.getElementById('referredSpBanner');
+                const spSection = document.getElementById('serviceProviderSection');
+                const referred = repairTypeMode && repairTypeMode.value === 'REFERRED TO SERVICE PROVIDER';
+                if (spBanner) spBanner.style.display = referred ? 'block' : 'none';
+                if (spSection) {
+                    const keepActive = spSection.dataset.keepActive === '1';
+                    if (referred || keepActive) {
+                        spSection.classList.remove('disabled-section');
+                        spSection.querySelectorAll('input, textarea, select').forEach(el => el.removeAttribute('disabled'));
+                    } else {
+                        spSection.classList.add('disabled-section');
+                        spSection.querySelectorAll('input, textarea, select').forEach(el => el.setAttribute('disabled', 'disabled'));
                     }
+                }
+            };
+
+            [repairTypeMode, repairTypeWarranty].forEach(sel => {
+                if (!sel) return;
+                sel.addEventListener('change', function () {
+                    syncRepairTypeHidden(this, this === repairTypeMode ? rtModeHidden : rtWarrantyHidden);
+                    syncSpState();
                 });
             });
+
+            // Initialize hidden inputs from the prefilled dropdowns
+            syncRepairTypeHidden(repairTypeMode, rtModeHidden);
+            syncRepairTypeHidden(repairTypeWarranty, rtWarrantyHidden);
 
             // System Admin self-assign via dropdown
             const assignItSelect = document.getElementById('assignItSelect');

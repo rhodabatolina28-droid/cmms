@@ -819,8 +819,7 @@
     }
 
     /* Radio and checkbox groups */
-    .radio-group.compact-radio,
-    .checkbox-group.compact-checkbox {
+    .radio-group.compact-radio {
         gap: 10px !important;
     }
 

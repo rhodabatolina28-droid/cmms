@@ -66,6 +66,9 @@
     .ict-sp-banner-visible { display: block; }
     .ict-notice-compact { background: #fffbeb; border-color: #fcd34d; margin-bottom: 16px; }
     .ict-mt-8 { margin-top: 8px; }
+    .ict-type-selects { display: flex; gap: 12px; flex-wrap: wrap; }
+    .ict-type-select-wrap { flex: 1; min-width: 200px; }
+    .ict-type-select-wrap .inline-label { display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 
     /* Deskstop UX Upgrades & Hidden Scanner */
     @media (min-width: 768px) {

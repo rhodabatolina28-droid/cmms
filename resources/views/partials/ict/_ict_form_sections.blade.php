@@ -51,15 +51,33 @@
                             <label>Repair Type:</label>
                             @php
                                 $repairTypes = json_decode($repairRequest->repair_type ?? '[]', true) ?: [];
+                                $typeModeOptions = ['INTERNAL REPAIR', 'EXTERNAL REPAIR', 'REFERRED TO SERVICE PROVIDER'];
+                                $typeWarrantyOptions = ['WITHIN WARRANTY', 'BEYOND WARRANTY'];
+                                $typeMode = collect($typeModeOptions)->first(fn ($o) => in_array($o, $repairTypes, true)) ?? '';
+                                $typeWarranty = collect($typeWarrantyOptions)->first(fn ($o) => in_array($o, $repairTypes, true)) ?? '';
                             @endphp
-                            <div class="checkbox-group compact-checkbox">
-                                @foreach(['INTERNAL REPAIR', 'EXTERNAL REPAIR', 'REFERRED TO SERVICE PROVIDER', 'WITHIN WARRANTY', 'BEYOND WARRANTY'] as $type)
-                                    <label class="checkbox-label">
-                                        <input type="checkbox" name="repairType[]" value="{{ $type }}" class="repair-type-cb" data-triggers-sp="{{ $type === 'REFERRED TO SERVICE PROVIDER' ? '1' : '0' }}" {{ in_array($type, $repairTypes) ? 'checked' : '' }} {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
-                                        <span>{{ $type }}</span>
-                                    </label>
-                                @endforeach
+                            <div class="ict-type-selects">
+                                <div class="ict-type-select-wrap">
+                                    <label class="inline-label">TYPE</label>
+                                    <select id="repairTypeMode" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                        <option value="">— Select type —</option>
+                                        @foreach($typeModeOptions as $opt)
+                                            <option value="{{ $opt }}" {{ $typeMode === $opt ? 'selected' : '' }}>{{ ucfirst(strtolower($opt)) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                                <div class="ict-type-select-wrap">
+                                    <label class="inline-label">WARRANTY</label>
+                                    <select id="repairTypeWarranty" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                                        <option value="">— Select warranty —</option>
+                                        @foreach($typeWarrantyOptions as $opt)
+                                            <option value="{{ $opt }}" {{ $typeWarranty === $opt ? 'selected' : '' }}>{{ ucfirst(strtolower($opt)) }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
                             </div>
+                            <input type="hidden" name="repairType[]" id="repairTypeModeHidden" value="{{ $typeMode }}" @if(!$typeMode) disabled @endif>
+                            <input type="hidden" name="repairType[]" id="repairTypeWarrantyHidden" value="{{ $typeWarranty }}" @if(!$typeWarranty) disabled @endif>
                             <p id="referredSpBanner" class="ict-sp-banner {{ ($isUpdate && in_array('REFERRED TO SERVICE PROVIDER', $repairTypes ?? [])) ? 'ict-sp-banner-visible' : '' }}">
                                 Referred to external <strong>Service Provider (SP)</strong>. Fill <strong>Section 4</strong> below, then <strong>Save / Update</strong> the ticket.
                             </p>

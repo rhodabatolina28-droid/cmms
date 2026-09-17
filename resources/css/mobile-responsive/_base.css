@@ -151,13 +151,6 @@
         align-items: flex-start;
     }
 
-    .checkbox-group,
-    .checkbox-group.compact-checkbox {
-        flex-direction: column;
-        gap: 10px;
-        align-items: flex-start;
-    }
-
     .radio-label,
     .checkbox-label {
         font-size: 13px;
