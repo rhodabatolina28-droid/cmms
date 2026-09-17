@@ -23,9 +23,8 @@ class RequestHelpers
      * D9.24 format: {PREFIX}-{YYYY}-{MM}-{DD}-{NNNN}  e.g. REQ-2026-09-17-0001
      * Legacy numbers (REQ-NCR-RCMB-2026-0001) remain valid and displayable.
      *
-     * The sequence is continuous within the year and only restarts when the
-     * year changes; a MySQL advisory lock keeps concurrent requests from
-     * reusing a number.
+     * The counter restarts every day, per prefix (a new day starts at 0001);
+     * a MySQL advisory lock keeps concurrent requests from reusing a number.
      *
      * @param string $type 'ICT' or 'PM'
      * @param User|null $actorUser Retained for backwards compatibility. The
@@ -34,25 +33,22 @@ class RequestHelpers
     public static function generateRequestNumber(string $type, ?User $actorUser = null): string
     {
         $prefix = $type === 'ICT' ? 'REQ' : 'PM';
-        $year = now()->format('Y');
         $datePart = now()->format('Y-m-d');
+        $searchPrefix = "{$prefix}-{$datePart}";
 
-        // The counter lives for the whole year; it only restarts in a new year.
-        $yearPrefix = "{$prefix}-{$year}-";
-
-        // Use MySQL advisory lock to prevent race conditions (per prefix, per year)
-        $lockName = 'request_number_' . $prefix . '_' . $year;
+        // Use MySQL advisory lock to prevent race conditions (per prefix, per day)
+        $lockName = 'request_number_' . $prefix . '_' . now()->format('Y_m_d');
         $lockTimeout = 10;
 
         $acquired = DB::select("SELECT GET_LOCK(?, ?) AS acquired", [$lockName, $lockTimeout]);
 
         if (!($acquired[0]->acquired ?? false)) {
-            Log::warning("Could not acquire advisory lock for request number generation (prefix: {$yearPrefix}). Proceeding without lock.");
+            Log::warning("Could not acquire advisory lock for request number generation (prefix: {$searchPrefix}). Proceeding without lock.");
         }
 
         try {
             $last = RequestModel::withTrashed()
-                ->where('request_number', 'LIKE', "{$yearPrefix}%")
+                ->where('request_number', 'LIKE', "{$searchPrefix}-%")
                 ->orderByDesc('request_number')
                 ->value('request_number');
 
@@ -62,7 +58,7 @@ class RequestHelpers
                 $next = (int) end($parts) + 1;
             }
 
-            return "{$prefix}-{$datePart}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
+            return "{$searchPrefix}-" . str_pad($next, 4, '0', STR_PAD_LEFT);
         } finally {
             DB::select("SELECT RELEASE_LOCK(?)", [$lockName]);
         }
