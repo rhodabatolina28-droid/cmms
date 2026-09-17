@@ -162,7 +162,8 @@ class SuperAdminDashboardAction
                 ->where('requests.division_admin_review_status', 'Approved')
                 ->when($user->region, fn ($query) => $query->where('users.region', $user->region))
                 ->when($user->branch, fn ($query) => $query->where('users.branch', $user->branch));
-            $surveys = (clone $surveysQuery)->get(['csm_surveys.sqd1','csm_surveys.sqd2','csm_surveys.sqd3','csm_surveys.sqd4','csm_surveys.sqd5','csm_surveys.sqd6','csm_surveys.sqd7','csm_surveys.sqd8','csm_surveys.sqd9']);
+            $sqdColumns = array_map(fn ($column) => 'csm_surveys.' . $column, CsmStatsService::SQD_COLUMNS);
+            $surveys = (clone $surveysQuery)->get($sqdColumns);
 
             // D9.31: scoring + per-SQD math live in CsmStatsService (single
             // source of truth, case-insensitive label normalization).
@@ -172,11 +173,51 @@ class SuperAdminDashboardAction
                 ->where('status', RequestModel::STATUS_COMPLETED)
                 ->count();
             $csmResponseRate = $completedRequestCount > 0 ? round(($csmResponses / $completedRequestCount) * 100) : 0;
+
+            // D9.31b: traffic-light band for the headline score (thresholds live
+            // in CsmStatsService). Dimension-level detail stays OFF this card on
+            // purpose: the six tiles share one grid row (D9.9) and each is only
+            // ~200px wide, so SQD codes/question text cannot fit without
+            // wrapping and stretching every neighbour.
+            $csmBand = CsmStatsService::ratingBand($csmAverage > 0 ? $csmAverage : null);
+
+            // D9.31b: month-over-month trend. Stays hidden until BOTH months
+            // hold a usable sample (MIN_TREND_SAMPLE), otherwise one respondent
+            // would swing the arrow and cry wolf.
+            $monthSurveys = function ($start, $end) use ($surveysQuery, $sqdColumns) {
+                return (clone $surveysQuery)
+                    ->whereBetween('csm_surveys.created_at', [$start, $end])
+                    ->get($sqdColumns);
+            };
+
+            $thisMonth = $monthSurveys(now()->startOfMonth(), now());
+            $lastMonthStart = now()->subMonthNoOverflow()->startOfMonth();
+            $lastMonth = $monthSurveys($lastMonthStart, now()->subMonthNoOverflow()->endOfMonth());
+
+            $csmDelta = null;
+            $csmTrend = null;
+            $csmPrevLabel = null;
+
+            if ($thisMonth->count() >= CsmStatsService::MIN_TREND_SAMPLE
+                && $lastMonth->count() >= CsmStatsService::MIN_TREND_SAMPLE) {
+                $currentAvg = CsmStatsService::averageForSurveys($thisMonth);
+                $previousAvg = CsmStatsService::averageForSurveys($lastMonth);
+
+                if ($currentAvg !== null && $previousAvg !== null) {
+                    $csmDelta = round($currentAvg - $previousAvg, 1);
+                    $csmTrend = CsmStatsService::trendDirection($csmDelta);
+                    $csmPrevLabel = $lastMonthStart->format('M');
+                }
+            }
         } catch (\Exception $e) {
             $csmAverage = 0;
             $csmResponses = 0;
             $completedRequestCount = 0;
             $csmResponseRate = 0;
+            $csmBand = 'none';
+            $csmDelta = null;
+            $csmTrend = null;
+            $csmPrevLabel = null;
         }
 
         // Active PM Cycles count (for Operations Overview replacement card)
@@ -206,6 +247,7 @@ class SuperAdminDashboardAction
             'recentRequests', 'stats', 'departmentStats',
             'warrantyExpiring', 'warrantyExpired',
             'csmAverage', 'csmResponses', 'csmResponseRate', 'completedRequestCount',
+            'csmBand', 'csmDelta', 'csmTrend', 'csmPrevLabel',
             'assetBreakdown', 'kpi',
             'activePmCycles', 'todayRequests', 'completedThisWeek', 'totalRequestCount'
         ));

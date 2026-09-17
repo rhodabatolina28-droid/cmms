@@ -163,6 +163,118 @@
             border-color: rgba(0, 56, 168, 0.2);
         }
 
+        /* D9.31b (user decision): extra info sits BESIDE the big value as a
+           compact chip — never on its own line below. The six tiles share ONE
+           grid row (D9.9), so a 4th line would stretch every neighbour and add
+           dead space; a chip keeps every tile a 3-line stack. The CSM tile also
+           compresses its internals so its (still 3-line) stack fits inside the
+           plain tiles' natural height. Measured in Chrome (1024-1920): the row
+           settles at the plain tiles' own natural height (~126px), rowStretch
+           = 0px, nothing clipped. */
+        .stats-grid .stat-csm {
+            padding: 14px 16px !important;
+        }
+        .stats-grid .stat-csm .stat-label {
+            margin-bottom: 2px;
+        }
+        .stats-grid .stat-csm .stat-sub {
+            margin-top: 2px;
+        }
+
+        /* D9.31b: CSM card run-rate + secondary lines */
+        .stat-unit {
+            font-size: 12px;
+            font-weight: 700;
+            color: #64748b;
+        }
+        .stat-sub {
+            font-size: 10px;
+            font-weight: 700;
+            color: #64748b;
+            margin-top: 4px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        /* Chip anchored INSIDE the value line — aligned to the digits' BASELINE
+           (same typographic rule as the "/5.0" unit beside it), then lifted
+           1px so the pill sits optically centred on the digit bodies instead
+           of hanging below the baseline. Full context lives in the title
+           tooltip because the tile is only ~150-200px wide. */
+        .stat-value-row {
+            display: flex;
+            align-items: baseline;
+            gap: 6px;
+            min-width: 0;
+            white-space: nowrap;
+        }
+        .stat-value-row .stat-unit {
+            flex-shrink: 0;
+        }
+        .stat-chip {
+            font-size: 10px;
+            font-weight: 800;
+            line-height: 1;
+            white-space: nowrap;
+            flex-shrink: 0;
+            padding: 3px 7px 4px;
+            border-radius: 999px;
+            transform: translateY(-2px);
+        }
+        .stat-chip-up { color: #047857; background: #ecfdf5; }
+        .stat-chip-down { color: #b91c1c; background: #fef2f2; }
+        .stat-chip-flat { color: #64748b; background: #f1f5f9; }
+        .stat-chip-amber { color: #b45309; background: #fffbeb; }
+        /* Sipit na widths: 6 tiles @ ~146px (1024 screens) — slim the chips
+           further so number + unit + chip always fit on the one line. */
+        @media screen and (max-width: 1440px) {
+            .stat-value-row { gap: 4px; }
+            .stat-chip {
+                font-size: 9px;
+                padding: 2px 5px 3px;
+                transform: translateY(-1px);
+            }
+        }
+        /* D9.31b: CSM-only chip polish. The trend chip belongs beside the score
+           it qualifies, but at 10px hugging "/5.0" it read as an afterthought
+           (user review). Scoped to .stat-csm so the Overdue chip keeps its
+           original proportions: slightly larger pill, real breathing room. */
+        .stats-grid .stat-csm .stat-value-row {
+            gap: 10px;
+        }
+        .stats-grid .stat-csm .stat-chip {
+            font-size: 11px;
+            padding: 4px 9px;
+            transform: translateY(-1px);
+        }
+        @media screen and (max-width: 1440px) {
+            .stats-grid .stat-csm .stat-value-row {
+                gap: 6px;
+            }
+            .stats-grid .stat-csm .stat-chip {
+                font-size: 10px;
+                padding: 3px 6px;
+                transform: none;
+            }
+        }
+        /* Sipit na widths (tiles ~146px sa 1024-1280 screens): slimmer chip at
+           gap — napatunayan sa sukat na nag-e-clip ang "▲1.9" sa gilid ng
+           tile kapag 10px + 6px gap (H-OVERFLOW check sa measurement harness). */
+        @media screen and (max-width: 1280px) {
+            .stats-grid .stat-csm .stat-value-row {
+                gap: 4px;
+            }
+            .stats-grid .stat-csm .stat-chip {
+                font-size: 9px;
+                padding: 2px 5px;
+                transform: none;
+            }
+        }
+        /* Traffic-light score colours (thresholds live in CsmStatsService). */
+        .stat-csm-good { color: #047857; }
+        .stat-csm-watch { color: #d97706; }
+        .stat-csm-low { color: #dc2626; }
+
         .stat-bg-icon {
             position: absolute;
             right: -10px;
@@ -564,20 +676,24 @@
         <div class="stat-card-premium stat-overdue {{ $stats['overdue_tickets'] > 0 ? 'stat-overdue-alert' : '' }}">
             <i class="fa-solid fa-clock stat-bg-icon"></i>
             <span class="stat-label">Overdue Tickets</span>
-            <div class="stat-value">{{ $stats['overdue_tickets'] }}</div>
-            @if(($stats['overdue_pms'] ?? 0) > 0)
-                <div style="font-size:10px; color:#b45309; font-weight:700; margin-top:4px;">
-                    <i class="fa-solid fa-calendar-check" style="margin-right:3px;"></i>{{ $stats['overdue_pms'] }} PM overdue
-                </div>
-            @endif
+            <div class="stat-value stat-value-row">{{ $stats['overdue_tickets'] }}@if(($stats['overdue_pms'] ?? 0) > 0){{-- D9.31b: chip BESIDE the number, not a 4th line below — the six tiles share one grid row (D9.9) --}}<span class="stat-chip stat-chip-amber" title="{{ $stats['overdue_pms'] }} preventive-maintenance task{{ $stats['overdue_pms'] > 1 ? 's are' : ' is' }} past its due date"><i class="fa-solid fa-calendar-check" style="margin-right:3px;"></i>{{ $stats['overdue_pms'] }} PM</span>@endif</div>
         </div>
         <div class="stat-card-premium stat-csm">
             <i class="fa-solid fa-star stat-bg-icon"></i>
             <span class="stat-label">CSM Satisfaction</span>
-            <div class="stat-value">
-                @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
+            {{-- D9.31b (user decision): the trend chip sits BESIDE the score,
+                 not on a line below — the six tiles share one grid row (D9.9),
+                 so a 4th line would stretch every neighbour. The chip is compact
+                 ("▲ 1.9"); full context ("higher than the Aug average of 1.3")
+                 lives in the hover tooltip. Hidden until BOTH months hold a
+                 usable sample (CsmStatsService::MIN_TREND_SAMPLE). --}}
+            <div class="stat-value stat-value-row">
+                @if($csmAverage > 0){{-- score coloured by band (red < 4.0, amber 4.0-4.4, green >= 4.5) --}}<span class="stat-csm-{{ $csmBand }}">{{ number_format($csmAverage, 1) }}</span><span class="stat-unit">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
+                @if($csmDelta !== null)
+                    <span class="stat-chip stat-chip-{{ $csmTrend }}" title="{{ $csmTrend === 'up' ? 'Higher' : ($csmTrend === 'down' ? 'Lower' : 'Unchanged') }} than the {{ $csmPrevLabel }} average of {{ number_format(abs($csmDelta), 1) }} points on the 5-point CSM scale">&{{ $csmTrend === 'up' ? '#9650;' : ($csmTrend === 'down' ? '#9660;' : '#8212;') }}{{ number_format(abs($csmDelta), 1) }}</span>
+                @endif
             </div>
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
+            <div class="stat-sub">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
         </div>
     </div>
 
@@ -822,7 +938,7 @@
                         <div class="ops-label">CSM Satisfaction</div>
                         <div class="ops-sub">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
                     </div>
-                    <span class="ops-val" style="color: #1e293b;">
+                    <span class="ops-val" style="color: {{ ['good' => '#047857', 'watch' => '#d97706', 'low' => '#dc2626'][$csmBand] ?? '#1e293b' }};">
                         @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 11px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
                     </span>
                 </div>

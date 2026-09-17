@@ -335,7 +335,10 @@ class KpiDashboardTest extends TestCase
             ->assertOk()
             // bagong cards
             ->assertSee("CSM Satisfaction")
-            ->assertSee("PM overdue")
+            // D9.31b: ang "PM overdue" subtext ay naging compact chip ("N PM")
+            // sa gilid ng bilang — ang "PM" chip text + tooltip ang tinitingnan
+            ->assertSee("PM</span>", false)
+            ->assertSee("preventive-maintenance task", false)
             // renamed KPI labels
             ->assertSee("Avg. Downtime")
             ->assertSee("Days Between Failures")
