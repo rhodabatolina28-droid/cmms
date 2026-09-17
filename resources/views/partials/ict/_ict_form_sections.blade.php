@@ -66,25 +66,21 @@
                         </div>
 
                         <div class="form-group compact">
-                            <label for="itRemarks">ACTION TAKEN / RECOMMENDATION:</label>
+                            <label for="itRemarks">REMARKS:</label>
                             <textarea id="itRemarks" name="itRemarks" rows="3" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>{{ $repairRequest->it_remarks ?? '' }}</textarea>
                         </div>
                     </div>
 
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="serviceRequestNo">SERVICE REQUEST NO:</label>
+                            <label for="serviceRequestNo">SERVICE REQUEST NO: RID -</label>
                             <input type="text" id="serviceRequestNo" name="serviceRequestNo" value="{{ $repairRequest->service_request_no ?? ($request->display_number ?? $request->request_number ?? '') }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
-                        </div>
-
-                        <div class="form-group compact">
-                            <label for="rid">RID:</label>
-                            <input type="text" id="rid" name="rid" value="{{ $repairRequest->rid ?? '' }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                            <input type="hidden" name="rid" value="RID">
                         </div>
 
                         <div class="form-group compact">
                             <label for="dateReceived">DATE RECEIVED:</label>
-                            <input type="date" id="dateReceived" name="dateReceived" value="{{ fmtDate($repairRequest->date_received ?? null) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                            <input type="date" id="dateReceived" name="dateReceived" value="{{ fmtDate($repairRequest->date_received ?? (($isAdmin && !$isView) ? now() : null)) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                         </div>
 
                         <div class="form-group compact">
@@ -253,12 +249,6 @@
                         <div class="form-group compact">
                             <label for="afterServiceDate">AFTER SERVICE DATE:</label>
                             <input type="date" id="afterServiceDate" name="afterServiceDate" value="{{ fmtDate($repairRequest->after_service_date ?? null) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
-                        </div>
-                    </div>
-                    <div class="form-col">
-                        <div class="form-group compact">
-                            <label for="repairCost">REPAIR COST (₱):</label>
-                            <input type="number" id="repairCost" name="repairCost" step="0.01" min="0" placeholder="0.00" value="{{ old('repairCost', $repairRequest->cost ?? '') }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }} class="ict-cost-input">
                         </div>
                     </div>
                 </div>

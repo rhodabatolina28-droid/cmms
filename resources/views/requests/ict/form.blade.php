@@ -295,7 +295,7 @@
                 <!-- DESCRIPTION -->
                 <div class="form-group compact">
                     <label for="repairDescription" class="required">
-                        INITIAL DIAGNOSIS:
+                        DESCRIPTION OF REPAIR REQUEST:
                     </label>
                     <textarea id="repairDescription" name="repairDescription" rows="3" required {{ ($isView || !$canEditEndUser) ? 'disabled' : '' }}>{{ $repairRequest->repair_description ?? '' }}</textarea>
                 </div>

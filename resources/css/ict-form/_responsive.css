@@ -25,7 +25,6 @@
         margin: 16px 0 12px;
     }
     .section-header h3 { font-size: 13px; }
-    .section-header::before { height: 16px; margin-right: 10px; }
 
     /* ── FORM GROUPS ── */
     .form-group { padding: 6px 4px; margin-bottom: 14px; }

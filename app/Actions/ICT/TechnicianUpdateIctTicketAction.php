@@ -289,7 +289,7 @@ class TechnicianUpdateIctTicketAction
                 ? (float) $data['repairCost']
                 : ((isset($data['cost']) && $data['cost'] !== '')
                     ? (float) $data['cost']
-                    : null),
+                    : ($repairRequest->cost ?? null)),
             'after_service_date' => $data['afterServiceDate'] ?? $data['after_service_date'] ?? null,
             'findings_remarks' => $data['findingsRemarks'] ?? $data['findings_remarks'] ?? null,
             'it_personnel_signature' => $data['itPersonnelSignature'] ?? $data['it_personnel_signature'] ?? null,

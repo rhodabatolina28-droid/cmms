@@ -48,7 +48,6 @@
     .ict-asset-select { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; background: white; box-sizing: border-box; }
     .ict-asset-hint { margin: 6px 0 0; font-size: 12px; color: #475569; }
     .ict-scan-btn { flex-shrink: 0; padding: 10px 16px; background: #0038A8; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; margin-top: 0; }
-    .ict-cost-input { width: 100%; padding: 10px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 13px; outline: none; }
     .ict-section-header-note { font-size: 12px; color: #475569; margin: 8px 0 0; }
     .ict-acceptance-block { background: #fffbeb; border-color: #fcd34d; margin-bottom: 16px; }
     .ict-acceptance-block-text { margin: 0; color: #92400e; font-weight: 600; }

@@ -389,8 +389,7 @@
             {{-- RIGHT COLUMN --}}
             <td class="s46">
                 <table class="s47">
-                    <tr><td class="s48">SERVICE REQUEST NO:</td><td class="s49"><div class="f s16">{{ $rr->service_request_no ?? $request->display_number ?? $request->request_number }}</div></td></tr>
-                    <tr><td class="s50">RID:</td><td class="s49"><div class="f s16">{{ $rr->rid ?? '' }}</div></td></tr>
+                    <tr><td class="s48">SERVICE REQUEST NO: RID -</td><td class="s49"><div class="f s16">{{ $rr->service_request_no ?? $request->display_number ?? $request->request_number }}</div></td></tr>
                     <tr><td class="s50">DATE RECEIVED:</td><td class="s49"><div class="f s16">{{ $rr->date_received ? \Carbon\Carbon::parse($rr->date_received)->format('m/d/Y') : '' }}</div></td></tr>
                     <tr><td class="s50">SERVICE SCHEDULE DATE:</td><td class="s49"><div class="f s16">{{ $rr->service_schedule_date ? \Carbon\Carbon::parse($rr->service_schedule_date)->format('m/d/Y') : '' }}</div></td></tr>
                     <tr><td class="s50">PROPERTY NO:</td><td class="s49"><div class="f s16">{{ $rr->property_no ?? '' }}</div></td></tr>
