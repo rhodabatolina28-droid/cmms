@@ -6,6 +6,7 @@ use App\Models\Request as RequestModel;
 use App\Models\User;
 use App\Models\InventoryAsset;
 use App\Models\PMSchedule;
+use App\Services\CsmStatsService;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -162,27 +163,10 @@ class SuperAdminDashboardAction
                 ->when($user->region, fn ($query) => $query->where('users.region', $user->region))
                 ->when($user->branch, fn ($query) => $query->where('users.branch', $user->branch));
             $surveys = (clone $surveysQuery)->get(['csm_surveys.sqd1','csm_surveys.sqd2','csm_surveys.sqd3','csm_surveys.sqd4','csm_surveys.sqd5','csm_surveys.sqd6','csm_surveys.sqd7','csm_surveys.sqd8','csm_surveys.sqd9']);
-            $totalScore = 0;
-            $totalQuestions = 0;
-            
-            $scoreMap = [
-                'Strongly Agree' => 5,
-                'Agree' => 4,
-                'Neither Agree nor Disagree' => 3,
-                'Disagree' => 2,
-                'Strongly Disagree' => 1,
-            ];
 
-            foreach ($surveys as $survey) {
-                foreach (['sqd1','sqd2','sqd3','sqd4','sqd5','sqd6','sqd7','sqd8','sqd9'] as $sqd) {
-                    if (isset($scoreMap[$survey->$sqd])) {
-                        $totalScore += $scoreMap[$survey->$sqd];
-                        $totalQuestions++;
-                    }
-                }
-            }
-
-            $csmAverage = $totalQuestions > 0 ? round($totalScore / $totalQuestions, 1) : 0;
+            // D9.31: scoring + per-SQD math live in CsmStatsService (single
+            // source of truth, case-insensitive label normalization).
+            $csmAverage = round(CsmStatsService::averageForSurveys($surveys) ?? 0, 1);
             $csmResponses = $surveys->count();
             $completedRequestCount = (clone $allRequests)
                 ->where('status', RequestModel::STATUS_COMPLETED)

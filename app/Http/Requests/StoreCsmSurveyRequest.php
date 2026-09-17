@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests;
 
+use App\Services\CsmStatsService;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreCsmSurveyRequest extends FormRequest
 {
@@ -15,7 +17,9 @@ class StoreCsmSurveyRequest extends FormRequest
     public function rules(): array
     {
         // Extracted verbatim from CsmController::store() lines 46-64.
-        return [
+        // D9.31: SQD answers are locked to the exact ARTA scale labels the
+        // form posts — free-text answers can no longer pollute CSM averages.
+        $rules = [
             'request_id'  => 'required|exists:requests,id',
             'consent'     => 'required|in:yes',
             'email'       => 'nullable|email|max:255',
@@ -24,16 +28,13 @@ class StoreCsmSurveyRequest extends FormRequest
             'cc1'         => 'required|array|size:1',
             'cc2'         => 'required|array|size:1',
             'cc3'         => 'required|array|size:1',
-            'sqd1'        => 'required|string',
-            'sqd2'        => 'required|string',
-            'sqd3'        => 'required|string',
-            'sqd4'        => 'required|string',
-            'sqd5'        => 'required|string',
-            'sqd6'        => 'required|string',
-            'sqd7'        => 'required|string',
-            'sqd8'        => 'required|string',
-            'sqd9'        => 'required|string',
             'suggestions' => 'nullable|string|max:5000',
         ];
+
+        foreach (CsmStatsService::SQD_COLUMNS as $column) {
+            $rules[$column] = ['required', 'string', Rule::in(CsmStatsService::validationLabels())];
+        }
+
+        return $rules;
     }
 }
