@@ -152,13 +152,13 @@ class SuperAdminDashboardAction
             $warrantyExpired = collect();
         }
 
-        // Client Satisfaction (CSM) Snapshot
+        // Client Satisfaction (CSM) Snapshot — ALL request types (ICT + PM)
         try {
             $surveysQuery = DB::table('csm_surveys')
                 ->join('requests', 'csm_surveys.request_id', '=', 'requests.id')
                 ->join('users', 'requests.user_id', '=', 'users.id')
-                ->where('requests.type', 'ICT')
                 ->where('requests.status', RequestModel::STATUS_COMPLETED)
+                ->where('requests.division_admin_review_status', 'Approved')
                 ->when($user->region, fn ($query) => $query->where('users.region', $user->region))
                 ->when($user->branch, fn ($query) => $query->where('users.branch', $user->branch));
             $surveys = (clone $surveysQuery)->get(['csm_surveys.sqd1','csm_surveys.sqd2','csm_surveys.sqd3','csm_surveys.sqd4','csm_surveys.sqd5','csm_surveys.sqd6','csm_surveys.sqd7','csm_surveys.sqd8','csm_surveys.sqd9']);
@@ -184,15 +184,14 @@ class SuperAdminDashboardAction
 
             $csmAverage = $totalQuestions > 0 ? round($totalScore / $totalQuestions, 1) : 0;
             $csmResponses = $surveys->count();
-            $completedIctCount = (clone $allRequests)
-                ->where('type', 'ICT')
+            $completedRequestCount = (clone $allRequests)
                 ->where('status', RequestModel::STATUS_COMPLETED)
                 ->count();
-            $csmResponseRate = $completedIctCount > 0 ? round(($csmResponses / $completedIctCount) * 100) : 0;
+            $csmResponseRate = $completedRequestCount > 0 ? round(($csmResponses / $completedRequestCount) * 100) : 0;
         } catch (\Exception $e) {
             $csmAverage = 0;
             $csmResponses = 0;
-            $completedIctCount = 0;
+            $completedRequestCount = 0;
             $csmResponseRate = 0;
         }
 
@@ -222,7 +221,7 @@ class SuperAdminDashboardAction
         return view('dashboard.super-admin', compact(
             'recentRequests', 'stats', 'departmentStats',
             'warrantyExpiring', 'warrantyExpired',
-            'csmAverage', 'csmResponses', 'csmResponseRate', 'completedIctCount',
+            'csmAverage', 'csmResponses', 'csmResponseRate', 'completedRequestCount',
             'assetBreakdown', 'kpi',
             'activePmCycles', 'todayRequests', 'completedThisWeek', 'totalRequestCount'
         ));

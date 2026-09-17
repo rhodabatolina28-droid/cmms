@@ -577,7 +577,7 @@
             <div class="stat-value">
                 @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 12px; font-weight: 700; color: #64748b;">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
             </div>
-            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
+            <div style="font-size: 10px; font-weight: 700; color: #64748b; margin-top: 4px;">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
         </div>
     </div>
 
@@ -820,7 +820,7 @@
                 <div class="ops-row">
                     <div>
                         <div class="ops-label">CSM Satisfaction</div>
-                        <div class="ops-sub">{{ $csmResponses }}/{{ $completedIctCount }} responded &middot; {{ $csmResponseRate }}%</div>
+                        <div class="ops-sub">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
                     </div>
                     <span class="ops-val" style="color: #1e293b;">
                         @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 11px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
