@@ -26,6 +26,13 @@ class RequestHelpers
      * The counter restarts every day, per prefix (a new day starts at 0001);
      * a MySQL advisory lock keeps concurrent requests from reusing a number.
      *
+     * Why daily (intentional, not an oversight): service requests are internal
+     * operational records used for daily queue tracking, so each day starts a
+     * fresh sequence. The full date is embedded in the number, so uniqueness
+     * and traceability (NAP / ISO 15489) are preserved. External government
+     * forms keep their own yearly series: PR-{YEAR}-NNNN (procurement) and
+     * PAR-{YEAR}-NNNN (property).
+     *
      * @param string $type 'ICT' or 'PM'
      * @param User|null $actorUser Retained for backwards compatibility. The
      *                             number no longer embeds region/branch codes.
