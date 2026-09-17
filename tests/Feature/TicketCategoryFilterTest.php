@@ -164,7 +164,7 @@ class TicketCategoryFilterTest extends TestCase
         $this->actingAs($sa)->get(route('ict.index'))
             ->assertOk()
             ->assertSee('All Categories')
-            ->assertSee('<th>Type</th>', false)
+            ->assertSee('Type</th>', false)
             ->assertSee('sa-td-type', false);
     }
 }

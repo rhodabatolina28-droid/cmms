@@ -1237,7 +1237,12 @@ public function test_badge_counts_all_unread_but_list_limited_to_ten(): void
         // Badge reflects the true unread total.
         $this->assertSame(15, $data['count']);
 
-        // Dropdown list stays capped at 10 for a snappy panel。
-        $this->assertCount(10, $data['notifications']);
+        // Default limit is 50: with only 15 created, all are returned.
+        $this->assertCount(15, $data['notifications']);
+
+        // The panel supports an explicit lower cap for a snappy dropdown.
+        $capped = $this->actingAs($user)->getJson(route('notifications.get', ['limit' => 10]))->json();
+        $this->assertCount(10, $capped['notifications']);
+        $this->assertSame(15, $capped['count']);
     }
 }
