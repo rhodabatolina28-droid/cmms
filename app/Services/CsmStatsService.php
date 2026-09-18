@@ -51,10 +51,28 @@ class CsmStatsService
     /** Severe = Strongly Disagree on at least this many of the 9 SQD questions. */
     public const SEVERE_SD_THRESHOLD = 3;
 
-    /** Rating bands shown on the dashboard (traffic-light thresholds). */
-    public const GOOD_THRESHOLD = 4.5;
+    /**
+     * Form column holding the ARTA overall-satisfaction question.
+     * The printed form numbers it "SDQ0" ("I am satisfied with the service
+     * that I availed.") and the DB column is sqd1 — note the offset. This is
+     * the item ARTA/CSC reports use for the headline "% satisfied" figure;
+     * sqd8 (SDQ7) is only about online support and must not be used for it.
+     */
+    public const SATISFACTION_COLUMN = 'sqd1';
 
-    public const WATCH_THRESHOLD = 4.0;
+    /**
+     * ARTA/CSC descriptive rating bands (Likert interpretation used in PH
+     * government client-satisfaction reports). D9.31c: these replaced the
+     * earlier arbitrary 4.5/4.0 traffic-light thresholds so the dashboard
+     * speaks the same language as the printed CSM form and its reports.
+     */
+    public const ARTA_BANDS = [
+        'very_satisfied' => ['label' => 'Very Satisfied', 'min' => 4.21, 'range' => '4.21–5.00', 'color' => 'good'],
+        'satisfied' => ['label' => 'Satisfied', 'min' => 3.41, 'range' => '3.41–4.20', 'color' => 'good'],
+        'neutral' => ['label' => 'Neutral', 'min' => 2.61, 'range' => '2.61–3.40', 'color' => 'watch'],
+        'dissatisfied' => ['label' => 'Dissatisfied', 'min' => 1.81, 'range' => '1.81–2.60', 'color' => 'low'],
+        'very_dissatisfied' => ['label' => 'Very Dissatisfied', 'min' => 1.00, 'range' => '1.00–1.80', 'color' => 'low'],
+    ];
 
     /**
      * Minimum surveys per period before a month-over-month arrow is shown.
@@ -204,20 +222,56 @@ class CsmStatsService
     }
 
     /**
-     * Traffic-light band for an average: 'good' (>= 4.5), 'watch' (>= 4.0),
-     * 'low' (< 4.0) or 'none' when nothing is scorable yet.
+     * ARTA band for an average — the descriptive rating a government reader
+     * expects ("Satisfied", "Neutral", ...). Returns
+     * ['key' => 'satisfied', 'label' => 'Satisfied', 'range' => '3.41–4.20',
+     *  'color' => 'good'] or key 'none' when nothing is scorable yet.
      */
-    public static function ratingBand(?float $average): string
+    public static function artaBand(?float $average): array
     {
         if ($average === null) {
-            return 'none';
+            return ['key' => 'none', 'label' => 'No data', 'range' => '', 'color' => 'none'];
         }
 
-        if ($average >= self::GOOD_THRESHOLD) {
-            return 'good';
+        foreach (self::ARTA_BANDS as $key => $band) {
+            if ($average >= $band['min']) {
+                return ['key' => $key] + $band;
+            }
         }
 
-        return $average >= self::WATCH_THRESHOLD ? 'watch' : 'low';
+        // Below the lowest band floor (defensive; the scale starts at 1.0).
+        $lowest = self::ARTA_BANDS['very_dissatisfied'];
+
+        return ['key' => 'very_dissatisfied'] + $lowest;
+    }
+
+    /**
+     * ARTA headline stat: the share of clients satisfied with the service —
+     * surveys whose overall-satisfaction answer (SDQ0, DB column sqd1) is
+     * "Strongly Agree" or "Agree", over surveys that gave a scorable answer on
+     * that column (N/A and blank respondents are excluded from both sides,
+     * mirroring how averages treat them). Returns null when nobody is scorable.
+     */
+    public static function percentSatisfied(iterable $surveys): ?float
+    {
+        $satisfied = 0;
+        $scorable = 0;
+
+        foreach ($surveys as $survey) {
+            $score = self::scoreFor($survey->{self::SATISFACTION_COLUMN} ?? null);
+
+            if ($score === null) {
+                continue;
+            }
+
+            $scorable++;
+
+            if ($score >= 4) {
+                $satisfied++;
+            }
+        }
+
+        return $scorable > 0 ? round(($satisfied / $scorable) * 100) : null;
     }
 
     /**

@@ -174,16 +174,21 @@ class SuperAdminDashboardAction
                 ->count();
             $csmResponseRate = $completedRequestCount > 0 ? round(($csmResponses / $completedRequestCount) * 100) : 0;
 
-            // D9.31b: traffic-light band for the headline score (thresholds live
-            // in CsmStatsService). Dimension-level detail stays OFF this card on
-            // purpose: the six tiles share one grid row (D9.9) and each is only
-            // ~200px wide, so SQD codes/question text cannot fit without
-            // wrapping and stretching every neighbour.
-            $csmBand = CsmStatsService::ratingBand($csmAverage > 0 ? $csmAverage : null);
+            // D9.31c: ARTA descriptive band (Very Satisfied … Very Dissatisfied)
+            // for the headline score — the government reader's own language —
+            // plus the ARTA headline stat (% of clients satisfied, SDQ0/sqd1).
+            // Dimension-level detail stays OFF this card on purpose: the six
+            // tiles share one grid row (D9.9) and each is only ~200px wide, so
+            // SQD codes/question text cannot fit without wrapping and
+            // stretching every neighbour.
+            $csmBand = CsmStatsService::artaBand($csmAverage > 0 ? $csmAverage : null);
+            $csmSatisfiedPct = CsmStatsService::percentSatisfied($surveys);
 
             // D9.31b: month-over-month trend. Stays hidden until BOTH months
             // hold a usable sample (MIN_TREND_SAMPLE), otherwise one respondent
-            // would swing the arrow and cry wolf.
+            // would swing the arrow and cry wolf. Lives in the value tooltip —
+            // the card no longer prints a bare delta number (user review:
+            // "▲1.9" had no meaning without its context).
             $monthSurveys = function ($start, $end) use ($surveysQuery, $sqdColumns) {
                 return (clone $surveysQuery)
                     ->whereBetween('csm_surveys.created_at', [$start, $end])
@@ -197,6 +202,8 @@ class SuperAdminDashboardAction
             $csmDelta = null;
             $csmTrend = null;
             $csmPrevLabel = null;
+            $csmPrevAvg = null;
+            $csmCurrentAvg = null;
 
             if ($thisMonth->count() >= CsmStatsService::MIN_TREND_SAMPLE
                 && $lastMonth->count() >= CsmStatsService::MIN_TREND_SAMPLE) {
@@ -206,7 +213,12 @@ class SuperAdminDashboardAction
                 if ($currentAvg !== null && $previousAvg !== null) {
                     $csmDelta = round($currentAvg - $previousAvg, 1);
                     $csmTrend = CsmStatsService::trendDirection($csmDelta);
-                    $csmPrevLabel = $lastMonthStart->format('M');
+                    $csmPrevLabel = $lastMonthStart->format('M Y');
+                    $csmPrevAvg = round($previousAvg, 1);
+                    // D9.31c: the tooltip compares month windows, so its right
+                    // side must be THIS month's average — not the overall
+                    // snapshot average (which includes previous months).
+                    $csmCurrentAvg = round($currentAvg, 1);
                 }
             }
         } catch (\Exception $e) {
@@ -214,10 +226,13 @@ class SuperAdminDashboardAction
             $csmResponses = 0;
             $completedRequestCount = 0;
             $csmResponseRate = 0;
-            $csmBand = 'none';
+            $csmBand = CsmStatsService::artaBand(null);
+            $csmSatisfiedPct = null;
             $csmDelta = null;
             $csmTrend = null;
             $csmPrevLabel = null;
+            $csmPrevAvg = null;
+            $csmCurrentAvg = null;
         }
 
         // Active PM Cycles count (for Operations Overview replacement card)
@@ -247,7 +262,8 @@ class SuperAdminDashboardAction
             'recentRequests', 'stats', 'departmentStats',
             'warrantyExpiring', 'warrantyExpired',
             'csmAverage', 'csmResponses', 'csmResponseRate', 'completedRequestCount',
-            'csmBand', 'csmDelta', 'csmTrend', 'csmPrevLabel',
+            'csmBand', 'csmSatisfiedPct', 'csmDelta', 'csmTrend', 'csmPrevLabel', 'csmPrevAvg',
+            'csmCurrentAvg',
             'assetBreakdown', 'kpi',
             'activePmCycles', 'todayRequests', 'completedThisWeek', 'totalRequestCount'
         ));

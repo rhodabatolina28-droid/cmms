@@ -200,7 +200,9 @@
            (same typographic rule as the "/5.0" unit beside it), then lifted
            1px so the pill sits optically centred on the digit bodies instead
            of hanging below the baseline. Full context lives in the title
-           tooltip because the tile is only ~150-200px wide. */
+           tooltip because the tile is only ~150-200px wide.
+           D9.31c: only the Overdue tile still carries a chip — the CSM trend
+           chip was replaced by the ARTA band word + % satisfied sub line. */
         .stat-value-row {
             display: flex;
             align-items: baseline;
@@ -221,12 +223,9 @@
             border-radius: 999px;
             transform: translateY(-2px);
         }
-        .stat-chip-up { color: #047857; background: #ecfdf5; }
-        .stat-chip-down { color: #b91c1c; background: #fef2f2; }
-        .stat-chip-flat { color: #64748b; background: #f1f5f9; }
         .stat-chip-amber { color: #b45309; background: #fffbeb; }
-        /* Sipit na widths: 6 tiles @ ~146px (1024 screens) — slim the chips
-           further so number + unit + chip always fit on the one line. */
+        /* Sipit na widths: 6 tiles @ ~146px (1024 screens) — slim the chip
+           further so number + chip always fit on the one line. */
         @media screen and (max-width: 1440px) {
             .stat-value-row { gap: 4px; }
             .stat-chip {
@@ -235,42 +234,9 @@
                 transform: translateY(-1px);
             }
         }
-        /* D9.31b: CSM-only chip polish. The trend chip belongs beside the score
-           it qualifies, but at 10px hugging "/5.0" it read as an afterthought
-           (user review). Scoped to .stat-csm so the Overdue chip keeps its
-           original proportions: slightly larger pill, real breathing room. */
-        .stats-grid .stat-csm .stat-value-row {
-            gap: 10px;
-        }
-        .stats-grid .stat-csm .stat-chip {
-            font-size: 11px;
-            padding: 4px 9px;
-            transform: translateY(-1px);
-        }
-        @media screen and (max-width: 1440px) {
-            .stats-grid .stat-csm .stat-value-row {
-                gap: 6px;
-            }
-            .stats-grid .stat-csm .stat-chip {
-                font-size: 10px;
-                padding: 3px 6px;
-                transform: none;
-            }
-        }
-        /* Sipit na widths (tiles ~146px sa 1024-1280 screens): slimmer chip at
-           gap — napatunayan sa sukat na nag-e-clip ang "▲1.9" sa gilid ng
-           tile kapag 10px + 6px gap (H-OVERFLOW check sa measurement harness). */
-        @media screen and (max-width: 1280px) {
-            .stats-grid .stat-csm .stat-value-row {
-                gap: 4px;
-            }
-            .stats-grid .stat-csm .stat-chip {
-                font-size: 9px;
-                padding: 2px 5px;
-                transform: none;
-            }
-        }
-        /* Traffic-light score colours (thresholds live in CsmStatsService). */
+        /* ARTA band colours for the headline score (bands live in
+           CsmStatsService::ARTA_BANDS): Very Satisfied/Satisfied = green,
+           Neutral = amber, Dissatisfied/Very Dissatisfied = red. */
         .stat-csm-good { color: #047857; }
         .stat-csm-watch { color: #d97706; }
         .stat-csm-low { color: #dc2626; }
@@ -681,19 +647,16 @@
         <div class="stat-card-premium stat-csm">
             <i class="fa-solid fa-star stat-bg-icon"></i>
             <span class="stat-label">CSM Satisfaction</span>
-            {{-- D9.31b (user decision): the trend chip sits BESIDE the score,
-                 not on a line below — the six tiles share one grid row (D9.9),
-                 so a 4th line would stretch every neighbour. The chip is compact
-                 ("▲ 1.9"); full context ("higher than the Aug average of 1.3")
-                 lives in the hover tooltip. Hidden until BOTH months hold a
-                 usable sample (CsmStatsService::MIN_TREND_SAMPLE). --}}
-            <div class="stat-value stat-value-row">
-                @if($csmAverage > 0){{-- score coloured by band (red < 4.0, amber 4.0-4.4, green >= 4.5) --}}<span class="stat-csm-{{ $csmBand }}">{{ number_format($csmAverage, 1) }}</span><span class="stat-unit">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
-                @if($csmDelta !== null)
-                    <span class="stat-chip stat-chip-{{ $csmTrend }}" title="{{ $csmTrend === 'up' ? 'Higher' : ($csmTrend === 'down' ? 'Lower' : 'Unchanged') }} than the {{ $csmPrevLabel }} average of {{ number_format(abs($csmDelta), 1) }} points on the 5-point CSM scale">&{{ $csmTrend === 'up' ? '#9650;' : ($csmTrend === 'down' ? '#9660;' : '#8212;') }}{{ number_format(abs($csmDelta), 1) }}</span>
-                @endif
-            </div>
-            <div class="stat-sub">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
+            {{-- D9.31c (user decision): ARTA/CSC alignment. The score is
+                 coloured by its ARTA descriptive band and the sub line speaks
+                 government report language: band word + % of satisfied clients
+                 (Strongly Agree or Agree on SDQ0, the overall-satisfaction
+                 question) + response count. The month-over-month trend moved
+                 INTO the hover tooltip — the bare "▲1.9" chip confused users
+                 (no unit, no reference) and lives on in the weekly digest
+                 instead. Same 3-line stack => zero row stretch. --}}
+            <div class="stat-value" title="{{ $csmBand['key'] !== 'none' ? 'ARTA rating: ' . $csmBand['label'] . ' (' . $csmBand['range'] . ' on the 5-point scale)' : 'No client-satisfaction responses yet' }}@if($csmDelta !== null) &middot; {{ $csmTrend === 'up' ? 'Higher' : ($csmTrend === 'down' ? 'Lower' : 'Unchanged') }} than {{ $csmPrevLabel }}: {{ number_format($csmPrevAvg, 1) }} &rarr; {{ number_format($csmCurrentAvg, 1) }}@endif">@if($csmAverage > 0)<span class="stat-csm-{{ $csmBand['color'] }}">{{ number_format($csmAverage, 1) }}</span><span class="stat-unit">/5.0</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif</div>
+            <div class="stat-sub" title="ARTA rating: {{ $csmBand['label'] }} &middot; {{ $csmSatisfiedPct !== null ? $csmSatisfiedPct . '% of clients satisfied (Strongly Agree or Agree on the overall-satisfaction question)' : 'No overall-satisfaction answers yet' }} &middot; {{ $csmResponses }}/{{ $completedRequestCount }} responded ({{ $csmResponseRate }}%)">@if($csmBand['key'] !== 'none'){{ $csmBand['label'] }} &middot; @endif{{ $csmSatisfiedPct !== null ? $csmSatisfiedPct . '% satisfied' : 'no verdicts yet' }} &middot; {{ $csmResponses }}/{{ $completedRequestCount }}</div>
         </div>
     </div>
 
@@ -938,7 +901,7 @@
                         <div class="ops-label">CSM Satisfaction</div>
                         <div class="ops-sub">{{ $csmResponses }}/{{ $completedRequestCount }} responded &middot; {{ $csmResponseRate }}%</div>
                     </div>
-                    <span class="ops-val" style="color: {{ ['good' => '#047857', 'watch' => '#d97706', 'low' => '#dc2626'][$csmBand] ?? '#1e293b' }};">
+                    <span class="ops-val" style="color: {{ ['good' => '#047857', 'watch' => '#d97706', 'low' => '#dc2626'][$csmBand['color']] ?? '#1e293b' }};">
                         @if($csmAverage > 0){{ number_format($csmAverage, 1) }}<span style="font-size: 11px; color: #64748b; font-weight: 700;">/5</span>@else <span style="color: #94a3b8; font-size: 14px;">&mdash;</span> @endif
                     </span>
                 </div>
