@@ -1,172 +1,199 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
     <meta charset="UTF-8">
-    <title>CSM Monthly Summary Report</title>
+    <title>CSM Monthly Summary Report — {{ $monthLabel }}</title>
     <style>
-        /* D9.32: same visual language as pdf/csm-form.blade.php (Arial, navy
-           letterhead, grey table borders) — print-friendly, no charts. */
+        /* D9.32b: minimal print style, aligned with physical-count-report
+           (plain header, light-blue table heads, hairline borders — no
+           decorative boxes, callouts, or colour accents). */
         @page { size: A4 portrait; margin: 12mm; }
-        body { font-family: Arial, sans-serif; font-size: 10px; color: #333; line-height: 1.35; }
-        .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 10px; }
-        .header-bar table { width: 100%; border-collapse: collapse; }
-        .header-bar td { border: none; vertical-align: middle; padding: 0; }
-        .logo { width: 44px; height: 44px; }
-        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; }
-        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
-        .meta { font-size: 10.5px; margin-bottom: 8px; }
-        .meta b { color: #0f2a6b; }
-        .plain-box { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 4px; padding: 8px 10px; margin-bottom: 10px; }
-        .plain-box p { margin: 2px 0; font-size: 10.5px; }
-        .big { font-size: 15px; font-weight: bold; }
-        .stat-color-good { color: #047857; }
-        .stat-color-low { color: #b91c1c; }
-        .stat-color-watch { color: #d97706; }
-        .section-title { font-size: 11.5px; font-weight: bold; color: #0f2a6b; margin: 10px 0 4px 0; text-transform: uppercase; letter-spacing: 0.4px; }
-        .rpt-table { width: 100%; border-collapse: collapse; }
-        .rpt-table th, .rpt-table td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: center; font-size: 9px; }
-        .rpt-table th { background: #0f2a6b; color: white; font-weight: bold; }
-        .rpt-table th .sub { display: block; font-size: 7px; font-weight: normal; }
-        .rpt-table td.q { text-align: left; width: 40%; font-size: 9.5px; line-height: 1.25; }
-        .rpt-table td.avg, .rpt-table td.rate { font-weight: bold; font-size: 10px; }
-        .rpt-table tr.weakest td { background: #fef3c7; }
-        .rpt-table tr.overall td { background: #e2e8f0; font-weight: bold; font-size: 10px; }
-        .legend { font-size: 8px; color: #666; margin-top: 4px; line-height: 1.4; }
-        .callout { border: 1px solid #cbd5e1; border-left: 4px solid #d97706; background: #fffbeb; padding: 8px 10px; margin-bottom: 8px; }
-        .callout.good-news { border-left-color: #047857; background: #f0fdf4; }
-        .callout p { margin: 2px 0; font-size: 10px; }
-        .callout .q-text { font-style: italic; font-size: 10.5px; font-weight: bold; color: #1f2937; }
-        .footer { border-top: 1px solid #cbd5e1; margin-top: 14px; padding-top: 3px; font-size: 8px; color: #94a3b8; }
-        .empty-note { background: #f1f5f9; border: 1px dashed #cbd5e1; padding: 10px; font-size: 11px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #000; line-height: 1.35; }
+
+        .hdr { text-align: center; border-bottom: 2px solid #0038A8; padding-bottom: 6px; margin-bottom: 10px; }
+        .hdr h1 { font-size: 14pt; letter-spacing: 1px; }
+        .hdr .sub { font-size: 9pt; color: #444; margin-top: 2px; }
+
+        .meta { width: 100%; margin-bottom: 10px; font-size: 9pt; }
+        .meta td { padding: 1.5px 4px; vertical-align: top; }
+        .meta .lbl { color: #555; width: 110px; }
+
+        table.sum { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
+        table.sum th, table.sum td { border: 1px solid #999; padding: 3px 6px; text-align: center; font-size: 9pt; }
+        table.sum th { background: #eef3fb; }
+
+        .sec { font-size: 10pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;
+               border-bottom: 1px solid #999; padding-bottom: 2px; margin: 12px 0 6px; }
+
+        table.q { width: 100%; border-collapse: collapse; }
+        table.q th { background: #eef3fb; border: 1px solid #999; padding: 3px 4px; font-size: 8.5pt; }
+        table.q th .sub { display: block; font-size: 7pt; font-weight: normal; color: #555; }
+        table.q td { border: 1px solid #bbb; padding: 2.5px 4px; font-size: 8.5pt; text-align: center; }
+        table.q td.qq { text-align: left; line-height: 1.25; }
+        table.q tr.total td { background: #eef3fb; font-weight: bold; }
+
+        .note { font-size: 8pt; color: #555; margin-top: 4px; line-height: 1.4; }
+        .blk { margin-bottom: 8px; font-size: 9.5pt; }
+        .blk p { margin: 2px 0; }
+        .blk .q-text { font-style: italic; font-weight: bold; }
+        .empty { border: 1px solid #999; padding: 10px; font-size: 9.5pt; background: #fafafa; }
+        .foot { margin-top: 16px; font-size: 8pt; color: #666; border-top: 1px solid #ccc; padding-top: 4px; }
+        .page-break { page-break-after: always; }
     </style>
 </head>
 <body>
-    <div class="header-bar">
-        <table>
-            <tr>
-                <td style="width:56px; text-align:left;">
-                    @php $logo = public_path('images/ncmb-logo.svg'); @endphp
-                    @if(file_exists($logo))
-                        <img src="{{ 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logo)) }}" class="logo">
-                    @endif
-                </td>
-                <td style="text-align:left;">
-                    <div class="agency">NCMB</div>
-                    <div class="form-title">Client Satisfaction Measurement (CSM) — Monthly Summary Report</div>
-                </td>
-            </tr>
-        </table>
+
+    <div class="hdr">
+        <h1>CLIENT SATISFACTION MEASUREMENT</h1>
+        <div class="sub">Monthly Summary Report — {{ $monthLabel }}</div>
     </div>
 
-    <div class="meta">
-        <b>For the month of:</b> {{ $monthLabel }} &nbsp;|&nbsp; <b>Date generated:</b> {{ now()->format('F j, Y') }} &nbsp;|&nbsp; <b>Scope:</b> All branches
-    </div>
+    <table class="meta">
+        <tr>
+            <td class="lbl">Reporting period:</td>
+            <td>{{ $monthLabel }}</td>
+            <td class="lbl">Date generated:</td>
+            <td>{{ now()->format('F j, Y') }}</td>
+        </tr>
+        <tr>
+            <td class="lbl">Scope:</td>
+            <td>All branches</td>
+            <td class="lbl">Survey responses:</td>
+            <td>{{ $respondents }}</td>
+        </tr>
+    </table>
 
     @if(!$hasData)
-        <div class="empty-note">
+        <div class="empty">
             No survey responses were recorded for {{ $monthLabel }}.
             This report is kept as part of the annual CSM record.
         </div>
-        <div class="footer">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 1 of 2</div>
+        <div class="foot">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 1 of 2</div>
     @else
-        <div class="plain-box">
-            <p>{{ $respondents }} clients answered our survey this month.</p>
-            <p>Overall, clients rated our service
-                <span class="big stat-color-{{ $band['color'] }}">{{ $overall }} out of 5</span>
-                &mdash; that means clients are <b>{{ strtoupper($band['label']) }}</b>.</p>
-            <p>{{ $satisfiedPct ?? 0 }} out of every 100 clients are satisfied with the service they received.
-                @if($responseRate !== null)({{ $respondents }} of {{ $completedCount }} finished requests got a survey response.)@endif</p>
-        </div>
-        <div class="section-title">How each question was answered</div>
-        <table class="rpt-table">
+        <div class="sec">Monthly Summary</div>
+        <table class="sum">
             <tr>
-                <th style="width:40%;">Question</th>
+                <th>Overall Rating</th>
+                <th>Rating Description</th>
+                <th>% Satisfied</th>
+                <th>Responses</th>
+                <th>Completed Requests</th>
+                <th>Response Rate</th>
+            </tr>
+            <tr>
+                <td><b>{{ $overall !== null ? number_format($overall, 1) : '—' }}</b>{{ $overall !== null ? ' / 5' : '' }}</td>
+                <td>{{ $overall !== null ? $band['label'] : '—' }}</td>
+                <td>{{ $satisfiedPct !== null ? $satisfiedPct . '%' : '—' }}</td>
+                <td>{{ $respondents }}</td>
+                <td>{{ $completedCount }}</td>
+                <td>{{ $responseRate !== null ? $responseRate . '%' : '—' }}</td>
+            </tr>
+        </table>
+
+        <div class="sec">How Each Question Was Answered</div>
+        <table class="q">
+            <tr>
+                <th style="width:38%;">Question</th>
                 <th>5<span class="sub">Strongly Agree</span></th>
                 <th>4<span class="sub">Agree</span></th>
                 <th>3<span class="sub">Not sure</span></th>
                 <th>2<span class="sub">Disagree</span></th>
                 <th>1<span class="sub">Strongly Dis.</span></th>
                 <th style="width:9%;">Average</th>
-                <th style="width:14%;">Rating</th>
+                <th style="width:13%;">Rating</th>
             </tr>
             @foreach($questions as $row)
-                @php $isWeakest = $weakest !== null && $row['column'] === $weakest['column']; @endphp
-                <tr @if($isWeakest) class="weakest" @endif>
-                    <td class="q">{{ $row['question'] }}</td>
+                <tr>
+                    <td class="qq">{{ $row['question'] }}</td>
                     @foreach([5,4,3,2,1] as $s)
                         <td>{{ $row['counts'][$s] }}</td>
                     @endforeach
-                    <td class="avg stat-color-{{ $row['band']['color'] }}">{{ $row['average'] ?? '&mdash;' }}</td>
-                    <td class="rate stat-color-{{ $row['band']['color'] }}">{{ $row['average'] !== null ? $row['band']['label'] : '&mdash;' }}</td>
+                    <td>{{ $row['average'] !== null ? number_format($row['average'], 1) : '—' }}</td>
+                    <td>{{ $row['average'] !== null ? $row['band']['label'] : '—' }}</td>
                 </tr>
             @endforeach
-            <tr class="overall">
-                <td>OVERALL SATISFACTION RATING</td>
+            <tr class="total">
+                <td class="qq">OVERALL SATISFACTION RATING</td>
                 <td colspan="5"></td>
-                <td class="avg stat-color-{{ $band['color'] }}">{{ $overall }}</td>
-                <td class="rate stat-color-{{ $band['color'] }}">{{ $band['label'] }}</td>
+                <td>{{ $overall !== null ? number_format($overall, 1) : '—' }}</td>
+                <td>{{ $overall !== null ? $band['label'] : '—' }}</td>
             </tr>
         </table>
-        <div class="legend">
+        <div class="note">
             Scale: 5 = Strongly Agree &middot; 4 = Agree &middot; 3 = Neither Agree nor Disagree &middot; 2 = Disagree &middot; 1 = Strongly Disagree.
-            Clients may leave an answer blank (N/A) &mdash; those are not counted.<br>
+            Blank answers (N/A) are not counted.<br>
             Rating: 4.21&ndash;5.00 Very Satisfied &middot; 3.41&ndash;4.20 Satisfied &middot; 2.61&ndash;3.40 Not Sure &middot; 1.81&ndash;2.60 Dissatisfied &middot; 1.00&ndash;1.80 Very Dissatisfied.
-            The shaded row is the lowest-rated question of the month.
         </div>
 
         <div class="page-break"></div>
 
-        <div class="section-title">What we need to improve</div>
+        <div class="hdr">
+            <h1>CLIENT SATISFACTION MEASUREMENT</h1>
+            <div class="sub">Monthly Summary Report — {{ $monthLabel }} (continued)</div>
+        </div>
+
+        <div class="sec">What We Need to Improve</div>
         @if($weakest)
-            <div class="callout">
-                <p>&#9888; Our clients gave this question the LOWEST rating
-                    ({{ $weakest['average'] }} &mdash; {{ $weakest['band']['label'] }}):</p>
+            <div class="blk">
+                <p>The clients rated this question the lowest ({{ number_format($weakest['average'], 1) }} — {{ $weakest['band']['label'] }}):</p>
                 <p class="q-text">&ldquo;{{ $weakest['question'] }}&rdquo;</p>
-                <p>{{ $weakest['disagreeCount'] }} of our {{ $respondents }} clients
+                <p>{{ $weakest['disagreeCount'] }} of {{ $respondents }} respondent(s)
                     ({{ $respondents > 0 ? round(($weakest['disagreeCount'] / $respondents) * 100) : 0 }}%)
-                    disagreed with this or answered Strongly Disagree.</p>
+                    answered Disagree or Strongly Disagree.</p>
                 @if($weakest['prevAverage'] !== null)
                     <p>Compared to last month it
                         @if($weakest['average'] < $weakest['prevAverage'])
-                            <span class="stat-color-low">went down</span> ({{ $weakest['prevAverage'] }} &rarr; {{ $weakest['average'] }}).
+                            went down ({{ number_format($weakest['prevAverage'], 1) }} &rarr; {{ number_format($weakest['average'], 1) }}).
                         @elseif($weakest['average'] > $weakest['prevAverage'])
-                            <span class="stat-color-good">went up</span> ({{ $weakest['prevAverage'] }} &rarr; {{ $weakest['average'] }}).
+                            went up ({{ number_format($weakest['prevAverage'], 1) }} &rarr; {{ number_format($weakest['average'], 1) }}).
                         @else
-                            stayed the same ({{ $weakest['average'] }}).
+                            stayed the same ({{ number_format($weakest['average'], 1) }}).
                         @endif
                     </p>
                 @else
                     <p>No prior-month sample to compare with yet.</p>
                 @endif
-                <p>&#128161; What we can do: review the process behind this question with the team,
+                <p>Recommended action: review the process behind this question with the team,
                     then check next month's report to confirm the rating improves.</p>
             </div>
         @endif
         @if($secondWeakest && $weakest && $secondWeakest['column'] !== $weakest['column'] && $secondWeakest['average'] !== null)
-            <div class="callout">
+            <div class="blk">
                 <p>Second-lowest: <span class="q-text">&ldquo;{{ $secondWeakest['question'] }}&rdquo;</span>
-                    &mdash; {{ $secondWeakest['average'] }} ({{ $secondWeakest['band']['label'] }}),
+                    &mdash; {{ number_format($secondWeakest['average'], 1) }} ({{ $secondWeakest['band']['label'] }}),
                     {{ $secondWeakest['disagreeCount'] }} disagree answer(s).</p>
             </div>
         @endif
 
         @if($goodNews)
-            <div class="callout good-news">
-                <p>&#10003; THE GOOD NEWS &mdash; our clients are happiest with:</p>
+            <div class="sec">Highest-Rated Questions</div>
+            <div class="blk">
                 @foreach($goodNews as $row)
-                    <p>&bull; &ldquo;{{ $row['question'] }}&rdquo; &mdash; {{ $row['average'] }} ({{ $row['band']['label'] }})</p>
+                    <p>&bull; &ldquo;{{ $row['question'] }}&rdquo; &mdash; {{ number_format($row['average'], 1) }} ({{ $row['band']['label'] }})</p>
                 @endforeach
             </div>
         @endif
 
-        <div class="section-title">Who answered</div>
-        <p style="font-size:10.5px;">
-            Men: {{ $male }} &middot; Women: {{ $female }}
-            @php $others = $respondents - $male - $female; @endphp
-            @if($others > 0) &middot; Not specified: {{ $others }} @endif
-        </p>
+        <div class="sec">Respondent Profile</div>
+        <table class="sum">
+            <tr>
+                <th>Male</th>
+                <th>Female</th>
+                <th>Not specified</th>
+                <th>Total</th>
+            </tr>
+            <tr>
+                @php $others = $respondents - $male - $female; @endphp
+                <td>{{ $male }}</td>
+                <td>{{ $female }}</td>
+                <td>{{ $others > 0 ? $others : 0 }}</td>
+                <td>{{ $respondents }}</td>
+            </tr>
+        </table>
 
-        <div class="footer">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 2 of 2</div>
+        <div class="foot">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 2 of 2</div>
     @endif
+
 </body>
 </html>
