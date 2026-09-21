@@ -8,31 +8,31 @@
            (no blue/colour accents), thin grey rules, consistent alignment.
            Same clean table language as pdf/csm-form.blade.php. */
         @page { size: A4 portrait; margin: 9mm; }
-        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #333; line-height: 1.3; padding: 6px 8px; }
-        .header-bar { border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 6px; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 10.5px; color: #333; line-height: 1.35; padding: 6px 8px; }
+        .header-bar { border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 8px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
         .logo { width: 44px; height: 44px; }
-        .agency { font-size: 17px; font-weight: bold; color: #222; }
-        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
-        .meta { font-size: 10px; margin-bottom: 6px; }
+        .agency { font-size: 18px; font-weight: bold; color: #222; }
+        .form-title { font-size: 10.5px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
+        .meta { font-size: 10.5px; margin-bottom: 8px; }
         .meta b { color: #222; }
-        .section-title { font-size: 11px; font-weight: bold; color: #222; margin: 8px 0 4px 0; text-transform: uppercase; text-align: left; }
+        .section-title { font-size: 12px; font-weight: bold; color: #222; margin: 10px 0 5px 0; text-transform: uppercase; text-align: left; }
         .rpt-table { width: 100%; border-collapse: collapse; }
-        .rpt-table th, .rpt-table td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: center; font-size: 9px; }
-        .rpt-table th { font-size: 8px; font-weight: bold; text-transform: uppercase; background: #f8fafc; }
-        .rpt-table th .sub { display: block; font-size: 7px; font-weight: normal; color: #666; text-transform: none; }
-        .rpt-table td.q { text-align: left; width: 38%; font-size: 10px; line-height: 1.25; }
-        .rpt-table td.avg, .rpt-table td.rate { font-weight: bold; font-size: 10px; }
-        .rpt-table tr.total td { background: #f1f5f9; font-weight: bold; font-size: 10px; }
-        .note { font-size: 8px; color: #666; margin-top: 4px; line-height: 1.4; }
-        .sec { margin-bottom: 6px; }
-        .sec p { margin: 2px 0; font-size: 10px; }
-        .sec .q-text { font-style: italic; font-weight: bold; font-size: 10.5px; color: #333; }
+        .rpt-table th, .rpt-table td { border: 1px solid #cbd5e1; padding: 4px 5px; text-align: center; font-size: 9.5px; }
+        .rpt-table th { font-size: 8.5px; font-weight: bold; text-transform: uppercase; background: #f8fafc; }
+        .rpt-table th .sub { display: block; font-size: 7.5px; font-weight: normal; color: #666; text-transform: none; }
+        .rpt-table td.q { text-align: left; width: 38%; font-size: 10.5px; line-height: 1.3; }
+        .rpt-table td.avg, .rpt-table td.rate { font-weight: bold; font-size: 10.5px; }
+        .rpt-table tr.total td { background: #f1f5f9; font-weight: bold; font-size: 10.5px; }
+        .note { font-size: 8.5px; color: #666; margin-top: 5px; line-height: 1.45; }
+        .sec { margin-bottom: 7px; }
+        .sec p { margin: 2px 0; font-size: 10.5px; }
+        .sec .q-text { font-style: italic; font-weight: bold; font-size: 11px; color: #333; }
         /* D9.32d: single-page layout — no page break, everything fits on one
            A4 sheet (summary + question table + improvement notes + profile). */
-        .footer { border-top: 1px solid #cbd5e1; margin-top: 10px; padding-top: 3px; font-size: 8px; color: #94a3b8; }
-        .empty-note { border: 1px dashed #cbd5e1; padding: 10px; font-size: 10px; }
+        .footer { border-top: 1px solid #cbd5e1; margin-top: 12px; padding-top: 4px; font-size: 8.5px; color: #94a3b8; }
+        .empty-note { border: 1px dashed #cbd5e1; padding: 12px; font-size: 10.5px; }
     </style>
 </head>
 <body>
