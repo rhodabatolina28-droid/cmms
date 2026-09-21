@@ -74,7 +74,7 @@ class CsmMonthlyReport extends Command
         // run later in the month => report the month so far.
         $today = now();
 
-        return $today->isDayOfMonth(1)
+        return $today->day === 1
             ? $today->copy()->subMonthNoOverflow()->startOfMonth()
             : $today->copy()->startOfMonth();
     }

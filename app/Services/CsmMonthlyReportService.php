@@ -104,6 +104,7 @@ class CsmMonthlyReportService
             $rows[$column] = [
                 'column' => $column,
                 'label' => CsmStatsService::labelFor($column),
+                'dimension' => CsmStatsService::dimensionFor($column),
                 'question' => CsmStatsService::questionFor($column),
                 'counts' => $counts,
                 'scorable' => $scorable,

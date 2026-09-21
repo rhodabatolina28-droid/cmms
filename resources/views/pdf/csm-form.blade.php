@@ -10,9 +10,9 @@
         .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 6px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
-        .logo { width: 44px; height: 44px; }
-        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; }
-        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
+        .logo { width: 46px; height: 46px; }
+        .agency { font-size: 16px; font-weight: bold; color: #0f2a6b; letter-spacing: 0.5px; line-height: 1.15; }
+        .form-title { font-size: 10.5px; font-weight: bold; color: #334155; letter-spacing: 0.5px; text-transform: uppercase; margin-top: 2px; }
         .form-body h1 { font-size: 13px; margin-bottom: 4px; }
         .form-body p { font-size: 10px; line-height: 1.3; margin-bottom: 4px; text-align: justify; }
         .form-row { width: 100%; margin-bottom: 1px; }
@@ -66,7 +66,7 @@
                         @endif
                     </td>
                     <td style="text-align:left;">
-                        <div class="agency">NCMB</div>
+                        <div class="agency">NATIONAL CONCILIATION AND MEDIATION BOARD</div>
                         <div class="form-title">Client Satisfaction Measurement (CSM) Survey Form</div>
                     </td>
                 </tr>

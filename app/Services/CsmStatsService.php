@@ -65,6 +65,21 @@ class CsmStatsService
         'sqd9' => 'I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.',
     ];
 
+    /**
+     * Official ARTA Service Quality Dimension names for each question.
+     */
+    public const SQD_DIMENSIONS = [
+        'sqd1' => 'Overall Satisfaction',
+        'sqd2' => 'Responsiveness',
+        'sqd3' => 'Reliability',
+        'sqd4' => 'Access & Facilities',
+        'sqd5' => 'Communication',
+        'sqd6' => 'Costs',
+        'sqd7' => 'Integrity',
+        'sqd8' => 'Support',
+        'sqd9' => 'Outcome',
+    ];
+
     /** Severe = Strongly Disagree on at least this many of the 9 SQD questions. */
     public const SEVERE_SD_THRESHOLD = 3;
 
@@ -242,6 +257,12 @@ class CsmStatsService
     public static function questionFor(string $column): string
     {
         return self::SQD_QUESTIONS[$column] ?? self::labelFor($column);
+    }
+
+    /** Official ARTA Service Quality Dimension title for an SQD column ('sqd3' => 'Reliability'). */
+    public static function dimensionFor(string $column): string
+    {
+        return self::SQD_DIMENSIONS[$column] ?? '';
     }
 
     /**

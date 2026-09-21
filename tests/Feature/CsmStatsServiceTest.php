@@ -217,4 +217,14 @@ class CsmStatsServiceTest extends TestCase
             CsmStatsService::optionLabels()
         );
     }
+
+    public function test_dimension_names_map_to_arta_standard(): void
+    {
+        $this->assertSame('Overall Satisfaction', CsmStatsService::dimensionFor('sqd1'));
+        $this->assertSame('Responsiveness', CsmStatsService::dimensionFor('sqd2'));
+        $this->assertSame('Reliability', CsmStatsService::dimensionFor('sqd3'));
+        $this->assertSame('Access & Facilities', CsmStatsService::dimensionFor('sqd4'));
+        $this->assertSame('Outcome', CsmStatsService::dimensionFor('sqd9'));
+        $this->assertSame('', CsmStatsService::dimensionFor('invalid_sqd'));
+    }
 }
