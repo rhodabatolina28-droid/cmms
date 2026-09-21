@@ -4,20 +4,20 @@
     <meta charset="UTF-8">
     <title>CSM Monthly Summary Report — {{ $monthLabel }}</title>
     <style>
-        /* D9.32c: same visual language as pdf/csm-form.blade.php — NCMB
-           letterhead (logo + navy title), thin grey table borders, plain
-           white background. No decorative boxes or colour accents. */
+        /* D9.32e: minimal government style — all Arial, plain dark text
+           (no blue/colour accents), thin grey rules, consistent alignment.
+           Same clean table language as pdf/csm-form.blade.php. */
         @page { size: A4 portrait; margin: 9mm; }
-        body { font-family: Arial, sans-serif; font-size: 9.5px; color: #333; line-height: 1.3; padding: 6px 8px; }
-        .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 6px; }
+        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5px; color: #333; line-height: 1.3; padding: 6px 8px; }
+        .header-bar { border-bottom: 1px solid #333; padding-bottom: 4px; margin-bottom: 6px; }
         .header-bar table { width: 100%; border-collapse: collapse; }
         .header-bar td { border: none; vertical-align: middle; padding: 0; }
         .logo { width: 44px; height: 44px; }
-        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; }
+        .agency { font-size: 17px; font-weight: bold; color: #222; }
         .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
         .meta { font-size: 10px; margin-bottom: 6px; }
-        .meta b { color: #0f2a6b; }
-        .section-title { font-size: 11px; font-weight: bold; color: #0f2a6b; margin: 8px 0 4px 0; text-transform: uppercase; letter-spacing: 0.4px; }
+        .meta b { color: #222; }
+        .section-title { font-size: 11px; font-weight: bold; color: #222; margin: 8px 0 4px 0; text-transform: uppercase; text-align: left; }
         .rpt-table { width: 100%; border-collapse: collapse; }
         .rpt-table th, .rpt-table td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: center; font-size: 9px; }
         .rpt-table th { font-size: 8px; font-weight: bold; text-transform: uppercase; background: #f8fafc; }
@@ -28,7 +28,7 @@
         .note { font-size: 8px; color: #666; margin-top: 4px; line-height: 1.4; }
         .sec { margin-bottom: 6px; }
         .sec p { margin: 2px 0; font-size: 10px; }
-        .sec .q-text { font-style: italic; font-weight: bold; font-size: 10.5px; color: #1f2937; }
+        .sec .q-text { font-style: italic; font-weight: bold; font-size: 10.5px; color: #333; }
         /* D9.32d: single-page layout — no page break, everything fits on one
            A4 sheet (summary + question table + improvement notes + profile). */
         .footer { border-top: 1px solid #cbd5e1; margin-top: 10px; padding-top: 3px; font-size: 8px; color: #94a3b8; }
@@ -154,11 +154,7 @@
                             stayed the same ({{ number_format($weakest['average'], 1) }}).
                         @endif
                     </p>
-                @else
-                    <p>No prior-month sample to compare with yet.</p>
                 @endif
-                <p>Recommended action: review the process behind this question with the team,
-                    then check next month's report to confirm the rating improves.</p>
             </div>
         @endif
         @if($secondWeakest && $weakest && $secondWeakest['column'] !== $weakest['column'] && $secondWeakest['average'] !== null)
