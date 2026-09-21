@@ -7,7 +7,7 @@ use App\Models\Request as RequestModel;
 use Illuminate\Support\Carbon;
 
 /**
- * D9.32 — assembles everything the 2-page CSM Monthly Summary PDF needs:
+ * D9.32 — assembles everything the single-page CSM Monthly Summary PDF needs:
  * per-question counts on the ARTA 5-point scale, averages with descriptive
  * bands, month-over-month deltas, the weakest question and the respondent
  * profile. All math delegates to CsmStatsService (single source of truth).
