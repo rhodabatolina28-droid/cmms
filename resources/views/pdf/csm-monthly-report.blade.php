@@ -54,7 +54,7 @@
     </div>
 
     <div class="meta">
-        <b>For the month of:</b> {{ $monthLabel }} &nbsp;|&nbsp; <b>Date generated:</b> {{ now()->format('F j, Y') }} &nbsp;|&nbsp; <b>Scope:</b> All branches
+        <b>For the month of:</b> {{ $monthLabel }} &nbsp;|&nbsp; <b>Date generated:</b> {{ now()->format('F j, Y') }} &nbsp;|&nbsp; <b>Scope:</b> Whole Office
     </div>
 
     @if(!$hasData)
