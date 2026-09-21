@@ -39,7 +39,12 @@ class Notification extends Model
                 // System admin: in-app only (no email flood on shared region).
                 // D9.20: exception — ICT requests are routed straight to the System
                 // Admin for review/assignment, so "for Review" types must also email.
-                if ($user->role === 'super_admin' && !str_ends_with((string) $notification->type, 'for Review')) {
+                // D9.32: second exception — CSM* notification types (Monthly Report,
+                // Severe Alert, Weekly Digest) must also email the SA; they are
+                // bundled by design (~2-4 emails/month), so the flood rule is safe.
+                if ($user->role === 'super_admin'
+                    && !str_ends_with((string) $notification->type, 'for Review')
+                    && !str_starts_with((string) $notification->type, 'CSM')) {
                     return;
                 }
 

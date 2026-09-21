@@ -20,3 +20,7 @@ Schedule::command('pm:send-reminders')->dailyAt('06:00');
 Schedule::command('parts:check-low-stock')->dailyAt('07:00');
 Schedule::command('inventory:verify-asset-sets')->dailyAt('08:00');
 
+// D9.32: CSM Monthly Summary PDF — runs on the 1st at 07:10 and reports the
+// PREVIOUS month (the command resolves this itself when no arg is given).
+Schedule::command('csm:monthly-report')->monthlyOn(1, '07:10');
+

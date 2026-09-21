@@ -48,6 +48,23 @@ class CsmStatsService
         'sqd9' => 'SDQ8',
     ];
 
+    /**
+     * Full question text as printed on the ARTA form, WITHOUT the SDQ number
+     * prefix. Plain-language reports (D9.32 PDF) and alert emails (D9.33/34)
+     * quote these verbatim — never DB column codes.
+     */
+    public const SQD_QUESTIONS = [
+        'sqd1' => 'I am satisfied with the service that I availed.',
+        'sqd2' => 'I spent a reasonable amount of time for my transaction.',
+        'sqd3' => "The office followed the transaction's requirements and steps based on the information provided.",
+        'sqd4' => 'The steps (including payment) I needed to do for my transaction were easy and simple.',
+        'sqd5' => "I easily found information about my transaction from the office's website.",
+        'sqd6' => 'I paid a reasonable amount of fees for my transaction.',
+        'sqd7' => 'I am confident my online transaction was secure.',
+        'sqd8' => "The office's online support was available, and (if asked questions) online support was quick to respond.",
+        'sqd9' => 'I got what I needed from the government office, or (if denied) denial of request was sufficiently explained to me.',
+    ];
+
     /** Severe = Strongly Disagree on at least this many of the 9 SQD questions. */
     public const SEVERE_SD_THRESHOLD = 3;
 
@@ -219,6 +236,12 @@ class CsmStatsService
     public static function labelFor(string $column): string
     {
         return self::SQD_LABELS[$column] ?? strtoupper($column);
+    }
+
+    /** Plain question text for an SQD column (no SDQ prefix). */
+    public static function questionFor(string $column): string
+    {
+        return self::SQD_QUESTIONS[$column] ?? self::labelFor($column);
     }
 
     /**

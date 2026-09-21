@@ -282,6 +282,11 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
     // CSM Survey Routes (end-users only)
     Route::get('/survey/{requestId}', [CsmController::class, 'create'])->middleware('role:user')->name('csm.create');
     Route::post('/survey', [CsmController::class, 'store'])->middleware('role:user', 'throttle:10,1')->name('csm.store');
+
+    // CSM Monthly Report download (D9.32 — Super Admin only; generates on demand)
+    Route::get('/csm/reports/{year}/{month}/download', [CsmController::class, 'downloadReport'])
+        ->middleware('role:super_admin', 'throttle:30,1')
+        ->name('csm.reports.download');
     
     // PM Schedules - System Admin ONLY
     Route::middleware('role:super_admin')->group(function () {
