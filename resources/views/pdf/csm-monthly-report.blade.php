@@ -1,98 +1,90 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <title>CSM Monthly Summary Report — {{ $monthLabel }}</title>
     <style>
-        /* D9.32b: minimal print style, aligned with physical-count-report
-           (plain header, light-blue table heads, hairline borders — no
-           decorative boxes, callouts, or colour accents). */
-        @page { size: A4 portrait; margin: 12mm; }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: Arial, Helvetica, sans-serif; font-size: 9.5pt; color: #000; line-height: 1.35; }
-
-        .hdr { text-align: center; border-bottom: 2px solid #0038A8; padding-bottom: 6px; margin-bottom: 10px; }
-        .hdr h1 { font-size: 14pt; letter-spacing: 1px; }
-        .hdr .sub { font-size: 9pt; color: #444; margin-top: 2px; }
-
-        .meta { width: 100%; margin-bottom: 10px; font-size: 9pt; }
-        .meta td { padding: 1.5px 4px; vertical-align: top; }
-        .meta .lbl { color: #555; width: 110px; }
-
-        table.sum { width: 100%; border-collapse: collapse; margin-bottom: 10px; }
-        table.sum th, table.sum td { border: 1px solid #999; padding: 3px 6px; text-align: center; font-size: 9pt; }
-        table.sum th { background: #eef3fb; }
-
-        .sec { font-size: 10pt; font-weight: bold; letter-spacing: 0.5px; text-transform: uppercase;
-               border-bottom: 1px solid #999; padding-bottom: 2px; margin: 12px 0 6px; }
-
-        table.q { width: 100%; border-collapse: collapse; }
-        table.q th { background: #eef3fb; border: 1px solid #999; padding: 3px 4px; font-size: 8.5pt; }
-        table.q th .sub { display: block; font-size: 7pt; font-weight: normal; color: #555; }
-        table.q td { border: 1px solid #bbb; padding: 2.5px 4px; font-size: 8.5pt; text-align: center; }
-        table.q td.qq { text-align: left; line-height: 1.25; }
-        table.q tr.total td { background: #eef3fb; font-weight: bold; }
-
-        .note { font-size: 8pt; color: #555; margin-top: 4px; line-height: 1.4; }
-        .blk { margin-bottom: 8px; font-size: 9.5pt; }
-        .blk p { margin: 2px 0; }
-        .blk .q-text { font-style: italic; font-weight: bold; }
-        .empty { border: 1px solid #999; padding: 10px; font-size: 9.5pt; background: #fafafa; }
-        .foot { margin-top: 16px; font-size: 8pt; color: #666; border-top: 1px solid #ccc; padding-top: 4px; }
+        /* D9.32c: same visual language as pdf/csm-form.blade.php — NCMB
+           letterhead (logo + navy title), thin grey table borders, plain
+           white background. No decorative boxes or colour accents. */
+        @page { size: A4 portrait; margin: 9mm; }
+        body { font-family: Arial, sans-serif; font-size: 9.5px; color: #333; line-height: 1.3; padding: 6px 8px; }
+        .header-bar { border-bottom: 2px solid #0f2a6b; padding-bottom: 4px; margin-bottom: 6px; }
+        .header-bar table { width: 100%; border-collapse: collapse; }
+        .header-bar td { border: none; vertical-align: middle; padding: 0; }
+        .logo { width: 44px; height: 44px; }
+        .agency { font-size: 17px; font-weight: bold; color: #0f2a6b; }
+        .form-title { font-size: 10px; font-weight: bold; letter-spacing: 0.6px; text-transform: uppercase; }
+        .meta { font-size: 10px; margin-bottom: 6px; }
+        .meta b { color: #0f2a6b; }
+        .section-title { font-size: 11px; font-weight: bold; color: #0f2a6b; margin: 8px 0 4px 0; text-transform: uppercase; letter-spacing: 0.4px; }
+        .rpt-table { width: 100%; border-collapse: collapse; }
+        .rpt-table th, .rpt-table td { border: 1px solid #cbd5e1; padding: 3px 4px; text-align: center; font-size: 9px; }
+        .rpt-table th { font-size: 8px; font-weight: bold; text-transform: uppercase; background: #f8fafc; }
+        .rpt-table th .sub { display: block; font-size: 7px; font-weight: normal; color: #666; text-transform: none; }
+        .rpt-table td.q { text-align: left; width: 38%; font-size: 10px; line-height: 1.25; }
+        .rpt-table td.avg, .rpt-table td.rate { font-weight: bold; font-size: 10px; }
+        .rpt-table tr.total td { background: #f1f5f9; font-weight: bold; font-size: 10px; }
+        .note { font-size: 8px; color: #666; margin-top: 4px; line-height: 1.4; }
+        .sec { margin-bottom: 6px; }
+        .sec p { margin: 2px 0; font-size: 10px; }
+        .sec .q-text { font-style: italic; font-weight: bold; font-size: 10.5px; color: #1f2937; }
         .page-break { page-break-after: always; }
+        .footer { border-top: 1px solid #cbd5e1; margin-top: 14px; padding-top: 3px; font-size: 8px; color: #94a3b8; }
+        .empty-note { border: 1px dashed #cbd5e1; padding: 10px; font-size: 10px; }
     </style>
 </head>
 <body>
-
-    <div class="hdr">
-        <h1>CLIENT SATISFACTION MEASUREMENT</h1>
-        <div class="sub">Monthly Summary Report — {{ $monthLabel }}</div>
+    <div class="header-bar">
+        <table>
+            <tr>
+                <td style="width:56px; text-align:left;">
+                    @php $logo = public_path('images/ncmb-logo.svg'); @endphp
+                    @if(file_exists($logo))
+                        <img src="{{ 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logo)) }}" class="logo">
+                    @endif
+                </td>
+                <td style="text-align:left;">
+                    <div class="agency">NCMB</div>
+                    <div class="form-title">Client Satisfaction Measurement (CSM) — Monthly Summary Report</div>
+                </td>
+            </tr>
+        </table>
     </div>
 
-    <table class="meta">
-        <tr>
-            <td class="lbl">Reporting period:</td>
-            <td>{{ $monthLabel }}</td>
-            <td class="lbl">Date generated:</td>
-            <td>{{ now()->format('F j, Y') }}</td>
-        </tr>
-        <tr>
-            <td class="lbl">Scope:</td>
-            <td>All branches</td>
-            <td class="lbl">Survey responses:</td>
-            <td>{{ $respondents }}</td>
-        </tr>
-    </table>
+    <div class="meta">
+        <b>For the month of:</b> {{ $monthLabel }} &nbsp;|&nbsp; <b>Date generated:</b> {{ now()->format('F j, Y') }} &nbsp;|&nbsp; <b>Scope:</b> All branches
+    </div>
 
     @if(!$hasData)
-        <div class="empty">
+        <div class="empty-note">
             No survey responses were recorded for {{ $monthLabel }}.
             This report is kept as part of the annual CSM record.
         </div>
-        <div class="foot">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 1 of 2</div>
+        <div class="footer">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 1 of 2</div>
     @else
-        <div class="sec">Monthly Summary</div>
-        <table class="sum">
+        <div class="section-title">Monthly Summary</div>
+        <table class="rpt-table">
             <tr>
-                <th>Overall Rating</th>
-                <th>Rating Description</th>
-                <th>% Satisfied</th>
-                <th>Responses</th>
-                <th>Completed Requests</th>
+                <th style="width:16%;">Overall Rating</th>
+                <th style="width:18%;">Rating Description</th>
+                <th style="width:14%;">% Satisfied</th>
+                <th style="width:14%;">Responses</th>
+                <th style="width:22%;">Completed Requests</th>
                 <th>Response Rate</th>
             </tr>
             <tr>
-                <td><b>{{ $overall !== null ? number_format($overall, 1) : '—' }}</b>{{ $overall !== null ? ' / 5' : '' }}</td>
-                <td>{{ $overall !== null ? $band['label'] : '—' }}</td>
-                <td>{{ $satisfiedPct !== null ? $satisfiedPct . '%' : '—' }}</td>
+                <td class="avg">{{ $overall !== null ? number_format($overall, 1) . ' / 5' : '&mdash;' }}</td>
+                <td>{{ $overall !== null ? $band['label'] : '&mdash;' }}</td>
+                <td>{{ $satisfiedPct !== null ? $satisfiedPct . '%' : '&mdash;' }}</td>
                 <td>{{ $respondents }}</td>
                 <td>{{ $completedCount }}</td>
-                <td>{{ $responseRate !== null ? $responseRate . '%' : '—' }}</td>
+                <td>{{ $responseRate !== null ? $responseRate . '%' : '&mdash;' }}</td>
             </tr>
         </table>
 
-        <div class="sec">How Each Question Was Answered</div>
-        <table class="q">
+        <div class="section-title">How Each Question Was Answered</div>
+        <table class="rpt-table">
             <tr>
                 <th style="width:38%;">Question</th>
                 <th>5<span class="sub">Strongly Agree</span></th>
@@ -105,19 +97,19 @@
             </tr>
             @foreach($questions as $row)
                 <tr>
-                    <td class="qq">{{ $row['question'] }}</td>
+                    <td class="q">{{ $row['question'] }}</td>
                     @foreach([5,4,3,2,1] as $s)
                         <td>{{ $row['counts'][$s] }}</td>
                     @endforeach
-                    <td>{{ $row['average'] !== null ? number_format($row['average'], 1) : '—' }}</td>
-                    <td>{{ $row['average'] !== null ? $row['band']['label'] : '—' }}</td>
+                    <td class="avg">{{ $row['average'] !== null ? number_format($row['average'], 1) : '&mdash;' }}</td>
+                    <td>{{ $row['average'] !== null ? $row['band']['label'] : '&mdash;' }}</td>
                 </tr>
             @endforeach
             <tr class="total">
-                <td class="qq">OVERALL SATISFACTION RATING</td>
+                <td class="q">OVERALL SATISFACTION RATING</td>
                 <td colspan="5"></td>
-                <td>{{ $overall !== null ? number_format($overall, 1) : '—' }}</td>
-                <td>{{ $overall !== null ? $band['label'] : '—' }}</td>
+                <td class="avg">{{ $overall !== null ? number_format($overall, 1) : '&mdash;' }}</td>
+                <td>{{ $overall !== null ? $band['label'] : '&mdash;' }}</td>
             </tr>
         </table>
         <div class="note">
@@ -128,14 +120,25 @@
 
         <div class="page-break"></div>
 
-        <div class="hdr">
-            <h1>CLIENT SATISFACTION MEASUREMENT</h1>
-            <div class="sub">Monthly Summary Report — {{ $monthLabel }} (continued)</div>
+        <div class="header-bar">
+            <table>
+                <tr>
+                    <td style="width:56px; text-align:left;">
+                        @if(file_exists($logo))
+                            <img src="{{ 'data:image/svg+xml;base64,' . base64_encode(file_get_contents($logo)) }}" class="logo">
+                        @endif
+                    </td>
+                    <td style="text-align:left;">
+                        <div class="agency">NCMB</div>
+                        <div class="form-title">CSM Monthly Summary Report — {{ $monthLabel }} (continued)</div>
+                    </td>
+                </tr>
+            </table>
         </div>
 
-        <div class="sec">What We Need to Improve</div>
+        <div class="section-title">What We Need to Improve</div>
         @if($weakest)
-            <div class="blk">
+            <div class="sec">
                 <p>The clients rated this question the lowest ({{ number_format($weakest['average'], 1) }} — {{ $weakest['band']['label'] }}):</p>
                 <p class="q-text">&ldquo;{{ $weakest['question'] }}&rdquo;</p>
                 <p>{{ $weakest['disagreeCount'] }} of {{ $respondents }} respondent(s)
@@ -159,7 +162,7 @@
             </div>
         @endif
         @if($secondWeakest && $weakest && $secondWeakest['column'] !== $weakest['column'] && $secondWeakest['average'] !== null)
-            <div class="blk">
+            <div class="sec">
                 <p>Second-lowest: <span class="q-text">&ldquo;{{ $secondWeakest['question'] }}&rdquo;</span>
                     &mdash; {{ number_format($secondWeakest['average'], 1) }} ({{ $secondWeakest['band']['label'] }}),
                     {{ $secondWeakest['disagreeCount'] }} disagree answer(s).</p>
@@ -167,16 +170,16 @@
         @endif
 
         @if($goodNews)
-            <div class="sec">Highest-Rated Questions</div>
-            <div class="blk">
+            <div class="section-title">Highest-Rated Questions</div>
+            <div class="sec">
                 @foreach($goodNews as $row)
                     <p>&bull; &ldquo;{{ $row['question'] }}&rdquo; &mdash; {{ number_format($row['average'], 1) }} ({{ $row['band']['label'] }})</p>
                 @endforeach
             </div>
         @endif
 
-        <div class="sec">Respondent Profile</div>
-        <table class="sum">
+        <div class="section-title">Respondent Profile</div>
+        <table class="rpt-table">
             <tr>
                 <th>Male</th>
                 <th>Female</th>
@@ -192,7 +195,7 @@
             </tr>
         </table>
 
-        <div class="foot">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 2 of 2</div>
+        <div class="footer">Generated by the NCMB ICT System &middot; {{ $monthLabel }} &middot; Page 2 of 2</div>
     @endif
 
 </body>
