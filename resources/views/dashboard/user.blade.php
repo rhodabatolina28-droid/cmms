@@ -91,26 +91,70 @@
             color: #1e293b;
         }
 
-        /* QUICK ACTIONS */
+        /* QUICK ACTIONS — D9.35: isang card (kagaya ng Management Tools ng admin) */
+        .queue-panel {
+            background: #fff;
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 16px;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.04);
+            margin-bottom: 20px;
+        }
+
         .action-button-premium {
             display: flex;
             align-items: center;
-            gap: 15px;
-            background: white;
-            border-radius: 12px;
-            padding: 18px;
+            gap: 14px;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 10px;
+            padding: 14px 16px;
             text-decoration: none;
             color: #1e293b;
-            border: 1px solid rgba(0,0,0,0.05);
+            font-weight: 700;
+            font-size: 13px;
             transition: all 0.2s;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
             justify-content: space-between;
         }
 
-        .action-button-premium:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.08);
+        /* Hover (mouse pointer) / click / keyboard focus → blue, eksaktong kagaya ng admin */
+        .action-button-premium:hover,
+        .action-button-premium:active,
+        .action-button-premium:focus-visible {
+            background: #0038A8;
+            color: #fff;
             border-color: #0038A8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 56, 168, 0.25);
+        }
+
+        .action-button-premium:hover .action-title,
+        .action-button-premium:active .action-title,
+        .action-button-premium:focus-visible .action-title {
+            color: #fff;
+        }
+
+        .action-button-premium:hover .action-subtitle,
+        .action-button-premium:active .action-subtitle,
+        .action-button-premium:focus-visible .action-subtitle {
+            color: rgba(255, 255, 255, 0.85);
+        }
+
+        .action-button-premium:hover .action-count-chip,
+        .action-button-premium:active .action-count-chip,
+        .action-button-premium:focus-visible .action-count-chip {
+            background: rgba(255, 255, 255, 0.2) !important;
+            color: #fff !important;
+        }
+
+        /* Gated (walang assigned asset) ay nananatiling pula — hindi nag-blue kahit i-hover */
+        .action-restricted:hover,
+        .action-restricted:active {
+            background: #fff5f5 !important;
+            border-color: #fecaca !important;
+            color: inherit !important;
+            transform: none !important;
+            box-shadow: none !important;
         }
 
         /* TABLE THEME */
@@ -348,36 +392,38 @@
             </div>
         </div>
 
-        <!-- RIGHT: ACTIONS & ASSETS -->
+        <!-- RIGHT: ACTIONS & ASSETS — D9.35: lahat sa loob ng isang card, blue kapag hover/click -->
         <div>
-            <div class="ribbon-label">Quick Actions</div>
-            @if(!empty($hasAssignedAssets))
-                <a href="{{ route('ict.create') }}" class="action-button-premium">
-                    <div>
-                        <div class="action-title">New Request</div>
-                        <div class="action-subtitle">ICT Technical Support</div>
-                    </div>
-                </a>
+            <div class="queue-panel">
+                <div class="ribbon-label">Quick Actions</div>
+                @if(!empty($hasAssignedAssets))
+                    <a href="{{ route('ict.create') }}" class="action-button-premium">
+                        <div style="flex: 1;">
+                            <div class="action-title">New Request</div>
+                            <div class="action-subtitle">ICT Technical Support</div>
+                        </div>
+                    </a>
 
-                <a href="{{ route('profile.assets') }}" class="action-button-premium mt-12">
-                    <div style="flex: 1;">
-                        <div class="action-title">My Assigned Equipment</div>
-                        <div class="action-subtitle">{{ $stats['assets'] }} active items assigned</div>
-                    </div>
-                    <div style="font-size: 11px; font-weight: 800; color: #0038A8; background: #eff6ff; padding: 3px 8px; border-radius: 12px;">
-                        {{ $stats['assets'] }}
-                    </div>
-                </a>
-            @else
-                <div class="action-button-premium action-restricted">
-                    <div>
-                        <div class="action-title-red">Requests Unavailable</div>
-                        <div class="action-subtitle-warn">
-                            Walang assigned asset. Makipag-ugnayan sa Administrative supply admin.
+                    <a href="{{ route('profile.assets') }}" class="action-button-premium mt-12">
+                        <div style="flex: 1;">
+                            <div class="action-title">My Assigned Equipment</div>
+                            <div class="action-subtitle">{{ $stats['assets'] }} active items assigned</div>
+                        </div>
+                        <div class="action-count-chip" style="font-size: 11px; font-weight: 800; color: #0038A8; background: #eff6ff; padding: 3px 8px; border-radius: 12px;">
+                            {{ $stats['assets'] }}
+                        </div>
+                    </a>
+                @else
+                    <div class="action-button-premium action-restricted">
+                        <div style="flex: 1;">
+                            <div class="action-title-red">Requests Unavailable</div>
+                            <div class="action-subtitle-warn">
+                                Walang assigned asset. Makipag-ugnayan sa Administrative supply admin.
+                            </div>
                         </div>
                     </div>
-                </div>
-            @endif
+                @endif
+            </div>
 
         </div>
 

@@ -466,15 +466,15 @@
             <div class="queue-panel">
                 <div class="ribbon-label">Management Tools</div>
                 <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
-                    <i class="fa-solid fa-list-check"></i> Manage Requests
+                    Manage Requests
                 </a>
                 @if(Auth::user()->canProcessSupply())
                     <a href="{{ route('inventory.index') }}" class="btn-action-premium mb-10">
-                        <i class="fa-solid fa-boxes-stacked"></i> Inventory & Assets
+                        Inventory & Assets
                     </a>
                 @endif
                 <a href="{{ route('personnel.index') }}" class="btn-action-premium">
-                    <i class="fa-solid fa-users-gear"></i> Manage Personnel
+                    Manage Personnel
                 </a>
 
                 @php
