@@ -384,7 +384,7 @@ sa User Management gamit ang bagong dropdown.
 
 ---
 
-## 5a. D5 — Storage Reorganization + CSM Auto-PDF — DESIGNED, awaiting execution
+## 5a. D5 — Storage Reorganization + CSM Auto-PDF — ✅ EXECUTED (D5a–D5d; tingnan ang §5.8 execution log sa ibaba)
 
 > **Konteksto:** lahat ng uploads ay dapat may kanya-kanyang organized storage, at ang CSM survey ay
 > dapat may awtomatikong naka-save na PDF copy pagkatapos ma-submit (walang download button,
@@ -645,7 +645,7 @@ ICT/PM ticket → technician completes → status = completed (DB transaction co
 
 ---
 
-## 5c. D7 — Huling mga Arkibo: PR Delivery Confirmation + Physical Count Report — DISENYO
+## 5c. D7 — Huling mga Arkibo: PR Delivery Confirmation + Physical Count Report — ✅ EXECUTED (D7a/D7b `34442e7` · D7c `4e9fc2c`; tingnan ang §D7.9 execution log)
 
 ### D7.0 Kumpletong imbentaryo (deep scan, Sept 8 2026) — ano ang NA-SA-TABI na vs KULANG
 
@@ -801,17 +801,17 @@ storage/app/private/
 ## 7. Git Checkpoints
 - v1 implementation: inline `Request.php::booted()` + `total_downtime` column (no tag; superseded by this doc)
 - Overhaul: X1-X4 to be committed per phase with tests, then pushed as a single squash to `origin/develop`
-- D4 (high-official priority): DESIGNED — position backfill + `config/priority.php` (awaiting execution)
+- D4 (high-official priority): ✅ EXECUTED — `config/priority.php` + position dropdown + queue-jump + URGENT badge (`202197e` → `bc21a6d`); natitira lang ang **D4d** na mano-manong backfill ng positions (user data entry, walang code)
 - D5 storage reorg: D5b/D5c private-disk migration + D5a CSM auto-PDF polish chain + D5d `csm:generate-pdfs` backfill — ✅ committed (`3a940d3` latest of chain)
 - **D6 ticket auto-archive: ✅ committed `0b791b8`** — `archive_pdf_path` column, afterCommit trigger sa completion, `tickets:generate-archive-pdfs` backfill (34/0), sigImg closure fix, 4 feature tests pass
 - **D2 Ticket Aging: ✅ DONE (Sept 9 2026)** — chain `5050937` → `dd8d178` → `b8d3267` → `362d7bc` → `ba4a009` → `f7b00f3` → `68fedeb` → `bc21a6d` → `9b8ef54`. Accessors + chips sa lahat ng lists + calendar aging + unfinished-first + URGENT-in-unfinished + terminal-age hidden + Work Orders badge. Full suite **297/297 green**.
 - **D8 Master List Category Column: ✅ committed (Sept 10-11 2026)** — category column + filter + Type column sa 3 Master Lists + IT Parts/Components category removal + Type alignment fix (dedicated td classes, left+baseline sa lahat ng roles)
 - **D3 SLA-lite (P1-P4): ⏸️ DEFERRED (Sept 11 2026)** — hindi idagdag (rationale sa Section 5); babalikan lang sa mga trigger doon
-- **D9 KPI Dashboard: PLANO (Sept 11 2026)** — 3 cards (MTTR · P1% · Parts Usage), walang bagong table/column, placement + alignment rules sa Section 9
+- **D9 KPI Dashboard: ✅ EXECUTED (Sept 11–12 2026)** — final set = **MTTR + MTBF** lang (D9-rev: tinanggal ang SLA% · P1% · Parts Usage), pamilyang stat-card-premium, walang bagong table/column (placement + alignment rules sa Section 9); nasundan ng D9.20–D9.34c (ICT form UX, dashboard polish, CSM stats/card/monthly/alert/weekly)
 
 ---
 
-## 8. D8 — Master List Category Column + IT Parts/Components Removal (Sept 2026) — GAGAWIN
+## 8. D8 — Master List Category Column + IT Parts/Components Removal (Sept 2026) — ✅ DONE (Sept 11 2026)
 
 ### D8.1 Ano at bakit
 - **Category column + filter sa 3 Master Lists** (IT, Admin Division, Super-Admin) — dedicated slim
@@ -876,7 +876,7 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
 
 ---
 
-## 9. D9 — Maintenance KPI Dashboard (MTTR + MTBF) — PLANO (Sept 11 2026, naka-revise)
+## 9. D9 — Maintenance KPI Dashboard (MTTR + MTBF) — ✅ EXECUTED (Sept 11–22 2026: D9.1 → D9.34c; tingnan ang §9.5 at ang CSM changelog sa dulo)
 
 ### D9.1 Ano at bakit
 - **2 KPI cards** (naka-revise Sept 11 2026): **MTTR** (mean time TO REPAIR = avg downtime_duration, buwanang, sa araw — ISO 55000 standard, kaparehong data ng asset profile) · **MTBF** (mean time between failures = araw sa buwan ÷ bilang ng completed ICT na may downtime window; failure = breakdown, hindi request-only; 0 failures → "No failures this month"). **SLA% dapat wala muna** — naka-align sa D3 deferral (walang target, kulang pa ang data, walang management demand).
@@ -997,4 +997,6 @@ Parts module ay hiwalay (sariling category field) · 0 backend refs sa `app/`, `
 
 
 - **D9.34c Weekly Digest: Bell Row Binalik + Bell Look Cleanup (Maikling Message Pa Rin): TAPOS (Sept 22 2026)** — (1) **User decision pagkatapos ng live demo:** *"may bell dapat na nakapag send na ng email ganon dapat"* — **binalik ang bell row** para sa weekly digest (ang D9.34b ay email-only), dahil kapag may email na ipinadala ay dapat may katumbas na entry sa 🔔 bell dropdown para makita agad sa system. (2) **`CsmWeeklyCheck` (revert ng delivery ng D9.34b):** (a) `Notification::send($admin->id, null, 'CSM Weekly Digest', $message, route('dashboard.super-admin'))` ulit — **bell + email** (sakop ng CSM* exception sa `Notification::booted()`; walang bagong code doon); (b) **dedup bumalik sa notifications table** (`where('type','CSM Weekly Digest')->whereDate('created_at', today())`) — walang migration (tinanggal ang Cache-based dedup ng D9.34b); (c) **mananatili ang MAIKLING message** (rule ng D9.34b): headline + hanggang 2–3 flag sentence; kapag ≥2 warnings = *"N of 9 questions flagged (worst: \"…\" — X disagreed, avg Y/5)"* (~430 chars mula ~2,000); (d) walang-laman na linggo = warning lang, walang notification. (3) **Bell look cleanup:** (a) **tinanggal ang vertical line** — desktop 4px `::before` bar (`resources/css/admin/_ui.css`) at **mobile 3px `border-left: 3px solid #0038A8 !important`** (`resources/css/mobile-responsive/_phone-portrait.css`); redundant ito dahil puro-unread naman ang laman ng dropdown — **ang bughaw na tuldok na lang ang unread marker** (nananatili ang unread tint); (b) **override sa layout** (`resources/views/layouts/app.blade.php`): `.notif-item.unread::before { display:none; }` at `.notif-item.unread { border-left:none !important; }` — kailangan ito dahil **hindi naka-rebuild ang Vite assets** (public/build = Sept 17) at ang inline `<style>` (L19–184) ay dumarating pagkatapos ng `@vite` link (L17) kaya nananalo ito sa cascade kahit `!important` pa ang mobile rule; (c) **contextual link label:** *"Open Ticket"* kapag may `request_number` (ticket notifications) at *"View Details"* kapag wala (CSM digest/alert/monthly at iba pang system notices), tooltip = "Click to view details". (4) **Bagong regression test: `tests/Feature/NotificationBellStyleTest.php`** (1 test / 7 assertions) — sinusuri ang **totoong rendered SA dashboard HTML**: naroroon ang dalawang override, **nauna ang `/build/assets/` link** kaysa sa override (cascade order), at **malinis ang source CSS modules** (para hindi na muling bumalik ang linya kapag `npm run build`). (5) **Live demo sa dev DB:** inalis ang **48 duplicate `CSM Monthly Report` bells** (galing sa paulit-ulit na PDF regen ng D9.32) — pinanatili ang pinakabago kada SA; inalis ang lumang 2 digest rows at pinatakbo ulit ang `csm:weekly-check 2026-09-14` → **2 sariwang UNREAD bells** (#568 `batolina@gmail.com`, #569 `test.superadmin@cmms.test` @ 10:16) + email preview sa `laravel.log`; same-day rerun = *"already sent today"* (deduped). (6) **Beripikasyon:** `CsmWeeklyDigestTest` **7 passed / 30 assertions** ✓ · `NotificationBellStyleTest` **1 passed / 7 assertions** ✓ · **full suite 380 passed / 1475 assertions / 0 failed** ✓ · `php artisan serve` HTTP 200 ✓.
+
+- **Phase 6 — Production Scheduler/Mail Runbook (CSM Roadmap, huling yugto): ✅ TAPOS bilang DOKUMENTO (Sept 22 2026)** — (1) **Bagong `docs/PRODUCTION_DEPLOY_CHECKLIST.md`** (~375 linya, 10 seksyon) = ang go-live runbook na dati ay nagkalat lang sa mga changelog entry: server requirements (PHP 8.3+, `dom/fileinfo/gd/intl/mbstring/openssl/pdo_mysql/zip`, MySQL, document root = `public/`, Node para sa build) · **ang 6 na scheduled command** (`pm:generate-scheduled` 00:00 · `pm:send-reminders` 06:00 · `parts:check-low-stock` 07:00 · `inventory:verify-asset-sets` 08:00 · `csm:weekly-check` Lunes 07:05 · `csm:monthly-report` ika-1 07:10) · **ang isang cron line** (`* * * * * cd /path && php artisan schedule:run`) kasama ang Windows Task Scheduler na katumbas (inline `.bat` na nasa md lang — **walang bagong file sa repo**, ops-side ang mga script) at `schedule:work` para sa local · **Mail+Queue** (`Notification::booted()` L114-120: kapag `MAIL_MAILER=smtp` ay `send()` na agad, kung `log/array` ay `queue()` — kaya sa dev ay may **409 pending jobs** na live na ebidensya ng "bakit walang email" na senaryo sa production) · deployment steps (maintenance mode → git pull → `composer install --no-dev` → **`npm run build`** [hindi naka-track sa git ang `public/build`] → `.env` → `migrate --force` → private-disk permissions → `optimize` → `up`) · storage/backup/retention (ang `storage/app/private` ay **legal records** — pirmas, PDFs, survey copies; ang `*.pdf` ay nasa `.gitignore`) · go-live verification (7 agad-agad + 7 smoke test + unang gabi) · 10 patibong (pinaka-mahalaga: **walang dedup ang `csm:monthly-report`** — huwag patakbuhin muli sa parehong araw; deduped naman ang weekly/severe via notifications table) · rollback procedure. (2) **Live verification (Sept 22 2026, dev machine):** server 200 ✓ · `/up` 200 ✓ · `schedule:list` **6/6** ✓ · `php artisan about` = local/Debug OFF/Asia-Manila/mysql/database ✓ · `schedule:run -v` = "No scheduled commands are ready to run" ✓ · `parts:check-low-stock --dry-run` = "4 low, 4 critical" na **walang ipinadala** ✓ · **dedup live test:** muling patakbo ng `csm:weekly-check 2026-09-14` → *"already sent today — deduped (1 per week)"*, bilang ng rows **hindi nagbago** ✓ · CSM bells sa DB: #560/#561 Monthly (Sept 21) · #562/#563 Severe (09:11) · #568/#569 Weekly Digest (10:16) ✓. (3) **Walang code na binago** — purong dokumento: main doc 1000 → 1002 linya (changelog + 6 heading/checkpoint corrections: §5a D5, §5c D7, §8 D8, §9 D9, Git Checkpoints D4 at D9 ay "✅ EXECUTED" na) + **bagong file** `docs/PRODUCTION_DEPLOY_CHECKLIST.md` (375 linya). **Ang natitirang gawain ng Phase 6 ay ops-side lang at nangyayari kapag may production server na:** isang cron/Task Scheduler entry, `.env` values, `npm run build`, at ang "unang gabi" na verification sa §7.
 
