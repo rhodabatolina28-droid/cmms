@@ -72,6 +72,12 @@ class StoreCsmSurveyAction
             \Illuminate\Support\Facades\Log::warning('CSM archives PDF generation failed (survey #' . ($survey->id ?? '') . '): ' . $e->getMessage());
         }
 
+        // D9.33: real-time severe alert (Strongly Disagree on >= 3 of 9 questions).
+        // The service swallows its own failures, so the submission flow is safe.
+        if (isset($survey) && $survey) {
+            app(\App\Services\CsmSevereAlertService::class)->check($survey);
+        }
+
         $nextPending = $user->pendingSurveyRequest();
 
         if ($nextPending) {
