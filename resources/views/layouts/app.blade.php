@@ -73,8 +73,12 @@
         .time-clock-icon { width: 34px; height: 34px; background: #eff6ff; color: #0038A8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0, 56, 168, 0.1); }
 
         /* Notification items (JS templates) */
-        .notif-item { padding: 13px 18px; border-bottom: 1px solid #f1f5f9; transition: all 0.15s ease; position: relative; cursor: pointer; border-left: 3px solid transparent; }
-        .notif-item:hover { background: #f0f7ff; border-left-color: #0038A8; }
+        .notif-item { padding: 13px 18px; border-bottom: 1px solid #f1f5f9; transition: all 0.15s ease; position: relative; cursor: pointer; }
+        .notif-item:hover { background: #f0f7ff; }
+        /* D9.34c: the blue dot is the only unread marker — no left vertical bar
+           (desktop, tablet and phone portrait — the mobile module used !important). */
+        .notif-item.unread::before { display: none; }
+        .notif-item.unread { border-left: none !important; }
         .notif-item-inner { display: flex; gap: 10px; }
         .notif-dot { width: 8px; height: 8px; background: #2563eb; border-radius: 50%; margin-top: 6px; flex-shrink: 0; }
         .notif-header-row { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 3px; }
@@ -553,8 +557,10 @@
                 </div>
             ` : '';
 
+            const viewLabel = n.request_number ? 'Open Ticket' : 'View Details';
+
             return `
-                <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}" title="Click to open ticket / details">
+                <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}" title="Click to view details">
                     <div class="notif-item-inner">
                         <div class="notif-dot"></div>
                         <div style="flex: 1; min-width: 0;">
@@ -568,7 +574,7 @@
                             <div class="notif-msg">${n.message}</div>
                             ${senderRow}
                             <div class="notif-actions-row">
-                                <span class="notif-view-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Ticket</span>
+                                <span class="notif-view-link"><i class="fa-solid fa-arrow-up-right-from-square"></i> ${viewLabel}</span>
                                 <a href="#" class="mark-read" data-id="${n.id}" title="Mark as read without opening">Mark as read</a>
                             </div>
                         </div>

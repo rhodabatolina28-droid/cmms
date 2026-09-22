@@ -2,33 +2,30 @@
 
 namespace App\Console\Commands;
 
-use App\Mail\SystemNotificationMail;
+use App\Models\Notification;
 use App\Models\User;
 use App\Services\CsmWeeklyDigestService;
-use App\Services\RequestNotificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
-use Illuminate\Support\Facades\Mail;
 
 /**
  * D9.34 — CSM Weekly Digest (Phase 5). Scheduled Monday 07:05, reports the
  * previous Mon–Sun week: overall watch (ARTA-aligned thresholds), per-question
  * BIG WARNINGs, recovery note and milestone.
  *
- * Delivery (D9.34b, user decision): EMAIL ONLY, no bell — the digest is a
- * weekly read, not an interruption, and the message stays short (flag counts,
- * not full lists; the dashboard holds the detail). Sent directly via
- * SystemNotificationMail — bypassing Notification::send so no bell row is
- * created. Deduped to one digest per day via Cache (the schedule only fires
- * Mondays, so that is one per week). Aggregate-only.
+ * Delivery: bell + email to every Super Admin (via the CSM* email exception in
+ * Notification::booted) — same as the severe alert. D9.34c (user decision):
+ * the bell stays, but the MESSAGE is short — flag counts instead of full
+ * lists (the dashboard holds the detail). Deduped to one digest per day via
+ * the notifications table (the schedule only fires Mondays, so that is one
+ * per week). Aggregate-only.
  */
 class CsmWeeklyCheck extends Command
 {
     protected $signature = 'csm:weekly-check
         {week? : Any date inside the week to report, Y-m-d (default: last week)}';
 
-    protected $description = 'Email the CSM weekly digest to the Super Admins (no bell, short message)';
+    protected $description = 'Send the CSM weekly digest to the Super Admins (bell + email, short message)';
 
     public function handle(): int
     {
@@ -41,52 +38,23 @@ class CsmWeeklyCheck extends Command
             return self::SUCCESS;
         }
 
-        $dedupKey = 'csm-weekly-digest-' . today()->toDateString();
-
-        if (Cache::has($dedupKey)) {
+        if (Notification::where('type', 'CSM Weekly Digest')
+            ->whereDate('created_at', today())
+            ->exists()) {
             $this->comment('CSM weekly digest already sent today — deduped (1 per week).');
 
             return self::SUCCESS;
         }
 
-        $message = $this->message($data);
         $url = route('dashboard.super-admin');
-        $isLocal = app()->environment('local');
+        $message = $this->message($data);
 
         $admins = User::where('role', 'super_admin')->get();
-        $sent = 0;
-
         foreach ($admins as $admin) {
-            // Production safety (same rule as Notification::booted): skip alias emails.
-            if (! $isLocal && str_contains((string) $admin->email, '+')) {
-                continue;
-            }
-
-            if ($isLocal) {
-                RequestNotificationService::logLocalEmailPreview(
-                    $admin->email,
-                    'CSM Weekly Digest',
-                    $message,
-                    'N/A'
-                );
-            }
-
-            Mail::to($admin->email)->queue(new SystemNotificationMail(
-                $admin->full_name,
-                'CSM Weekly Digest',
-                $message,
-                'N/A',
-                $url,
-                $admin->branch,
-                $admin->region
-            ));
-
-            $sent++;
+            Notification::send($admin->id, null, 'CSM Weekly Digest', $message, $url);
         }
 
-        Cache::put($dedupKey, true, now()->endOfDay());
-
-        $this->info('CSM weekly digest emailed to ' . $sent . ' super admin(s) (no bell, short message).');
+        $this->info('CSM weekly digest sent to ' . $admins->count() . ' super admin(s) (bell + email, short message).');
 
         return self::SUCCESS;
     }

@@ -1168,7 +1168,7 @@
 
     .notif-item.unread {
         background: #eff6ff !important;
-        border-left: 3px solid #0038A8 !important;
+        /* D9.34c: left vertical bar removed on mobile too — the blue dot marks it. */
     }
 
     /* Notification Header — clean on mobile */

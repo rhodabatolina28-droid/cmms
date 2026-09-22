@@ -10,7 +10,6 @@ use App\Services\CsmStatsService;
 use App\Services\CsmWeeklyDigestService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
@@ -188,29 +187,28 @@ class CsmWeeklyDigestTest extends TestCase
     public function test_command_sends_digest_and_dedups_per_day(): void
     {
         Mail::fake();
-        Cache::flush(); // fresh dedup state for this test run
-        $this->user(["role" => "super_admin"]);
+        $sa = $this->user(["role" => "super_admin"]);
         $requestor = $this->user();
         $this->plantWeek($requestor, "2026-09-14", 5, "Strongly Agree");
 
         $this->artisan("csm:weekly-check", ["week" => "2026-09-14"])
-            ->expectsOutputToContain("CSM weekly digest emailed to 1 super admin(s)")
+            ->expectsOutputToContain("CSM weekly digest sent to 1 super admin(s)")
             ->assertSuccessful();
 
-        // D9.34b: email-only — no bell row is created for the digest.
-        $this->assertSame(0, Notification::where("type", "CSM Weekly Digest")->count());
-
-        // One queued email to the SA, with the short message.
+        // Bell lands on the SA dashboard AND the CSM* exception queues the email.
+        $notification = Notification::where("type", "CSM Weekly Digest")
+            ->where("user_id", $sa->id)
+            ->first();
+        $this->assertNotNull($notification, "SA must receive the weekly digest bell");
+        $this->assertStringContainsString("Sep 14", $notification->message);
+        $this->assertStringContainsString("No action needed this week.", $notification->message);
         Mail::assertQueued(\App\Mail\SystemNotificationMail::class, 1);
-        Mail::assertQueued(function (\App\Mail\SystemNotificationMail $mail) {
-            return str_contains($mail->notificationMessage, "Sep 14")
-                && str_contains($mail->notificationMessage, "No action needed this week.");
-        });
 
         // Same-day rerun is suppressed — 1 digest per week.
         $this->artisan("csm:weekly-check", ["week" => "2026-09-14"])
             ->expectsOutputToContain("already sent today")
             ->assertSuccessful();
+        $this->assertSame(1, Notification::where("type", "CSM Weekly Digest")->count());
         Mail::assertQueued(\App\Mail\SystemNotificationMail::class, 1); // still 1
     }
 }

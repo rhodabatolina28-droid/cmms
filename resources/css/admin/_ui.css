@@ -66,15 +66,8 @@
     background: #f8fafc !important;
 }
 
-.notif-item.unread::before {
-    content: '';
-    position: absolute;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    width: 4px;
-    background: #0038A8;
-}
+/* D9.34c: left vertical bar removed — the blue dot alone marks unread items
+   (the dropdown only lists unread notifications, so the bar was redundant). */
 
 #timeContainer:hover {
     border-color: #cbd5e1 !important;
