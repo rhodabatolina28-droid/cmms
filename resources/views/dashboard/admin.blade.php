@@ -367,7 +367,7 @@
                                 </td>
                                 <td class="table-cell-gray" style="max-width: 240px;">
                                     <div style="font-weight: 600; color: #334155; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" title="{{ $req->description }}">
-                                        {{ $req->description ?: 'ICT Support Request' }}
+                                        {{ $req->concern_label }}
                                     </div>
                                     <span style="font-size: 10px; font-weight: 700; text-transform: uppercase; color: #475569; background: #f1f5f9; padding: 2px 6px; border-radius: 4px; display: inline-block; margin-top: 3px; border: 1px solid #e2e8f0;">
                                         {{ $req->type }}

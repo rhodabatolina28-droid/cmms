@@ -361,7 +361,7 @@
                                     </td>
                                     <td class="table-cell">
                                         <div style="font-weight: 600; color: #1e293b; font-size: 13px;" title="{{ $job->description }}">
-                                            {{ \Illuminate\Support\Str::limit($job->description ?: 'Technical Support Request', 38) }}
+                                            {{ \Illuminate\Support\Str::limit($job->concern_label, 38) }}
                                         </div>
                                     </td>
                                     <td class="table-cell">

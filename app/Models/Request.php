@@ -121,6 +121,25 @@ class Request extends Model
         ];
     }
 
+    /**
+     * BUG-PM-CONCERN-1: type-aware label for the "Concern / Subject" column.
+     * Empty descriptions previously fell back to a hard-coded ICT-worded
+     * string in the dashboards, which mislabelled auto-generated PM tickets
+     * as "ICT Support Request". Keep the ICT wording for ICT tickets.
+     */
+    public function getConcernLabelAttribute(): string
+    {
+        $desc = trim((string) ($this->attributes['description'] ?? ''));
+
+        if ($desc !== '') {
+            return $desc;
+        }
+
+        return $this->type === 'Preventive Maintenance'
+            ? 'Preventive Maintenance'
+            : 'ICT Support Request';
+    }
+
     // Get display format: REQ-2026-09-16-0001 -> ICT-2026-09-16-0001
     //              legacy: REQ-NCR-RCMB-2026-0001 -> ICT-2026-0001
     public function getDisplayNumberAttribute(): string

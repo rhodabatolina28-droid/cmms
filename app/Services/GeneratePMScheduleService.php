@@ -170,6 +170,13 @@ class GeneratePMScheduleService
                     'user_id'                     => $userId,
                     'requestor_name'              => $endUserName,
                     'type'                        => 'Preventive Maintenance',
+                    // BUG-PM-CONCERN-1: auto-generated PM tickets used to be
+                    // created with a NULL description and then mislabelled as
+                    // "ICT Support Request" on the dashboards. Write a real
+                    // description up front (schedule + focus division).
+                    'description'                 => 'Scheduled Preventive Maintenance — '
+                        . $schedule->schedule_name
+                        . ' (' . $focusDivision . ')',
                     'status'                      => RequestModel::STATUS_SCHEDULED,
                     'region'                      => $user?->region ?? $actor?->region ?? null,
                     'linked_asset_id'             => null, // Bundled workstation PM

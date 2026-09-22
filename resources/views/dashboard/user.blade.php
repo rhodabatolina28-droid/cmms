@@ -354,7 +354,7 @@
                                 </td>
                                 <td class="table-cell">
                                     <div style="font-weight: 600; color: #1e293b; font-size: 13px;" title="{{ $req->description }}">
-                                        {{ \Illuminate\Support\Str::limit($req->description ?: 'ICT Support Request', 40) }}
+                                        {{ \Illuminate\Support\Str::limit($req->concern_label, 40) }}
                                     </div>
                                     <div style="font-size: 11px; color: #94a3b8; margin-top: 2px;">
                                         {{ $req->type }}

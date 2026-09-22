@@ -267,7 +267,7 @@
                                 <div>@include('partials.ticket-age-chip', ['req' => $req])</div>
                             </td>
                             <td class="td-desc" title="{{ $req->description }}">
-                                {{ $req->description ?: 'N/A' }}
+                                {{ $req->concern_label }}
                             </td>
                             <td class="td-type">{{ $req->linkedAsset?->category ?? '—' }}</td>
                             <td class="td-date">
