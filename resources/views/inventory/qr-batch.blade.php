@@ -355,8 +355,8 @@
         <option value="">All Status</option>
         <option value="Active">Active</option>
         <option value="Spare">Spare</option>
-        <option value="Defective">Defective</option>
         <option value="For Repair">For Repair</option>
+        <option value="Under Maintenance">Under Maintenance</option>
     </select>
     <select class="filter-input" id="categoryFilter">
         <option value="">All Categories</option>
@@ -379,7 +379,6 @@
 <!-- ASSET TABLE -->
         <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
         <div class="table-container">
-<div class="table-container">
     <table class="asset-table" id="assetTable">
         <thead>
             <tr>
@@ -581,6 +580,10 @@
     });
 
     document.addEventListener('click', function(e) {
+        // Checkbox clicks own themselves via the native toggle + change handler
+        // above — without this guard the row handler double-toggles and the
+        // selection instantly empties (print button stays disabled forever).
+        if (e.target.closest('input[type="checkbox"]')) return;
         var row = e.target.closest('.asset-row');
         if (row) {
             toggleRow(parseInt(row.dataset.id));
