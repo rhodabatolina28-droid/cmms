@@ -24,3 +24,7 @@ Schedule::command('inventory:verify-asset-sets')->dailyAt('08:00');
 // PREVIOUS month (the command resolves this itself when no arg is given).
 Schedule::command('csm:monthly-report')->monthlyOn(1, '07:10');
 
+// D9.34: CSM Weekly Digest — Monday 07:05, reports the previous Mon-Sun week
+// (the command resolves this itself when no arg is given; deduped 1/week).
+Schedule::command('csm:weekly-check')->weeklyOn(1, '07:05');
+
