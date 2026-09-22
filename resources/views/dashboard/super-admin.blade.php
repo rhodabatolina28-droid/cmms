@@ -288,23 +288,38 @@
             color: #1e293b;
         }
 
-        /* Management Tools (Clean & Icon-Free) */
+        /* Management Tools (Clean & Icon-Free) — D9.36: blue kapag hover/click, kagaya ng admin */
         .mgmt-tool-link {
             display: block;
             padding: 10px 12px;
-            border-radius: 8px;
+            border-radius: 10px;
             text-decoration: none;
             color: #1e293b;
-            border: 1px solid transparent;
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
             transition: all 0.15s ease;
-            margin-bottom: 4px;
+            margin-bottom: 6px;
         }
         .mgmt-tool-link:last-child {
             margin-bottom: 0;
         }
-        .mgmt-tool-link:hover {
-            background: #f8fafc;
-            border-color: #e2e8f0;
+        .mgmt-tool-link:hover,
+        .mgmt-tool-link:active,
+        .mgmt-tool-link:focus-visible {
+            background: #0038A8;
+            border-color: #0038A8;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0, 56, 168, 0.25);
+        }
+        .mgmt-tool-link:hover .mgmt-tool-title,
+        .mgmt-tool-link:active .mgmt-tool-title,
+        .mgmt-tool-link:focus-visible .mgmt-tool-title {
+            color: #fff;
+        }
+        .mgmt-tool-link:hover .mgmt-tool-desc,
+        .mgmt-tool-link:active .mgmt-tool-desc,
+        .mgmt-tool-link:focus-visible .mgmt-tool-desc {
+            color: rgba(255, 255, 255, 0.85);
         }
         .mgmt-tool-title {
             font-size: 13px;
