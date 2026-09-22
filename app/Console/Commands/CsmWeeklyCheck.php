@@ -2,26 +2,33 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Notification;
+use App\Mail\SystemNotificationMail;
 use App\Models\User;
 use App\Services\CsmWeeklyDigestService;
+use App\Services\RequestNotificationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\Mail;
 
 /**
  * D9.34 — CSM Weekly Digest (Phase 5). Scheduled Monday 07:05, reports the
  * previous Mon–Sun week: overall watch (ARTA-aligned thresholds), per-question
- * BIG WARNINGs, recovery note and milestone. Bell + email to every Super
- * Admin via the CSM* email exception in Notification::booted. Deduped to
- * one digest per day (the schedule only fires Mondays, so that is one per
- * week; manual same-day re-runs are also suppressed). Aggregate-only.
+ * BIG WARNINGs, recovery note and milestone.
+ *
+ * Delivery (D9.34b, user decision): EMAIL ONLY, no bell — the digest is a
+ * weekly read, not an interruption, and the message stays short (flag counts,
+ * not full lists; the dashboard holds the detail). Sent directly via
+ * SystemNotificationMail — bypassing Notification::send so no bell row is
+ * created. Deduped to one digest per day via Cache (the schedule only fires
+ * Mondays, so that is one per week). Aggregate-only.
  */
 class CsmWeeklyCheck extends Command
 {
     protected $signature = 'csm:weekly-check
         {week? : Any date inside the week to report, Y-m-d (default: last week)}';
 
-    protected $description = 'Send the CSM weekly digest to the Super Admins (bell + email)';
+    protected $description = 'Email the CSM weekly digest to the Super Admins (no bell, short message)';
 
     public function handle(): int
     {
@@ -34,28 +41,57 @@ class CsmWeeklyCheck extends Command
             return self::SUCCESS;
         }
 
-        if (Notification::where('type', 'CSM Weekly Digest')
-            ->whereDate('created_at', today())
-            ->exists()) {
+        $dedupKey = 'csm-weekly-digest-' . today()->toDateString();
+
+        if (Cache::has($dedupKey)) {
             $this->comment('CSM weekly digest already sent today — deduped (1 per week).');
 
             return self::SUCCESS;
         }
 
-        $url = route('dashboard.super-admin');
         $message = $this->message($data);
+        $url = route('dashboard.super-admin');
+        $isLocal = app()->environment('local');
 
         $admins = User::where('role', 'super_admin')->get();
+        $sent = 0;
+
         foreach ($admins as $admin) {
-            Notification::send($admin->id, null, 'CSM Weekly Digest', $message, $url);
+            // Production safety (same rule as Notification::booted): skip alias emails.
+            if (! $isLocal && str_contains((string) $admin->email, '+')) {
+                continue;
+            }
+
+            if ($isLocal) {
+                RequestNotificationService::logLocalEmailPreview(
+                    $admin->email,
+                    'CSM Weekly Digest',
+                    $message,
+                    'N/A'
+                );
+            }
+
+            Mail::to($admin->email)->queue(new SystemNotificationMail(
+                $admin->full_name,
+                'CSM Weekly Digest',
+                $message,
+                'N/A',
+                $url,
+                $admin->branch,
+                $admin->region
+            ));
+
+            $sent++;
         }
 
-        $this->info('CSM weekly digest sent to ' . $admins->count() . ' super admin(s) (bell + email).');
+        Cache::put($dedupKey, true, now()->endOfDay());
+
+        $this->info('CSM weekly digest emailed to ' . $sent . ' super admin(s) (no bell, short message).');
 
         return self::SUCCESS;
     }
 
-    /** One readable digest line: headline + every flag, joined by " · ". */
+    /** Short digest: one headline + at most a couple of flag sentences. */
     private function message(array $data): string
     {
         $parts = [sprintf(
@@ -72,17 +108,13 @@ class CsmWeeklyCheck extends Command
             $flagged = true;
 
             if ($data['overall'] <= CsmWeeklyDigestService::ALERT_MAX_AVG) {
-                $parts[] = sprintf(
-                    'Overall has entered %s territory (%s/5) — please review this week.',
-                    $data['band']['label'],
-                    $data['overall']
-                );
+                $parts[] = sprintf('Overall is low (%s/5, %s) — please review.', $data['overall'], $data['band']['label']);
             }
 
             if ($data['overallPrev'] !== null
                 && ($data['overallPrev'] - $data['overall']) >= CsmWeeklyDigestService::DROP_THRESHOLD) {
                 $parts[] = sprintf(
-                    'Down %.1f from the previous week (%s to %s).',
+                    'Down %.1f from last week (%s to %s).',
                     $data['overallPrev'] - $data['overall'],
                     $data['overallPrev'],
                     $data['overall']
@@ -90,23 +122,32 @@ class CsmWeeklyCheck extends Command
             }
         }
 
-        foreach ($data['warnings'] as $warning) {
+        $warnings = $data['warnings'];
+        $count = count($warnings);
+
+        if ($count === 1) {
             $flagged = true;
             $parts[] = sprintf(
-                'Per-question warning: %d client(s) disagreed on "%s" (average %s/5).',
-                $warning['disagreeCount'],
-                $warning['question'],
-                $warning['average']
+                '%d client(s) disagreed on "%s".',
+                $warnings[0]['disagreeCount'],
+                $warnings[0]['question']
+            );
+        } elseif ($count > 1) {
+            $flagged = true;
+            usort($warnings, fn ($a, $b) => $a['average'] <=> $b['average']);
+            $worst = $warnings[0];
+            $parts[] = sprintf(
+                '%d of 9 questions flagged (worst: "%s" — %d disagreed, avg %s/5).',
+                $count,
+                $worst['question'],
+                $worst['disagreeCount'],
+                $worst['average']
             );
         }
 
         if ($data['recovered']) {
             $flagged = true;
-            $parts[] = sprintf(
-                'Recovery: back up to %s from last week\'s %s.',
-                $data['band']['label'],
-                $data['bandPrev']['label']
-            );
+            $parts[] = sprintf('Recovered to %s.', $data['band']['label']);
         }
 
         if ($data['milestone']) {
