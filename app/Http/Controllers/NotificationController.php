@@ -55,6 +55,15 @@ class NotificationController extends Controller
                 }
             }
 
+            // BUG-NOTIF-FROM-1: a notification addressed to the ticket's own
+            // requestor must not read "From: <yourself>" — the requestor IS
+            // the recipient. The acting IT personnel named in the message
+            // ("IT personnel X has been assigned...") wins; otherwise the
+            // notification is system-generated.
+            if ($sender !== null && $n->request !== null && (int) $n->request->user_id === (int) $n->user_id) {
+                $sender = $this->deriveSelfNotificationSender($n->message);
+            }
+
             return [
                 'id' => $n->id,
                 'type' => $n->type ?: 'Notification',
@@ -73,6 +82,27 @@ class NotificationController extends Controller
             'total' => $totalUnread,
             'has_more' => ($offset + $notifications->count()) < $totalUnread,
         ]);
+    }
+
+    /**
+     * BUG-NOTIF-FROM-1: sender label for self-addressed notifications.
+     * The ticket owner is the recipient here, so "From: <owner>" is wrong;
+     * prefer the acting IT personnel named in the message, else "System".
+     */
+    private function deriveSelfNotificationSender(string $message): string
+    {
+        // "… is now Ongoing. IT personnel Marites Santos-Reyes has been assigned …"
+        if (preg_match('/IT personnel\s+(.+?)(?=\s+(?:has|will|is|was)\b|\.(?:\s|$)|$)/i', $message, $m)) {
+            $candidate = trim(preg_replace('/\s+/', ' ', $m[1]));
+            $first = strtolower((string) strtok($candidate, ' '));
+
+            // "IT personnel has updated …" names nobody — treat as system.
+            if ($candidate !== '' && !in_array($first, ['has', 'will', 'is', 'was', 'updated', 'completed'], true)) {
+                return $candidate;
+            }
+        }
+
+        return 'System';
     }
 
     protected function resolveTargetUrl($notification, $user)
