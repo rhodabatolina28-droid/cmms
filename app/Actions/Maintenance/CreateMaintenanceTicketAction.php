@@ -73,8 +73,9 @@ class CreateMaintenanceTicketAction
                 'maintenance_tasks_json' => json_encode($tasksObj),
             ]));
 
-            // Generate request number
-            $requestNumber = $this->generateRequestNumber('Preventive Maintenance');
+            // Generate request number (D9.42: same Auth user the tracking row
+            // below reads its region/branch from — see generateRequestNumber())
+            $requestNumber = $this->generateRequestNumber('Preventive Maintenance', Auth::user());
             $maintenance->update([
                 'form_no' => $requestNumber,
                 'service_request_no' => $requestNumber
@@ -407,8 +408,13 @@ class CreateMaintenanceTicketAction
         return \App\Support\RequestHelpers::saveSignature($base64Data, $type, $name);
     }
 
-    private function generateRequestNumber($type)
+    /**
+     * D9.42: forward the actor so the number's region/branch come from the
+     * SAME user whose region/branch the tracking row stores (lines 98-99).
+     * Without it the helper would silently fall back to 'SYS'.
+     */
+    private function generateRequestNumber($type, ?\App\Models\User $actor = null)
     {
-        return \App\Support\RequestHelpers::generateRequestNumber($type);
+        return \App\Support\RequestHelpers::generateRequestNumber($type, $actor);
     }
 }

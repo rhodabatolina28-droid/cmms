@@ -81,7 +81,7 @@ class CreateIctTicketAction
             $repairRequest = RepairRequest::create($mappedData);
 
             // Generate request number
-            $requestNumber = \App\Support\RequestHelpers::generateRequestNumber('ICT');
+            $requestNumber = \App\Support\RequestHelpers::generateRequestNumber('ICT', $user);
 
             // Create tracking request
             $trackingRequest = RequestModel::create([

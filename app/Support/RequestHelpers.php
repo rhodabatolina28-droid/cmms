@@ -20,7 +20,7 @@ class RequestHelpers
     /**
      * Generate a unique request number for ICT or PM tickets.
      *
-     * D9.24 format: {PREFIX}-{YYYY}-{MM}-{DD}-{NNNN}  e.g. REQ-2026-09-17-0001
+     * D9.42 format: {ICT|PM}-{REGION}-{BRANCH}-{YYYY}-{MM}-{DD}-{NNNN} (e.g. ICT-NCR-RCMB-2026-09-23-0001)
      * Legacy numbers (REQ-NCR-RCMB-2026-0001) remain valid and displayable.
      *
      * The counter restarts every day, per prefix (a new day starts at 0001);
@@ -33,18 +33,27 @@ class RequestHelpers
      * forms keep their own yearly series: PR-{YEAR}-NNNN (procurement) and
      * PAR-{YEAR}-NNNN (property).
      *
-     * @param string $type 'ICT' or 'PM'
-     * @param User|null $actorUser Retained for backwards compatibility. The
-     *                             number no longer embeds region/branch codes.
+     * @param string $type 'ICT' or 'PM'/'Preventive Maintenance'
+     * @param User|null $actorUser Fallback source for region/branch
+     * @param string|null $region Explicit region (console path)
+     * @param string|null $branch Explicit branch (console path)
      */
-    public static function generateRequestNumber(string $type, ?User $actorUser = null): string
+    public static function generateRequestNumber(string $type, ?User $actorUser = null, ?string $region = null, ?string $branch = null): string
     {
-        $prefix = $type === 'ICT' ? 'REQ' : 'PM';
-        $datePart = now()->format('Y-m-d');
-        $searchPrefix = "{$prefix}-{$datePart}";
+        // D9.42: per-region daily sequence. Region/branch resolution order:
+        // explicit param -> $actorUser -> Auth user -> 'SYS'. Console paths
+        // (scheduler) have no Auth, so they pass region/branch explicitly.
+        $prefix = $type === 'ICT' ? 'ICT' : 'PM';
+        $region = $region ?? $actorUser?->region ?? Auth::user()?->region;
+        $branch = $branch ?? $actorUser?->branch ?? Auth::user()?->branch;
+        $regionCode = self::getBranchCode($region);
+        $branchCode = self::getBranchCode($branch);
 
-        // Use MySQL advisory lock to prevent race conditions (per prefix, per day)
-        $lockName = 'request_number_' . $prefix . '_' . now()->format('Y_m_d');
+        $datePart = now()->format('Y-m-d');
+        $searchPrefix = "{$prefix}-{$regionCode}-{$branchCode}-{$datePart}";
+
+        // MySQL advisory lock, per (prefix, region, branch, day)
+        $lockName = 'request_number_' . $prefix . '_' . $regionCode . '_' . $branchCode . '_' . now()->format('Y_m_d');
         $lockTimeout = 10;
 
         $acquired = DB::select("SELECT GET_LOCK(?, ?) AS acquired", [$lockName, $lockTimeout]);
@@ -80,7 +89,7 @@ class RequestHelpers
             return 'SYS';
         }
 
-        $branchUpper = strtoupper($branch);
+        $branchUpper = strtoupper(trim($branch));
 
         $mapping = [
             'RCMB' => 'RCMB',
@@ -104,6 +113,14 @@ class RequestHelpers
             'BARMM' => 'BARMM',
         ];
 
+        // D9.42 BUG FIX: exact match first, then longest keyword. The old
+        // insertion-order str_contains loop hit 'REGION I' before 'REGION II',
+        // so every numbered region silently collapsed to 'RI'.
+        if (isset($mapping[$branchUpper])) {
+            return $mapping[$branchUpper];
+        }
+
+        uksort($mapping, fn (string $a, string $b) => strlen($b) <=> strlen($a));
         foreach ($mapping as $keyword => $code) {
             if (str_contains($branchUpper, $keyword)) {
                 return $code;

@@ -147,9 +147,17 @@ class GeneratePMScheduleService
             $schedule->update(['current_focus_division' => $focusDivision]);
 
             foreach ($eligibleUsers as $userId => $data) {
-                $requestNumber = $this->generateRequestNumber($actor);
                 $user = User::find($userId);
-                
+
+                // D9.42: embed the SAME region/branch expression the tracking row
+                // stores (end user first, schedule actor fallback). Resolved AFTER
+                // $user is loaded so the number can never diverge from the columns —
+                // this path also runs Auth-less from the console scheduler.
+                $requestNumber = $this->generateRequestNumber(
+                    $actor,
+                    $user?->region ?? $actor?->region,
+                    $user?->branch ?? $actor?->branch
+                );
                 $endUserName   = $user?->full_name ?? 'Auto-generated';
                 $endUserDiv    = $user?->office ?? $user?->department ?? $actor?->office ?? '';
                 
@@ -974,9 +982,9 @@ class GeneratePMScheduleService
         ]);
     }
 
-    private function generateRequestNumber(?User $actorUser = null): string
+    private function generateRequestNumber(?User $actorUser = null, ?string $region = null, ?string $branch = null): string
     {
-        return \App\Support\RequestHelpers::generateRequestNumber('PM', $actorUser);
+        return \App\Support\RequestHelpers::generateRequestNumber('PM', $actorUser, $region, $branch);
     }
     
     private function getBranchCode(?string $branch): string

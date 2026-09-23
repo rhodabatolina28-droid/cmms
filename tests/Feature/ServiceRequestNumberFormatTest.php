@@ -9,9 +9,11 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
 /**
- * D9.24 — date-based service request numbers.
- * New format: {PREFIX}-{YYYY}-{MM}-{DD}-{NNNN}  (REQ-2026-09-16-0001).
- * Legacy region/branch numbers (REQ-NCR-RCMB-2026-0001) must still display.
+ * D9.24 — date-based service request numbers (updated by D9.42).
+ * Stored format now: {ICT|PM}-{REGION}-{BRANCH}-{YYYY}-{MM}-{DD}-{NNNN}
+ *   (ICT-NCR-RCMB-2026-09-16-0001 — per-region daily sequence).
+ * Legacy REQ-NCR-RCMB-2026-0001 and D9.24 REQ-2026-09-16-0001 numbers
+ * must still display until the Phase 3 backfill renumbers them.
  */
 class ServiceRequestNumberFormatTest extends TestCase
 {
@@ -57,16 +59,16 @@ class ServiceRequestNumberFormatTest extends TestCase
     {
         $number = RequestHelpers::generateRequestNumber('ICT', $this->user());
 
-        $this->assertMatchesRegularExpression('/^REQ-\d{4}-\d{2}-\d{2}-\d{4}$/', $number);
-        $this->assertStringStartsWith('REQ-' . now()->format('Y-m-d') . '-', $number);
+        $this->assertMatchesRegularExpression('/^ICT-NCR-RCMB-\d{4}-\d{2}-\d{2}-\d{4}$/', $number);
+        $this->assertStringStartsWith('ICT-NCR-RCMB-' . now()->format('Y-m-d') . '-', $number);
     }
 
     public function test_pm_request_number_uses_pm_prefix_and_date_format(): void
     {
         $number = RequestHelpers::generateRequestNumber('PM', $this->user());
 
-        $this->assertMatchesRegularExpression('/^PM-\d{4}-\d{2}-\d{2}-\d{4}$/', $number);
-        $this->assertStringStartsWith('PM-' . now()->format('Y-m-d') . '-', $number);
+        $this->assertMatchesRegularExpression('/^PM-NCR-RCMB-\d{4}-\d{2}-\d{2}-\d{4}$/', $number);
+        $this->assertStringStartsWith('PM-NCR-RCMB-' . now()->format('Y-m-d') . '-', $number);
     }
 
     public function test_sequence_increments_within_the_same_day(): void

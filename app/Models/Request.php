@@ -85,16 +85,34 @@ class Request extends Model
     /**
      * Split a request number into display parts.
      *
+     * D9.42 format:  ICT-NCR-RCMB-2026-09-16-0001 -> [1]=region [2]=branch
+     *                                            [3]=YYYY [4]=MM [5]=DD [6]=NNNN
      * D9.24 format:  REQ-2026-09-16-0001      -> [1]=YYYY [2]=MM [3]=DD [4]=NNNN
      * Legacy format: REQ-NCR-RCMB-2026-0001   -> [1]=region [2]=branch [3]=YYYY [4]=NNNN
      *
-     * Legacy numbers must keep rendering, so both shapes are supported.
+     * All three shapes must keep rendering, so the backfill can run gradually.
      */
     private static function parseRequestNumber(?string $requestNumber): array
     {
         $parts = explode('-', (string) $requestNumber);
         $rawPrefix = ($parts[0] ?? '') !== '' ? $parts[0] : 'PM';
         $displayPrefix = $rawPrefix === 'REQ' ? 'ICT' : $rawPrefix;
+
+        // D9.42 per-region date format:
+        // [0]=ICT/PM, [1]=REGION, [2]=BRANCH, [3]=2026, [4]=09, [5]=16, [6]=0001
+        if (count($parts) === 7
+            && isset($parts[3], $parts[4], $parts[5], $parts[6])
+            && ctype_digit($parts[3])
+            && strlen($parts[3]) === 4) {
+            return [
+                'prefix' => $displayPrefix,
+                'year'   => $parts[3],
+                'number' => $parts[6],
+                'date'   => $parts[3] . '-' . $parts[4] . '-' . $parts[5],
+                'region' => $parts[1],
+                'branch' => $parts[2],
+            ];
+        }
 
         // D9.24 date-based format: [0]=REQ/PM, [1]=2026, [2]=09, [3]=16, [4]=0001
         if (isset($parts[1], $parts[2], $parts[3], $parts[4])
@@ -160,14 +178,23 @@ class Request extends Model
 
         if ($p['date']) {
             // D9.24: region/branch live in the request columns, not in the number.
+            // D9.42: the per-region format embeds its own codes — prefer them
+            // (columns may hold the full region name, e.g. 'NATIONAL CAPITAL REGION').
             $segments = [$p['prefix']];
 
-            if (!empty($this->region)) {
-                $segments[] = strtoupper($this->region);
+            $regionCode = $p['region'] !== ''
+                ? $p['region']
+                : ($this->region ? strtoupper($this->region) : '');
+            $branchCode = $p['branch'] !== ''
+                ? $p['branch']
+                : ($this->branch ? \App\Support\RequestHelpers::getBranchCode($this->branch) : '');
+
+            if ($regionCode !== '') {
+                $segments[] = $regionCode;
             }
 
-            if (!empty($this->branch)) {
-                $segments[] = \App\Support\RequestHelpers::getBranchCode($this->branch);
+            if ($branchCode !== '') {
+                $segments[] = $branchCode;
             }
 
             $segments[] = $p['date'];
