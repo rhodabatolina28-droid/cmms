@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
@@ -33,6 +34,11 @@ class AppServiceProvider extends ServiceProvider
                 Vite::useCspNonce($nonce);
             }
         });
+
+        // D9.40 - pin the shared, styled pagination bar so every ->links() call
+        // (including list pages added later) renders the CMMS paginator instead of
+        // Laravel's raw Tailwind one.
+        Paginator::defaultView('vendor.pagination.cmms');
 
         InventoryAsset::observe(InventoryAssetObserver::class);
         RequestModel::observe(RequestObserver::class);

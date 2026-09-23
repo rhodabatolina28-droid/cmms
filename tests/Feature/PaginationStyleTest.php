@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Request as RequestModel;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Pagination\Paginator;
 use Tests\TestCase;
 
 /**
@@ -138,5 +139,22 @@ class PaginationStyleTest extends TestCase
         $this->assertSame(7, substr_count($nav, 'cmms-pag__num'), 'Page numbers must stay windowed as data grows.');
         $this->assertSame(2, substr_count($nav, 'cmms-pag__gap'), 'Ellipsis must mark the collapsed ranges.');
         $this->assertStringContainsString('page=10', $nav, 'The last page must always be reachable.');
+    }
+
+    public function test_bare_links_uses_the_styled_view_by_default(): void
+    {
+        // The paginator default view is pinned in AppServiceProvider (D9.40) so a
+        // list page added later can never fall back to the raw Tailwind paginator.
+        $this->assertSame('vendor.pagination.cmms', Paginator::$defaultView);
+
+        for ($i = 0; $i < 21; $i++) {
+            $this->user('user');
+        }
+
+        $html = (string) User::query()->paginate(20)->links();
+
+        $this->assertStringContainsString('cmms-pag__info', $html);
+        $this->assertStringContainsString('of <strong>21</strong> results', $html);
+        $this->assertStringNotContainsString('text-sm text-gray-700 leading-5 dark:text-gray-600', $html);
     }
 }
