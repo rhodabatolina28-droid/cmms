@@ -132,6 +132,37 @@ class RequestHelpers
     }
 
     /**
+     * Pull the service request number out of a notification message.
+     *
+     * Notifications embed the STORED request number, so this has to recognise
+     * every format the system has ever written:
+     *   D9.42    ICT-NCR-RCMB-2026-09-23-0001 / PM-NCR-RCMB-2026-09-23-0001
+     *   D9.24    REQ-2026-09-17-0001
+     *   legacy   REQ-NCR-RCMB-2026-0001
+     *
+     * Why this exists (D9.42 Phase 3): the notification bell matched only
+     * '/REQ-[A-Z0-9-]+/', so once numbers became 'ICT-…'/'PM-…' the match
+     * returned nothing — the bell lost the ticket number and the click fell
+     * through to the ticket LIST instead of opening the ticket. This method is
+     * the single source of truth for that lookup; do not re-inline the regex.
+     *
+     * Every segment must carry at least one alphanumeric character, so a
+     * trailing separator ("…-0001 - please review") is never swallowed.
+     */
+    public static function extractRequestNumber(?string $message): ?string
+    {
+        if ($message === null || trim($message) === '') {
+            return null;
+        }
+
+        if (preg_match('/\b(?:ICT|PM|REQ)-[A-Z0-9]+(?:-[A-Z0-9]+)*/', $message, $m)) {
+            return $m[0];
+        }
+
+        return null;
+    }
+
+    /**
      * Save a base64 signature image to the PRIVATE disk
      * (storage/app/private/signatures/{year}/{MonthName}/).
      *

@@ -33,8 +33,17 @@ class Notification extends Model
                     return;
                 }
 
-                // PR-type notifications carry their number inside the message (they have no requests row); fall back to "N/A" for everything else
-                $requestNumber = $notification->request ? $notification->request->request_number : ($notification->prNumber() ?? 'N/A');
+                // PR-type notifications carry their number inside the message
+                // (they have no requests row). D9.42 Phase 3: ICT/PM
+                // notifications can reach this point without a request relation
+                // too, so recover their STORED number from the message with the
+                // same helper the bell uses ('{ICT|PM}-…'-aware). Only a message
+                // with no recognisable number falls back to "N/A".
+                $requestNumber = $notification->request
+                    ? $notification->request->request_number
+                    : ($notification->prNumber()
+                        ?? \App\Support\RequestHelpers::extractRequestNumber($notification->message)
+                        ?? 'N/A');
 
                 // System admin: in-app only (no email flood on shared region).
                 // D9.20: exception — ICT requests are routed straight to the System

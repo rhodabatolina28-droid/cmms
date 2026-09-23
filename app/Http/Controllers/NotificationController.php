@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Support\RequestHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
@@ -42,10 +43,15 @@ class NotificationController extends Controller
                 if ($n->request->user) {
                     $sender = $n->request->user->full_name ?: $n->request->user->name;
                 }
-            } elseif (preg_match('/REQ-[A-Z0-9-]+/', $n->message, $m)) {
-                $reqNum = $m[0];
-            } elseif (preg_match('/PR-[A-Z0-9-]+/', $n->message, $m)) {
-                $reqNum = $m[0];
+            } else {
+                // D9.42 Phase 3: the message embeds the STORED number, which is
+                // now '{ICT|PM}-REGION-BRANCH-date-NNNN' — the old REQ-only
+                // regex returned nothing and the bell lost the ticket number.
+                $reqNum = RequestHelpers::extractRequestNumber($n->message);
+
+                if (!$reqNum && preg_match('/PR-[A-Z0-9-]+/', $n->message, $m)) {
+                    $reqNum = $m[0];
+                }
             }
 
             // Extract sender from message if not found on relation
@@ -129,8 +135,13 @@ class NotificationController extends Controller
         $msg = $notification->message ?? '';
         $type = $notification->type ?? '';
 
-        if (preg_match('/REQ-[A-Z0-9-]+/', $msg, $m)) {
-            $foundReq = \App\Models\Request::where('request_number', $m[0])->first();
+        // D9.42 Phase 3: match every stored format (ICT-…/PM-…/REQ-…) — the old
+        // REQ-only regex let new-format notifications fall through to the
+        // generic list routes below instead of opening the ticket.
+        $requestNumber = RequestHelpers::extractRequestNumber($msg);
+
+        if ($requestNumber) {
+            $foundReq = \App\Models\Request::where('request_number', $requestNumber)->first();
             if ($foundReq) {
                 if ($foundReq->type === 'ICT') {
                     return ($user && in_array($user->role, ['super_admin', 'admin']))
