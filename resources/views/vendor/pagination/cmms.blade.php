@@ -1,9 +1,10 @@
-{{-- D9.40 - Shared CMMS pagination (styled summary + windowed page numbers).
-     Every list page renders this through $paginator->links('vendor.pagination.cmms')
-     so the whole system shares one pagination look. Deliberately div/span based with
-     its own classes: the legacy Bootstrap style rules in the layout (ul/li,
-     .active span, nav[role="navigation"] a/span) must never style this markup again. --}}
-@if ($paginator->hasPages())
+{{-- D9.40 / D9.41 - Shared CMMS pagination bar.
+     Rendered from every list page via $paginator->links('vendor.pagination.cmms')
+     (pinned as the paginator default view in AppServiceProvider) so the whole system
+     shares one look. The result count is always shown while there are rows - kaya ang
+     server-side filter ay may agarang feedback - at ang windowed page numbers ay
+     lumalabas lamang kapag higit sa isang page ang listahan. --}}
+@if ($paginator->count() > 0)
     @php
         $window  = 2;
         $current = $paginator->currentPage();
@@ -25,6 +26,7 @@
             of <strong>{{ $total }}</strong> results
         </p>
 
+        @if ($paginator->hasPages())
         <nav class="cmms-pag__nav" aria-label="Pagination">
             @if ($paginator->onFirstPage())
                 <span class="cmms-pag__btn cmms-pag__btn--disabled" aria-disabled="true">&lsaquo; Prev</span>
@@ -60,5 +62,6 @@
                 <span class="cmms-pag__btn cmms-pag__btn--disabled" aria-disabled="true">Next &rsaquo;</span>
             @endif
         </nav>
+        @endif
     </div>
 @endif

@@ -191,6 +191,10 @@
         .ad-search-input { width: 100%; padding-left: 35px; }
         .ad-filter-select { width: 180px; }
         .ad-filter-status { width: 160px; }
+        .ad-filter-apply { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; background: #0038A8; color: #ffffff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
+        .ad-filter-apply:hover { background: #002f8a; }
+        .ad-filter-reset { display: inline-flex; align-items: center; padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; }
+        .ad-filter-reset:hover { background: #e2e8f0; }
         .ad-table-wrap { overflow-x: auto; }
         .ad-td-id { font-weight: 800; color: #0038A8; }
         .ad-td-sub { font-size: 11px; color: #64748b; font-style: italic; }
@@ -396,31 +400,32 @@
 
         <div class="ad-body-pad">
             <!-- FILTER RIBBON -->
-            <div class="filter-ribbon">
+            {{-- D9.41: GET form - server-side ang filter, saklaw ang lahat ng rows (hindi lang 20). --}}
+            <form method="GET" action="{{ route('ict.index') }}" class="filter-ribbon" role="search">
                 <div class="ad-search-wrap">
                     <i class="fa-solid fa-magnifying-glass ad-search-icon"></i>
-                    <input type="text" id="searchRequest" placeholder="Search by ID, requestor, or office..." class="ribbon-input ad-search-input">
+                    <input type="text" name="q" id="searchRequest" value="{{ request('q') }}" maxlength="100" class="ribbon-input ad-search-input" placeholder="Search by ID, requestor, or office..." aria-label="Search requests">
                 </div>
 
-                <select id="filterStatus" class="ribbon-input ad-filter-status">
+                <select name="status" id="filterStatus" class="ribbon-input ad-filter-status" onchange="this.form.submit()" aria-label="Filter by status">
                     <option value="">All Status</option>
-                    <option value="Pending">Pending</option>
-                    <option value="Ongoing">Ongoing</option>
-                    <option value="Completed">Completed</option>
-                    <option value="Rejected">Rejected</option>
+                    @foreach(['Pending', 'Ongoing', 'Completed', 'Rejected'] as $statusOption)
+                    <option value="{{ $statusOption }}" @selected(request('status') === $statusOption)>{{ $statusOption }}</option>
+                    @endforeach
                 </select>
 
-                <select id="filterCategory" class="ribbon-input ad-filter-status">
+                <select name="category" id="filterCategory" class="ribbon-input ad-filter-status" onchange="this.form.submit()" aria-label="Filter by category">
                     <option value="">All Categories</option>
-                    <option value="Desktop">Desktop</option>
-                    <option value="Laptop">Laptop</option>
-                    <option value="Monitor">Monitor</option>
-                    <option value="Printer/Scanner">Printer/Scanner</option>
-                    <option value="Peripherals">Peripherals</option>
-                    <option value="Network/Server">Network/Server</option>
-                    <option value="Others">Others</option>
+                    @foreach(['Desktop', 'Laptop', 'Monitor', 'Printer/Scanner', 'Peripherals', 'Network/Server', 'Others'] as $categoryOption)
+                    <option value="{{ $categoryOption }}" @selected(request('category') === $categoryOption)>{{ $categoryOption }}</option>
+                    @endforeach
                 </select>
-            </div>
+
+                <button type="submit" class="ad-filter-apply"><i class="fa-solid fa-filter"></i> Filter</button>
+                @if(request()->hasAny(['q', 'status', 'category']))
+                <a href="{{ route('ict.index') }}" class="ad-filter-reset">Reset</a>
+                @endif
+            </form>
 
             <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
             <div class="ad-table-wrap">
@@ -495,37 +500,5 @@
     </div>
 </div>
 
-@endsection
-
-@section('scripts')
-<script nonce="{{ $cspNonce }}">
-function filterRequests() {
-    const searchInput = document.getElementById('searchRequest').value.toLowerCase();
-    const statusFilter = document.getElementById('filterStatus').value;
-    const categoryFilter = document.getElementById('filterCategory').value;
-    const tableRows = document.querySelectorAll('#requestTable tr');
-
-    tableRows.forEach(row => {
-        if (row.cells.length < 4) return;
-
-        const id = row.cells[0].textContent.toLowerCase();
-        const requestor = row.cells[1].textContent.toLowerCase();
-        const statusSpan = row.querySelector('.status-pill');
-        const status = statusSpan ? statusSpan.textContent.trim() : "";
-        const rowCategory = row.getAttribute('data-category') || '';
-
-        const matchesSearch = id.includes(searchInput) || requestor.includes(searchInput);
-        const matchesStatus = statusFilter === "" || status === statusFilter;
-        const matchesCategory = categoryFilter === "" || rowCategory === categoryFilter;
-
-        row.style.display = (matchesSearch && matchesStatus && matchesCategory) ? "" : "none";
-    });
-}
-document.addEventListener('DOMContentLoaded', function() {
-    document.getElementById('searchRequest').addEventListener('keyup', filterRequests);
-    document.getElementById('filterStatus').addEventListener('change', filterRequests);
-    document.getElementById('filterCategory').addEventListener('change', filterRequests);
-});
-</script>
 @endsection
 
