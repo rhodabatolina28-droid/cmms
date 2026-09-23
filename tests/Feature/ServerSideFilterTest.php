@@ -169,6 +169,32 @@ class ServerSideFilterTest extends TestCase
         $this->assertStringContainsString("input.addEventListener('input'", $html);
         $this->assertStringContainsString('setSelectionRange', $html);
     }
+
+    public function test_reset_link_is_removed_from_both_filter_ribbons(): void
+    {
+        // D9.42: hiniling ng user na tanggalin ang Reset button sa filter
+        // ribbons - ang live search + "All Status"/"All Categories" na lang
+        // ang paraan ng pag-clear, kaya walang Reset kahit may aktibong filter.
+        $user = $this->user('user');
+        $this->ict($user, 'Monitor flicker');
+
+        $userHtml = $this->actingAs($user)
+            ->get(route('ict.index', ['q' => 'Monitor', 'status' => 'Pending']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('btn-filter-reset', $userHtml);
+        $this->assertStringNotContainsString('>Reset</a>', $userHtml);
+
+        $admin = $this->user('admin');
+        $adminHtml = $this->actingAs($admin)
+            ->get(route('ict.index', ['q' => 'Monitor']))
+            ->assertOk()
+            ->getContent();
+
+        $this->assertStringNotContainsString('ad-filter-reset', $adminHtml);
+        $this->assertStringNotContainsString('>Reset</a>', $adminHtml);
+    }
     public function test_search_matches_the_id_that_is_displayed_on_screen(): void
     {
         // Ang ID na nakikita sa page (display_number, hal. ICT-2026-09-23-0001) ay

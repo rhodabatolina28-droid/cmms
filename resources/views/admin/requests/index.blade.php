@@ -191,8 +191,6 @@
         .ad-search-input { width: 100%; padding-left: 35px; }
         .ad-filter-select { width: 180px; }
         .ad-filter-status { width: 160px; }
-        .ad-filter-reset { display: inline-flex; align-items: center; padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; }
-        .ad-filter-reset:hover { background: #e2e8f0; }
         .ad-table-wrap { overflow-x: auto; }
         .ad-td-id { font-weight: 800; color: #0038A8; }
         .ad-td-sub { font-size: 11px; color: #64748b; font-style: italic; }
@@ -418,10 +416,6 @@
                     <option value="{{ $categoryOption }}" @selected(request('category') === $categoryOption)>{{ $categoryOption }}</option>
                     @endforeach
                 </select>
-
-                @if(request()->hasAny(['q', 'status', 'category']))
-                <a href="{{ route('ict.index') }}" class="ad-filter-reset">Reset</a>
-                @endif
             </form>
 
             <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
