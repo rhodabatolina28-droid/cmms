@@ -488,7 +488,7 @@
                     </tbody>
                 </table>
                 <div class="ad-pagination">
-                    {{ $requests->links() }}
+                    {{ $requests->links('vendor.pagination.cmms') }}
                 </div>
             </div>
         </div>

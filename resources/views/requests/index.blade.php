@@ -308,7 +308,7 @@
                     </tbody>
                 </table>
                 <div class="pagination-wrap">
-                    {{ $requests->links() }}
+                    {{ $requests->links('vendor.pagination.cmms') }}
                 </div>
             </div>
         </div>

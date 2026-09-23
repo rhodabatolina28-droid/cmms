@@ -167,7 +167,7 @@
                 @endforeach
 
                 @if($sessions->hasPages())
-                    <div class="pagination-wrap">{{ $sessions->links() }}</div>
+                    <div class="pagination-wrap">{{ $sessions->links('vendor.pagination.cmms') }}</div>
                 @endif
             @endif
         </div>

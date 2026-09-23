@@ -289,7 +289,7 @@
             {{-- Pagination --}}
             @if($pmTasks->hasPages())
             <div class="pm-pagination">
-                {{ $pmTasks->links() }}
+                {{ $pmTasks->links('vendor.pagination.cmms') }}
             </div>
             @endif
         </div>

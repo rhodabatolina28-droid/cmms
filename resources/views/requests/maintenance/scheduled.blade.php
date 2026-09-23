@@ -100,7 +100,7 @@
         </table></div>
 
         <div class="sched-pagination">
-            {{ $requests->links() }}
+            {{ $requests->links('vendor.pagination.cmms') }}
         </div>
     @endif
 </div>

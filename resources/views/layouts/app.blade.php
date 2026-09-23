@@ -16,40 +16,27 @@
     <!-- Core CSS -->
     @vite(['resources/css/admin.css', 'resources/css/mobile-responsive.css'])
     
-    <!-- CSS for Pagination Fix (Final Clean) -->
+    <!-- Shared pagination styles (D9.40) -->
     <style nonce="{{ $cspNonce }}">
-        /* Pagination */
-        nav[role="navigation"] { margin-top: 20px; }
-        .pagination, nav[role="navigation"] ul { 
-            display: flex !important; 
-            list-style: none !important; 
-            padding: 0 !important; 
-            gap: 5px !important; 
-            justify-content: flex-end !important;
-            margin: 0 !important;
+        /* D9.40 - Shared pagination (resources/views/vendor/pagination/cmms.blade.php).
+           The old block targeted a Bootstrap style paginator (ul/li, .active span) while
+           Laravel renders a div/span paginator, so the old blanket nav/span rule boxed the summary numbers
+           ("Showing [1] to [20] of [22] results"), never highlighted the current page and
+           force-hid the mobile prev/next block. Styles are scoped to .cmms-pag now. */
+        .cmms-pag { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; margin-top: 20px; }
+        .cmms-pag__info { margin: 0; font-size: 12px; font-weight: 600; color: #64748b; }
+        .cmms-pag__info strong { font-weight: 800; color: #1e293b; }
+        .cmms-pag__nav { display: flex; align-items: center; flex-wrap: wrap; gap: 5px; margin: 0; }
+        .cmms-pag__btn { display: inline-flex; align-items: center; justify-content: center; min-width: 34px; min-height: 34px; padding: 6px 10px; border: 1px solid #cbd5e1; border-radius: 6px; background: #ffffff; color: #1e293b; font-size: 12px; font-weight: 700; line-height: 1; text-decoration: none; }
+        a.cmms-pag__btn:hover { border-color: #0038A8; color: #0038A8; background: #eff6ff; }
+        .cmms-pag__btn--current { background: #0038A8; border-color: #0038A8; color: #ffffff; cursor: default; }
+        .cmms-pag__btn--disabled { background: #f1f5f9; border-color: #e2e8f0; color: #94a3b8; cursor: not-allowed; }
+        .cmms-pag__gap { display: inline-flex; align-items: center; justify-content: center; min-width: 24px; color: #94a3b8; font-size: 12px; }
+        @media screen and (max-width: 767px) {
+            .cmms-pag { justify-content: center; }
+            .cmms-pag__info { width: 100%; text-align: center; }
+            .cmms-pag__btn { min-width: 42px; min-height: 42px; }
         }
-        nav[role="navigation"] li { display: inline-block !important; }
-        nav[role="navigation"] a, nav[role="navigation"] span { 
-            padding: 8px 14px !important; 
-            border: 1px solid #dee2e6 !important; 
-            color: #0038A8 !important; 
-            text-decoration: none !important; 
-            border-radius: 4px !important;
-            font-size: 14px !important;
-            background: white !important;
-            line-height: 1 !important;
-        }
-        nav[role="navigation"] .active span, nav[role="navigation"] li[aria-current="page"] span { 
-            background-color: #0038A8 !important; 
-            color: white !important; 
-            border-color: #0038A8 !important; 
-        }
-        nav[role="navigation"] svg { width: 14px !important; height: 14px !important; display: inline-block !important; }
-        nav[role="navigation"] > div:first-child { display: none !important; }
-        nav[role="navigation"] > div:last-child { display: flex !important; width: 100% !important; justify-content: flex-end !important; }
-        .hidden.sm\:flex-1.sm\:flex.sm\:items-center.sm\:justify-between { display: flex !important; flex-direction: row-reverse !important; }
-
-
         /* Sidebar overrides (only keep essential overrides, let admin.css handle the rest to prevent jumping) */
         #sidebar { background-color: #0038A8 !important; }
         #logout-form { display: none; }

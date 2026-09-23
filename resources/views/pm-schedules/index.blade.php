@@ -406,7 +406,7 @@
                     </div>
                 @endforeach
             </div>
-            <div class="sched-paginator">{{ $schedules->links() }}</div>
+            <div class="sched-paginator">{{ $schedules->links('vendor.pagination.cmms') }}</div>
         @endif
     </div>
 

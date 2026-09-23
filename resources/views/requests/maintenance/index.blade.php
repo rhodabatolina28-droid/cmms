@@ -140,7 +140,7 @@
                 </tbody>
             </table>
             <div class="maint-pagination">
-                {{ $requests->links() }}
+                {{ $requests->links('vendor.pagination.cmms') }}
             </div>
         </div>
     </div>

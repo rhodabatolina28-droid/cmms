@@ -312,7 +312,7 @@
                                 </tbody>
                             </table>
                         </div>
-                        <div id="myPrsPagination" class="paginator-compact">{{ $myPrs->links() }}</div>
+                        <div id="myPrsPagination" class="paginator-compact">{{ $myPrs->links('vendor.pagination.cmms') }}</div>
                     @else
                         <div class="cmms-empty">No purchase requests yet.</div>
                     @endif
@@ -373,7 +373,7 @@
                         </tbody>
                     </table>
                 </div>
-                <div id="historyPagination" class="paginator-compact">{{ $requisitions->links() }}</div>
+                <div id="historyPagination" class="paginator-compact">{{ $requisitions->links('vendor.pagination.cmms') }}</div>
             @endif
         </div>
             </div>

@@ -218,36 +218,6 @@
         .th-status { width: 100px; }
         .th-actions { width: 120px; }
         .pagination-wrap { margin-top: 20px; }
-        /* --- Custom pagination (kapareho ng inventory/physical-count pattern) --- */
-        .pagination-wrap nav {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 6px;
-            justify-content: center;
-            align-items: center;
-        }
-        .pagination-wrap nav a,
-        .pagination-wrap nav span {
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            min-height: 40px;
-            min-width: 40px;
-            padding: 8px 14px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            background: white;
-            font-size: 13px;
-            font-weight: 700;
-            color: #334155;
-            text-decoration: none;
-            transition: all 0.15s;
-        }
-        .pagination-wrap nav a:hover { background: #f1f5f9; border-color: #cbd5e1; }
-        .pagination-wrap nav span.current { background: #0038A8; border-color: #0038A8; color: white; }
-        .pagination-wrap nav span[aria-disabled="true"],
-        .pagination-wrap nav .disabled span { opacity: 0.45; cursor: not-allowed; }
-        .pagination-wrap nav svg { width: 14px; height: 14px; }
         /* --- Supply Workspace scroll pattern: base hide hint --- */
         .mobile-table-hint { display: none; }
         .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
@@ -482,7 +452,7 @@
                     </tbody>
                 </table>
                 <div class="pagination-wrap">
-                    {{ $personnel->links() }}
+                    {{ $personnel->links('vendor.pagination.cmms') }}
                 </div>
             </div>
         </div>
