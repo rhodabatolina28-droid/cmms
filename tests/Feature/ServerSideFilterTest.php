@@ -142,4 +142,49 @@ class ServerSideFilterTest extends TestCase
         $this->assertStringNotContainsString('function filterRequests', $html);
         $this->assertStringNotContainsString('row.style.display', $html);
     }
+    public function test_search_applies_live_while_typing_without_a_filter_button(): void
+    {
+        $user = $this->user('user');
+        $this->ict($user, 'Monitor flicker');
+
+        $html = $this->actingAs($user)->get(route('ict.index'))->assertOk()->getContent();
+
+        // Walang Filter button: awtomatikong nag-a-apply habang nagta-type.
+        $this->assertStringNotContainsString('btn-filter-apply', $html);
+        $this->assertStringContainsString("input.addEventListener('input'", $html);
+        $this->assertStringContainsString('setTimeout', $html);
+        // Pagkatapos ng reload, ituloy ang pag-type (caret sa dulo).
+        $this->assertStringContainsString('setSelectionRange', $html);
+    }
+
+    public function test_admin_ribbon_has_no_filter_button_and_livesearches(): void
+    {
+        $admin = $this->user('admin');
+        $this->ict($this->user('user'), 'Printer jammed');
+
+        $html = $this->actingAs($admin)->get(route('ict.index'))->assertOk()->getContent();
+
+        $this->assertStringContainsString('<form method="GET"', $html);
+        $this->assertStringNotContainsString('ad-filter-apply', $html);
+        $this->assertStringContainsString("input.addEventListener('input'", $html);
+        $this->assertStringContainsString('setSelectionRange', $html);
+    }
+    public function test_search_matches_the_id_that_is_displayed_on_screen(): void
+    {
+        // Ang ID na nakikita sa page (display_number, hal. ICT-2026-09-23-0001) ay
+        // iba sa request_number sa DB (hal. REQ-2026-09-23-0001) - kaya ang
+        // "tamang" ID na hinahanap ng user ay dapat pa ring tumugma.
+        $user = $this->user('user');
+        $first = $this->ict($user, 'Printer jammed');
+        $this->ict($user, 'Monitor flicker');
+
+        $display = $first->display_number;
+        $this->assertNotSame($first->request_number, $display);
+
+        $html = $this->actingAs($user)->get(route('ict.index', ['q' => $display]))->assertOk()->getContent();
+
+        $this->assertStringContainsString('of <strong>1</strong> results', $html);
+        $this->assertStringContainsString('Printer jammed', $html);
+        $this->assertStringNotContainsString('Monitor flicker', $html);
+    }
 }

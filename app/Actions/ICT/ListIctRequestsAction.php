@@ -118,9 +118,27 @@ class ListIctRequestsAction
         if ($filters['search'] !== '') {
             $term = '%' . $filters['search'] . '%';
 
-            $query->where(function (Builder $q) use ($term, $filters) {
+            // ID-aware na paghahanap: ang ID na nakikita sa page (`display_number`,
+            // hal. ICT-2026-0027) ay galing sa request_number (hal.
+            // REQ-NCR-RCMB-2026-0027) kaya hindi literal na tugma. ID-like lang ang
+            // hahanapin nang ganito (walang space, may dash o puro numero) para hindi
+            // magdulot ng false positives sa text search.
+            $idGroups = (! str_contains($filters['search'], ' ')
+                    && (str_contains($filters['search'], '-') || ctype_digit($filters['search'])))
+                ? preg_split('/[^0-9]+/', $filters['search'], -1, PREG_SPLIT_NO_EMPTY)
+                : [];
+
+            $query->where(function (Builder $q) use ($term, $filters, $idGroups) {
                 $q->where('requests.request_number', 'like', $term)
                     ->orWhere('requests.description', 'like', $term);
+
+                if ($idGroups !== []) {
+                    $q->orWhere(function (Builder $id) use ($idGroups) {
+                        foreach ($idGroups as $group) {
+                            $id->where('requests.request_number', 'like', '%' . $group . '%');
+                        }
+                    });
+                }
 
                 // Division/System admin + supply search requestor/office too.
                 if ($filters['broad']) {

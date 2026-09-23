@@ -191,8 +191,6 @@
         .ad-search-input { width: 100%; padding-left: 35px; }
         .ad-filter-select { width: 180px; }
         .ad-filter-status { width: 160px; }
-        .ad-filter-apply { display: inline-flex; align-items: center; gap: 7px; padding: 10px 18px; background: #0038A8; color: #ffffff; border: none; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; }
-        .ad-filter-apply:hover { background: #002f8a; }
         .ad-filter-reset { display: inline-flex; align-items: center; padding: 10px 16px; background: #f1f5f9; color: #334155; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 12px; font-weight: 700; text-decoration: none; }
         .ad-filter-reset:hover { background: #e2e8f0; }
         .ad-table-wrap { overflow-x: auto; }
@@ -421,7 +419,6 @@
                     @endforeach
                 </select>
 
-                <button type="submit" class="ad-filter-apply"><i class="fa-solid fa-filter"></i> Filter</button>
                 @if(request()->hasAny(['q', 'status', 'category']))
                 <a href="{{ route('ict.index') }}" class="ad-filter-reset">Reset</a>
                 @endif
@@ -500,5 +497,25 @@
     </div>
 </div>
 
+<script nonce="{{ $cspNonce }}">
+// D9.41b - live search: habang nagta-type ay awtomatikong inilalapat ang filter (server-side).
+(function () {
+    var input = document.getElementById('searchRequest');
+    if (!input || !input.form) return;
+
+    var timer = null;
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(function () { input.form.submit(); }, 450);
+    });
+
+    // Pagkatapos ng reload, ituloy ang pag-type (caret sa dulo ng text).
+    if (input.value !== '') {
+        input.focus();
+        var end = input.value.length;
+        try { input.setSelectionRange(end, end); } catch (e) { }
+    }
+})();
+</script>
 @endsection
 
