@@ -14,7 +14,10 @@ class Request extends Model
     protected $table = 'requests';
 
     // D2: aging fields travel with every JSON serialization (Master List API)
-    protected $appends = ['age_display', 'aging_bucket', 'should_show_age'];
+    // D9.42 P3: display_number rides along too — the AJAX lists (Super Admin
+    // Master List, PM Work Orders) print it instead of the raw stored number,
+    // which now carries region + branch (ICT-NCR-RCMB-2026-09-23-0001).
+    protected $appends = ['age_display', 'aging_bucket', 'should_show_age', 'display_number'];
 
     // Status Constants
     public const STATUS_SCHEDULED = 'Scheduled';
@@ -158,11 +161,77 @@ class Request extends Model
             : 'ICT Support Request';
     }
 
-    // Get display format: REQ-2026-09-16-0001 -> ICT-2026-09-16-0001
-    //              legacy: REQ-NCR-RCMB-2026-0001 -> ICT-2026-0001
-    public function getDisplayNumberAttribute(): string
+    /**
+     * D9.42 P3: can this string be shortened at all?
+     *
+     * The parser's fallback branch happily invents a year/number for ANY
+     * dashed string, so foreign identifiers must be excluded up front:
+     * PR-2026-0016 (procurement), PAR-2026-0007 (property), 'CONFLICT-9',
+     * ZZTMP scratch rows. Only strings shaped like a ticket number pass.
+     *
+     * Accepted shapes (PREFIX = 2-5 letters: ICT, PM, REQ, JO, …):
+     *   PREFIX-YYYY-MM-DD-NNNN                   (D9.24 date)
+     *   PREFIX-REGION-BRANCH-YYYY-MM-DD-NNNN     (D9.42 per-region date)
+     *   PREFIX-REGION-BRANCH-YYYY-NNNN           (legacy region/branch)
+     */
+    public static function looksLikeTicketNumber(?string $number): bool
     {
-        $p = self::parseRequestNumber($this->request_number);
+        $number = strtoupper(trim((string) $number));
+
+        if ($number === '') {
+            return false;
+        }
+
+        $parts = explode('-', $number);
+        $count = count($parts);
+
+        if ($count < 4 || !preg_match('/^[A-Z]{2,5}$/', $parts[0])) {
+            return false;
+        }
+
+        // The sequence always sits last (0001, 001, …).
+        if (!preg_match('/^\d{1,6}$/', (string) end($parts))) {
+            return false;
+        }
+
+        $isYear = static fn ($value) => is_string($value) && preg_match('/^\d{4}$/', $value) === 1;
+
+        // PREFIX-REGION-BRANCH-YYYY-MM-DD-NNNN
+        if ($count === 7 && $isYear($parts[3] ?? null)) {
+            return true;
+        }
+
+        // PREFIX-YYYY-MM-DD-NNNN  ·  PREFIX-REGION-BRANCH-YYYY-NNNN
+        if ($count === 5 && ($isYear($parts[1] ?? null) || $isYear($parts[3] ?? null))) {
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * D9.42 P3: string-level shortener — the ONE place that turns a STORED
+     * number into the number every screen prints. Used by the accessor below
+     * and by surfaces that only hold the number as text (notification bell),
+     * so the whole app keeps a single shape.
+     *
+     *   ICT-NCR-RCMB-2026-09-23-0001 -> ICT-2026-09-23-0001
+     *   REQ-2026-09-17-0001          -> ICT-2026-09-17-0001
+     *   REQ-NCR-RCMB-2026-0028       -> ICT-2026-0028
+     *
+     * Anything that is not a recognised ticket number (PR-…, 'CONFLICT-123',
+     * free text) is returned UNCHANGED — parseRequestNumber() alone would
+     * happily invent a year for it.
+     */
+    public static function shortNumber(?string $number): string
+    {
+        $number = trim((string) $number);
+
+        if (!self::looksLikeTicketNumber($number)) {
+            return $number;
+        }
+
+        $p = self::parseRequestNumber($number);
 
         if ($p['date']) {
             return $p['prefix'] . '-' . $p['date'] . '-' . $p['number'];
@@ -171,9 +240,23 @@ class Request extends Model
         return $p['prefix'] . '-' . $p['year'] . '-' . $p['number'];
     }
 
+    // Get display format: REQ-2026-09-16-0001 -> ICT-2026-09-16-0001
+    //              legacy: REQ-NCR-RCMB-2026-0001 -> ICT-2026-0001
+    public function getDisplayNumberAttribute(): string
+    {
+        // D9.42 P3: this accessor is now in $appends, so it runs on EVERY
+        // serialization — including narrow `select()` payloads that may not
+        // carry request_number. Never invent a number out of nothing.
+        return self::shortNumber($this->request_number);
+    }
+
     // Get full display format with region and branch (for multi-location backend)
     public function getFullDisplayNumberAttribute(): string
     {
+        if (trim((string) $this->request_number) === '') {
+            return '';
+        }
+
         $p = self::parseRequestNumber($this->request_number);
 
         if ($p['date']) {

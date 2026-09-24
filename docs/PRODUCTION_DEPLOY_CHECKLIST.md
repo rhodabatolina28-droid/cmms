@@ -263,6 +263,44 @@ php artisan optimize:clear && php artisan optimize   # + i-verify: php artisan s
 *(Sa Laravel 11+, ang `schedule:list` ay hindi umaasa sa route cache, pero ang `config:cache` ay dapat
 i-refresh kapag nagbago ang `.env` — laging `optimize:clear` pagkatapos mag-edit ng `.env`.)*
 
+### 5a. D9.42 ONE-TIME backfill — per-region request numbers 🔴
+
+**Isang beses lang ito.** Ang mga bagong ticket ay awtomatikong bagong format na (D9.42 Phase 1);
+ang command ay para lamang sa mga **lumang** numero (`REQ-NCR-RCMB-2026-0028`, `REQ-2026-09-17-0001`,
+`PM-NCR-RCMB-2026-0007`) → `{ICT|PM}-{REGION}-{BRANCH}-{YYYY}-{MM}-{DD}-{NNNN}`, kasama ang
+mirror columns (`repair_requests.service_request_no`, `preventive_maintenance.form_no`).
+
+```bash
+# a) BACKUP MUNA (walang dump = huwag ituloy) — §6
+mysqldump -u <user> -p <db> > storage/ux_backup/cmms_pre_d942_renumber_$(date +%Y%m%d).sql
+
+# b) DRY RUN (ito ang DEFAULT — walang isinusulat). Basahin ang plano.
+php artisan requests:renumber
+
+# c) Kung 0 collisions at tama ang plano → ISULAT  (nasa maintenance mode, hakbang 0)
+php artisan requests:renumber --force
+
+# d) Beripikasyon: ang 2nd run ay dapat "0 request number(s)" (idempotent)
+php artisan requests:renumber --force
+
+# e) Kung kailangang hatiin per rehiyon/branch (tumatanggap ng code O buong pangalan)
+php artisan requests:renumber --force --region=RII --branch=Batuen
+
+# f) Kung may placeholder rows (ZZTMP-*, "TEMP layout verification") na ayaw galawin
+php artisan requests:renumber --force --skip-orphans
+```
+
+**Bakit sa maintenance mode:** ang command ay **hindi** nakikipag-share ng MySQL advisory lock
+(`GET_LOCK`) sa live generator, kaya may maliit na window kung saan makakakuha ang bagong ticket
+ng numerong naka-plano na ring ibigay ng backfill. **Nahuhuli ito** ng collision check —
+**exit code 1 at all-or-nothing (walang kahit isang partial write)** — pero kailangan lang i-re-run.
+
+**Exit codes:** `0` = ok (o dry run) · `1` = may collision, walang isinulat · `2` = walang row sa scope.
+
+**Mabilis na suriin pagkatapos (read-only):** tingnan ang **§7 rows 15–22** — ang mga SQL doon
+(regex conformance, duplicate, type/prefix, `0001..N` kada araw, mirror parity, continuation ng
+bagong ticket, bell text, audit entry) ang aktwal na ginamit sa dev beripikasyon.
+
 ---
 
 ## 6. Storage, backup, at retention
@@ -324,6 +362,19 @@ gDrive-ready na config).
 - Kung **Windows Task Scheduler**: i-check ang **Last Run Result** (dapat `0x0`) at ang
   `storage/logs/scheduler.log` (dapat lumalaki kada minuto).
 
+### ✅ D9.42 request-numbering verification (pagkatapos ng backfill §5a)
+
+| # | Check | Paraan (read-only) | Dapat resulta |
+|---|---|---|---|
+| 15 | Lahat ng numero ay bagong format | `SELECT COUNT(*) FROM requests WHERE request_number NOT REGEXP '^(ICT\\|PM)-[A-Z0-9]+-[A-Z0-9]+-[0-9]{4}-[0-9]{2}-[0-9]{2}-[0-9]{4}$'` | **0** |
+| 16 | Walang duplicate | `SELECT request_number FROM requests GROUP BY request_number HAVING COUNT(*) > 1` | walang row |
+| 17 | Prefix tugma sa type | bilangin ang `type='ICT'` na hindi nagsisimula sa `ICT-`, at `type='Preventive Maintenance'` na hindi `PM-` | **0 / 0** |
+| 18 | Bawat araw ay `0001..N` kada (prefix, rehiyon, branch) | `GROUP BY` ang 4 na bahagi ng numero, i-check ang min/max ng huling 4 na digit | walang gap sa simula (`min = 0001`) |
+| 19 | Mirror parity | `repair_requests.service_request_no` vs parent `request_number`; `preventive_maintenance.form_no` vs parent | **0 mismatch** |
+| 20 | Bagong ticket ay tumutuloy (hindi nag-restart) | gumawa ng 1 ICT ticket; ihambing sa huling numero ng araw | huling numero **+1** (hal. `…-0002` → `…-0003`) |
+| 21 | Bell/email na teksto | tingnan ang 🔔 notification ng bagong ticket | ang numerong nakikita sa listahan ay **kapareho** ng nasa mensahe; tumutuloy pa rin ang pag-click sa tamang ticket |
+| 22 | Audit trail | `SELECT * FROM audit_logs WHERE action = 'Renumber Service Requests'` | may isang entry na may bilang ng na-renumber + mirror |
+
 ---
 
 ## 8. Mga patibong at caveats (basahin bago mag-reklamo 😄)
@@ -340,6 +391,7 @@ gDrive-ready na config).
 | 8 | **`PHP_CLI_SERVER_WORKERS`** (nasa `.env.example`) | Para lang sa `artisan serve` — hindi gagamitin sa production (IIS/Apache/Nginx). |
 | 9 | **`storage/app/private` = hindi `storage/app`** | Sa Laravel 13, `local` disk root = `storage/app/private`. Ang `Storage::disk('local')->put('csm-reports/...')` ay napupunta doon. |
 | 10 | **`php artisan down` ay hindi sumasaklaw sa scheduler/queue** | Patuloy na tatakbo ang scheduled commands sa maintenance mode. Kung kailangan ng tuluyang hinto: i-disable muna ang cron line (o `schedule:pause` kung available sa bersyon). |
+| 11 | **`requests:renumber` ay hindi nagbabahagi ng advisory lock sa live generator** | Kaya patakbuhin ito sa **maintenance mode** (§5a). May **collision guard**: exit code 1 at **all-or-nothing** kung may numero nang nakuha ng ibang row — walang partial write, i-re-run lang. **Idempotent**: ang 2nd run ay 0 ang babaguhin, kaya safe itong ulitin. Ang `--force` lang ang nagsusulat (dry run ang default). |
 
 ---
 
@@ -370,6 +422,8 @@ php artisan up
   changelog entry Sept 18 2026 — ang `app/Console/Kernel.php` ay **burado**; ang tunay na
   pinagmulan ng schedule ay **`routes/console.php`**
 - **D5 storage/private disk:** parehong dokyumento, §5a (D5b/D5c/D5d)
+- **D9.42 per-region request numbers** (ICT/PM format + backfill command + notification parsing):
+  parehong dokyumento, changelog §D9.42 (Phase 1–4). Ang one-time backfill ay **§5a** dito.
 - **Health endpoint:** `/up` (naka-define sa `bootstrap/app.php` → `health: '/up'`)
 - **Local dev na katumbas ng cron:** `php artisan schedule:work` (Laragon) + `MAIL_MAILER=log`
 

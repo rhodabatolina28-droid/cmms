@@ -1489,7 +1489,7 @@
                 stockOutTickets.forEach(t => {
                     const o = document.createElement('option');
                     o.value = t.id;
-                    o.textContent = '[' + (t.type === 'Preventive Maintenance' ? 'PM' : 'ICT') + '] ' + t.request_number + (t.asset_name ? ' · ' + t.asset_name : '');
+                    o.textContent = '[' + (t.type === 'Preventive Maintenance' ? 'PM' : 'ICT') + '] ' + (t.display_number || t.request_number) + (t.asset_name ? ' · ' + t.asset_name : '');
                     ticketEl.appendChild(o);
                 });
             }

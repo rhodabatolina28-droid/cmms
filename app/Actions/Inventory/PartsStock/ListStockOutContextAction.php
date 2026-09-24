@@ -55,6 +55,9 @@ class ListStockOutContextAction
             ->get(['id', 'request_number', 'type', 'linked_asset_id'])
             ->map(fn ($t) => [
                 'id'             => $t->id,
+                // D9.42: the picker prints the short form; the full stored number
+                // (with region + branch) is kept for search/back-reference.
+                'display_number' => $t->display_number,
                 'request_number' => $t->request_number,
                 'type'           => $t->type,
                 'asset_id'       => $t->linked_asset_id,

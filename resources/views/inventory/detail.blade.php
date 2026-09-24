@@ -565,7 +565,7 @@
                                         Issued to: {{ $au->issuedTo?->full_name ?? '—' }}
                                         @if($au->issued_at) · {{ $au->issued_at->format('M d, Y') }} @endif
                                         @if($au->unit_value !== null) · ₱{{ number_format((float) $au->unit_value, 2) }} @endif
-                                        @if($au->request) · {{ $au->request->request_number }} @endif
+                                        @if($au->request) · {{ $au->request->display_number ?: $au->request->request_number }} @endif
                                     </small>
                                 @endif
                             </span>

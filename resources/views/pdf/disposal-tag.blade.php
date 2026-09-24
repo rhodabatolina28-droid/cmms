@@ -121,8 +121,10 @@
                 <td>{{ $asset->serial_number ?? 'N/A' }}</td>
             </tr>
             <tr>
+                {{-- D9.42: print the short form (ICT-2026-09-23-0001); the region +
+                     branch only live in the stored number, never on a tag. --}}
                 <th>Linked Ticket:</th>
-                <td>{{ $request->request_number }}</td>
+                <td>{{ $request->display_number ?: $request->request_number }}</td>
             </tr>
             <tr>
                 <th>Recommended On:</th>

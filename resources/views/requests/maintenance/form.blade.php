@@ -160,7 +160,7 @@
             @endphp
 
             <div class="header-no-row">
-                <span class="form-no-label">Form No.: <input type="text" name="form_no" class="no-input" value="{{ $maintenance->form_no ?? '' }}" placeholder="0000" readonly></span>
+                <span class="form-no-label">Form No.: <input type="text" id="formNo" class="no-input" value="{{ $request?->display_number ?: $maintenance?->form_no ?: '' }}" placeholder="0000" readonly></span>
                 <div id="adminControls" class="admin-controls {{ ($request && (Auth::user()->isAdmin() || Auth::user()->isIt())) ? '' : 'hidden' }}">
                     @if($isAdmin)
                     <button type="button" id="enableEditBtn" class="toggle-edit-btn">Switch to View Only</button>

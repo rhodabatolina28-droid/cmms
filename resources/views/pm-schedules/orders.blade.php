@@ -234,7 +234,7 @@ function renderOrdersTable(orders) {
         const overdueTag = overdue ? `<span class="status-pill pill-overdue"><i class="fa-solid fa-clock"></i> Overdue</span>` : '';
 
         return `<tr class="${rowClass}">
-            <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.request_number}</a>${ageBadge}</td>
+            <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.display_number || order.request_number}</a>${ageBadge}</td>
             <td class="td">${order.requestor_name || '--'}</td>
             <td class="td" style="color:#475569;font-size:12px;">${order.office || '--'}</td>
             <td class="td">${assignedName}</td>

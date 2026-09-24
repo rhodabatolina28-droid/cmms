@@ -91,8 +91,12 @@
 
                     <div class="form-col">
                         <div class="form-group compact">
-                            <label for="serviceRequestNo">SERVICE REQUEST NO: RID -</label>
-                            <input type="text" id="serviceRequestNo" name="serviceRequestNo" value="{{ $repairRequest->service_request_no ?? ($request->display_number ?? $request->request_number ?? '') }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                            <label for="serviceRequestNo">SERVICE REQUEST NO:</label>
+                            {{-- D9.42: the screen shows the SHORT form (ICT-2026-09-23-0001) — the
+                                 region + branch live only in the stored number, which travels in
+                                 a hidden field so this box can never demote it. --}}
+                            <input type="text" id="serviceRequestNo" value="{{ $request?->display_number ?: \App\Models\Request::shortNumber($repairRequest?->service_request_no ?? '') }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }} readonly>
+                            <input type="hidden" name="serviceRequestNo" value="{{ $repairRequest?->service_request_no ?: ($request?->request_number ?: '') }}">
                             <input type="hidden" name="rid" value="RID">
                         </div>
 

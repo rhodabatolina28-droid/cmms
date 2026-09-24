@@ -104,7 +104,7 @@
                 <span class="s6"> PREVENTIVE MAINTENANCE SERVICE FORM</span>
             </td>
             <td class="s7">
-                No.: <span class="f s8">{{ $pm->form_no ?? $request->display_number ?? $request->request_number }}</span>
+                No.: <span class="f s8">{{ $request->display_number ?: $pm->form_no ?: '' }}</span>
             </td>
         </tr>
     </table>

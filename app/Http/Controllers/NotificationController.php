@@ -39,7 +39,12 @@ class NotificationController extends Controller
             $sender = null;
 
             if ($n->request) {
-                $reqNum = $n->request->request_number;
+                // D9.42 P3: the badge is the ticket's UI number, not the raw
+                // stored one (DB keeps 'ICT-NCR-RCMB-2026-09-23-0001', every
+                // screen prints 'ICT-2026-09-23-0001') — same accessor the
+                // lists and forms use, so there is no second shape to keep in
+                // sync.
+                $reqNum = $n->request->display_number;
                 if ($n->request->user) {
                     $sender = $n->request->user->full_name ?: $n->request->user->name;
                 }

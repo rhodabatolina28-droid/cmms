@@ -389,7 +389,10 @@
             {{-- RIGHT COLUMN --}}
             <td class="s46">
                 <table class="s47">
-                    <tr><td class="s48">SERVICE REQUEST NO: RID -</td><td class="s49"><div class="f s16">{{ $rr->service_request_no ?? $request->display_number ?? $request->request_number }}</div></td></tr>
+                    {{-- D9.42: no 'RID -' prefix and no region/branch on the sheet — only
+                         the short number (ICT-2026-09-23-0001). The stored number keeps
+                         region + branch in the DB; a mirror fallback is shortened too. --}}
+                    <tr><td class="s48">SERVICE REQUEST NO:</td><td class="s49"><div class="f s16">{{ $request?->display_number ?: \App\Models\Request::shortNumber($rr->service_request_no ?? '') }}</div></td></tr>
                     <tr><td class="s50">DATE RECEIVED:</td><td class="s49"><div class="f s16">{{ $rr->date_received ? \Carbon\Carbon::parse($rr->date_received)->format('m/d/Y') : '' }}</div></td></tr>
                     <tr><td class="s50">SERVICE SCHEDULE DATE:</td><td class="s49"><div class="f s16">{{ $rr->service_schedule_date ? \Carbon\Carbon::parse($rr->service_schedule_date)->format('m/d/Y') : '' }}</div></td></tr>
                     <tr><td class="s50">PROPERTY NO:</td><td class="s49"><div class="f s16">{{ $rr->property_no ?? '' }}</div></td></tr>
