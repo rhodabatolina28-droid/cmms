@@ -28,7 +28,7 @@ class NotificationController extends Controller
 
         $query = Notification::where('user_id', $userId)
             ->where('is_read', false)
-            ->with(['request.user'])
+            ->with(['request.user', 'sender'])
             ->orderBy('created_at', 'desc');
 
         $totalUnread = $query->count();
@@ -46,9 +46,6 @@ class NotificationController extends Controller
                 // lists and forms use, so there is no second shape to keep in
                 // sync.
                 $reqNum = $n->request->display_number;
-                if ($n->request->user) {
-                    $sender = $n->request->user->full_name ?: $n->request->user->name;
-                }
             } else {
                 // D9.42 Phase 3: the message embeds the STORED number, which is
                 // now '{ICT|PM}-REGION-BRANCH-date-NNNN' — the old REQ-only
@@ -60,8 +57,26 @@ class NotificationController extends Controller
                 }
             }
 
-            // Extract sender from message if not found on relation
-            if (!$sender) {
+            $actor = $n->sender;
+
+            if ($actor) {
+                // BUG-NOTIF-FROM-2: the name beside the bell icon is WHO
+                // PERFORMED the ACTION — the admin who assigned IT, the IT/SA
+                // who requested parts, the user who submitted — never derived
+                // from the ticket's requestor. Self-addressed rows must still
+                // not read "From: <yourself>" (BUG-NOTIF-FROM-1 guard).
+                $sender = ((int) $actor->id === (int) $n->user_id)
+                    ? $this->deriveSelfNotificationSender($n->message)
+                    : ($actor->full_name ?: $actor->name);
+            } else {
+                // Legacy rows (sender_id NULL — pre-fix data / system notices
+                // with no authenticated actor): old heuristics below.
+                if ($n->request && $n->request->user) {
+                    $sender = $n->request->user->full_name ?: $n->request->user->name;
+                }
+
+                // Extract sender from message if not found on relation
+                if (!$sender) {
                 if (preg_match('/(?:from|Admin|staff|personnel)\s+([A-Z\s]{3,30}?)(?:\s+in|\s+forwarded|\s+has|\s+\(|\.)/i', $n->message, $sm)) {
                     $sender = trim($sm[1]);
                 }
@@ -74,6 +89,7 @@ class NotificationController extends Controller
             // notification is system-generated.
             if ($sender !== null && $n->request !== null && (int) $n->request->user_id === (int) $n->user_id) {
                 $sender = $this->deriveSelfNotificationSender($n->message);
+            }
             }
 
             return [

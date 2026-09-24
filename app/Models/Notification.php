@@ -15,6 +15,7 @@ class Notification extends Model
         'type',
         'message',
         'url',
+        'sender_id',
         'is_read',
         'read_at',
     ];
@@ -148,6 +149,14 @@ class Notification extends Model
         return $this->belongsTo(User::class);
     }
 
+    // BUG-NOTIF-FROM-2: the user who PERFORMED the action that produced this
+    // notification (admin who assigned, IT who requested parts, requestor who
+    // submitted) — NOT the ticket's requestor. NULL = system/legacy row.
+    public function sender()
+    {
+        return $this->belongsTo(User::class, 'sender_id');
+    }
+
     public function request()
     {
         return $this->belongsTo(Request::class);
@@ -182,14 +191,29 @@ class Notification extends Model
         ]);
     }
 
-    public static function send($userId, $requestId, $type, $message, $url = null)
+    /**
+     * @param  int|false  $senderId  BUG-NOTIF-FROM-2: who performed the action
+     *        (bell "From" name beside the icon). `false` (default) auto-detects
+     *        the authenticated actor — covers every web call site at once
+     *        (admin assigning IT, IT/SA filing parts, user submitting a ticket).
+     *        Pass an explicit user id to override, or `null` for system notices
+     *        that must name nobody (console commands have no Auth anyway; the
+     *        CSM severe alert passes null so the survey respondent — who IS
+     *        signed in — is never shown as the sender).
+     */
+    public static function send($userId, $requestId, $type, $message, $url = null, $senderId = false)
     {
+        if ($senderId === false) {
+            $senderId = \Illuminate\Support\Facades\Auth::id();
+        }
+
         return self::create([
             'user_id' => $userId,
             'request_id' => $requestId,
             'type' => $type,
             'message' => $message,
             'url' => $url,
+            'sender_id' => $senderId,
             'is_read' => false
         ]);
     }

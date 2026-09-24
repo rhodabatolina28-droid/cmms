@@ -51,7 +51,9 @@ class CsmSevereAlertService
                     null,
                     self::NOTIFICATION_TYPE,
                     $this->buildMessage($survey),
-                    $url
+                    $url,
+                    null // BUG-NOTIF-FROM-2: system notice — a respondent IS
+                         // signed in here, but must never be the bell "From".
                 );
             }
 
