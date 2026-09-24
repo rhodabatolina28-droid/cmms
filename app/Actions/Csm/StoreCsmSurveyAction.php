@@ -83,7 +83,7 @@ class StoreCsmSurveyAction
         if ($nextPending) {
             return redirect()
                 ->route('csm.create', $nextPending->id)
-                ->with('info', 'Thank you! Please complete the survey for request ' . $nextPending->request_number . '.');
+                ->with('info', 'Thank you! Please complete the survey for request ' . \App\Models\Request::shortNumber($nextPending->request_number) . '.');
         }
 
         return redirect()

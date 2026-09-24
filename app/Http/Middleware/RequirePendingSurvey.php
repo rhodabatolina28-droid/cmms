@@ -45,6 +45,6 @@ class RequirePendingSurvey
 
         return redirect()
             ->route('csm.create', $pending->id)
-            ->with('info', 'Please complete the required satisfaction survey for ' . $pending->request_number . ' before continuing.');
+            ->with('info', 'Please complete the required satisfaction survey for ' . \App\Models\Request::shortNumber($pending->request_number) . ' before continuing.');
     }
 }

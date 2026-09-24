@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\Request as ServiceRequest;
 use App\Support\RequestHelpers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -78,9 +79,12 @@ class NotificationController extends Controller
             return [
                 'id' => $n->id,
                 'type' => $n->type ?: 'Notification',
-                'message' => $n->message,
+                // D9.42 P3(vi): the row STORES the full number so routing keeps
+                // working, but the bell prints the short one — same rule as the
+                // lists, forms, PDFs and emails.
+                'message' => ServiceRequest::shortenNumbersInText($n->message),
                 'url' => $targetUrl,
-                'request_number' => $reqNum,
+                'request_number' => $reqNum === null ? null : ServiceRequest::shortNumber($reqNum),
                 'sender' => $sender,
                 'created_at' => $n->created_at ? $n->created_at->toISOString() : null,
                 'time_ago' => $n->created_at ? $n->created_at->diffForHumans() : '',

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\SystemNotificationMail;
 use App\Models\Notification;
 use App\Models\Request as RequestModel;
 use App\Models\User;
@@ -85,7 +86,7 @@ class NotificationRequestNumberMatchTest extends TestCase
         $rows = $this->bellJson($recipient);
 
         $this->assertCount(1, $rows);
-        $this->assertSame('ICT-NCR-RCMB-2026-09-23-0001', $rows[0]['request_number']);
+        $this->assertSame('ICT-2026-09-23-0001', $rows[0]['request_number']);
     }
 
     public function test_the_bell_reports_the_ticket_number_for_a_new_format_pm_message(): void
@@ -99,7 +100,7 @@ class NotificationRequestNumberMatchTest extends TestCase
 
         $rows = $this->bellJson($recipient);
 
-        $this->assertSame('PM-NCR-RCMB-2026-09-23-0001', $rows[0]['request_number']);
+        $this->assertSame('PM-2026-09-23-0001', $rows[0]['request_number']);
     }
 
     public function test_the_bell_still_reads_legacy_and_d9_24_numbers(): void
@@ -111,8 +112,10 @@ class NotificationRequestNumberMatchTest extends TestCase
 
         $numbers = array_column($this->bellJson($recipient), 'request_number');
 
-        $this->assertContains('REQ-NCR-RCMB-2026-0001', $numbers);
-        $this->assertContains('REQ-2026-09-17-0001', $numbers);
+        // D9.42 P3(vi): the payload is a DISPLAY payload — legacy REQ-… rows
+        // print with the ICT prefix and the short shape, same as every list.
+        $this->assertContains('ICT-2026-0001', $numbers);
+        $this->assertContains('ICT-2026-09-17-0001', $numbers);
     }
 
     public function test_a_message_without_a_request_number_reports_none(): void
@@ -148,7 +151,7 @@ class NotificationRequestNumberMatchTest extends TestCase
 
         $rows = $this->bellJson($recipient);
 
-        $this->assertSame('ICT-NCR-RCMB-2026-09-23-0001', $rows[0]['request_number']);
+        $this->assertSame('ICT-2026-09-23-0001', $rows[0]['request_number']);
     }
 
     public function test_clicking_a_new_format_ict_notification_opens_the_ticket(): void
@@ -217,7 +220,7 @@ class NotificationRequestNumberMatchTest extends TestCase
 
         $rows = $this->bellJson($viewer);
 
-        $this->assertSame('ICT-NCR-RCMB-2026-09-23-0099', $rows[0]['request_number']);
+        $this->assertSame('ICT-2026-09-23-0099', $rows[0]['request_number']);
         $this->assertSame(route('ict.index'), $rows[0]['url']);
     }
 
@@ -307,5 +310,88 @@ class NotificationRequestNumberMatchTest extends TestCase
             $rows[0]['url'],
             'A stored url is authoritative — extraction is only the fallback.'
         );
+    }
+
+    /**
+     * D9.42 P3(vi) — the reported leak: the bell printed the FULL stored number
+     * INSIDE the message text ("…your ICT request ICT-NCR-RCMB-2026-09-24-0001…")
+     * even though every other screen shows the short one. The row keeps the full
+     * number (traceability + routing); only the rendered payload is shortened.
+     */
+    public function test_the_bell_message_text_prints_the_short_number(): void
+    {
+        $recipient = $this->user();
+
+        $this->loose(
+            $recipient,
+            'IT has completed the repair for your ICT request ICT-NCR-RCMB-2026-09-24-0001. '
+            . 'Please open the ticket and sign the Service Acceptance section (Section 6).'
+        );
+
+        $rows = $this->bellJson($recipient);
+
+        $this->assertStringContainsString('ICT-2026-09-24-0001', $rows[0]['message']);
+        $this->assertStringNotContainsString('NCR-RCMB', $rows[0]['message']);
+        // The prose around the number is untouched.
+        $this->assertStringContainsString('Service Acceptance section (Section 6)', $rows[0]['message']);
+
+        $stored = Notification::where('user_id', $recipient->id)->first()->message;
+
+        $this->assertStringContainsString(
+            'ICT-NCR-RCMB-2026-09-24-0001',
+            $stored,
+            'The row must keep the FULL number — shortening happens at render time only.'
+        );
+        $this->assertNotSame($stored, $rows[0]['message']);
+    }
+
+    /**
+     * The email is the other render boundary: its subject carries #requestNumber
+     * and its body interpolates the message. Both must print the short form.
+     * build() does the work (not the constructor) so already-queued mailables
+     * are fixed the moment they send.
+     */
+    public function test_the_email_subject_and_body_print_the_short_number(): void
+    {
+        $mail = new SystemNotificationMail(
+            'Juan Dela Cruz',
+            'Request Updated',
+            'Your ICT request ICT-NCR-RCMB-2026-09-24-0001 was updated.',
+            'ICT-NCR-RCMB-2026-09-24-0001'
+        );
+
+        $rendered = $mail->render();
+
+        $this->assertSame('[NCMB CMMS] Request Updated - #ICT-2026-09-24-0001', $mail->subject);
+        $this->assertStringContainsString('ICT-2026-09-24-0001', $rendered);
+        $this->assertStringNotContainsString('NCR-RCMB', $rendered);
+    }
+
+    /**
+     * The text shortener runs over whole sentences, so it must not touch
+     * identifiers that merely LOOK dashed: procurement (PR-…), property
+     * accounting (PAR-…), standards ('ISO-15489') or words ending in a prefix
+     * token ('CONFLICT-123').
+     */
+    public function test_shorten_numbers_in_text_leaves_foreign_identifiers_alone(): void
+    {
+        $text = 'PR-2026-0016 · PAR-2026-0007 · ISO-15489 · CONFLICT-123 · '
+            . 'REQ-NCR-RCMB-2026-0028 was updated for ICT-NCR-RCMB-2026-09-24-0001';
+
+        $this->assertSame(
+            'PR-2026-0016 · PAR-2026-0007 · ISO-15489 · CONFLICT-123 · '
+            . 'ICT-2026-0028 was updated for ICT-2026-09-24-0001',
+            RequestModel::shortenNumbersInText($text)
+        );
+
+        $this->assertSame('', RequestModel::shortenNumbersInText(''));
+        $this->assertSame('', RequestModel::shortenNumbersInText(null));
+        $this->assertSame('No numbers here.', RequestModel::shortenNumbersInText('No numbers here.'));
+        $this->assertSame('A plain sentence without dashes.', RequestModel::shortenNumbersInText('A plain sentence without dashes.'));
+
+        // Idempotent: a message that is already short must not be re-shortened
+        // into a different shape when build() runs twice.
+        $short = 'Your request ICT-2026-09-24-0001 is now Ongoing.';
+        $this->assertSame($short, RequestModel::shortenNumbersInText($short));
     }
 }

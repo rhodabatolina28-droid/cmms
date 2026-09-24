@@ -3,6 +3,7 @@
 namespace App\Actions\SuperAdmin;
 
 use App\Models\AuditLog;
+use App\Models\Request as RequestModel;
 use Illuminate\Http\Request;
 
 class GetAuditLogsDataAction
@@ -68,7 +69,19 @@ class GetAuditLogsDataAction
 
         return response()->json([
             'success'      => true,
-            'logs'         => $logs->items(),
+            // D9.42 P3(vi): the audit ROW keeps the full number (ISO 15489
+            // traceability), but the SA screen prints the short one — same rule
+            // as the bell, email, lists and PDFs. Search below still runs
+            // against the stored (full) text.
+            'logs'         => collect($logs->items())
+                ->map(function ($log) {
+                    $row = $log->toArray();
+                    $row['details'] = RequestModel::shortenNumbersInText($log->details);
+
+                    return $row;
+                })
+                ->values()
+                ->all(),
             'total'        => $logs->total(),
             'per_page'     => $logs->perPage(),
             'current_page' => $logs->currentPage(),

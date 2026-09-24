@@ -240,6 +240,35 @@ class Request extends Model
         return $p['prefix'] . '-' . $p['year'] . '-' . $p['number'];
     }
 
+    /**
+     * D9.42 P3(vi): make a human-readable sentence match every screen.
+     *
+     * Notification messages and remarks are STORED with the full number
+     * (ICT-NCR-RCMB-2026-09-24-0001) — they are historical text and are never
+     * rewritten. The bell and the email, however, must print the short form
+     * (ICT-2026-09-24-0001). Normalising at the display boundary fixes every
+     * stored row and every future composer at once, instead of editing ~40
+     * message call sites and rewriting the rows themselves.
+     *
+     * Only tokens that pass looksLikeTicketNumber() are touched, so foreign
+     * identifiers ('PR-2026-0016', 'PAR-2026-0007', 'ISO-15489', 'SN-ABC123')
+     * come back unchanged.
+     */
+    public static function shortenNumbersInText(?string $text): string
+    {
+        $text = (string) $text;
+
+        if ($text === '' || !str_contains($text, '-')) {
+            return $text;
+        }
+
+        return preg_replace_callback(
+            '/\b[A-Z]{2,6}-[A-Z0-9]+(?:-[A-Z0-9]+)*/',
+            static fn (array $matches) => self::shortNumber($matches[0]),
+            $text
+        ) ?? $text;
+    }
+
     // Get display format: REQ-2026-09-16-0001 -> ICT-2026-09-16-0001
     //              legacy: REQ-NCR-RCMB-2026-0001 -> ICT-2026-0001
     public function getDisplayNumberAttribute(): string
