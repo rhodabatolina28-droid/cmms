@@ -132,7 +132,13 @@
             @php
                 $isReferredToSp = in_array('REFERRED TO SERVICE PROVIDER', $repairTypes ?? []);
                 $spSectionActive = $isReferredToSp || \App\Support\RequestHelpers::isServiceProviderSectionInUse($repairRequest);
+                // D9.43 (Option A, strict): the whole section renders ONLY while
+                // REPAIR TYPE = "REFERRED TO SERVICE PROVIDER" — for every role
+                // (admin / IT / end user). Saved SP data stays in the DB and in the
+                // PDF; it just won't show in the web form when not referred.
+                $spSectionVisible = $isReferredToSp;
             @endphp
+            <div id="serviceProviderSectionWrap" class="{{ $spSectionVisible ? '' : 'hidden' }}">
             <div class="section-header" id="serviceProviderSectionHeader">
                 <h3>TO BE FILLED-UP BY SERVICE PROVIDER</h3>
                 @if($isUser)
@@ -240,6 +246,7 @@
                     </div>
                 </div>
             </div> <!-- End of serviceProviderSection -->
+            </div> <!-- End of serviceProviderSectionWrap -->
             @endif
 
             <!-- SECTION 5: TO BE FILLED-UP BY IT PERSONNEL (AFTER REPAIR) -->

@@ -208,9 +208,14 @@
 
             const syncSpState = () => {
                 const spBanner = document.getElementById('referredSpBanner');
+                const spWrap = document.getElementById('serviceProviderSectionWrap');
                 const spSection = document.getElementById('serviceProviderSection');
                 const referred = repairTypeMode && repairTypeMode.value === 'REFERRED TO SERVICE PROVIDER';
                 if (spBanner) spBanner.style.display = referred ? 'block' : 'none';
+                // D9.43 (Option A, strict): visibility follows the TYPE dropdown only —
+                // for every role. keepActive below still governs enablement so saved
+                // SP values keep submitting (and never get wiped) while hidden.
+                if (spWrap) spWrap.classList.toggle('hidden', !referred);
                 if (spSection) {
                     const keepActive = spSection.dataset.keepActive === '1';
                     if (referred || keepActive) {
@@ -234,6 +239,14 @@
             // Initialize hidden inputs from the prefilled dropdowns
             syncRepairTypeHidden(repairTypeMode, rtModeHidden);
             syncRepairTypeHidden(repairTypeWarranty, rtWarrantyHidden);
+
+            // D9.43: reconcile banner + SP section visibility on load — but ONLY when
+            // the TYPE dropdown is editable (admin/IT edit mode). View-only and
+            // non-admin roles keep the server-rendered state: syncSpState() would
+            // otherwise un-disable the SP inputs it does not own.
+            if (repairTypeMode && !repairTypeMode.disabled) {
+                syncSpState();
+            }
 
             // System Admin self-assign via dropdown
             const assignItSelect = document.getElementById('assignItSelect');
