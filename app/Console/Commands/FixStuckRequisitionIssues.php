@@ -84,7 +84,9 @@ class FixStuckRequisitionIssues extends Command
                 if ($requisition->requested_by) {
                     Notification::send(
                         $requisition->requested_by,
-                        $requisition->ticket?->id ?? $pr->id,
+                        // BUG-NOTIF-LINK: a PR id is NOT a requests.id — the old
+                        // ?? $pr->id fallback linked the row to an unrelated ticket.
+                        $requisition->ticket?->id,
                         'Parts Request — Issued',
                         'Parts were issued for ' . ($requisition->ticket?->request_number ?? $pr->pr_number)
                             . '. You may continue repair work.'

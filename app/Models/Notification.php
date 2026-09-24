@@ -85,6 +85,18 @@ class Notification extends Model
                 if ($request) {
                     $branch = $request->branch ?: $branch;
                     $region = $request->region ?: $region;
+                }
+
+                // BUG-NOTIF-LINK: the email "View Details" button must follow
+                // the SAME destination rules as the bell (resolveTargetUrl).
+                // Parts-family and PM-batch notices resolve OUTSIDE the linked
+                // ticket — the request-linked branch below used to rebuild the
+                // ICT/PM form URL for every request_id row.
+                if (! $ticketUrl && self::isPartsFamilyType($notification->type)) {
+                    $ticketUrl = self::partsFamilyUrlFor($user);
+                } elseif (! $ticketUrl && str_contains((string) $notification->type, 'PM Batch')) {
+                    $ticketUrl = self::pmBatchUrlFor($user);
+                } elseif ($request) {
                     if ($request->type === 'ICT') {
                         if ($user->role === 'admin' || $user->role === 'super_admin') {
                             $ticketUrl = route('ict.show', $request->id);
@@ -181,6 +193,50 @@ class Notification extends Model
         }
 
         return null;
+    }
+
+    /**
+     * BUG-NOTIF-LINK: types whose actionable page is the requisitions
+     * workspace (request-parts flow), NOT the parent ticket form. Covers the
+     * whole family: "Parts Requisition", "Parts Request — Approve/Issue/
+     * Reject/Issued", "Parts Request Rejected", "Parts Low Stock Alert".
+     */
+    public static function isPartsFamilyType(?string $type): bool
+    {
+        return str_contains((string) $type, 'Parts')
+            || str_contains((string) $type, 'Requisition');
+    }
+
+    /**
+     * Requisitions-workspace landing for the recipient: supply sees the
+     * review queue (default view); the IT/SA requester sees their History
+     * tab. Only roles that RECEIVE parts notifications reach this helper
+     * (supply_officer, admin+can_supply, it, super_admin) — all pass the
+     * requisitions.index role middleware.
+     */
+    public static function partsFamilyUrlFor(?User $user): string
+    {
+        if ($user && $user->canProcessSupply()) {
+            return route('requisitions.index');
+        }
+
+        return route('requisitions.index', ['tab' => 'history']);
+    }
+
+    /**
+     * BUG-NOTIF-LINK: pm-schedules.* routes are super_admin-only, but
+     * "PM Batch Generated" also reaches IT (conduct the PMs) and division
+     * admins/supply (inform personnel). Role-aware landing = no 403 redirect.
+     * Plain admins are additionally 403'd inside ListMaintenanceRequestsAction,
+     * so the non-IT/non-SA arm lands on the recipient's own dashboard.
+     */
+    public static function pmBatchUrlFor(?User $user): string
+    {
+        return match ($user?->role) {
+            'super_admin' => route('pm-schedules.index'),
+            'it' => route('pm.tasks'),
+            default => route($user ? $user->dashboardRouteName() : 'dashboard.user'),
+        };
     }
 
     public function markAsRead()

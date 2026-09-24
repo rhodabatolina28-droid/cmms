@@ -142,6 +142,23 @@ class NotificationController extends Controller
             return $notification->url;
         }
 
+        $msg = $notification->message ?? '';
+        $type = $notification->type ?? '';
+
+        // BUG-NOTIF-LINK: parts-family and PM-batch notices resolve BEFORE the
+        // request-linked branch below — that branch checked request_id first
+        // and hijacked every parts notification (which carries the parent
+        // ticket), sending IT/SA/supply to the ICT form instead of the
+        // requisitions workspace. Same class: "PM Batch Generated" pointed
+        // non-SA recipients at the super_admin-only pm-schedules page (403).
+        if (Notification::isPartsFamilyType($type)) {
+            return Notification::partsFamilyUrlFor($user);
+        }
+
+        if (str_contains($type, 'PM Batch')) {
+            return Notification::pmBatchUrlFor($user);
+        }
+
         if ($notification->request_id && $notification->request) {
             $req = $notification->request;
             if ($req->type === 'ICT') {
@@ -156,9 +173,6 @@ class NotificationController extends Controller
                 return route('maintenance.edit', $req->id);
             }
         }
-
-        $msg = $notification->message ?? '';
-        $type = $notification->type ?? '';
 
         // D9.42 Phase 3: match every stored format (ICT-…/PM-…/REQ-…) — the old
         // REQ-only regex let new-format notifications fall through to the
@@ -185,16 +199,16 @@ class NotificationController extends Controller
             return route('requisitions.index');
         }
 
-        if (str_contains($type, 'Parts') || str_contains($type, 'Requisition')) {
-            return route('requisitions.index');
-        }
+        // (Parts/Requisition types are handled by the early branch above —
+        // BUG-NOTIF-LINK — so no duplicate check here.)
 
         if (str_contains($type, 'PR ') || str_contains($type, 'Purchase')) {
             return route('requisitions.index');
         }
 
         if (str_contains($type, 'PM ') || str_contains($type, 'Preventive')) {
-            return route('pm-schedules.index');
+            // Role-aware: pm-schedules.* is super_admin-only (BUG-NOTIF-LINK).
+            return Notification::pmBatchUrlFor($user);
         }
 
         return route('ict.index');

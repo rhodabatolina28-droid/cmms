@@ -544,7 +544,13 @@
                 </div>
             ` : '';
 
-            const viewLabel = n.request_number ? 'Open Ticket' : 'View Details';
+            // BUG-NOTIF-LINK: the label must match the DESTINATION — parts/PR
+            // notices carry a number badge but open their workspaces, not a ticket.
+            const notifType = n.type || '';
+            let viewLabel = 'View Details';
+            if (/^PR |Purchase/i.test(notifType)) viewLabel = 'Open PR';
+            else if (/Parts|Requisition/i.test(notifType)) viewLabel = 'Open Requisitions';
+            else if (n.request_number) viewLabel = 'Open Ticket';
 
             return `
                 <div class="notif-item unread" data-id="${n.id}" data-url="${n.url || ''}" title="Click to view details">
