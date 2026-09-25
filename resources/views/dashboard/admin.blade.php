@@ -421,8 +421,47 @@
                 @endforelse
             </div>
 
+            <div class="queue-panel">
+                <div class="ribbon-label">Management Tools</div>
+                <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
+                    Manage Requests
+                </a>
+                @if(Auth::user()->canProcessSupply())
+                    <a href="{{ route('inventory.index') }}" class="btn-action-premium mb-10">
+                        Inventory & Assets
+                    </a>
+                @endif
+                <a href="{{ route('personnel.index') }}" class="btn-action-premium">
+                    Manage Personnel
+                </a>
+
+                @php
+                    $dashboardUser = Auth::user();
+                    $roleLabel = $dashboardUser->role === 'super_admin' ? 'System Admin'
+                        : ($dashboardUser->role === 'it' ? 'IT Personnel'
+                        : ($dashboardUser->canProcessSupply() ? 'Supply Admin' : 'Division Admin'));
+                    $scopeLabel = $dashboardUser->department ? 'Department'
+                        : ($dashboardUser->office ? 'Office' : ($dashboardUser->branch ? 'Branch' : 'Scope'));
+                    $scopeValue = $dashboardUser->department ?: $dashboardUser->office ?: $dashboardUser->branch ?: 'N/A';
+                @endphp
+
+                <div class="section-label" style="margin-top:16px;">Division Info</div>
+                <div class="info-box">
+                    <div class="flex-sb-wrap">
+                        <div class="info-min">
+                            <span>System Role:</span><br>
+                            <strong class="text-dark">{{ $roleLabel }}</strong>
+                        </div>
+                        <div class="info-min">
+                            <span class="info-label">{{ $scopeLabel }}:</span><br>
+                            <strong class="text-dark">{{ $scopeValue }}</strong>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             @if(Auth::user()->canProcessSupply() && !empty($supplyStats))
-                <div class="queue-panel" style="margin-bottom:20px;">
+                <div class="queue-panel">
                     <div class="flex-center-sb">
                         <div class="ribbon-label mb-0">Supply Snapshot</div>
                         <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace &rarr;</a>
@@ -462,45 +501,6 @@
                     @endif
                 </div>
             @endif
-
-            <div class="queue-panel">
-                <div class="ribbon-label">Management Tools</div>
-                <a href="{{ route('ict.index') }}" class="btn-action-premium mb-10">
-                    Manage Requests
-                </a>
-                @if(Auth::user()->canProcessSupply())
-                    <a href="{{ route('inventory.index') }}" class="btn-action-premium mb-10">
-                        Inventory & Assets
-                    </a>
-                @endif
-                <a href="{{ route('personnel.index') }}" class="btn-action-premium">
-                    Manage Personnel
-                </a>
-
-                @php
-                    $dashboardUser = Auth::user();
-                    $roleLabel = $dashboardUser->role === 'super_admin' ? 'System Admin'
-                        : ($dashboardUser->role === 'it' ? 'IT Personnel'
-                        : ($dashboardUser->canProcessSupply() ? 'Supply Admin' : 'Division Admin'));
-                    $scopeLabel = $dashboardUser->department ? 'Department'
-                        : ($dashboardUser->office ? 'Office' : ($dashboardUser->branch ? 'Branch' : 'Scope'));
-                    $scopeValue = $dashboardUser->department ?: $dashboardUser->office ?: $dashboardUser->branch ?: 'N/A';
-                @endphp
-
-                <div class="section-label" style="margin-top:16px;">Division Info</div>
-                <div class="info-box">
-                    <div class="flex-sb-wrap">
-                        <div class="info-min">
-                            <span>System Role:</span><br>
-                            <strong class="text-dark">{{ $roleLabel }}</strong>
-                        </div>
-                        <div class="info-min">
-                            <span class="info-label">{{ $scopeLabel }}:</span><br>
-                            <strong class="text-dark">{{ $scopeValue }}</strong>
-                        </div>
-                    </div>
-                </div>
-            </div>
         </div>
 
     </div>
