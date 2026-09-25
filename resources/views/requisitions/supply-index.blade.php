@@ -472,7 +472,7 @@
             display: inline-flex !important;
         }
 
-        /* ── Pagination bars on mobile (both JO and PR tabs) ── */
+        /* ── Pagination bars on mobile (queue / JO and PR tabs) ── */
         .cmms-pagination-bar {
             padding: 10px 8px !important;
             justify-content: center !important;
@@ -480,21 +480,17 @@
         .cmms-pagination-bar nav {
             width: 100% !important;
         }
-        .cmms-pagination-bar .pagination {
-            display: flex !important;
+        /* D9.45: retargeted from the dead ul.pagination/li markup (the shared
+           cmms view emits nav.cmms-pag__nav > a/span.cmms-pag__btn) so the
+           38px mobile touch targets survive. */
+        .cmms-pagination-bar .cmms-pag__nav {
             flex-wrap: wrap !important;
             justify-content: center !important;
             gap: 4px !important;
         }
-        .cmms-pagination-bar .pagination li a,
-        .cmms-pagination-bar .pagination li span {
+        .cmms-pagination-bar .cmms-pag__btn {
             min-width: 38px !important;
             min-height: 38px !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            font-size: 12px !important;
-            padding: 4px 8px !important;
         }
 
         /* ── Panel heads on mobile ── */
@@ -675,7 +671,7 @@
             </div>
             <div id="queuePagination" class="cmms-pagination-bar">
                 @if($requisitions->hasPages())
-                    {{ $requisitions->links('vendor.pagination.parts') }}
+                    {{ $requisitions->links('vendor.pagination.cmms') }}
                 @endif
             </div>
         </div>
@@ -751,7 +747,7 @@
             </div>
             <div id="ticketsPagination" class="cmms-pagination-bar">
                 @if($ictTickets->hasPages())
-                    {{ $ictTickets->links('vendor.pagination.parts') }}
+                    {{ $ictTickets->links('vendor.pagination.cmms') }}
                 @endif
             </div>
         </div>
@@ -817,7 +813,7 @@
             </div>
             <div id="prPagination" class="cmms-pagination-bar">
                 @if($requests->hasPages())
-                    {{ $requests->links('vendor.pagination.parts') }}
+                    {{ $requests->links('vendor.pagination.cmms') }}
                 @endif
             </div>
         </div>
@@ -860,6 +856,9 @@
             if (queueTotalCount) queueTotalCount.textContent = data.total;
             if (queueFilterLabel) queueFilterLabel.textContent = FILTER_LABELS[data.filter] || data.filter;
             bindQuickActions();
+            // D9.45: the pagination bar was replaced above — rebind its links or
+            // page clicks fall back to a full reload (lost the no-reload UX).
+            bindQueuePagination();
         })
         .catch(() => {});
     }

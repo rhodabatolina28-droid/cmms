@@ -160,7 +160,7 @@ class ListPurchaseRequestsAction
         ])->render();
 
         $paginationHtml = $requests->hasPages()
-            ? (string) $requests->links('vendor.pagination.parts')
+            ? (string) $requests->links('vendor.pagination.cmms')
             : '';
 
         $counts = [];

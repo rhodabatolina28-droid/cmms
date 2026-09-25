@@ -412,7 +412,7 @@ class ListRequisitionsAction
         }
 
         $paginationHtml = $requisitions->hasPages()
-            ? (string) $requisitions->links('vendor.pagination.parts')
+            ? (string) $requisitions->links('vendor.pagination.cmms')
             : '';
 
         $counts = [
@@ -473,7 +473,7 @@ class ListRequisitionsAction
         ])->render();
 
         $paginationHtml = $ictTickets->hasPages()
-            ? (string) $ictTickets->links('vendor.pagination.parts')
+            ? (string) $ictTickets->links('vendor.pagination.cmms')
             : '';
 
         return response()->json([

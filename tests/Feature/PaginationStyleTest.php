@@ -31,11 +31,11 @@ class PaginationStyleTest extends TestCase
 
     private int $counter = 0;
 
-    private function user(string $role = 'user'): User
+    private function user(string $role = 'user', array $attributes = []): User
     {
         $this->counter++;
 
-        return User::create([
+        return User::create(array_merge([
             'full_name' => 'Pag ' . ucfirst($role) . ' ' . $this->counter,
             'email'     => 'pag-' . $role . '-' . $this->counter . '@test.com',
             'password'  => bcrypt('password'),
@@ -44,7 +44,7 @@ class PaginationStyleTest extends TestCase
             'region'    => 'NCR',
             'branch'    => 'Main Office',
             'office'    => self::OFFICE,
-        ]);
+        ], $attributes));
     }
 
     private function ictRequests(User $owner, int $count): void
@@ -157,4 +157,123 @@ class PaginationStyleTest extends TestCase
         $this->assertStringContainsString('of <strong>21</strong> results', $html);
         $this->assertStringNotContainsString('text-sm text-gray-700 leading-5 dark:text-gray-600', $html);
     }
+
+    // ──────────────────────────────────────────────────────────────────────────
+    // D9.45 — the Supply Workspace was MISSED by the D9.40 sweep: its three tabs
+    // explicitly rendered the legacy vendor.pagination.parts view (whose CSS
+    // lives only inside inventory/parts.blade.php), so the Requisition Queue
+    // pagination bar showed up as raw, unstyled links. Contract: every Supply
+    // Workspace surface — server-rendered AND AJAX — uses the shared cmms view.
+    // ──────────────────────────────────────────────────────────────────────────
+
+    private function makeSupplyAdmin(array $attributes = []): User
+    {
+        return $this->user('admin', array_merge(['can_supply' => true], $attributes));
+    }
+
+    private function makeRequisition(User $requester): void
+    {
+        $ticket = RequestModel::create([
+            'user_id'        => $this->makeUser()->id,
+            'assigned_to'    => $requester->id,
+            'request_number' => 'JO-NCR-2026-' . str_pad((string) $this->counter, 4, '0', STR_PAD_LEFT),
+            'type'           => 'ICT',
+            'requestor_name' => 'Queue Requestor',
+            'description'    => 'D9.45 pagination fixture',
+            'status'         => RequestModel::STATUS_ONGOING,
+            'region'         => 'NCR',
+        ]);
+
+        \App\Models\Requisition::create([
+            'request_id'   => $ticket->id,
+            'requested_by' => $requester->id,
+            'status'       => \App\Models\Requisition::STATUS_PENDING,
+            'items'        => [['description' => 'Pagination item', 'quantity' => 1]],
+            'remarks'      => null,
+        ]);
+    }
+
+    private function makeUser(array $attributes = []): User
+    {
+        return $this->user('user', $attributes);
+    }
+
+    public function test_supply_queue_pagination_uses_the_shared_view(): void
+    {
+        $supply = $this->makeSupplyAdmin(['branch' => 'RCMB']);
+        $requester = $this->makeUser(['branch' => 'RCMB']);
+        for ($i = 0; $i < 22; $i++) {
+            $this->makeRequisition($requester);
+        }
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', ['view' => 'queue']));
+
+        $response->assertOk();
+        $this->assertStyledPagination($response->getContent(), 1, 20, 22);
+        $this->assertStringNotContainsString(
+            'parts-pag-btns',
+            $response->getContent(),
+            'The Supply Workspace must not render the legacy parts paginator (its CSS only exists on the Parts page).'
+        );
+    }
+
+    public function test_supply_queue_ajax_endpoint_returns_the_shared_pagination_view(): void
+    {
+        $supply = $this->makeSupplyAdmin(['branch' => 'RCMB']);
+        $requester = $this->makeUser(['branch' => 'RCMB']);
+        for ($i = 0; $i < 22; $i++) {
+            $this->makeRequisition($requester);
+        }
+
+        $response = $this->actingAs($supply)->getJson(route('requisitions.queue.data', ['view' => 'queue', 'status' => 'all']));
+
+        $response->assertOk()->assertJson(['success' => true]);
+        $this->assertSame(22, $response->json('total'));
+        $pagination = (string) $response->json('pagination');
+        $this->assertStringContainsString('cmms-pag__info', $pagination, 'AJAX pagination must use the shared styled view.');
+        $this->assertStringNotContainsString('parts-pag-btns', $pagination);
+    }
+
+    public function test_supply_job_orders_tab_pagination_uses_the_shared_view(): void
+    {
+        $supply = $this->makeSupplyAdmin(['branch' => 'RCMB']);
+        $requester = $this->makeUser(['branch' => 'RCMB']);
+        for ($i = 0; $i < 22; $i++) {
+            $this->makeRequisition($requester);
+        }
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', ['view' => 'tickets']));
+
+        $response->assertOk();
+        $this->assertStyledPagination($response->getContent(), 1, 20, 22);
+        $this->assertStringNotContainsString('parts-pag-btns', $response->getContent());
+    }
+
+    public function test_supply_purchase_requests_tab_pagination_uses_the_shared_view(): void
+    {
+        $supply = $this->makeSupplyAdmin(['branch' => 'RCMB']);
+        $it = $this->makeUser(['role' => 'it', 'branch' => 'RCMB']);
+        for ($i = 0; $i < 22; $i++) {
+            \App\Models\PurchaseRequest::create([
+                'pr_number'    => 'PR-2026-94' . str_pad((string) $i, 2, '0', STR_PAD_LEFT),
+                'requisition_id' => null,
+                'requested_by' => $it->id,
+                'created_by'   => $it->id,
+                'status'       => \App\Models\PurchaseRequest::STATUS_SUBMITTED,
+                'items'        => [['description' => 'PR pagination item', 'quantity' => 1]],
+                'total_amount' => 100,
+            ]);
+        }
+
+        $response = $this->actingAs($supply)->get(route('requisitions.index', ['view' => 'purchase-requests']));
+
+        $response->assertOk();
+        $this->assertStringContainsString('cmms-pag__info', $response->getContent());
+        $this->assertStringNotContainsString(
+            'parts-pag-btns',
+            $response->getContent(),
+            'PR tab must render the shared cmms paginator, not the legacy parts one.'
+        );
+    }
 }
+
