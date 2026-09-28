@@ -238,7 +238,6 @@
         .status-toggle-group { display: flex; align-items: center; gap: 10px; }
         .toggle-btn-sm { padding: 2px 8px; font-size: 10px; }
         .section-title { margin: 0 0 12px; font-size: 13px; color: #1e293b; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; text-transform: uppercase; }
-        .section-icon { margin-right: 8px; color: #0038A8; }
         .assets-scroll { max-height: 150px; overflow-y: auto; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
         .requests-scroll { max-height: 200px; overflow-y: auto; }
@@ -296,6 +295,20 @@
                 width: 100% !important;
                 justify-content: center !important;
             }
+            /* Compact inline pill: Account Status "Toggle" must NOT stretch */
+            .btn-view-modern.toggle-btn-sm {
+                width: auto !important;
+                min-width: 86px !important;
+                max-width: 100% !important;
+                min-height: 36px !important;
+                padding: 7px 14px !important;
+                font-size: 12px !important;
+                flex: 0 0 auto !important;
+                justify-content: center !important;
+            }
+            .toggle-btn-sm { white-space: nowrap !important; }
+            .status-toggle-group { flex-wrap: wrap !important; gap: 8px 10px !important; }
+
             .btn-save-solid { 
                 min-height: 48px !important; 
                 width: 100% !important; 
@@ -312,8 +325,8 @@
             .close-icon-btn:hover { background: rgba(0,0,0,0.05) !important; }
             /* â”€â”€ Swal/Toggle mobile fix â”€â”€ */
             .swal2-popup { width: 85vw !important; max-width: 300px !important; margin: 0 auto !important; box-sizing: border-box !important; padding: 16px 20px !important; }
-            .swal2-actions { flex-direction: column !important; width: 100% !important; gap: 6px !important; margin-top: 10px !important; }
-            .swal2-actions button { width: 100% !important; margin: 0 !important; box-sizing: border-box !important; padding: 8px 12px !important; font-size: 13px !important; border-radius: 6px !important; }
+            .swal2-actions { flex-direction: row !important; flex-wrap: wrap !important; justify-content: center !important; align-items: center !important; width: auto !important; gap: 8px !important; margin-top: 12px !important; }
+            .swal2-actions button { flex: 0 1 auto !important; width: auto !important; min-width: 92px !important; max-width: 100% !important; margin: 0 !important; box-sizing: border-box !important; padding: 9px 18px !important; font-size: 13.5px !important; border-radius: 8px !important; white-space: nowrap !important; }
             .swal2-container { padding: 10px !important; box-sizing: border-box !important; }
             .swal2-title { font-size: 15px !important; padding: 0 !important; }
             .swal2-html-container { font-size: 13px !important; margin: 8px 0 0 !important; }

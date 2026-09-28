@@ -856,9 +856,181 @@
             .modal-footer { flex-direction: column !important; gap: 10px !important; }
             /* —— ALL BUTTONS — full width (exclude topbar icon buttons, SweetAlert buttons,
                and table action/finalize buttons — those keep their inline size) —— */
-            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny):not(.act-btn):not(.cmms-req-details-btn):not(.pr-finalize-btn),
+            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny):not(.act-btn):not(.cmms-req-details-btn):not(.pr-finalize-btn):not(.toggle-btn-sm):not(#btnToggleStatus),
             .btn, .btn-action-premium, .action-button-premium,
             .btn-view-modern, .btn-action-modern { width: 100% !important; }
+
+            /* ── Compact inline pills — keep natural width, never stretch 100% ──
+               (#btnToggleStatus = the Account Status "Toggle" button inside
+                #viewPersonnelModal). Specificity (1,1,0) — beats the
+               .btn-view-modern (0,1,0) full-width rule above and the page-level
+               .btn-view-modern !important rules. */
+            #btnToggleStatus.btn-view-modern,
+            .status-toggle-group .toggle-btn-sm.btn-view-modern {
+                width: auto !important;
+                flex: 0 0 auto !important;
+                min-width: 86px !important;
+                max-width: 100% !important;
+                min-height: 36px !important;
+                height: auto !important;
+                padding: 7px 14px !important;
+                font-size: 12px !important;
+                line-height: 1.2 !important;
+                justify-content: center !important;
+                white-space: nowrap !important;
+            }
+            .status-toggle-group {
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                gap: 8px 10px !important;
+            }
+
+            /* ══════════════════════════════════════════════════════
+               PERSONNEL PROFILE & ACTIVITY MODAL (#personnelModal)
+               — mobile layout fixes. Each selector below out-ranks the
+               generic rules above by specificity (IDs included) instead
+               of stacking more !important on the losing side.
+               ══════════════════════════════════════════════════════ */
+
+            /* 95vw stretches the modal past ~620px on big phones/tablets */
+            #personnelModal .modal-card.modal-card-lg { max-width: 620px !important; }
+
+            /* Basic info grid — tighter card, values wrap instead of overflowing */
+            #personnelModal .det-grid {
+                padding: 14px !important;
+                gap: 14px !important;
+                margin-bottom: 18px !important;
+            }
+            #personnelModal .det-value,
+            #personnelModal .det-value-sm {
+                font-size: 14px !important;
+                overflow-wrap: anywhere !important;
+                word-break: break-word !important;
+            }
+            #personnelModal .form-group-lg { margin-bottom: 18px !important; }
+
+            /* Department control is a always-disabled display element; the generic
+               `select:not(.swal2-select) { width:100% !important; min-height:44px }`
+               rule was blowing it up into a full-width field. */
+            #personnelModal .dept-select {
+                width: auto !important;
+                max-width: 100% !important;
+                min-width: 0 !important;
+                min-height: 38px !important;
+                height: auto !important;
+                padding: 6px 10px !important;
+                font-size: 13px !important;
+            }
+
+            /* ── Account Status: ACTIVE badge + Toggle must read as ONE even row ──
+               The pill kept its natural ~20px height while Toggle is a 36px
+               control, so the pair looked staggered/uneven. Pin BOTH to the same
+               36px height, 12px label and 104px floor so they render as the exact
+               same box ("pantay") on every mobile width. The floor is sized for
+               the longest value ("INACTIVE") so the text can never spill out of
+               the pill, and shrinking (never growing) keeps the pair on one row
+               even in the narrowest cell.
+               Specificity (2,0,0) — beats .status-pill / .sp-* (0,1,0), the
+               global "font-size:11px !important; min-height:20px" badge rule and
+               #btnToggleStatus.btn-view-modern (1,1,0); the colors still come
+               from the page's .sp-active / .sp-inactive classes. */
+            #personnelModal .status-toggle-group {
+                display: flex !important;
+                flex-wrap: wrap !important;
+                align-items: center !important;
+                gap: 8px 10px !important;
+            }
+            #personnelModal #detStatusBadge,
+            #personnelModal #btnToggleStatus {
+                height: 36px !important;
+                min-height: 36px !important;
+                min-width: 104px !important;
+                max-width: 100% !important;
+                margin: 0 !important;
+                padding: 7px 14px !important;
+                font-size: 12px !important;
+                line-height: 1 !important;
+                justify-content: center !important;
+                flex: 0 1 auto !important;
+                align-self: center !important;
+                box-sizing: border-box !important;
+                white-space: nowrap !important;
+            }
+            #personnelModal #detStatusBadge {
+                display: inline-flex !important;
+                align-items: center !important;
+                letter-spacing: 0.02em !important;
+                border-radius: 18px !important;
+            }
+
+            /* ── ICT Request Overview: 4 tiles → 2×2 ──
+               NOTE: the old `#detStats[style*="display: grid"]` rule never
+               matched — renderStats() only sets innerHTML, the element has no
+               inline `display`, so this element used to fall through to the
+               generic `.stats-grid { 1fr }` rule and stacked 1 per row. */
+            #detStats.stats-grid {
+                grid-template-columns: repeat(2, 1fr) !important;
+                gap: 8px !important;
+                margin-bottom: 12px !important;
+            }
+            #detStats > div {
+                padding: 9px 8px !important;
+                border-radius: 8px !important;
+            }
+            #detStats .stat-label,
+            #detStats .stat-label-green,
+            #detStats .stat-label-yellow,
+            #detStats .stat-label-red { font-size: 9.5px !important; letter-spacing: 0.02em !important; }
+            #detStats .stat-value,
+            #detStats .stat-value-green,
+            #detStats .stat-value-yellow,
+            #detStats .stat-value-red { font-size: 17px !important; margin-top: 2px !important; }
+
+            /* ── Assigned Assets + Request History tables ──
+               The global `table { min-width: 450px !important }` above forced
+               these narrow 3-column tables wider than the modal body, so the
+               Status column was cut off / needed horizontal scrolling.
+               (Author !important beats the inline padding/font-size that
+               renderAssets()/renderRequests() write into every cell.) */
+            #detAssets table,
+            #detRequests table {
+                min-width: 0 !important;
+                width: 100% !important;
+                table-layout: fixed !important;
+            }
+            #detAssets table th,
+            #detAssets table td,
+            #detRequests table th,
+            #detRequests table td {
+                padding: 6px 8px !important;
+                font-size: 11px !important;
+                white-space: normal !important;
+                overflow-wrap: anywhere !important;
+                word-break: break-word !important;
+            }
+            #detAssets table th,
+            #detRequests table th { font-size: 10px !important; }
+            #detAssets .status-pill,
+            #detRequests .status-pill,
+            #detAssets table span,
+            #detRequests table span { white-space: normal !important; }
+            .assets-scroll,
+            .requests-scroll {
+                overflow-x: auto !important;
+                overflow-y: auto !important;
+                max-width: 100% !important;
+                overscroll-behavior: contain !important;
+                -webkit-overflow-scrolling: touch !important;
+            }
+        }
+
+        /* ── Tablets (768–1000px) — the Personnel Profile modal still uses the
+           page's 3-column info grid up there, which leaves each cell ~170px:
+           too tight for the equal-size Account Status pair (and cramped for long
+           office/department values). Two roomy columns instead. ≤767px keeps the
+           1-column layout from the block above; ≥1001px keeps 3-column desktop. ── */
+        @media screen and (min-width: 768px) and (max-width: 1000px) {
+            #personnelModal .det-grid { grid-template-columns: repeat(2, 1fr) !important; }
         }
 
         /* ══════════════════════════════════════════════════════════
@@ -949,15 +1121,45 @@
         .swal2-checkbox {
             display: none !important;
         }
-        .swal2-confirm,
-        .swal2-cancel {
+        /* ── Swal action buttons: SIDE-BY-SIDE, natural width, centered ──
+           Root cause of the "super long Cancel button": page-level rules like
+           `.swal2-actions button { width: 100% !important }` = specificity (0,1,1)
+           beat `.swal2-cancel { width: auto !important }` = (0,1,0), so Cancel
+           stretched across the whole row while Confirm stayed compact.
+           The selectors below are (0,3,1) so they ALWAYS win. ── */
+        .swal2-popup .swal2-actions {
+            flex-direction: row !important;
+            flex-wrap: wrap !important;
+            justify-content: center !important;
+            align-items: center !important;
             width: auto !important;
-            min-height: auto !important;
+            max-width: 100% !important;
+            gap: 8px !important;
+        }
+        .swal2-popup .swal2-actions button.swal2-confirm,
+        .swal2-popup .swal2-actions button.swal2-cancel,
+        .swal2-popup .swal2-actions button.swal2-deny {
+            flex: 0 1 auto !important;
+            width: auto !important;
+            min-width: 92px !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            white-space: nowrap !important;
         }
         .swal2-deny { display: none !important; }
-        .swal2-actions { flex-direction: row !important; gap: 4px !important; }
-        .swal2-popup .swal2-actions button.swal2-confirm { width: auto !important; min-width: 80px !important; }
         .swal2-popup .swal2-actions button[style*="display: none"] { display: none !important; }
+        @media screen and (max-width: 767px) {
+            /* Touch-friendly but compact — no full-bleed stretching */
+            .swal2-popup .swal2-actions { margin: 14px auto 0 !important; }
+            .swal2-popup .swal2-actions button.swal2-confirm,
+            .swal2-popup .swal2-actions button.swal2-cancel {
+                min-height: 40px !important;
+                padding: 9px 18px !important;
+                font-size: 13.5px !important;
+                line-height: 1.2 !important;
+                border-radius: 8px !important;
+            }
+        }
     </style>
 </body>
 </html>

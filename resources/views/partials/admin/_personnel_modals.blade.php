@@ -145,18 +145,14 @@
 
                 <!-- Assigned Assets -->
                 <div class="form-group-lg">
-                    <h5 class="section-title">
-                        <i class="fa-solid fa-laptop section-icon"></i> Currently Assigned Assets
-                    </h5>
+                    <h5 class="section-title">Currently Assigned Assets</h5>
                     <div id="detAssets" class="assets-scroll">
                     </div>
                 </div>
 
                 <!-- Stats and History -->
                 <div>
-                    <h5 class="section-title">
-                        <i class="fa-solid fa-clipboard-list section-icon"></i> ICT Request Overview
-                    </h5>
+                    <h5 class="section-title">ICT Request Overview</h5>
                     <div id="detStats" class="stats-grid">
                     </div>
                     <div id="detRequests" class="requests-scroll">

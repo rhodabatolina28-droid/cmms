@@ -1141,7 +1141,6 @@
         font-size: 11px !important;
         font-weight: 700 !important;
         border-radius: 10px !important;
-        display: flex !important;
         align-items: center !important;
         justify-content: center !important;
         box-shadow: 0 2px 4px rgba(239, 68, 68, 0.3) !important;
@@ -1468,7 +1467,11 @@
         gap: 10px !important;
     }
 
-    #detStats[style*="display: grid"] {
+    /* NOTE: renderStats() only writes innerHTML into #detStats — the element
+       never carries an inline `display`, so the previous
+       `[style*="display: grid"]` attribute match NEVER fired and the 4 tiles
+       stacked 1 per row. Match the element itself. */
+    #detStats.stats-grid {
         grid-template-columns: repeat(2, 1fr) !important;
         gap: 10px !important;
     }
