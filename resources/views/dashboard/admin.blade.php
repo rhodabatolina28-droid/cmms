@@ -399,24 +399,6 @@
 
         <!-- RIGHT: QUICK ACTIONS & TOOLS -->
         <div>
-            <div class="queue-panel">
-                <div class="flex-center-sb">
-                    <span class="badge-sm {{ ($stats['unassigned_jobs'] ?? 0) > 0 ? 'badge-red' : 'badge-green' }}">{{ $stats['unassigned_jobs'] ?? 0 }}</span>
-                </div>
-
-                @forelse(($unassignedRequests ?? collect()) as $job)
-                    <a href="{{ route($job->type === 'ICT' ? 'ict.show' : 'maintenance.show', $job->id) }}" class="queue-item">
-                        <div class="flex-start-gap">
-                            <div>
-                                <div class="job-number">{{ $job->display_number ?? $job->request_number }}</div>
-                                <div class="job-meta">{{ $job->requestor_name }}</div>
-                            </div>
-                            <span class="assign-link">Assign &rarr;</span>
-                        </div>
-                    </a>
-                @empty
-                @endforelse
-            </div>
 
             <div class="queue-panel">
                 <div class="ribbon-label">Management Tools</div>
