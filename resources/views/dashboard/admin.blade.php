@@ -254,7 +254,6 @@
         .job-meta { font-size: 12px; color: #64748b; margin-top: 2px; }
         .assign-link { color: #0038A8; font-size: 12px; font-weight: 800; text-decoration: none; }
         .assign-link:hover { text-decoration: underline; }
-        .empty-queue { padding: 12px 0 4px; color: #64748b; font-size: 12px; line-height: 1.5; }
         .info-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 12px; padding: 14px; font-size: 12px; color: #475569; }
         .info-min { min-width: 140px; }
         .info-label { color: #64748b; }
@@ -402,7 +401,6 @@
         <div>
             <div class="queue-panel">
                 <div class="flex-center-sb">
-                    <div class="ribbon-label mb-0">Needs IT Assignment</div>
                     <span class="badge-sm {{ ($stats['unassigned_jobs'] ?? 0) > 0 ? 'badge-red' : 'badge-green' }}">{{ $stats['unassigned_jobs'] ?? 0 }}</span>
                 </div>
 
@@ -417,7 +415,6 @@
                         </div>
                     </a>
                 @empty
-                    <div class="empty-queue">All ICT and PM jobs in your scope already have assigned IT personnel.</div>
                 @endforelse
             </div>
 
