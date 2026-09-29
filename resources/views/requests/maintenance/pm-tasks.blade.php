@@ -1,5 +1,5 @@
 @php
-    $pageTitle = 'My PM Tasks';
+    $pageTitle = 'PM Tasks';
 @endphp
 
 @extends('layouts.app')
@@ -21,10 +21,10 @@
     .task-card:hover { border-color: #0038A8; box-shadow: 0 4px 12px rgba(0,56,168,0.1); transform: translateY(-3px); }
     .pm-stat-card { text-align: center; padding: 14px; }
     .pm-stat-num { font-size: 24px; font-weight: 800; }
-    .pm-stat-num-total { color: #0038A8; }
-    .pm-stat-num-scheduled { color: #92400e; }
-    .pm-stat-num-ongoing { color: #1e40af; }
-    .pm-stat-num-completed { color: #047857; }
+    .pm-stat-num-total { color: #000000; }
+    .pm-stat-num-scheduled { color: #000000; }
+    .pm-stat-num-ongoing { color: #000000; }
+    .pm-stat-num-completed { color: #000000; }
     .pm-stat-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
 
     /* Filters */
@@ -88,6 +88,13 @@
         .card-header-accent { padding: 15px !important; }
         .card-body-content { padding: 15px !important; }
         .pm-stats-grid { grid-template-columns: repeat(2, 1fr) !important; }
+        /* Stats polish (mobile-only): Total PM Tasks = full-width horizontal strip at top */
+        .pm-stat-card:first-child { grid-column: 1 / -1; display: flex; flex-direction: row-reverse; align-items: center; justify-content: space-between; padding: 14px 18px; }
+        .pm-stat-card:first-child .pm-stat-label { margin-top: 0; }
+        .pm-stat-label { font-size: 11px !important; }
+        /* Filters (mobile-only): 2x2 grid + 44px touch targets (orders-page convention) */
+        .pm-filters { display: grid !important; grid-template-columns: repeat(2, 1fr) !important; }
+        .filter-btn { min-height: 44px !important; justify-content: center; font-size: 13px !important; }
 
         /* PM table - Supply Workspace scroll pattern */
         .mobile-table-hint {
@@ -141,7 +148,7 @@
         {{-- HEADER --}}
         <div class="card-header-accent">
             <div>
-                <h3 class="h3-title"><i class="fa-solid fa-clipboard-check" style="color:#0038A8;margin-right:8px;"></i>My PM Tasks</h3>
+                <h3 class="h3-title">PM Tasks</h3>
                 <p class="p-subtitle">Preventive Maintenance work orders assigned to you.</p>
             </div>
         </div>
@@ -174,20 +181,18 @@
                     <div class="pm-stat-num pm-stat-num-completed">{{ $completedCount }}</div>
                     <div class="pm-stat-label">Completed</div>
                 </div>
-                @if($overdueCount > 0)
-                <div class="task-card pm-stat-card" style="border-color:#fde68a;background:#fffbeb;">
-                    <div class="pm-stat-num" style="color:#92400e;">{{ $overdueCount }}</div>
-                    <div class="pm-stat-label" style="color:#b45309;">Overdue</div>
+                <div class="task-card pm-stat-card">
+                    <div class="pm-stat-num">{{ $overdueCount }}</div>
+                    <div class="pm-stat-label">Overdue</div>
                 </div>
-                @endif
             </div>
 
             {{-- Filters --}}
             <div class="pm-filters">
-                <a href="{{ route('pm.tasks') }}"                               class="filter-btn {{ !request('status') ? 'active' : '' }}"><i class="fa-solid fa-list"></i> All</a>
-                <a href="{{ route('pm.tasks', ['status' => 'Scheduled']) }}"   class="filter-btn {{ request('status') === 'Scheduled' ? 'active' : '' }}"><i class="fa-solid fa-clock"></i> To Do</a>
-                <a href="{{ route('pm.tasks', ['status' => 'Ongoing']) }}"     class="filter-btn {{ request('status') === 'Ongoing' ? 'active' : '' }}"><i class="fa-solid fa-play"></i> Ongoing</a>
-                <a href="{{ route('pm.tasks', ['status' => 'Completed']) }}"   class="filter-btn {{ request('status') === 'Completed' ? 'active' : '' }}"><i class="fa-solid fa-check"></i> Completed</a>
+                <a href="{{ route('pm.tasks') }}"                               class="filter-btn {{ !request('status') ? 'active' : '' }}">All</a>
+                <a href="{{ route('pm.tasks', ['status' => 'Scheduled']) }}"   class="filter-btn {{ request('status') === 'Scheduled' ? 'active' : '' }}">To Do</a>
+                <a href="{{ route('pm.tasks', ['status' => 'Ongoing']) }}"     class="filter-btn {{ request('status') === 'Ongoing' ? 'active' : '' }}">Ongoing</a>
+                <a href="{{ route('pm.tasks', ['status' => 'Completed']) }}"   class="filter-btn {{ request('status') === 'Completed' ? 'active' : '' }}">Completed</a>
             </div>
 
             {{-- PM Tasks Table --}}
@@ -196,8 +201,19 @@
                 @if($pmTasks->isEmpty())
                     <div class="pm-empty">
                         <div class="pm-empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
-                        <h3 class="pm-empty-title">No PM Tasks Assigned</h3>
-                        <p class="pm-empty-text">PM tasks will appear here once assigned to you by the System Admin.</p>
+                        @if(request('status'))
+                            @php
+                                $filterLabel = match(request('status')) {
+                                    'Scheduled' => 'To Do',
+                                    default     => request('status'),
+                                };
+                            @endphp
+                            <h3 class="pm-empty-title">No {{ $filterLabel }} PM Tasks</h3>
+                            <p class="pm-empty-text">No tasks match this filter. Switch to <strong>All</strong> to see all PM tasks assigned to you.</p>
+                        @else
+                            <h3 class="pm-empty-title">No PM Tasks Assigned</h3>
+                            <p class="pm-empty-text">PM tasks will appear here once assigned to you by the System Admin.</p>
+                        @endif
                     </div>
                 @else
                     <table class="pm-table">

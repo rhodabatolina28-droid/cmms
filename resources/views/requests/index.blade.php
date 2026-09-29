@@ -204,7 +204,7 @@
         <!-- HEADER STRIP -->
         <div class="card-header-accent">
             <div>
-                <h3 class="req-header-title">My Request Repository</h3>
+                <h3 class="req-header-title">Request Repository</h3>
                 <p class="req-header-sub">Track and manage all ICT support requests submitted by your account.</p>
             </div>
             @if(Auth::user()->role === 'user')

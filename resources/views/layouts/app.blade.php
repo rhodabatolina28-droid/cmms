@@ -209,7 +209,7 @@
             <nav>
                 <!-- DASHBOARD (ALL) -->
                 <a href="{{ route(Auth::user()->dashboardRouteName()) }}" class="nav-link {{ request()->routeIs('dashboard.*') ? 'active' : '' }}" data-tooltip="Dashboard">
-                    <i class="fa-solid fa-gauge"></i> <span>Dashboard</span>
+                    <i class="fa-solid fa-table-columns"></i> <span>Dashboard</span>
                 </a>
 
                 <!-- PROFILE (ALL) -->
@@ -242,7 +242,7 @@
                         </div>
                     </div>
                     <a href="{{ route('requisitions.index') }}" class="nav-link {{ request()->routeIs('requisitions.*') ? 'active' : '' }}" data-tooltip="Parts Requests">
-                        <i class="fa-solid fa-box"></i> <span>My Parts Requests</span>
+                        <i class="fa-solid fa-box"></i> <span>Parts Requests</span>
                     </a>
                     <a href="{{ route('pm-schedules.index') }}" class="nav-link {{ request()->routeIs('pm-schedules.*') ? 'active' : '' }}" data-tooltip="PM Schedules">
                         <i class="fa-solid fa-calendar-clock"></i> <span>PM Schedules</span>
@@ -267,7 +267,7 @@
                         </div>
                     </div>
                     @endif
-                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="Requests">
+                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="{{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests">
                         <i class="fa-solid fa-clipboard-list"></i> <span>{{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests</span>
                     </a>
                     @if(Auth::user()->canProcessSupply())
@@ -276,26 +276,26 @@
                     </a>
                     @endif
                 @elseif(Auth::user()->role === 'it')
-                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="My Assigned Jobs">
-                        <i class="fa-solid fa-screwdriver-wrench"></i> <span>My Assigned Jobs</span>
+                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') ? 'active' : '' }}" data-tooltip="Assigned Jobs">
+                        <i class="fa-solid fa-screwdriver-wrench"></i> <span>Assigned Jobs</span>
                     </a>
                     <a href="{{ route('pm.tasks') }}" class="nav-link {{ request()->routeIs('pm.tasks') ? 'active' : '' }}" data-tooltip="PM Tasks">
                         <i class="fa-solid fa-calendar-check"></i> <span>PM Tasks</span>
                     </a>
                     <a href="{{ route('requisitions.index') }}" class="nav-link {{ request()->routeIs('requisitions.*') ? 'active' : '' }}" data-tooltip="Parts Requests">
-                        <i class="fa-solid fa-box"></i> <span>My Parts Requests</span>
+                        <i class="fa-solid fa-box"></i> <span>Parts Requests</span>
                     </a>
                 @elseif(Auth::user()->role === 'user')
                     <!-- END USER MODULES -->
-                    <a href="{{ route('profile.assets') }}" class="nav-link {{ request()->routeIs('profile.assets') ? 'active' : '' }}" data-tooltip="My Assets">
-                        <i class="fa-solid fa-laptop-medical"></i> <span>My Assets</span>
+                    <a href="{{ route('profile.assets') }}" class="nav-link {{ request()->routeIs('profile.assets') ? 'active' : '' }}" data-tooltip="Assets">
+                        <i class="fa-solid fa-computer"></i> <span>Assets</span>
                     </a>
                     <a href="{{ route('ict.create') }}" class="nav-link {{ request()->routeIs('ict.create') ? 'active' : '' }}" data-tooltip="ICT Request">
-                        <i class="fa-solid fa-desktop"></i> <span>ICT Request</span>
+                        <i class="fa-solid fa-square-plus"></i> <span>ICT Request</span>
                     </a>
                     {{-- PM is now scheduled by System Admin — removed from user sidebar --}}
-                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') || request()->routeIs('maintenance.*') ? 'active' : '' }}" data-tooltip="My Requests">
-                        <i class="fa-solid fa-list-check"></i> <span>My Requests</span>
+                    <a href="{{ route('ict.index') }}" class="nav-link {{ request()->routeIs('ict.*') || request()->routeIs('maintenance.*') ? 'active' : '' }}" data-tooltip="Requests">
+                        <i class="fa-solid fa-clipboard-list"></i> <span>Requests</span>
                     </a>
                 @endif
 

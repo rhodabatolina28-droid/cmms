@@ -36,7 +36,7 @@
         <td class="nowrap">
             <div style="display:flex;align-items:center;gap:6px;">
                 <a href="{{ route('purchase_requests.show', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View {{ $pr->pr_number }} document" title="Open full document">
-                    <i class="fa-solid fa-eye"></i>&nbsp;View
+                    View
                 </a>
                 @if($isSubmitted)
                     <form method="POST" action="{{ route('purchase_requests.finalize', $pr->id) }}">
@@ -51,7 +51,7 @@
                     </a>
                 @elseif($pr->status === 'delivered')
                     <a href="{{ route('purchase_requests.receiveForm', $pr->id) }}" class="cmms-btn-secondary" style="padding:5px 10px;font-size:11.5px;" aria-label="View delivery record for {{ $pr->pr_number }}" title="View what arrived, where it went, and the proof of purchase">
-                        <i class="fa-solid fa-receipt"></i>&nbsp;View delivery
+                        View delivery
                     </a>
                 @endif
             </div>

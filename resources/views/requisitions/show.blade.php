@@ -467,11 +467,11 @@
             {{-- ── Requested Items ── --}}
             <div class="cmms-panel mt-18">
                 <div class="cmms-panel-head">
-                    <h2><i class="fa-solid fa-list-check mr-6" style="color:#0038A8;"></i>Requested Items</h2>
+                    <h2>Requested Items</h2>
                     <span class="badge-sm text-gray-400">{{ count($requisition->items ?? []) }} line item(s)</span>
                 </div>
                 <div class="cmms-panel-body panel-body-flush">
-                    <div class="mobile-table-hint"><i class="fa-solid fa-arrows-left-right"></i> Swipe table horizontally to view all columns</div>
+                    <div class="mobile-table-hint">Swipe table horizontally to view all columns</div>
                     <div class="table-wrap">
                         <table class="cmms-official-table cmms-req-items-table">
                             <colgroup class="desktop-colgroup">
@@ -539,14 +539,13 @@
     {{-- ══ SUPPLY: Inventory Availability Check ══ --}}
     <div class="cmms-panel mt-18">
         <div class="cmms-panel-head">
-            <h2><i class="fa-solid fa-warehouse mr-6" style="color:#0038A8;"></i>Inventory Availability Check</h2>
+            <h2>Inventory Availability Check</h2>
             <span class="badge-sm text-green-800">
                 {{ $spareInventoryMatches->count() }} of {{ count($requisition->items ?? []) }} item(s) have spare stock ready for issue
             </span>
         </div>
         <div class="cmms-panel-body panel-body-flush">
             <div class="info-bar">
-                <i class="fa-solid fa-circle-info icon-mr-4"></i>
                 These are possible matches from the current inventory. Verify physically before deciding to issue from stock or procure new.
             </div>
             @foreach($spareInventoryMatches as $lineIndex => $match)
@@ -591,7 +590,7 @@
                                     : route('inventory.detail', $asset->asset_id);
                             @endphp
                             <a href="{{ $detailRoute }}" target="_blank" class="asset-link">
-                                View asset <i class="fa-solid fa-arrow-up-right-from-square icon-xs"></i>
+                                View asset
                             </a>
                         </div>
                     </div>
@@ -607,7 +606,7 @@
     {{-- ══ SUPPLY: Parts & Consumables Stock Availability ══ --}}
     <div class="cmms-panel mt-18">
         <div class="cmms-panel-head">
-            <h2><i class="fa-solid fa-boxes mr-6" style="color:#0038A8;"></i>Parts &amp; Consumables Stock</h2>
+            <h2>Parts &amp; Consumables Stock</h2>
             @php $okLines = $partsStockMatches->filter(fn ($m) => empty($m['deficit']))->count(); @endphp
             <span class="badge-sm text-green-800">{{ $okLines }} of {{ $partsStockMatches->count() }} line(s) available in stock</span>
         </div>
@@ -648,13 +647,12 @@
             @php $hasDeficit = $partsStockMatches->contains(fn($m) => !empty($m['deficit'])); @endphp
             @if(Auth::user()->canProcessSupply() && $hasDeficit)
             <div class="info-bar info-bar-deficit">
-                <span><i class="fa-solid fa-boxes-stacked icon-mr-4"></i>May kulang sa Parts Stock — gumawa ng Purchase Request.</span>
+                <span>May kulang sa Parts Stock — gumawa ng Purchase Request.</span>
                 <a href="{{ route('purchase_requests.create', ['requisition_id' => $requisition->id]) }}" class="cmms-btn-primary deficit-pr-btn">Create Purchase Request</a>
             </div>
             @endif
             @if($canReview && in_array($status, ['approved'], true))
             <div class="info-bar info-bar-issue-notice">
-                <i class="fa-solid fa-circle-info icon-mr-4"></i>
                 Issuing will deduct these items from Parts Stock and assign their serialized units to the linked asset custodian.
             </div>
             @endif
@@ -706,19 +704,19 @@
 
                     <div class="cmms-action-bar action-bar-flush">
                         @if($status === 'pending')
-                        <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve"><i class="fa-solid fa-check"></i> Approve</button>
-                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
+                        <button type="button" class="cmms-btn-primary supply-action-btn" data-action="approve">Approve</button>
+                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject">Disapprove</button>
                         @elseif($status === 'approved')
                             @if($issueContext['valid'])
-                                <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                                <button type="button" class="cmms-btn-success supply-action-btn" data-action="issue">Issue property</button>
                             @else
-                                <button type="button" class="cmms-btn-success" disabled title="{{ $issueContext['message'] }}"><i class="fa-solid fa-box-open"></i> Issue property</button>
+                                <button type="button" class="cmms-btn-success" disabled title="{{ $issueContext['message'] }}">Issue property</button>
                             @endif
-                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject"><i class="fa-solid fa-xmark"></i> Disapprove</button>
+                        <button type="button" class="cmms-btn-danger supply-action-btn" data-action="reject">Disapprove</button>
                         @endif
                     </div>
                     @if($status === 'approved' && ! $issueContext['valid'])
-                    <p class="info-text" style="color:#991b1b;margin-top:8px;"><i class="fa-solid fa-circle-exclamation mr-6"></i>{{ $issueContext['message'] }}</p>
+                    <p class="info-text" style="color:#991b1b;margin-top:8px;">{{ $issueContext['message'] }}</p>
                     @endif
                 </div>
             </div>

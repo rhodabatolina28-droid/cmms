@@ -578,7 +578,7 @@ function renderRequestsTable(requests) {
             <td class="sa-td-center"><span class="status-pill ${statusClass}">${req.status}</span></td>
             <td class="sa-td-center">
                 <a href="/requests/ict/${req.id}" class="btn-action-modern">
-                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Details
+                    Details
                 </a>
             </td>
         </tr>`;

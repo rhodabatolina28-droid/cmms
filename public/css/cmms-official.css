@@ -1586,27 +1586,31 @@
     }
 
     /* Status tracker mobile vertical steps */
+    .cmms-status-tracker--full {
+        padding: 14px 14px 16px !important;
+    }
     .cmms-st-summary {
         flex-direction: column !important;
         align-items: flex-start !important;
-        gap: 8px !important;
-        padding: 12px 14px !important;
+        gap: 6px !important;
+        padding: 0 0 10px !important;
+        margin-bottom: 10px !important;
     }
     .cmms-st-summary-main {
         flex-direction: column !important;
         align-items: flex-start !important;
-        gap: 6px !important;
+        gap: 4px !important;
     }
     .cmms-st-steps {
         display: flex !important;
         flex-direction: column !important;
-        gap: 16px !important;
-        padding: 16px 14px !important;
+        gap: 10px !important;
+        padding: 0 !important;
     }
     .cmms-st-step {
         display: flex !important;
         align-items: flex-start !important;
-        gap: 12px !important;
+        gap: 10px !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
         position: relative !important;
@@ -1620,7 +1624,7 @@
         position: absolute !important;
         left: 11px !important;
         top: 24px !important;
-        bottom: -16px !important;
+        bottom: -10px !important;
         width: 2px !important;
         height: auto !important;
         right: auto !important;

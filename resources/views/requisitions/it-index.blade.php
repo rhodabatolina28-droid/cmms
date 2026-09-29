@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'My Parts Requisitions')
-@section('page-title', 'My Parts Requisitions')
+@section('title', 'Parts Requisitions')
+@section('page-title', 'Parts Requisitions')
 
 @section('styles')
 @include('requisitions.partials.official-assets')
@@ -156,7 +156,7 @@
         <div class="cmms-page-card">
             <div class="cmms-page-card-head">
                 <div>
-                    <h2>My Parts Requisitions</h2>
+                    <h2>Parts Requisitions</h2>
                     <div class="sub">Request and track parts tied to your assigned ICT or PM job orders.</div>
                 </div>
                 @if($activeTickets->isEmpty())

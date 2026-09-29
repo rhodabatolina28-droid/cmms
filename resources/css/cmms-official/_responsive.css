@@ -174,6 +174,71 @@
     .cmms-st-note {
         font-size: 10px !important;
     }
+    /* Status tracker mobile vertical steps (mirrors public/css/cmms-official.css) */
+    .cmms-status-tracker--full {
+        padding: 14px 14px 16px !important;
+    }
+    .cmms-st-summary {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 6px !important;
+        padding: 0 0 10px !important;
+        margin-bottom: 10px !important;
+    }
+    .cmms-st-summary-main {
+        flex-direction: column !important;
+        align-items: flex-start !important;
+        gap: 4px !important;
+    }
+    .cmms-st-steps {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+        padding: 0 !important;
+    }
+    .cmms-st-step {
+        display: flex !important;
+        align-items: flex-start !important;
+        gap: 10px !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+        position: relative !important;
+    }
+    .cmms-st-dot {
+        flex-shrink: 0 !important;
+        position: relative !important;
+        z-index: 2 !important;
+    }
+    .cmms-st-line {
+        position: absolute !important;
+        left: 11px !important;
+        top: 24px !important;
+        bottom: -10px !important;
+        width: 2px !important;
+        height: auto !important;
+        right: auto !important;
+    }
+    .cmms-st-body {
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 2px !important;
+    }
+    .cmms-st-label {
+        font-size: 13px !important;
+        font-weight: 700 !important;
+    }
+    .cmms-st-note {
+        font-size: 11.5px !important;
+        color: var(--cmms-muted) !important;
+    }
+    .cmms-st-date {
+        font-size: 11px !important;
+    }
+    .cmms-st-actor {
+        font-size: 11px !important;
+    }
+
+
 
     /* Pagination */
     .cmms-pagination-bar {

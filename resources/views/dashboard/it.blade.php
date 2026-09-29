@@ -1,7 +1,7 @@
 @extends('layouts.app')
 
-@section('title', 'IT Dashboard | NCMB CMMS')
-@section('page-title', 'IT Dashboard')
+@section('title', 'Dashboard | NCMB ICT System')
+@section('page-title', 'Dashboard')
 
 @section('styles')
     <style nonce="{{ $cspNonce }}">
