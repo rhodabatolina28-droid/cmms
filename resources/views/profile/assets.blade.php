@@ -164,7 +164,8 @@
             border-radius: 20px;
             font-size: 11px;
             font-weight: 800;
-            color: #1d4ed8;
+            /* Black label (walang icon) - pareho sa mobile at desktop, kaya nandito lang sa base rule */
+            color: #000;
             cursor: pointer;
             transition: all 0.2s;
             display: inline-flex;
@@ -174,11 +175,11 @@
             text-transform: uppercase;
         }
         .btn-view:hover {
-            background: #1d4ed8;
-            color: white;
-            border-color: #1d4ed8;
+            background: #dbeafe;
+            color: #000;
+            border-color: #93c5fd;
             transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
         }
 
         .asset-header-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
@@ -253,7 +254,7 @@
                                 </td>
                                 <td class="td-center">
                                     <button class="btn-view" data-action="open-modal" data-id="{{ $asset->asset_id }}">
-                                        <i class="fa-solid fa-eye"></i> View
+                                        View
                                     </button>
                                 </td>
                             </tr>

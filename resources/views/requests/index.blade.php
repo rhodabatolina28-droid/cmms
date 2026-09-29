@@ -104,7 +104,8 @@
             background: #eff6ff;
             border: 1px solid #bfdbfe;
             border-radius: 20px;
-            color: #1d4ed8;
+            /* Black label (walang icon) - pareho sa mobile at desktop, kaya nandito lang sa base rule */
+            color: #000;
             font-size: 11px;
             font-weight: 800;
             text-transform: uppercase;
@@ -117,11 +118,11 @@
         }
 
         .btn-view-modern:hover {
-            background: #1d4ed8;
-            color: white;
-            border-color: #1d4ed8;
+            background: #dbeafe;
+            color: #000;
+            border-color: #93c5fd;
             transform: scale(1.05);
-            box-shadow: 0 4px 10px rgba(29, 78, 216, 0.2);
+            box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
         }
         .req-header-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
         .req-header-sub { margin: 2px 0 0; font-size: 12px; color: #64748b; }
@@ -282,7 +283,7 @@
                             </td>
                             <td class="td-center">
                                 <a href="{{ route('ict.edit', $req->id) }}" class="btn-view-modern">
-                                    <i class="fa-solid fa-folder-open"></i> Open
+                                    Open
                                 </a>
                             </td>
                         </tr>
