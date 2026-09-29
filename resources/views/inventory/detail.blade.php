@@ -174,9 +174,6 @@
 .btn-print { background: #0038A8; color: white; border: none; padding: 8px 14px; border-radius: 6px; font-size: 12px; font-weight: 700; cursor: pointer; display: inline-flex; align-items: center; gap: 6px; min-height: 40px; }
 .btn-print:hover { background: #002d8c; }
 .btn-print:active { background: #001f5c; }
-.icon-warning { color: #f59e0b; }
-.icon-purple { color: #8b5cf6; }
-.icon-sky { color: #0ea5e9; }
 .ml-6 { margin-left: 6px; }
 .ml-4 { margin-left: 4px; }
 .mb-18 { margin-bottom: 16px; }
@@ -341,7 +338,7 @@
     <div class="main-grid">
         {{-- Asset Info Card --}}
         <div class="detail-card">
-            <div class="detail-card-header"><i class="fa-solid fa-microchip"></i> Asset Information</div>
+            <div class="detail-card-header">Asset Information</div>
             <div class="detail-card-body">
                 <div class="field-row"><span class="field-label">Category</span><span class="field-value">{{ $asset->category }}</span></div>
                 <div class="field-row"><span class="field-label">Item Name</span><span class="field-value">{{ $asset->item_name }}</span></div>
@@ -358,7 +355,7 @@
 
         {{-- Lifecycle / Financial Card --}}
         <div class="detail-card">
-            <div class="detail-card-header"><i class="fa-solid fa-calendar-days"></i> Lifecycle & Financial</div>
+            <div class="detail-card-header">Lifecycle & Financial</div>
             <div class="detail-card-body">
                 <div class="field-row">
                     <span class="field-label">Date Acquired</span>
@@ -414,7 +411,7 @@
         {{-- Specifications Card --}}
         @if($asset->specifications)
         <div class="detail-card">
-            <div class="detail-card-header"><i class="fa-solid fa-list-check"></i> Technical Specifications</div>
+            <div class="detail-card-header">Technical Specifications</div>
             <div class="detail-card-body">
                 @php
                     $specs = is_array($asset->specifications) ? $asset->specifications : json_decode($asset->specifications, true);
@@ -457,7 +454,7 @@
         {{-- Set Components Card --}}
         @if($asset->components->isNotEmpty() || $asset->parentAsset || $custodianPeripherals->isNotEmpty() || $custodianMajorAssets->isNotEmpty())
         <div class="detail-card">
-            <div class="detail-card-header"><i class="fa-solid fa-layer-group"></i> Set Components</div>
+            <div class="detail-card-header">Set Components</div>
             <div class="detail-card-body">
                 @if($asset->components->isNotEmpty())
                     {{-- Parent view: list the components that share this asset's PAR. --}}
@@ -548,7 +545,7 @@
 
 {{-- Installed Parts / Consumables card (parts_stock_units.asset_id) — Phase 5 data --}}
         <div class="detail-card main-grid-full">
-            <div class="detail-card-header"><i class="fa-solid fa-boxes-stacked" style="color:#0038A8;"></i> Installed Parts / Consumables</div>
+            <div class="detail-card-header">Installed Parts / Consumables</div>
             <div class="detail-card-body">
                 @php $assetUnits = \App\Models\PartUnit::with(['part:id,item_name', 'issuedTo:id,full_name', 'request:id,request_number'])->where('asset_id', $asset->asset_id)->orderByDesc('issued_at')->get(); @endphp
                 @if($assetUnits->isEmpty())
@@ -615,7 +612,7 @@
         {{-- Notes Card --}}
         @if($asset->asset_notes)
         <div class="detail-card">
-            <div class="detail-card-header"><i class="fa-solid fa-note-sticky"></i> Notes</div>
+            <div class="detail-card-header">Notes</div>
             <div class="detail-card-body">
                 <p class="text-notes">{{ $asset->asset_notes }}</p>
             </div>
@@ -625,7 +622,7 @@
         {{-- QR Code Card --}}
         @if($asset->qr_code)
         <div class="detail-card card-mt20">
-            <div class="detail-card-header"><i class="fa-solid fa-qrcode"></i> QR Code</div>
+            <div class="detail-card-header">QR Code</div>
             <div class="detail-card-body qr-body">
                 <div class="qr-frame">
                     {!! $asset->qr_code !!}
@@ -647,7 +644,7 @@
 
     {{-- Repair / Maintenance History --}}
     <div class="detail-card card-mt20">
-        <div class="detail-card-header"><i class="fa-solid fa-screwdriver-wrench icon-warning"></i> Repair & Maintenance History ({{ $repairHistory->count() }} records)</div>
+        <div class="detail-card-header">Repair & Maintenance History ({{ $repairHistory->count() }} records)</div>
         <div class="detail-card-body">
             @if($repairHistory->isEmpty())
                 <p class="text-empty">No repair or maintenance records linked to this asset.</p>
@@ -728,7 +725,7 @@
 
     {{-- Transfer / Custody History --}}
     <div class="detail-card card-mt20">
-        <div class="detail-card-header"><i class="fa-solid fa-arrows-rotate icon-purple"></i> Custody & Transfer Log</div>
+        <div class="detail-card-header">Custody & Transfer Log</div>
         <div class="detail-card-body">
             @if($transferHistory->isEmpty())
                 <p class="text-empty">No transfer records found.</p>
@@ -770,7 +767,7 @@
 
     {{-- Attachments --}}
     <div class="detail-card card-mt20">
-        <div class="detail-card-header"><i class="fa-solid fa-paperclip icon-sky"></i> Documents & Attachments ({{ $asset->attachments->count() }})</div>
+        <div class="detail-card-header">Documents & Attachments ({{ $asset->attachments->count() }})</div>
         <div class="detail-card-body">
             @if($asset->attachments->isEmpty())
                 <p class="text-empty">No documents attached. Click "Add Document" to upload files.</p>
