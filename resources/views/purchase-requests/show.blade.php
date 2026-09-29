@@ -337,7 +337,7 @@
 @section('content')
 <div class="prd-wrap">
     <div class="prd-toolbar no-print">
-        <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary" aria-label="Back to requisitions page"><i class="fa-solid fa-arrow-left" style="margin-right:6px;"></i>Back</a>
+        <a href="{{ route('requisitions.index') }}" class="cmms-btn-secondary" aria-label="Back to requisitions page">Back</a>
 
         @php
             $stClass = $purchaseRequest->status === 'finalized' || $purchaseRequest->status === 'delivered' ? 'finalized' : ($purchaseRequest->status === 'submitted' && ! $purchaseRequest->isLegacyStatus() ? 'submitted' : 'draft');
@@ -373,33 +373,23 @@
                         || (Auth::user()->role === 'it' && ($purchaseRequest->requested_by === Auth::id() || $purchaseRequest->created_by === Auth::id())));
             @endphp
             @if($canEditPr)
-                <a href="{{ route('purchase_requests.edit', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="Edit purchase request" title="Correct items, quantities, or header details">
-                    <i class="fa-solid fa-pen-to-square"></i>Edit
-                </a>
+                <a href="{{ route('purchase_requests.edit', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="Edit purchase request" title="Correct items, quantities, or header details">Edit</a>
             @endif
             @if($purchaseRequest->status === 'submitted' && Auth::user()->canProcessSupply())
                 <form method="POST" action="{{ route('purchase_requests.finalize', $purchaseRequest->id) }}" style="display:inline;">
                     @csrf
-                    <button type="submit" class="prd-action-btn prd-action-btn--success pr-finalize-btn" data-pr="{{ $purchaseRequest->pr_number }}" title="Lock this document and unlock official printing">
-                        <i class="fa-solid fa-stamp"></i>Finalize &amp; Print
-                    </button>
+                    <button type="submit" class="prd-action-btn prd-action-btn--success pr-finalize-btn" data-pr="{{ $purchaseRequest->pr_number }}" title="Lock this document and unlock official printing">Finalize &amp; Print</button>
                 </form>
             @elseif($purchaseRequest->status === 'finalized')
-                <button type="button" onclick="window.print()" class="prd-action-btn prd-action-btn--primary" aria-label="Print purchase request document">
-                    <i class="fa-solid fa-print"></i>Print document
-                </button>
+                <button type="button" onclick="window.print()" class="prd-action-btn prd-action-btn--primary" aria-label="Print purchase request document">Print document</button>
                 @if(!empty($canReceive))
-                    <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--success" aria-label="Record the delivery of purchased goods" title="Goods arrived? Record what arrived and where it went">
-                        <i class="fa-solid fa-box-open"></i>Record delivery
-                    </a>
+                    <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--success" aria-label="Record the delivery of purchased goods" title="Goods arrived? Record what arrived and where it went">Record delivery</a>
                 @endif
             @elseif($purchaseRequest->status === 'delivered')
-                <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="View the delivery record and proof of purchase" title="View delivery record, recorded items, and proof of purchase">
-                    <i class="fa-solid fa-receipt"></i>View delivery
-                </a>
-                <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-circle-check"></i>Delivered</span>
+                <a href="{{ route('purchase_requests.receiveForm', $purchaseRequest->id) }}" class="prd-action-btn prd-action-btn--secondary" aria-label="View the delivery record and proof of purchase" title="View delivery record, recorded items, and proof of purchase">View delivery</a>
+                <span class="prd-action-btn prd-action-btn--locked">Delivered</span>
             @else
-                <span class="prd-action-btn prd-action-btn--locked"><i class="fa-solid fa-lock"></i>Print locked</span>
+                <span class="prd-action-btn prd-action-btn--locked">Print locked</span>
             @endif
         </div>
     </div>

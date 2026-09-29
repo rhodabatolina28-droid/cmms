@@ -50,6 +50,8 @@
     .rx-unit-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#374151; margin-bottom:8px; }
     .rx-unit-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
     @media screen and (max-width:560px){ .rx-unit-row { grid-template-columns:1fr; } }
+    /* Per-piece label inside the serial/property grid — mobile-only (shown ≤768px). */
+    .rx-unit-no { display:none; }
     .rx-warn { display:flex; gap:10px; align-items:flex-start; background:#fffbeb; border:1.5px solid #fde68a; border-radius:12px; padding:13px 15px; margin-bottom:16px; font-size:12.5px; color:#92400e; line-height:1.5; }
     .rx-warn i { margin-top:2px; }
 
@@ -70,7 +72,6 @@
     /* Upload dropzone */
     .rx-dropzone { border:2px dashed #cbd5e1; border-radius:12px; padding:20px; text-align:center; background:#f8fafc; transition:all .15s; cursor:pointer; }
     .rx-dropzone:hover, .rx-dropzone.dragover { border-color:#0038A8; background:#eff6ff; }
-    .rx-dropzone i.dz-ic { font-size:22px; color:#94a3b8; margin-bottom:8px; display:block; }
     .rx-dropzone .dz-t { font-size:12.5px; font-weight:700; color:#334155; }
     .rx-dropzone .dz-d { font-size:11px; color:#94a3b8; margin-top:2px; }
 
@@ -223,7 +224,7 @@
         .rx-dest label {
             display: flex !important;
             flex-direction: column !important;
-            padding: 10px 12px !important;
+            padding: 9px 11px !important;
             border: 1.5px solid #d1d5db !important;
             border-radius: 9px !important;
             background: #ffffff !important;
@@ -264,11 +265,11 @@
         }
         .rx-dest .d {
             display: block !important;
-            font-size: 11.5px !important;
+            font-size: 11px !important;
             color: #64748b !important;
-            margin-top: 3px !important;
+            margin-top: 2px !important;
             margin-left: 24px !important;
-            line-height: 1.45 !important;
+            line-height: 1.4 !important;
         }
         .rx-dest label.is-checked {
             border-color: #0038A8 !important;
@@ -282,11 +283,22 @@
         .rx-dest label.is-checked .d {
             color: #1e40af !important;
         }
+        /* Unavailable option: keep it clearly readable on a phone instead of
+           fading the whole card to 45% (11px gray on 45% fails contrast). */
         .rx-dest label.is-disabled {
-            opacity: 0.45 !important;
+            opacity: 1 !important;
             cursor: not-allowed !important;
             background: #f8fafc !important;
             border-color: #e2e8f0 !important;
+        }
+        .rx-dest label.is-disabled .t {
+            color: #94a3b8 !important;
+        }
+        .rx-dest label.is-disabled .d {
+            color: #9aa6b6 !important;
+        }
+        .rx-dest label.is-disabled .rx-dest-head input[type=radio] {
+            opacity: 0.45 !important;
         }
 
         /* Form inputs */
@@ -295,6 +307,11 @@
             min-height: 44px !important;
             font-size: 14px !important;
             padding: 10px 12px !important;
+            /* The page's controls are content-box, so `width:100%` + padding made
+               every select/input ~26px wider than its grid column on a phone
+               (they crossed the card border). Fit them to the card on mobile. */
+            box-sizing: border-box !important;
+            max-width: 100% !important;
         }
         .rx-field-label {
             font-size: 10px !important;
@@ -306,14 +323,44 @@
             padding: 10px 10px !important;
             border-radius: 8px !important;
         }
+        /* Title fits on one line on a phone (icon + "…PER PIECE (n)" used to wrap). */
+        .rx-unit-grid .rx-unit-title {
+            font-size: 10px !important;
+            letter-spacing: 0.02em !important;
+            line-height: 1.35 !important;
+        }
         .rx-unit-row {
             grid-template-columns: 1fr !important;
             gap: 6px !important;
-            margin-bottom: 8px !important;
+            margin-bottom: 0 !important;
         }
         .rx-unit-row .rx-input {
             min-height: 44px !important;
             font-size: 14px !important;
+        }
+        /* Each stacked pair is one physical piece — label it and separate the
+           groups, otherwise 2+ pieces read as one long run of 6 inputs. */
+        .rx-unit-no {
+            display: block !important;
+            font-size: 9.5px !important;
+            font-weight: 800 !important;
+            text-transform: uppercase !important;
+            letter-spacing: 0.06em !important;
+            color: #0038A8 !important;
+            margin-bottom: 5px !important;
+        }
+        .rx-unit-row + .rx-unit-row {
+            margin-top: 10px !important;
+            padding-top: 10px !important;
+            border-top: 1px dashed #e2e8f0 !important;
+        }
+        /* Footnote in the grid / lines: muted + tighter than the default 12px black. */
+        .rx-unit-grid .note,
+        .rx-line .note {
+            font-size: 11px !important;
+            color: #64748b !important;
+            line-height: 1.5 !important;
+            margin: 9px 0 0 !important;
         }
 
         /* New part mini-form */
@@ -337,14 +384,16 @@
             padding: 16px 12px !important;
             border-radius: 10px !important;
         }
-        .rx-dropzone i.dz-ic {
-            font-size: 20px !important;
-        }
         .rx-dropzone .dz-t {
+            display: block !important;
             font-size: 12px !important;
+            line-height: 1.4 !important;
         }
         .rx-dropzone .dz-d {
+            display: block !important;
             font-size: 10.5px !important;
+            margin-top: 4px !important;
+            line-height: 1.4 !important;
         }
 
         /* Upload details row */
@@ -357,6 +406,7 @@
             width: 100% !important;
             min-height: 44px !important;
             font-size: 14px !important;
+            box-sizing: border-box !important;
         }
         #rz-details .rxb {
             width: 100% !important;
@@ -387,7 +437,7 @@
             align-items: stretch !important;
             gap: 10px !important;
             padding: 12px 12px !important;
-            bottom: 8px !important;
+            bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
             border-radius: 10px !important;
         }
         .rx-confirm-bar .txt {
@@ -420,15 +470,11 @@
 <div class="rx-page">
 
     <div class="rx-topbar">
-        <a href="{{ route('purchase_requests.show', $purchaseRequest->id) }}" class="rx-back" aria-label="Back to purchase request document">
-            <i class="fa-solid fa-arrow-left"></i>Back to document
-        </a>
+        <a href="{{ route('purchase_requests.show', $purchaseRequest->id) }}" class="rx-back" aria-label="Back to purchase request document">Back to document</a>
         <div style="display:flex; align-items:center; gap:10px; flex-wrap:wrap;">
-            <div class="rx-crumb">Purchase Request <i class="fa-solid fa-angle-right"></i> <b>{{ $purchaseRequest->pr_number }}</b> <i class="fa-solid fa-angle-right"></i> Record delivery</div>
+            <div class="rx-crumb">Purchase Request <span aria-hidden="true">&rsaquo;</span> <b>{{ $purchaseRequest->pr_number }}</b> <span aria-hidden="true">&rsaquo;</span> Record delivery</div>
             @if(!empty($viewOnly))
-                <a href="{{ route('purchase_requests.delivery_confirmation.pdf', $purchaseRequest->id) }}" class="rxb rxb-white rxb-sm" aria-label="Download the formal delivery confirmation PDF for {{ $purchaseRequest->pr_number }}" title="Formal A4 document: items, serial/property numbers, destinations, and proof of purchase">
-                    <i class="fa-solid fa-file-pdf"></i>Delivery Confirmation PDF
-                </a>
+                <a href="{{ route('purchase_requests.delivery_confirmation.pdf', $purchaseRequest->id) }}" class="rxb rxb-white rxb-sm" aria-label="Download the formal delivery confirmation PDF for {{ $purchaseRequest->pr_number }}" title="Formal A4 document: items, serial/property numbers, destinations, and proof of purchase">Delivery Confirmation PDF</a>
             @endif
         </div>
     </div>
@@ -457,7 +503,6 @@
 
     @if($errors->any())
         <div class="rx-warn" role="alert" style="background:#fef2f2; border-color:#fecaca; color:#b91c1c;">
-            <i class="fa-solid fa-circle-exclamation"></i>
             <div>@foreach($errors->all() as $err)<p style="margin:1px 0;">{{ $err }}</p>@endforeach</div>
         </div>
     @endif

@@ -57,9 +57,7 @@
                         <span class="rx-line-no">{{ $idx + 1 }}</span>
                         <span class="rx-line-desc">{{ $item['description'] ?? ('Item ' . ($idx + 1)) }} <em>&times;{{ $qty }} {{ $item['unit'] ?? '' }}</em></span>
                         @if($destLabel)
-                            <span style="font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:{{ $installed ? '#eff6ff' : '#f0fdf4' }}; color:{{ $installed ? '#0038A8' : '#15803d' }}; border-radius:999px; padding:3px 10px; flex:none;">
-                                <i class="fa-solid {{ $installed ? 'fa-screwdriver-wrench' : 'fa-boxes-stacked' }}" style="margin-right:4px;"></i>{{ $destLabel }}
-                            </span>
+                            <span style="font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; background:{{ $installed ? '#eff6ff' : '#f0fdf4' }}; color:{{ $installed ? '#0038A8' : '#15803d' }}; border-radius:999px; padding:3px 10px; flex:none;">{{ $destLabel }}</span>
                         @endif
                     </div>
                     <div class="rx-cols" style="margin-top:8px;">
@@ -72,7 +70,7 @@
                     </div>
                     @if($hasUnits)
                         <div class="rx-unit-grid show" style="margin-top:10px;">
-                            <div class="rx-unit-title"><i class="fa-solid fa-barcode" style="margin-right:5px;"></i>Serial / property numbers per piece ({{ $units->count() }}/{{ $qty }})</div>
+                            <div class="rx-unit-title">Serial / property numbers per piece ({{ $units->count() }}/{{ $qty }})</div>
                             @foreach($units as $u)
                                 <div class="rx-unit-row">
                                     <div class="rx-unit-cell"><span class="rx-field-label">Serial no.</span><span class="rx-view-val">{{ $u->serial_number ?: '—' }}</span></div>
@@ -143,9 +141,12 @@
                     </div>
                 </div>
                 <div class="rx-unit-grid" data-units>
-                    <div class="rx-unit-title"><i class="fa-solid fa-barcode" style="margin-right:5px;"></i>Serial / property numbers per piece ({{ $qty }})</div>
+                    <div class="rx-unit-title">Serial / property numbers per piece ({{ $qty }})</div>
                     @for($u = 0; $u < $qty; $u++)
                         <div class="rx-unit-row">
+                            {{-- Mobile-only per-piece label (hidden ≥769px): the serial/property
+                                 pair is only visually grouped by its grid row on desktop. --}}
+                            <span class="rx-unit-no">Piece {{ $u + 1 }}</span>
                             <input type="text" class="rx-input" name="lines[{{ $idx }}][units][{{ $u }}][serial_number]" placeholder="Serial no. (e.g. KR8220Y2BS)" maxlength="100" aria-label="Serial number unit {{ $u + 1 }}">
                             <input type="text" class="rx-input" name="lines[{{ $idx }}][units][{{ $u }}][property_number]" placeholder="Property no. (e.g. 2026-0445)" maxlength="100" aria-label="Property number unit {{ $u + 1 }}">
                         </div>
@@ -156,9 +157,7 @@
         @endforeach
         <div class="rx-confirm-bar">
             <span class="txt">Confirming closes <b>{{ $purchaseRequest->pr_number }}</b> as <b>Delivered</b> &mdash; this cannot be undone.</span>
-            <button type="submit" class="rxb rxb-green" aria-label="Confirm delivery of all items">
-                <i class="fa-solid fa-circle-check"></i>Confirm delivery
-            </button>
+            <button type="submit" class="rxb rxb-green" aria-label="Confirm delivery of all items">Confirm delivery</button>
         </div>
     </form>
     @endif

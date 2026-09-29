@@ -13,11 +13,10 @@
 
     @forelse($purchaseRequest->attachments as $att)
         <div class="pr-attach-row" style="display:flex; align-items:center; gap:10px; padding:9px 12px; border:1px solid #e5e7eb; border-radius:10px; margin-bottom:8px; background:#fff; font-size:12.5px; flex-wrap:wrap;">
-            <i class="fa-regular fa-file-lines" style="color:#6b7280; font-size:15px;"></i>
             <strong style="color:#111827;">{{ $att->filename }}</strong>
             @if($att->label)<span style="background:#f1f5f9; border-radius:999px; padding:2px 10px; font-size:11px; color:#475569;">{{ $att->label }}</span>@endif
             <span class="pr-attach-meta" style="color:#94a3b8; font-size:11.5px;">{{ $att->uploader?->full_name ?? '&mdash;' }} &middot; {{ optional($att->created_at)->format('M d, Y g:i A') }}</span>
-            <a href="{{ route('purchase_requests.attachments.download', $att) }}" class="rxb rxb-white rxb-sm" aria-label="Download receipt {{ $att->filename }}"><i class="fa-solid fa-download"></i>Download</a>
+            <a href="{{ route('purchase_requests.attachments.download', $att) }}" class="rxb rxb-white rxb-sm" aria-label="Download receipt {{ $att->filename }}">Download</a>
             @if($canUploadReceipt)
                 <button type="button" class="pr-del-att rxb rxb-white rxb-sm" data-url="{{ route('purchase_requests.attachments.destroy', $att) }}" aria-label="Delete receipt {{ $att->filename }}" style="color:#b91c1c;"><i class="fa-solid fa-trash"></i></button>
             @endif
@@ -33,14 +32,13 @@
             @csrf
             <input type="file" id="receipt-file" name="file" accept=".pdf,.jpg,.jpeg,.png" required aria-label="Choose receipt file" style="display:none;">
             <div class="rx-dropzone" role="button" tabindex="0" aria-label="Choose receipt file to upload">
-                <i class="dz-ic fa-solid fa-cloud-arrow-up"></i>
                 <span class="dz-t" data-dz-text>Drop your receipt here or click to browse</span>
                 <span class="dz-d">PDF / JPG / PNG &middot; up to 10MB</span>
             </div>
             <div id="rz-details" style="display:none; margin-top:10px; gap:8px; align-items:center; flex-wrap:wrap;">
                 <input type="text" name="label" placeholder="Label (optional, e.g. Official receipt)" maxlength="100" style="flex:1; min-width:180px; padding:9px 12px; border:1.5px solid #d1d5db; border-radius:9px; font-size:12.5px;" aria-label="Receipt label">
-                <button type="submit" class="rxb rxb-blue"><i class="fa-solid fa-upload"></i>Upload receipt</button>
-                <button type="button" class="rxb rxb-white" onclick="rzReset()"><i class="fa-solid fa-xmark"></i>Cancel</button>
+                <button type="submit" class="rxb rxb-blue">Upload receipt</button>
+                <button type="button" class="rxb rxb-white" onclick="rzReset()">Cancel</button>
             </div>
         </form>
     @endif
@@ -119,13 +117,13 @@
                 setTimeout(function () { window.location.reload(); }, 800);
             } else {
                 submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="fa-solid fa-upload"></i>Upload receipt';
+                submitBtn.innerHTML = 'Upload receipt';
                 if (window.Swal) { window.Swal.fire('Upload failed', data.message || 'Please try again.', 'error'); }
             }
         })
         .catch(function () {
             submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="fa-solid fa-upload"></i>Upload receipt';
+            submitBtn.innerHTML = 'Upload receipt';
         });
     });
 })();
