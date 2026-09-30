@@ -252,7 +252,20 @@
 @php
     $jobUrl = function ($job) {
         if ($job->type === 'ICT' && $job->status === \App\Models\Request::STATUS_AWAITING_PARTS) {
-            return route('requisitions.index', ['request_id' => $job->id]);
+            // Parts Status → open the Material Requisition actually filed for
+            // this job order (newest still-open ticket first), NOT the
+            // "create a requisition" page. Falls back to the filtered Parts
+            // Requests list when nothing has been filed yet.
+            $requisitions = ($job->requisitions ?? collect())->sortByDesc('created_at');
+            $open = $requisitions->first(fn ($r) => in_array($r->status, [
+                \App\Models\Requisition::STATUS_PENDING,
+                \App\Models\Requisition::STATUS_APPROVED,
+            ], true));
+            $requisition = $open ?? $requisitions->first();
+
+            return $requisition
+                ? route('requisitions.show', $requisition->id)
+                : route('requisitions.index', ['request_id' => $job->id]);
         }
 
         return route($job->type === 'ICT' ? 'ict.edit' : 'maintenance.edit', $job->id);

@@ -797,9 +797,23 @@
                         </thead>
                         <tbody>
                             @php
-                            $sortedRecent = $recentRequests->sortBy(function($r) {
-                                $map = ['Pending' => 0, 'Scheduled' => 0, 'Ongoing' => 1, 'Completed' => 2];
-                                return $map[$r->status] ?? 99;
+                            // Keep unfinished work on top: an Awaiting Parts /
+                            // Awaiting Signature / Referred ticket is NOT done, so
+                            // it must never sink under freshly-Completed rows.
+                            // Stay in sync with Request::scopeUnfinishedFirst().
+                            $sortedRecent = $recentRequests->sortBy(function ($r) {
+                                $map = [
+                                    \App\Models\Request::STATUS_PENDING => 0,
+                                    \App\Models\Request::STATUS_SCHEDULED => 0,
+                                    \App\Models\Request::STATUS_ONGOING => 1,
+                                    \App\Models\Request::STATUS_AWAITING_PARTS => 2,
+                                    \App\Models\Request::STATUS_AWAITING_SIGNATURE => 2,
+                                    \App\Models\Request::STATUS_REFERRED_EXTERNAL => 2,
+                                    \App\Models\Request::STATUS_COMPLETED => 3,
+                                ];
+
+                                // Unknown statuses sort as unfinished (never as Completed).
+                                return $map[$r->status] ?? 2;
                             });
                             @endphp
                             @forelse($sortedRecent as $index => $req)

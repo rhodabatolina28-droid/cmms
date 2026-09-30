@@ -21,7 +21,7 @@
     .th { padding:12px 14px; font-size:10px; font-weight:700; text-transform:uppercase; color:#475569; text-align:left; border-bottom:2px solid #0038A8; }
     .tr { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
     .tr:hover { background:#f8fafc; }
-    .tr-overdue { border-left:3px solid #f59e0b; background:#fffbeb !important; }
+    .tr-overdue { background:#fffbeb !important; }
     .tr-overdue:hover { background:#fef3c7 !important; }
     .td { padding:11px 14px; font-size:13px; color:#1e293b; }
     .td-num a { color:#0038A8; font-weight:700; text-decoration:none; font-size:12px; }
@@ -46,8 +46,6 @@
         /* Filter buttons -- 2x2 grid, 44px touch targets */
         .filter-bar { display:grid !important; grid-template-columns:repeat(2, 1fr) !important; gap:8px !important; }
         .filter-btn { min-height:44px !important; font-size:12px !important; text-align:center !important; }
-        /* Overdue alert -- compact */
-        #overdueAlert { padding:10px 12px !important; }
         /* Swipe hint -- mobile only */
         .mobile-table-hint {
             display:flex !important;
@@ -103,13 +101,6 @@
                 <button data-status="Completed" class="filter-btn">Completed</button>
             </div>
 
-            <div id="overdueAlert" style="display:none; background:linear-gradient(to right, #fffbeb, #fef3c7); border-left:4px solid #f59e0b; color:#92400e; padding:12px 16px; border-radius:6px; font-size:12px; font-weight:600; margin-bottom:16px; align-items:center; gap:10px; box-shadow:0 1px 2px rgba(245,158,11,0.1);">
-                <i class="fa-solid fa-circle-exclamation" style="font-size:16px; color:#d97706;"></i>
-                <div>
-                    <span style="font-weight:800; color:#b45309; text-transform:uppercase; letter-spacing:0.5px;">Overdue Notice:</span> Work orders highlighted in amber have been pending in "To Do" for more than 7 days.
-                </div>
-            </div>
-
             <div class="mobile-table-hint"><i class="fa-solid fa-arrow-right-arrow-left"></i> Swipe table horizontally to view all columns</div>
             <div class="table-wrap">
                 <table class="table-orders">
@@ -154,7 +145,6 @@ async function loadOrders(page) {
 
     const tbody = document.getElementById('ordersTableBody');
     tbody.innerHTML = '<tr><td colspan="8" style="text-align:center;padding:24px;color:#94a3b8;"><i class="fa-solid fa-circle-notch fa-spin"></i> Loading...</td></tr>';
-    document.getElementById('overdueAlert').style.display = 'none';
 
     try {
         const response = await fetch(ORDERS_DATA_URL + '?' + params.toString(), {
@@ -192,8 +182,6 @@ function renderOrdersTable(orders) {
         return;
     }
 
-    let hasOverdue = false;
-
     // Sort by status (To Do first)
     const sorted = [...orders].sort((a, b) => {
         const orderMap = { 'Scheduled': 0, 'Ongoing': 1, 'Awaiting Signature': 2, 'Completed': 3 };
@@ -219,7 +207,6 @@ function renderOrdersTable(orders) {
 
         const assignedName = order.assigned_to ? order.assigned_to.full_name : '--';
         const overdue = isOverdue(order);
-        if (overdue) hasOverdue = true;
 
         // D2: bucket-colored age badge — rendered UNDER the request number
         // (same pattern as the ICT lists), never as its own column. Terminal
@@ -252,10 +239,6 @@ function renderOrdersTable(orders) {
             </td>
         </tr>`;
     }).join('');
-
-    if (hasOverdue) {
-        document.getElementById('overdueAlert').style.display = 'flex';
-    }
 }
 
 function renderOrdersPagination(total) {

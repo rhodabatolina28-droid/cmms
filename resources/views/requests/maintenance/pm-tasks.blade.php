@@ -45,7 +45,7 @@
     .pm-th-cell-center { padding: 12px 16px; text-align: center; font-size: 10px; color: #475569; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
     .pm-row { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
     .pm-row:hover { background: #f8fafc; }
-    .pm-row-overdue { border-left: 3px solid #f59e0b !important; background: #fffbeb; }
+    .pm-row-overdue { background: #fffbeb; }
     .pm-row-overdue:hover { background: #fef3c7 !important; }
     .pm-td { padding: 14px 16px; }
     .pm-td-link { color: #0038A8; font-weight: 700; text-decoration: none; font-size: 13px; }
