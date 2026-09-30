@@ -138,14 +138,47 @@
         .job-type {
             display: inline-flex;
             align-items: center;
-            min-width: 34px;
+            min-width: 20px;
             justify-content: center;
             border-radius: 4px;
-            padding: 2px 6px;
+            padding: 2px 5px;
             background: #f1f5f9;
             color: #334155;
-            font-size: 10px;
+            font-size: 9px;
             font-weight: 800;
+            letter-spacing: .3px;
+            flex: none;
+        }
+        /* Ticket # line: type chip + number + URGENT all on one aligned row so
+           the badge never drops to its own line (desktop and mobile). */
+        .job-id-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .job-id-link {
+            color: #0038A8;
+            text-decoration: none;
+            font-weight: 800;
+            white-space: nowrap;
+            flex: none;
+        }
+        .job-urgent {
+            display: inline-flex;
+            align-items: center;
+            flex: none;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: .1px;
+            line-height: 1.7;
+            text-transform: uppercase;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            white-space: nowrap;
         }
         .job-meta {
             margin-top: 3px;
@@ -204,12 +237,28 @@
         .table-header.center { text-align: center; }
         .table-header.right { text-align: right; }
         .table-cell { padding: 12px 10px; }
-        .table-cell-bold { padding: 12px 10px; font-weight: 800; color: #0038A8; }
+        .table-cell-bold { padding: 12px 10px; font-weight: 800; color: #0038A8; font-size: 12px; }
         .table-cell-center { padding: 12px 10px; text-align: center; }
         .table-cell-right { padding: 12px 10px; text-align: right; }
         .empty-cell { padding: 30px; text-align: center; color: #94a3b8; }
         .job-row-single { grid-template-columns: 1fr; }
         .job-action-full { width: 100%; }
+
+        /* The ticket # cell keeps chip + number + URGENT badge on one line, so on
+           desktop every column gets a fixed share. Without this the long columns
+           collapse to their narrowest word inside the scrollable panel. Mobile
+           keeps its own 650px scrollable table below. */
+        @media screen and (min-width: 768px) {
+            .table-full { table-layout: fixed; }
+            .table-full th:nth-child(1), .table-full td:nth-child(1) { width: 27%; }
+            .table-full th:nth-child(2), .table-full td:nth-child(2) { width: 15%; }
+            .table-full th:nth-child(3), .table-full td:nth-child(3) { width: 12%; }
+            .table-full th:nth-child(4), .table-full td:nth-child(4) { width: 11%; }
+            .table-full th:nth-child(5), .table-full td:nth-child(5) { width: 20%; }
+            .table-full th:nth-child(6), .table-full td:nth-child(6) { width: 15%; }
+            .status-pill { font-size: 9px; padding: 4px 7px; white-space: normal; }
+            .action-button { font-size: 10.5px; padding: 6px 8px; }
+        }
 
         @media screen and (max-width: 991px) {
             .workbench-grid { grid-template-columns: 1fr !important; }
@@ -360,17 +409,15 @@
                             @forelse($requests as $job)
                                 <tr class="tr-hover-row table-row-border">
                                     <td class="table-cell-bold">
-                                        <div style="display: flex; align-items: center; gap: 6px;">
+                                        <div class="job-id-row">
                                             <span class="job-type">{{ $job->type === 'ICT' ? 'ICT' : 'PM' }}</span>
-                                            <a href="{{ $jobUrl($job) }}" style="color: #0038A8; text-decoration: none; font-weight: 800;">
+                                            <a href="{{ $jobUrl($job) }}" class="job-id-link" title="{{ $job->display_number ?? $job->request_number }}">
                                                 {{ $job->display_number ?? $job->request_number }}
                                             </a>
+                                            @if($job->user?->is_high_official && $job->is_urgent_visible)
+                                                <span class="job-urgent" title="High official request &mdash; serve within the 3-working-day window">Urgent</span>
+                                            @endif
                                         </div>
-                                        @if($job->user?->is_high_official && $job->is_urgent_visible)
-                                            <div style="margin-top: 4px;">
-                                                <span style="display:inline-block;padding:2px 8px;border-radius:10px;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;">Urgent</span>
-                                            </div>
-                                        @endif
                                     </td>
                                     <td class="table-cell">
                                         <div style="font-weight: 600; color: #1e293b; font-size: 13px;" title="{{ $job->description }}">
