@@ -335,7 +335,7 @@
                     <h3 class="table-title">Recent {{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Requests</h3>
                     <div style="font-size: 12px; color: #64748b; margin-top: 3px;">Latest ICT & maintenance activities submitted by your division</div>
                 </div>
-                <a href="{{ route('ict.index') }}" class="link-master">View All Requests &rarr;</a>
+                <a href="{{ route('ict.index') }}" class="link-master">View All Requests</a>
             </div>
             <div class="scroll-x">
                 <table class="table-full">
@@ -443,7 +443,7 @@
                 <div class="queue-panel">
                     <div class="flex-center-sb">
                         <div class="ribbon-label mb-0">Supply Snapshot</div>
-                        <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace &rarr;</a>
+                        <a href="{{ route('requisitions.index') }}" class="assign-link">Open workspace</a>
                     </div>
                     <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;">
                         <a href="{{ route('requisitions.index', ['view' => 'queue', 'status' => 'pending']) }}" class="btn-action-premium" style="margin:0;flex-direction:column;text-align:center;padding:12px 8px;">

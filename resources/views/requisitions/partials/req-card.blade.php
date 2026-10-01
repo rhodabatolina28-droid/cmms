@@ -18,7 +18,7 @@
             <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
             @if($quickActions && strtolower($req->status ?? '') === 'pending')
                 <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
-                <span class="cmms-req-age">@php $reqAge = (int) $req->created_at->diffInDays(now()); @endphp <i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ $reqAge }}d ago</span>
+                <span class="cmms-req-age">@php $reqAge = (int) $req->created_at->diffInDays(now()); @endphp {{ $reqAge }}d ago</span>
             @elseif($quickActions && strtolower($req->status ?? '') === 'approved')
                 <span class="cmms-req-tag cmms-req-tag--issue">Awaiting issue</span>
             @endif

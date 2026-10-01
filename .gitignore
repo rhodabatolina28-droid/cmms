@@ -36,3 +36,12 @@ Thumbs.db
 /storage/d5c_archive_*
 /storage/ux_backup
 /storage/diag
+
+# Local dev tooling — cloudflared binary + tunnel output (not part of the app)
+/tools/cloudflared.exe
+/tools/*.log
+/storage/framework/tunnel.*
+
+# Temporary local responsive-check artifacts
+/storage/shots/
+/storage/y*/

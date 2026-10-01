@@ -262,7 +262,6 @@
 
         /* --- Inline style replacement classes --- */
         .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
-        .icon-blue { margin-right: 10px; color: #0038A8; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .content-padding { padding: 25px 30px; }
         .search-wrapper { position: relative; flex: 1; min-width: 250px; }
@@ -425,7 +424,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="h3-title">
-                    <i class="fa-solid fa-users-gear icon-blue"></i>
                     System User Accounts
                 </h3>
                 <p class="p-subtitle">Manage system access, roles, and office assignments for all personnel.</p>

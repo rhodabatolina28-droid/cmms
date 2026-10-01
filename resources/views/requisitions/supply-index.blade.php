@@ -21,10 +21,6 @@
     .cmms-req-actions--quick .cmms-btn-primary,
     .cmms-req-actions--quick .cmms-btn-success,
     .cmms-req-actions--quick .cmms-btn-danger-ghost { margin:0; }
-    /* Queue table row status accent */
-    .cmms-req-table td:first-child { border-left:3px solid transparent; }
-    .cmms-req-table tr.cmms-req-row--needs-review td:first-child { border-left-color:#d97706; }
-    .cmms-req-table tr.cmms-req-row--awaiting-issue td:first-child { border-left-color:#16a34a; }
     .cmms-req-table tr.cmms-req-row { transition:background .12s ease; }
     .cmms-req-table tr.cmms-req-row:hover td { background:#f8fafc; }
     .cmms-req-table tr.cmms-req-details-row > td { background:#f8fafc; border-bottom:1px solid #e2e8f0; }

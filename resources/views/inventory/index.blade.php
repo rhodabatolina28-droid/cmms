@@ -418,7 +418,6 @@
         .si-defective { background: #fef2f2; color: #dc2626; }
         .card-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
-        .icon-box-blue { margin-right: 10px; color: #0038A8; }
         .btn-group { display: flex; gap: 8px; }
         .btn-import { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .btn-import:hover { background: #dcfce7; }
@@ -612,7 +611,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="card-title">
-                    <i class="fa-solid fa-boxes-stacked icon-box-blue"></i>
                     Supply Asset Registry
                 </h3>
                 <p class="card-subtitle">

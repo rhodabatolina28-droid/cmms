@@ -115,7 +115,6 @@
         #globalAlertError, #globalAlertSuccess { display: none !important; }
 
         .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
-        .icon-blue { margin-right: 10px; color: #0038A8; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .header-action-group { display: flex; align-items: center; gap: 15px; }
         .btn-archive { font-size: 12px; font-weight: 800; color: white; background: #dc2626; border: none; padding: 10px 20px; border-radius: 99px; cursor: pointer; min-height: 44px; transition: background 0.2s; }
@@ -207,7 +206,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="h3-title">
-                    <i class="fa-solid fa-shield-halved icon-blue"></i>
                     System Activity Logs
                 </h3>
                 <p class="p-subtitle">Monitoring real-time administrative actions and system events.</p>

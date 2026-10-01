@@ -16,10 +16,10 @@
 <tr class="cmms-req-row {{ $rowAccent }}" data-status="{{ $statusKey }}">
     <td class="td-nowrap">
         <a href="{{ route('requisitions.show', $req->id) }}" class="cmms-req-id" style="text-decoration:none;" title="Open full record">
-            <i class="fa-solid fa-file-invoice" style="opacity:.6;margin-right:4px;"></i>{{ $reqNo }}
+            {{ $reqNo }}
         </a>
         @if($quickActions && $isPending)
-            <div><span class="cmms-req-age"><i class="fa-regular fa-clock" style="margin-right:3px;"></i>{{ (int) $req->created_at->diffInDays(now()) }}d old</span></div>
+            <div><span class="cmms-req-age">{{ (int) $req->created_at->diffInDays(now()) }}d old</span></div>
         @endif
     </td>
     @if(!empty($showRequester))

@@ -91,7 +91,7 @@
                         <td>{{ $req->assignedTo?->full_name ?? '—' }}</td>
                         <td>
                             <a href="{{ route('maintenance.edit', $req->id) }}" class="btn-conduct">
-                                <i class="fa-solid fa-play"></i> Conduct PM
+                                Conduct PM
                             </a>
                         </td>
                     </tr>

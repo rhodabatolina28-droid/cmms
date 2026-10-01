@@ -254,7 +254,7 @@
                                         {{ $task->display_number ?? $task->request_number }}
                                     </a>
                                     @if($task->should_show_age)
-                                        <br><span class="age-chip age-{{ $task->aging_bucket }}"><i class="fa-regular fa-clock"></i> {{ $task->age_display }}</span>
+                                        <br><span class="age-chip age-{{ $task->aging_bucket }}">{{ $task->age_display }}</span>
                                     @endif
                                 </td>
                                 <td class="pm-td-name">{{ $task->requestor_name }}</td>
@@ -272,7 +272,7 @@
                                 <td class="pm-td-status">
                                     <span class="badge-pm {{ $badgeClass }}">{{ $statusLabel }}</span>
                                     @if($isOverdue)
-                                        <span class="badge-overdue"><i class="fa-solid fa-clock"></i> Overdue</span>
+                                        <span class="badge-overdue">Overdue</span>
                                     @endif
                                 </td>
 
@@ -287,11 +287,11 @@
                                             data-url="{{ $startRoute }}"
                                             data-name="{{ $task->requestor_name }}"
                                             data-number="{{ $task->display_number ?? $task->request_number }}">
-                                            <i class="fa-solid fa-play"></i> Start
+                                            Start
                                         </button>
                                     @else
                                         <a href="{{ $editRoute }}" class="pm-btn-action pm-btn-view">
-                                            <i class="fa-solid fa-arrow-right"></i> View
+                                            View
                                         </a>
                                     @endif
                                 </td>
@@ -330,7 +330,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 showCancelButton: true,
                 confirmButtonColor: '#0038A8',
                 cancelButtonColor: '#64748b',
-                confirmButtonText: '<i class="fa-solid fa-play"></i> Start Now',
+                confirmButtonText: 'Start Now',
                 cancelButtonText: 'Cancel',
                 reverseButtons: true
             }).then(function(result) {

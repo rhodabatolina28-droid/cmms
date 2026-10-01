@@ -244,23 +244,24 @@
         .job-row-single { grid-template-columns: 1fr; }
         .job-action-full { width: 100%; }
 
-        /* The ticket # cell keeps chip + number + URGENT badge on one line, so on
-           desktop every column gets a fixed share. Without this the long columns
-           collapse to their narrowest word inside the scrollable panel. Mobile
-           keeps its own 650px scrollable table below. */
+        /* Responsive columns: the ticket # cell keeps chip + number + URGENT on one
+           line, so every other column gets a readable floor. If the panel gets too
+           narrow (zoom-in, small laptop) the .scroll-x wrapper scrolls instead of
+           squeezing the badge over its neighbour. Mobile keeps its 650px table. */
         @media screen and (min-width: 768px) {
-            .table-full { table-layout: fixed; }
-            .table-full th:nth-child(1), .table-full td:nth-child(1) { width: 27%; }
-            .table-full th:nth-child(2), .table-full td:nth-child(2) { width: 15%; }
-            .table-full th:nth-child(3), .table-full td:nth-child(3) { width: 12%; }
-            .table-full th:nth-child(4), .table-full td:nth-child(4) { width: 11%; }
-            .table-full th:nth-child(5), .table-full td:nth-child(5) { width: 20%; }
-            .table-full th:nth-child(6), .table-full td:nth-child(6) { width: 15%; }
+            .table-full th:nth-child(2), .table-full td:nth-child(2) { min-width: 80px; }
+            .table-full th:nth-child(3), .table-full td:nth-child(3) { min-width: 76px; }
+            .table-full th:nth-child(4), .table-full td:nth-child(4) { min-width: 68px; }
+            .table-full th:nth-child(5), .table-full td:nth-child(5) { min-width: 90px; }
+            .table-full th:nth-child(6), .table-full td:nth-child(6) { min-width: 105px; }
             .status-pill { font-size: 9px; padding: 4px 7px; white-space: normal; }
             .action-button { font-size: 10.5px; padding: 6px 8px; }
         }
 
-        @media screen and (max-width: 991px) {
+        /* Stack the two workbench cards earlier (1149px) so the Assigned Job Orders
+           table always has a panel wide enough for its columns — no horizontal
+           scroll between ~992px and 1150px (small laptop / zoomed-in screens). */
+        @media screen and (max-width: 1149px) {
             .workbench-grid { grid-template-columns: 1fr !important; }
         }
         @media screen and (max-width: 767px) {
@@ -438,7 +439,7 @@
                                     </td>
                                     <td class="table-cell-right" style="white-space: nowrap;">
                                         <a href="{{ $jobUrl($job) }}" class="action-button">
-                                            {{ $jobAction($job) }} <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i>
+                                            {{ $jobAction($job) }}
                                         </a>
                                     </td>
                                 </tr>
@@ -471,7 +472,7 @@
                                 {{ $job->type === 'ICT' ? 'Section 5 / IT signature' : 'Technician signature' }}
                             </div>
                         </div>
-                        <a href="{{ $jobUrl($job) }}" class="action-button job-action-full">Complete <i class="fa-solid fa-arrow-right" style="font-size: 10px;"></i></a>
+                        <a href="{{ $jobUrl($job) }}" class="action-button job-action-full">Complete</a>
                     </div>
                 @empty
                     <div class="empty-state" style="padding: 24px 12px; text-align: center; color: #94a3b8; font-size: 12px; border: 1px dashed #e2e8f0; border-radius: 8px; background: #f8fafc;">

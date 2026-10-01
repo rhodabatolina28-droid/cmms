@@ -214,11 +214,11 @@ function renderOrdersTable(orders) {
         const ageColors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
         const ageC = ageColors[order.age_bucket] || ageColors.green;
         const ageBadge = order.age_display
-            ? `<div style="margin-top:3px;"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:9px;font-size:9px;font-weight:700;background:${ageC[0]};color:${ageC[1]};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${order.age_display}</span></div>`
+            ? `<div style="margin-top:3px;"><span style="display:inline-flex;align-items:center;gap:3px;padding:2px 8px;border-radius:9px;font-size:9px;font-weight:700;background:${ageC[0]};color:${ageC[1]};white-space:nowrap;">${order.age_display}</span></div>`
             : '';
 
         const rowClass = overdue ? 'tr tr-overdue' : 'tr';
-        const overdueTag = overdue ? `<span class="status-pill pill-overdue"><i class="fa-solid fa-clock"></i> Overdue</span>` : '';
+        const overdueTag = overdue ? `<span class="status-pill pill-overdue">Overdue</span>` : '';
 
         return `<tr class="${rowClass}">
             <td class="td td-num"><a href="/requests/maintenance/${order.id}/edit">${order.display_number || order.request_number}</a>${ageBadge}</td>
@@ -231,10 +231,10 @@ function renderOrdersTable(orders) {
             <td class="td" style="text-align:center;">
                 ${order.status === 'Scheduled' && order.assigned_to && order.assigned_to.id == CURRENT_USER_ID
                     ? `<a href="/requests/maintenance/${order.id}/conduct" class="action-btn">
-                         <i class="fa-solid fa-play"></i> Start
+                         Start
                        </a>`
                     : `<a href="/requests/maintenance/${order.id}/edit" class="action-btn">
-                         <i class="fa-solid fa-arrow-right"></i> View
+                         View
                        </a>`}
             </td>
         </tr>`;

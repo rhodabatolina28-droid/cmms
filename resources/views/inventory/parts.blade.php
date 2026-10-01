@@ -619,7 +619,7 @@
     <div class="parts-card">
         <div class="parts-card-head">
             <div>
-                <h3><i class="fa-solid fa-boxes-stacked"></i> Parts &amp; Consumables</h3>
+                <h3>Parts &amp; Consumables</h3>
                 <p id="partsHeadSub">Supplies ledger — {{ $totalParts }} item(s) · {{ $totalOnHand }} total on-hand{!! !empty($isSuperAdminView) ? ' · Read-only' : '' !!}</p>
             </div>
         </div>

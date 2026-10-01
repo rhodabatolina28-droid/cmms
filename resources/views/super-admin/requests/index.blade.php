@@ -224,7 +224,6 @@
         .btn-action-modern:active {
             transform: scale(0.97);
         }
-        .sa-title-icon { margin-right: 10px; color: #0038A8; }
         .sa-export-btn { padding: 10px 20px; }
         .sa-search-wrap { position: relative; flex: 1; min-width: 300px; }
         .sa-search-icon { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: #94a3b8; font-size: 12px; }
@@ -239,7 +238,32 @@
         .gov-table-premium tbody { transition: opacity 0.15s ease; }
         .gov-table-premium tbody.fading { opacity: 1; }
         .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
-        .sa-td-desc { font-size: 11px; color: #64748b; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        /* Request ID line: number + URGENT badge on one aligned row (never drops
+           below) — same treatment as the IT dashboard / admin tables. */
+        .sa-id-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .sa-id-row .sa-td-id { white-space: nowrap; flex: none; }
+        .sa-urgent {
+            display: inline-flex;
+            align-items: center;
+            flex: none;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            line-height: 1.7;
+            text-transform: uppercase;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            box-shadow: 0 1px 2px rgba(185, 28, 28, 0.08);
+            white-space: nowrap;
+        }
         .sa-td-office { font-weight: 700; color: #475569; }
         .sa-td-type { font-weight: 700; font-size: 12px; color: #475569; }
         .sa-type-pill { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
@@ -326,7 +350,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="h3-title">
-                    <i class="fa-solid fa-clipboard-list sa-title-icon"></i>
                     Master List of Requests
                 </h3>
                 <p class="p-subtitle">Centralized monitoring of all office maintenance and ICT support tickets.</p>
@@ -542,17 +565,16 @@ function renderRequestsTable(requests) {
         if (req.should_show_age) {
             const ageColors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
             const [ageBg, ageFg] = ageColors[req.aging_bucket] || ageColors.green;
-            ageChip = `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:${ageBg};color:${ageFg};white-space:nowrap;"><i class="fa-regular fa-clock"></i> ${req.age_display}</div>`;
+            ageChip = `<div style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:${ageBg};color:${ageFg};white-space:nowrap;">${req.age_display}</div>`;
         }
-
-        const descClean = (req.description || '').replace(/"/g, '&quot;');
 
         return `<tr class="${rowClass}">
             <td>
-                <div class="sa-td-id">${req.display_number || req.request_number}</div>
-                ${req.user && req.user.is_high_official && ['Pending','Ongoing','Scheduled','Awaiting Parts','Awaiting Signature','Referred - External'].includes(req.status) ? '<div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>' : ''}
+                <div class="sa-id-row">
+                    <div class="sa-td-id">${req.display_number || req.request_number}</div>
+                    ${req.user && req.user.is_high_official && ['Pending','Ongoing','Scheduled','Awaiting Parts','Awaiting Signature','Referred - External'].includes(req.status) ? '<span class="sa-urgent" title="High official request &mdash; serve within the 3-working-day window">Urgent</span>' : ''}
+                </div>
                 ${ageChip}
-                <div class="sa-td-desc" title="${descClean}">${req.description || ''}</div>
             </td>
             <td class="sa-td-type">
                 ${req.linked_asset?.category ? `<span class="sa-type-category">${req.linked_asset.category}</span>` : '<span style="color:#94a3b8;">ICT</span>'}

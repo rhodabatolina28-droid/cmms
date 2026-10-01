@@ -17,7 +17,6 @@
     .status-ongoing { background: #dcfce7; color: #166534; }
         .status-completed { background: #f1f5f9; color: #475569; }
         .card-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
-        .icon-box-blue { margin-right: 10px; color: #0038A8; }
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .inline-form { display:inline; }
         .pc-start-wrap { padding: 14px 24px 0; display: flex; justify-content: flex-end; }
@@ -71,7 +70,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="card-title">
-                    <i class="fa-solid fa-clipboard-check icon-box-blue"></i>
                     Physical Count
                 </h3>
                 <p class="card-subtitle">

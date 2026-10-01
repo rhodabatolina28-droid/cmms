@@ -330,11 +330,11 @@
                                 @endphp
                                 @if($canStart)
                                     <a href="{{ route('maintenance.start', $order->id) }}" class="btn-wo-action">
-                                        <i class="fa-solid fa-play"></i> Start
+                                        Start
                                     </a>
                                 @else
                                     <a href="{{ route('maintenance.edit', $order->id) }}" class="btn-wo-action">
-                                        <i class="fa-solid fa-arrow-right"></i> {{ $order->status === 'Scheduled' ? 'View' : 'Update' }}
+                                        {{ $order->status === 'Scheduled' ? 'View' : 'Update' }}
                                     </a>
                                 @endif
                             </td>

@@ -180,7 +180,6 @@
             border-color: #0038A8;
             box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.05);
         }
-        .ad-title-icon { margin-right: 10px; color: #0038A8; }
         .ad-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
         .ad-em { font-weight: 800; color: #0038A8; }
         .ad-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
@@ -192,8 +191,33 @@
         .ad-filter-select { width: 180px; }
         .ad-filter-status { width: 160px; }
         .ad-table-wrap { overflow-x: auto; }
+        /* Request ID line: number + URGENT badge on one aligned row (never drops
+           below) — same treatment as the IT dashboard Assigned Job Orders table. */
+        .ad-id-row {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: nowrap;
+        }
+        .ad-id-row .ad-td-id { white-space: nowrap; flex: none; }
+        .ad-urgent {
+            display: inline-flex;
+            align-items: center;
+            flex: none;
+            padding: 2px 8px;
+            border-radius: 12px;
+            font-size: 9px;
+            font-weight: 800;
+            letter-spacing: 0.4px;
+            line-height: 1.7;
+            text-transform: uppercase;
+            background: #fef2f2;
+            color: #b91c1c;
+            border: 1px solid #fecaca;
+            box-shadow: 0 1px 2px rgba(185, 28, 28, 0.08);
+            white-space: nowrap;
+        }
         .ad-td-id { font-weight: 800; color: #0038A8; }
-        .ad-td-sub { font-size: 11px; color: #64748b; font-style: italic; }
         .ad-td-type { font-weight: 600; color: #475569; }
         .ad-td-name { color: #1e293b; font-weight: 700; }
         .ad-td-office { color: #475569; }
@@ -269,7 +293,6 @@
                 letter-spacing: 0.3px !important; 
             }
             .ad-td-id { font-size: 12px !important; }
-            .ad-td-sub { font-size: 10px !important; }
             .ad-td-type { font-size: 11px !important; }
             .ad-td-name { font-size: 11px !important; }
             .ad-td-office { font-size: 11px !important; }
@@ -382,7 +405,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="ad-title">
-                    <i class="fa-solid fa-clipboard-list ad-title-icon"></i>
                     {{ Auth::user()->department ? 'Department' : (Auth::user()->office ? 'Office' : 'Division') }} Request Management
                 </h3>
                 <p class="ad-subtitle">
@@ -444,12 +466,13 @@
                             data-category="{{ $req->linkedAsset?->category ?? '' }}"
                         >
                             <td>
-                                <div class="ad-td-id">{{ $req->display_number ?? $req->request_number }}</div>
-                                @if($req->user?->is_high_official && $req->is_urgent_visible)
-                                    <div style="display:inline-block;margin-top:4px;padding:3px 10px;border-radius:12px;font-size:10px;font-weight:800;letter-spacing:.6px;text-transform:uppercase;background:#fef2f2;color:#b91c1c;border:1px solid #fecaca;box-shadow:0 1px 2px rgba(185,28,28,.08);white-space:nowrap;">Urgent</div>
-                                @endif
+                                <div class="ad-id-row">
+                                    <span class="ad-td-id">{{ $req->display_number ?? $req->request_number }}</span>
+                                    @if($req->user?->is_high_official && $req->is_urgent_visible)
+                                        <span class="ad-urgent" title="High official request &mdash; serve within the 3-working-day window">Urgent</span>
+                                    @endif
+                                </div>
                                 <div>@include('partials.ticket-age-chip', ['req' => $req])</div>
-                                <div class="ad-td-sub">#{{ $req->id }}</div>
                             </td>
                             <td class="ad-td-name">{{ $req->requestor_name }}</td>
                             <td class="ad-td-type">{{ $req->linkedAsset?->category ?? '—' }}</td>

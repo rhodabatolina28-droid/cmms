@@ -142,7 +142,7 @@
         if (!bucket || !display) return '';
         const colors = { red: ['#fee2e2','#991b1b'], orange: ['#ffedd5','#9a3412'], yellow: ['#fef9c3','#854d0e'], green: ['#ecfdf5','#047857'] };
         const c = colors[bucket] || colors.green;
-        return '<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:9px;font-size:9px;font-weight:700;background:' + c[0] + ';color:' + c[1] + ';white-space:nowrap;margin-left:6px;"><i class="fa-regular fa-clock"></i> ' + display + '</span>';
+        return '<span style="display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:9px;font-size:9px;font-weight:700;background:' + c[0] + ';color:' + c[1] + ';white-space:nowrap;margin-left:6px;">' + display + '</span>';
     }
 
     // D2: day-cell chip border tint per aging bucket

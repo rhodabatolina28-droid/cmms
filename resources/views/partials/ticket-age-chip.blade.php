@@ -10,6 +10,6 @@
     };
 @endphp
 <span style="display:inline-flex;align-items:center;gap:4px;margin-top:4px;padding:2px 9px;border-radius:10px;font-size:10px;font-weight:700;background:{{ $ageBg }};color:{{ $ageFg }};white-space:nowrap;">
-    <i class="fa-regular fa-clock"></i> {{ $req->age_display }}
+    {{ $req->age_display }}
 </span>
 @endif

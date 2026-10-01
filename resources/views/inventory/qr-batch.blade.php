@@ -291,7 +291,6 @@
         .empty-state p { font-size: 14px; }
 
         /* ===== INLINE STYLE REPLACEMENTS ===== */
-        .icon-blue { color: #0038A8; margin-right: 8px; }
         .icon-gray { color: #94a3b8; }
         .search-wide { width: 280px; }
         .mobile-table-hint { display: none; }
@@ -330,7 +329,7 @@
 <!-- SCREEN HEADER -->
 <div class="page-header">
     <div>
-        <h1><i class="fa-solid fa-qrcode icon-blue"></i>Batch QR Sticker Print</h1>
+        <h1>Batch QR Sticker Print</h1>
         <p>Piliin ang mga assets, tapos i-click ang Print. Icut ang bawat sticker bago idikit sa asset.</p>
     </div>
     <div class="header-actions">
