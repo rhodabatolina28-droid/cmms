@@ -33,7 +33,13 @@ class UpdateUserAction
             $validated['role'] = 'admin';
             $validated['can_supply'] = true;
         } else {
-            $validated['can_supply'] = $request->boolean('can_supply');
+            // The Edit System Account modal has no can_supply control, so a plain
+            // $request->boolean('can_supply') used to wipe a Division Admin's
+            // Supply Officer rights on every save. Keep the stored flag unless the
+            // request really carries a value; any other role always clears it.
+            $validated['can_supply'] = $request->has('can_supply')
+                ? $request->boolean('can_supply')
+                : ($validated['role'] === 'admin' ? (bool) $user->can_supply : false);
         }
 
         $previous = [

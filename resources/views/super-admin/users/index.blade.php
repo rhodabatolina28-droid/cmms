@@ -204,6 +204,17 @@
             animation: modalPop 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
         }
 
+        /* The <form> sits between .modal-card and .modal-body/.modal-foot, so it
+           must continue the flex column — otherwise its auto height lets the tall
+           body push the footer out of the card and overflow:hidden clips the
+           Save / Discard buttons (worse when zoomed in). */
+        .modal-card > form {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            min-height: 0;
+        }
+
         .modal-header {
             padding: 18px 24px;
             background: #f8fafc;
@@ -293,7 +304,7 @@
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
         .form-group-sm { margin-bottom: 4px; }
         .form-help { margin: 4px 0 0; font-size: 11px; color: #64748b; line-height: 1.4; }
-        .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; }
+        .modal-body { padding: 20px 24px; overflow-y: auto; flex: 1; min-height: 0; }
         .modal-foot { padding: 14px 24px; background: #f8fafc; border-top: 1px solid #e2e8f0; display: flex; justify-content: flex-end; gap: 8px; flex-shrink: 0; }
         .btn-cancel { padding: 10px 20px; }
         .btn-submit { padding: 10px 25px; }
