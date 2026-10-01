@@ -14,7 +14,7 @@
 <article class="cmms-req-card @if($quickActions && strtolower($req->status ?? '') === 'pending') cmms-req-card--needs-review @elseif($quickActions && strtolower($req->status ?? '') === 'approved') cmms-req-card--awaiting-issue @endif" data-status="{{ $statusKey }}">
     <div>
         <div class="cmms-req-card-top">
-            <span class="cmms-req-id"><i class="fa-solid fa-file-invoice" style="opacity:0.6;margin-right:4px;"></i>{{ $reqNo }}</span>
+            <span class="cmms-req-id">{{ $reqNo }}</span>
             <span class="cmms-status-badge cmms-status-{{ $statusKey }}">{{ $req->status }}</span>
             @if($quickActions && strtolower($req->status ?? '') === 'pending')
                 <span class="cmms-req-tag cmms-req-tag--review">Needs review</span>
