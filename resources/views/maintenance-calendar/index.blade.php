@@ -39,7 +39,6 @@
             font-size: 13px;
             color: #64748b;
         }
-        .sa-title-icon { margin-right: 10px; color: #0038A8; }
 
         @media screen and (max-width: 767px) {
             .card-header-accent { padding: 16px 18px !important; flex-direction: column; gap: 10px; align-items: flex-start; }
@@ -58,7 +57,6 @@
         <div class="card-header-accent">
             <div>
                 <h3 class="h3-title">
-                    <i class="fa-solid fa-calendar-alt sa-title-icon"></i>
                     Maintenance Calendar
                 </h3>
                 <p class="p-subtitle">Unified view of all preventive maintenance schedules and ICT service requests.</p>

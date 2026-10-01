@@ -603,7 +603,7 @@
         }
 
         const btnText = e.event_type === 'pm' ? 'View Work Order' : 'View ICT Request';
-        const btn = '<a href="' + e.details_url + '" class="cal-detail-btn"><i class="fa-solid fa-arrow-right"></i> ' + btnText + '</a>';
+        const btn = '<a href="' + e.details_url + '" class="cal-detail-btn">' + btnText + '</a>';
 
         body.innerHTML = badges + table + divisionsHtml + ticketsHtml + assignHtml + btn;
         card.classList.add('show');
