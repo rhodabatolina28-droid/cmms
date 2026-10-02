@@ -1,0 +1,186 @@
+# UX Defect Fix Plan — Mobile & Desktop (October 2026)
+
+> **Created:** 2026-10-02
+> **Branch:** `develop` (base commit `78daf0b`)
+> **Scope:** 7 reported defects — concentrated on **mobile**, mayroon ding desktop/layout side-effects.
+> **Rule:** bawat phase = **isang hiwalay na commit** (madaling i-rollback via `git revert <hash>`), may verification bago i-push.
+
+---
+
+## 1. Defect Register (7 bugs, lahat may napatunayang root cause)
+
+| # | Bug (reported) | Root cause (verified) | Sakop |
+|---|---|---|---|
+| **1** | Parts & Consumables — hindi gumagana ang actions (`⋯`) sa mobile | Ang `⋯` menu ay nasa **loob ng horizontally-scrollable table** (`.table-wrap-parts { overflow-x: auto }` L284, `.parts-card { overflow: hidden }` L9) kaya **na-clip** ang dropdown; sabay ang `#dropdownBackdrop` (fixed, `z-index: 999`, L887) ay nasa ibabaw ng menu → ang tap ay tumatama sa backdrop → `closeAllDropdowns()`. Desktop: `.actions-dropdown { display: none }` (L99) → **mobile-only** ang sakit | Mobile |
+| **2** | Physical Count —(a) hindi nawawala ang na-count na asset; (b) bumabalik sa taas pagkatapos mag-mark | (a) `ShowPhysicalCountAction` ay ipinapasa ang **lahat** ng assets/groups kahit `Ongoing`; disabled lang ang buttons ng counted — may `$pending` na pero hindi ginamit sa render. (b) `markAsset()` / `markMany()` ay **`location.reload()`** → nawawala ang scroll position, profile card, at "Other Assets of X" | Mobile + Desktop |
+| **3** | ICT form — walang auto-fill ng na-scan na asset; Cam/Scan button hindi gumagana | (a) `@vite(['resources/js/qr-scanner.js'])` ay nag-build ng **0-byte** file (`public/build/assets/qr-scanner-BvRk9kiK.js` = 0 bytes) → `window.AssetScanner` **undefined** → `new AssetScanner()` ay **nag-throw** → hindi na-abot ang `scanBtn.addEventListener`. (b) `CreateIctFormAction` L44-46 ay **nag-aalis** ng `asset_id` kapag wala sa `$myAssets` (naka-`whereNotIn(['For Repair','For Disposal','Scrapped'])` L27/L36) → kaya kung For Repair na ang asset, `$preselectedAssetId = null` | Mobile (button hidden ≥768px) |
+| **4** | "Register New Personnel" — hindi makita ang **Create Account** button (mobile) | Ang `<form id="addPersonnelForm">` (partial `_personnel_modals.blade.php` L7) ay anak ng `.modal-card` (L3) **pero hindi flex** → sa mobile global CSS (`.modal-card { display:flex; flex-direction:column; max-height:90vh }` `_phone-portrait.css` L206-213) ang `.modal-body` + `.modal-footer` (L77-80) ay **lumalampas** sa `max-height` at **kinakain ng `overflow:hidden`** | Mobile (+ desktop kapag matangkad ang content) |
+| **5** | Super-admin dashboard — MTBF/MTTR cards overflow / siksik | `.analytics-title` (L708, L745) ay may `flex-wrap: nowrap` + `margin-left:auto` month `<select>`; ang value rows ay `space-between` na may **nowrap chips** → lumalampas sa box | Mobile + Desktop |
+| **6** | PM Work Orders — blank ang "Assigned To"; wala ang stats cards | (a) **LIVE DB evidence:** `pm_schedules` id=1 focus = `CONCILIATION AND MEDIATION DIVISION`, `assigned_it_id = NULL`; auto-PM: **36 total, 6 unassigned — lahat CMD, status = Scheduled**. Ang `GeneratePMScheduleService` L350-353 ay **ni-null** ang `assigned_it_id` sa cycle advance, habang `AssignPMScheduleITAction` L44-50 ay nag-u-update **lang** kapag `office = current_focus_division`. (b) Ang 5 stats cards ay nasa IT PM Tasks lang | Mobile + Desktop |
+| **7** | "Remove all icons — text only" sa mga na-scan / per-role cards | Maraming `<i class="fa-solid …">` pa sa scan flow at iba pang list pages | Lahat |
+
+---
+
+## 2. Phase Overview
+
+| Phase | Nilalaman | Risk | Backend touch? |
+|---|---|---|---|
+| **0** | Pre-flight baseline (test run, DB before-values, branch check) | — | Wala |
+| **1** | Personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | Mababa (front-end only) | Wala |
+| **2** | Physical Count: i-hide ang counted + in-place mark (walang reload) + icons + mobile polish | Katamtaman | May (1 Action + JS) |
+| **3** | QR/Cam button fix (0-byte bundle) + ICT auto-fill ng na-scan | Katamtaman | May (1 Action + JS build) |
+| **4** | PM Work Orders: assignment back-fill + hindi na mag-reset + stats cards | Katamtaman | May (2 Actions + Service) |
+
+**Bawal galawin sa lahat ng phase:** print/PDF/archive logic, at ang mga date-dependent na existing test.
+
+---
+
+## 3. PHASE 0 — Pre-flight (walang code change)
+
+1. `php artisan test` → i-record ang baseline (**476 passed / 3 pre-existing date-dependent failures**: `CsmMonthlyReportTest` ×2, `PMCalendarTest` ×1).
+2. Read-only DB snapshot para sa before/after ng Bug 6:
+   - total auto-generated PM requests, bilang ng `assigned_to IS NULL` (target fix: 6 → 0 pagkatapos i-assign).
+3. Kumpirmahin: branch `develop`, working tree clean (`git status --porcelain` = walang output).
+
+---
+
+## 4. PHASE 1 — Front-end only (walang backend risk)
+
+**Target commit:** `fix(ux): phase 1 — personnel modal footer, KPI responsive, parts mobile actions, scan icons`
+
+### 1a. Personnel modal footer (Bug 4)
+**Files:** `resources/views/admin/personnel/index.blade.php` (CSS), `resources/views/partials/admin/_personnel_modals.blade.php` (markup reference)
+
+**Dagdag sa `@section('styles')` ng `admin/personnel/index.blade.php`:**
+```css
+/* Ipagpatuloy ang flex chain hanggang sa footer (para hindi ma-clip) */
+.modal-card { display: flex; flex-direction: column; max-height: 90vh; }
+.modal-card > form { display: flex; flex-direction: column; flex: 1 1 auto; min-height: 0; min-width: 0; }
+.modal-card > form > .modal-body,
+.modal-card > .modal-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; }
+.modal-card > form > .modal-footer,
+.modal-card > .modal-footer { flex: 0 0 auto; }
+.modal-overlay { overflow-y: auto; }
+```
+Sinasaklaw nito ang **dalawang modal**: `#addPersonnelModal` (may `<form>`, L2-83) at `#personnelModal` (direkta ang body, L86+).
+
+**Audit (pareho ang one-line rule kung kailangan):**
+- `resources/views/partials/super-admin/_user_modals.blade.php` (modal-card L3/L87, form L7/L104)
+- `resources/views/super-admin/users/index.blade.php` (may nang-existing fixes na: rule sa L211-215, `.modal-body` L307)
+- `resources/views/admin/requests/index.blade.php` (`.modal-card` L139-147 na may `overflow:hidden`)
+
+### 1b. MTBF/MTTR responsive (Bug 5)
+**File:** `resources/views/dashboard/super-admin.blade.php`
+
+| Ano | Pagbabago |
+|---|---|
+| `.analytics-title` (L708, L745) | Alisin ang `flex-wrap: nowrap` → `flex-wrap: wrap; row-gap: 8px;` |
+| Month `<select>` (L714-721) | ≤900px → sariling linya, `width: 100%`, `min-height: 44px` |
+| Diff chips (L730-732, L760-762) | `white-space: normal` (payagang mag-wrap) |
+| Value rows (L723-740, L753-767) | `flex-wrap: wrap; gap: 6px` |
+| `.analytics-box` (L374) | `min-width: 0` (safety laban sa overflow) |
+| Charts | Panatilihin ang 260px `chart-box-trend` + `maintainAspectRatio: false` |
+
+**Verify sa:** 1440 / 1224 / 900 / 767 / 430 px (walang horizontal overflow sa `document.documentElement.scrollWidth`).
+
+### 1c. Parts & Consumables mobile actions (Bug 1, pinaka-kritikal)
+**File:** `resources/views/inventory/parts.blade.php`
+
+- `toggleDropdown(event, btn)` (L1050) → **i-portal ang menu sa `document.body`**: `position: fixed`, coords mula `btn.getBoundingClientRect()`, **clamp** sa viewport, **flip pataas** kapag kulang ang espasyo sa ibaba, `z-index: 1300` (sa taas ng backdrop 999).
+- `closeAllDropdowns()` (L1061) → ibalik ang menu sa row at linisin ang inline styles/classes.
+- ≤768px → gawing **bottom sheet**: full-width, naka-pinned sa ibaba, items ≥52px, `max-height: 60vh; overflow-y: auto` — malaking touch target.
+- Panatilihin ang `#dropdownBackdrop` (L887) para sa click-away.
+
+### 1d. Scan-page icons → text only (Bug 7, bahagi)
+**Files:** `resources/views/scan/asset-info.blade.php`, `resources/views/scan/scan-preview.blade.php`, `resources/views/scan/notice.blade.php`
+
+| File | Linyang aalisin ang `<i>` |
+|---|---|
+| `asset-info.blade.php` | 133 `fa-arrow-left` · 138 `fa-qrcode` · 189 `fa-calendar-check` · 273 `fa-ticket` · 291 `fa-layer-group` · 307 `fa-clock-rotate-left` · 327 `fa-screwdriver-wrench` · 332 `fa-eye` · 336 `fa-house` |
+| `scan-preview.blade.php` | 40 `fa-qrcode` · 56 `fa-check-double` · 60 `fa-triangle-exclamation` · 77 `fa-chevron-right` |
+| `notice.blade.php` | 22 `.icon-wrap` + `$icon` · 25 `fa-house` |
+
+Panatilihin ang layout/spacing; **teksto lang**. (Ang `notice.blade.php` `.icon-wrap` CSS sa L13 ay iaalis din dahil walang laman na.)
+
+### Phase 1 verification
+1. Headless footer/menu measurement: `FOOTER VISIBLE: true` at `MENU VISIBLE: true` sa 1224×805, 684×505, 430×780.
+2. Click-test ng `⋯`: nagbubukas at tumatakbo ang Edit / Stock In / Stock Out / History / Units.
+3. `php artisan test` → walang **bagong** failure (baseline pa rin).
+4. Screenshots (temp sa `storage/`, lilinisin bago ang commit).
+
+---
+
+## 5. PHASE 2 — Physical Count (cohesive change: backend + frontend)
+
+**Target commit:** `fix(physical-count): hide counted assets, in-place mark without reload, text-only actions`
+
+**Files:** `app/Actions/PhysicalCount/ShowPhysicalCountAction.php`, `resources/views/inventory/physical-count-show.blade.php`, (kung kailangan) `app/Actions/PhysicalCount/MarkPhysicalCountAssetAction.php`
+
+| Item | Pagbabago |
+|---|---|
+| **2a** I-hide ang na-count | Sa `ShowPhysicalCountAction`: kapag `$session->status === 'Ongoing'` → i-filter ang `$groups` sa **custodian na may pending lang**, at sa loob ng group → **pending assets lang** (gamitin ang `$pending`). Panatilihin ang `$summary` (all-assets) para sa stats bar. **Hindi** gagalawin ang Print/Archive/Export. Kapag `Completed` → ipakita lahat (report view) |
+| **2b** Huwag agad mag-close | `markAsset()` / `markMany()`: **in-place update** ng row (pill → Operational/Non-Operational, i-disable ang buttons), i-update ang group counters + stats bar + `COUNTED_IDS`; alisin ang row kung nasa pending-only mode. **Alisin ang `location.reload()`**. Manatiling bukas ang profile card para tuloy-tuloy sa iba pang asset ng custodian |
+| **2c** Icons + mobile polish | Alisin ang icons sa listahan (kasama ang ✅/❌ emoji sa mark buttons kung meron) → teksto lang; panatilihin ang 44-46px touch targets; ayusin ang `.stats-bar` (2×2 sa mobile); full-width ang "Scan QR"/"Complete Session" |
+
+**Verification:**
+1. Bagong feature tests: (i) `Ongoing` → naka-hide ang counted rows at kumpleto ang summary; (ii) `Completed` → buo ang listahan; (iii) mark endpoint hindi nabago ang behavior.
+2. Live: i-mark ang isang asset → **hindi** bumabalik sa taas, nag-update ang row, nanatili ang card.
+
+---
+
+## 6. PHASE 3 — Scan/Camera + ICT auto-fill (end-user side)
+
+**Target commit:** `fix(scan): rebuild qr-scanner bundle and preselected scanned asset on ICT form`
+
+**Files:** `resources/js/qr-scanner.js`, `resources/views/partials/ict/_ict_scripts.blade.php`, `resources/views/requests/ict/form.blade.php`, `app/Actions/ICT/CreateIctFormAction.php`
+
+| Item | Pagbabago |
+|---|---|
+| **3a** Cam button | Sa `resources/js/qr-scanner.js`: idagdag ang `if (typeof window !== 'undefined') { window.AssetScanner = AssetScanner; }` (para hindi ma-tree-shake ang bundle) + **`npm run build`** → tiyakin na `public/build/assets/qr-scanner-*.js` **> 0 bytes** at defined ang `window.AssetScanner` |
+| **3b** Auto-fill | `CreateIctFormAction` L41-47: kung may `asset_id` at pag-aari ng user (validated gaya ng sa `linkedAssetValidationError`) → **i-push sa `$myAssets`** sa halip na gawing `null`; sa `form.blade.php` L279 → suportahan din ang `request('asset_id')` sa `selected`. Panatilihin ang JS path (URL param → `ictAutoFillFromAsset`) |
+| **3c** Guard | Magdagdag ng smoke test/verification na hindi na-empty ang built bundle para hindi na maulit |
+
+**Verification:** live mobile flow — scan-preview → "Report Repair" → **naka-preselect at auto-filled** ang asset; ang Scan button ay nagbubukas ng camera modal at nakaka-detect ng QR.
+
+---
+
+## 7. PHASE 4 — PM Work Orders (System Admin)
+
+**Target commit:** `fix(pm-orders): back-fill IT assignment for scheduled auto-PMs and add stats cards`
+
+**Files:** `app/Actions/PMSchedule/AssignPMScheduleITAction.php`, `app/Services/GeneratePMScheduleService.php`, `app/Actions/PMSchedule/GetOrdersDataAction.php`, `resources/views/pm-schedules/orders.blade.php`
+
+| Item | Pagbabago |
+|---|---|
+| **4a** Back-fill ng assignment | `AssignPMScheduleITAction` L44-50: i-update ang **lahat ng `is_auto_generated` requests ng schedule na `status = Scheduled`** (hindi pa nasimulan) kahit anong division (hindi lang `current_focus_division`), + ang non-terminal ng focus division gaya ng dati. Ibalik ang `updated_count` sa toast |
+| **4b** Hindi na mag-reset | `GeneratePMScheduleService` L350-353: huwag i-null ang `assigned_it_id` kung may bagong gawain pa; fallback sa L191 → kung `NULL`, ipakita ang **"Unassigned — needs assignee"** sa UI imbes na `--` |
+| **4c** Inline assign | Maglagay ng assign control (dropdown ng IT + Save) sa PM Work Orders page para maisaayos agad sa isang lugar |
+| **4d** Stats cards | `GetOrdersDataAction` → idagdag ang `stats` (Total / To Do / Ongoing / Completed / Overdue, gamit ang `is_aging_overdue` gaya ng `ListPmTasksAction`) — **additive** lang sa JSON; i-render ang 5 cards sa `orders.blade.php` (markup mula `pm-tasks.blade.php`), mobile-friendly (2 columns ≤767px → 2/2/1) |
+
+**Verification:** (i) i-test na ang 6 na CMD "To Do" ay nagkakaroon ng assignee pagkatapos i-assign (DB before/after); (ii) feature test sa `AssignPMScheduleITAction`; (iii) tugma ang stats sa listahan sa bawat filter; (iv) mobile screenshots.
+
+---
+
+## 8. Cross-cutting Rules
+
+- **Guardrails:** walang gagalawin sa print/PDF/archive; **additive** lang ang JSON changes; visual fix = CSS/JS only.
+- **Rollback:** bawat phase = isang commit → `git revert <hash>` kung may aberya.
+- **Verification toolkit:** headless Chrome measurement (VISIBLE flags + bounding boxes), screenshots sa `storage/` (temp, lilinisin), at `php artisan test` kada phase.
+- **Cleanup:** iaalis ang lahat ng temp artifacts bago mag-final commit; isasama ang `public/build` kapag may JS/CSS entry change.
+- **Walang DB migration** sa buong plano — pure bug fix/UX.
+
+---
+
+## 9. Open Decisions (kailangan ng kumpirmasyon sa tamang phase)
+
+1. **Bug 7 scope** (Phase 1): kasama na ang **scan-flow pages**. Kung isasama rin ang **"My Assets"** at **lahat ng list-page cards**, sabihin bago magsimula ang Phase 1.
+2. **Bug 6b/6c** (Phase 4): **sticky** ba ang IT assignment (hindi na ni-null sa cycle advance) o sapat na ang **inline assign sa PM Work Orders**?
+
+---
+
+## 10. Progress Log
+
+| Petsa | Phase | Status |
+|---|---|---|
+| 2026-10-02 | Plan doc | ✅ Ginawa |
+| — | Phase 1 | ⏳ Susunod |
