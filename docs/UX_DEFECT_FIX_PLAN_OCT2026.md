@@ -225,8 +225,28 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 |---|---|---|
 | 2026-10-02 | Plan doc | ✅ Ginawa — `c5670ae` |
 | 2026-10-02 | **Phase 1** — personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | ✅ **DONE & VERIFIED** — `996e4ca` |
+| 2026-10-02 | Phase 1 docs (ebidensya + hashes) | ✅ — `94a8112` |
+| 2026-10-02 | **Phase 1b** — post-scan (QR) pages mobile UX: isang back action, walang sayang na footer space | ✅ **DONE & VERIFIED** — `369edab` |
 | — | Phase 2 — Physical Count (hide counted + walang reload + icons + mobile polish) | ⏳ Susunod |
 | — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+
+---
+
+## 11. Local testing (Cloudflare tunnel)
+
+Ang tunnel URL ay **nagbabago tuwing i-restart** ang `cloudflared` (trycloudflare quick tunnel).
+
+| Hakbang | Command / Location |
+|---|---|
+| Simulan ang web server | `php artisan serve` (port 8000) |
+| Simulan ang tunnel | `Start-Process -FilePath 'tools\cloudflared.exe' -ArgumentList 'tunnel','--url','http://localhost:8000','--no-autoupdate' -NoNewWindow -RedirectStandardError 'storage\framework\tunnel.err'` |
+| Kunin ang bagong URL | `Select-String -Path storage\framework\tunnel.err -Pattern 'https://[a-z0-9-]+\.trycloudflare\.com'` |
+| I-update ang `.env` | `APP_URL=<bagong URL>` |
+| I-clear ang config cache | `php artisan config:clear` |
+| **I-regenerate ang QR codes** | `App\Services\QrCodeService::regenerateForAll()` — kailangan ito dahil ang QR ay nag-e-encode ng `config('app.url') . '/r/{asset_id}'` (406 assets) |
+| I-verify | `Invoke-WebRequest https://<url>/login` → 200 |
+
+> ⚠️ **Tandaan:** kapag nag-restart ang tunnel at nagbago ang URL, laging `config:clear` + QR regenerate, kung hindi luma ang URL na naka-encode sa mga sticker.
