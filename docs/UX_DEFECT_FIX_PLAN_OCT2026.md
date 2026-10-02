@@ -151,6 +151,25 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 
 ---
 
+## 4c. PHASE 1c — Parts modals + My Assets mobile UX — DONE (2026-10-02)
+
+| Item | Bago | Ngayon |
+|---|---|---|
+| Parts modal-box sa mobile (Edit Part · Stock In · Stock Out · History · Units) | `width: 95-96vw`, halos edge-to-edge; hindi nasusunod ang padding | `max-width: 430px` + overlay padding → may malinaw na side margins; full-height flex chain (box → form → body scroll + foot pinned) kaya laging maabot ang Save/Cancel |
+| Parts × close button | Global `button { width: 100% }` rule ay **nag-stretch sa ×** — sumasakop sa modal header · desktop rule walang fixed size | Naka-pin: `parts` 34px desktop / 36px mobile; `assets` 40px mobile · + systemic exclusion ng **17 close-button classes** sa `layouts/app.blade.php` global rule |
+| Units table sa loob ng modal | Pinipilit sa `min-width: 720px` → horizontal-scroll sa maliit na modal | Rule na-scoped lang sa main registry table (`.table-wrap-parts`); wrap nang maayos sa loob ng modal |
+| Stock Out serial picker | `44px` min-height rule tumatama pati sa `<input type="checkbox">` → nag-wrap ang serial row sa 2 linya | Checkbox excluded → `18px` eksakto; serial = **1 linya + ellipsis** gaya ng desktop |
+| My Assets (`profile/assets`, lahat ng roles na may assigned assets) | Overlay walang scroll, walang max-height → na-clip ang modal sa maikling screen; × naka-stretch sa 100% | Scrollable overlay + `max-height: calc(100dvh - 20px)`; × naka-pin sa 40px |
+| Inventory detail (Upload/Scrap) + Physical Count scanner modal + User dashboard modal | Walang scroll / `overflow: hidden` → nawawala ang action buttons sa maikling screen | Max-height + scroll sa overlay at box; stacked full-width footer buttons ≤480px |
+
+**Files (6):** `inventory/parts.blade.php` · `inventory/detail.blade.php` · `inventory/physical-count-show.blade.php` · `profile/assets.blade.php` (My Assets) · `dashboard/user.blade.php` · `layouts/app.blade.php` (systemic 17-class close-button exclusion).
+
+**Ebidensya (headless Chrome, tunay na Blade output):** parts → `zeroOverflow: true` sa open modals · serial single-line ellipsis · checkbox 18px; dynamic close-button test sa 17 classes → `pageStretched: []` (**walang naka-stretch**); `php artisan view:cache` OK.
+
+> **Paliwanag sa ScanFlowTest:** kapag tumatakbo nang **mag-isa** (`--filter=Scan`, 5 tests), nag-fail ito sa `Data truncated for column 'status'` — enum mismatch ito sa mismong test fixture (`status='Serviceable'`, galing sa commit `a07ef39`), **hindi dulot ng Phase 1/1b/1c** (pawang CSS-only). Sa **buong suite** pumapasa ito: **3 failed / 476 passed (1825 assertions)** = eksaktong baseline (3 pre-existing date-dependent: `CsmMonthlyReportTest` ×2, `PMCalendarTest` ×1).
+
+---
+
 ## 5. PHASE 2 — Physical Count (cohesive change: backend + frontend)
 
 **Target commit:** `fix(physical-count): hide counted assets, in-place mark without reload, text-only actions`
@@ -227,11 +246,12 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 | 2026-10-02 | **Phase 1** — personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | ✅ **DONE & VERIFIED** — `996e4ca` |
 | 2026-10-02 | Phase 1 docs (ebidensya + hashes) | ✅ — `94a8112` |
 | 2026-10-02 | **Phase 1b** — post-scan (QR) pages mobile UX: isang back action, walang sayang na footer space | ✅ **DONE & VERIFIED** — `369edab` |
+| 2026-10-02 | **Phase 1c** — Parts modals (Edit/Stock In/Out/History/Units) + My Assets mobile UX: fixed ×, scrollable modals, serial picker 1-linya | ✅ **DONE & VERIFIED** — `7d652ae` |
 | — | Phase 2 — Physical Count (hide counted + walang reload + icons + mobile polish) | ⏳ Susunod |
 | — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ---
 
