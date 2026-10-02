@@ -255,11 +255,11 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 | 2026-10-02 | Phase 1 docs (ebidensya + hashes) | ✅ — `94a8112` |
 | 2026-10-02 | **Phase 1b** — post-scan (QR) pages mobile UX: isang back action, walang sayang na footer space | ✅ **DONE & VERIFIED** — `369edab` |
 | 2026-10-02 | **Phase 1c** — Parts modals (Edit/Stock In/Out/History/Units) + My Assets mobile UX: fixed ×, scrollable modals, serial picker 1-linya | ✅ **DONE & VERIFIED** — `7d652ae` |
-| — | Phase 2 — Physical Count (hide counted + walang reload + icons + mobile polish) | ⏳ Susunod |
+| 2026-10-02 | **Phase 2** — Physical Count: hide counted · walang reload · scan card v2 (custodian-ordered, compact) · auto-close + deretso sa susunod na scan | ✅ **DONE & VERIFIED** — `719045b` |
 | — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ---
 
