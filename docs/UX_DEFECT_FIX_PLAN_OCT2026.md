@@ -201,8 +201,10 @@ Panatilihin ang layout/spacing; **teksto lang**. (Ang `notice.blade.php` `.icon-
 
 | Petsa | Phase | Status |
 |---|---|---|
-| 2026-10-02 | Plan doc | ✅ Ginawa |
-| 2026-10-02 | **Phase 1** — personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | ✅ **DONE & VERIFIED** |
+| 2026-10-02 | Plan doc | ✅ Ginawa — `c5670ae` |
+| 2026-10-02 | **Phase 1** — personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | ✅ **DONE & VERIFIED** — `996e4ca` |
 | — | Phase 2 — Physical Count (hide counted + walang reload + icons + mobile polish) | ⏳ Susunod |
 | — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
+
+**Rollback:** `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
