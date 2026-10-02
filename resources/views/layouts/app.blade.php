@@ -855,8 +855,10 @@
             .modal-card { width: 95vw !important; max-width: 95vw !important; }
             .modal-footer { flex-direction: column !important; gap: 10px !important; }
             /* —— ALL BUTTONS — full width (exclude topbar icon buttons, SweetAlert buttons,
-               and table action/finalize buttons — those keep their inline size) —— */
-            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny):not(.act-btn):not(.cmms-req-details-btn):not(.pr-finalize-btn):not(.toggle-btn-sm):not(#btnToggleStatus),
+               table action/finalize buttons, AND all modal close (×) buttons —
+               those keep their natural inline size so hindi nila sinasakop ang
+               modal header) —— */
+            button:not(#sidebarToggle):not(#notifBell):not(.mobile-close-btn):not(.btn-dropdown-toggle):not(.swal2-confirm):not(.swal2-cancel):not(.swal2-deny):not(.act-btn):not(.cmms-req-details-btn):not(.pr-finalize-btn):not(.toggle-btn-sm):not(#btnToggleStatus):not(.modal-close):not(.ad-modal-close):not(.close-icon-btn):not(.close-btn):not(.btn-close):not(.btn-close-lg):not(.cal-modal-close):not(.cal-detail-close):not(.scrap-close-btn):not(.close-scrapped-btn):not(.scanner-modal-close):not(.close-scanner-btn):not(.close-add-personnel-btn):not(.close-modal-btn):not(.close-view-modal-btn):not(.close-history-btn):not(.close-asset-btn):not(.close-transfer-btn):not(.close-upload-btn):not(.modal-cancel-x),
             .btn, .btn-action-premium, .action-button-premium,
             .btn-view-modern, .btn-action-modern { width: 100% !important; }
 

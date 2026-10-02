@@ -50,7 +50,7 @@
     .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
     .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; }
     .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
-    .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; padding: 4px; border-radius: 6px; }
+    .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; border-radius: 8px; width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
     .modal-close:hover { background: #f1f5f9; color: #0f172a; }
     .modal-body { padding: 20px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
@@ -318,12 +318,19 @@
             max-width: 100% !important;
             border-radius: 0 0 10px 10px !important;
         }
-        .parts-table colgroup {
+        /* Ang min-width ay para lang sa MAIN registry table. Ang mga table sa
+           loob ng modal (hal. Units) ay hindi dapat pilitin sa 720px —
+           dati sumasabog ito at nagiging horizontal-scroll sa maliit na modal. */
+        .table-wrap-parts .parts-table colgroup {
             display: none !important;
+        }
+        .table-wrap-parts .parts-table {
+            table-layout: auto !important;
+            min-width: 720px !important;
+            width: 100% !important;
         }
         .parts-table {
             table-layout: auto !important;
-            min-width: 720px !important;
             width: 100% !important;
         }
         .parts-table th,
@@ -394,43 +401,128 @@
             justify-content: center !important;
         }
 
-        /* Modals on mobile */
+        /* ── Modals on mobile ──
+           Dati `width: 95vw` → halos edge-to-edge at mukhang masyadong
+           malapad. Ngayon: ang overlay ang may padding at ang box ang
+           sumusunod (100% - padding), kaya may malinaw na side margins. */
         .form-grid {
             grid-template-columns: 1fr !important;
         }
+        .modal-overlay {
+            align-items: center !important;
+            padding: 16px !important;
+            overflow-y: auto !important;
+        }
         .modal-box {
-            width: 95vw !important;
-            max-width: 95vw !important;
-            max-height: 90vh !important;
-            margin: 10px auto !important;
+            /* Maliit at malinaw ang margins — hindi edge-to-edge at hindi
+               full-screen sheet sa mobile. */
+            width: 100% !important;
+            max-width: 430px !important;
+            max-height: calc(100dvh - 96px) !important;
+            margin: auto !important;
+            border-radius: 14px !important;
         }
         .modal-head {
             padding: 14px 16px !important;
         }
+        .modal-head h3 {
+            font-size: 15px !important;
+        }
+        /* Malaking touch target ang × (44px) */
+        .modal-box > .modal-head > .modal-close,
+        .modal-head .modal-close {
+            width: 36px !important;
+            min-width: 36px !important;
+            max-width: 36px !important;
+            height: 36px !important;
+            min-height: 36px !important;
+            max-height: 36px !important;
+            flex: 0 0 36px !important;
+            align-self: center !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 10px !important;
+            background: #f1f5f9 !important;
+            color: #475569 !important;
+            font-size: 20px !important;
+            line-height: 1 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }
+        .modal-head .modal-close:active {
+            background: #e2e8f0 !important;
+        }
         .modal-body {
-            padding: 14px !important;
+            padding: 14px 16px !important;
         }
         .modal-foot {
-            padding: 12px 14px !important;
+            padding: 12px 16px !important;
             flex-wrap: wrap !important;
-            gap: 8px !important;
+            gap: 10px !important;
         }
         .modal-foot button,
         .modal-foot .btn-navy,
         .modal-foot .btn-ghost {
-            min-height: 44px !important;
-            flex: 1 1 120px !important;
+            min-height: 48px !important;
+            flex: 1 1 140px !important;
             justify-content: center !important;
             text-align: center !important;
+            font-size: 14px !important;
         }
-        .form-field input,
+        .form-field label {
+            font-size: 12.5px !important;
+        }
+        /* ── Stock Out (Issue): serial picker rows ──
+           BUG: ang rule na ito ay tumatama rin sa <input type="checkbox">
+           kaya ang maliit na check ay nagiging 44px+ (may 10px 12px padding)
+           at nagwa-wrap ang serial row sa dalawang linya sa mobile.
+           FIX: i-exclude ang checkbox/radio sa 44px rule. */
+        .form-field input:not([type="checkbox"]):not([type="radio"]),
         .form-field select {
             min-height: 44px !important;
             font-size: 14px !important;
+            padding: 10px 12px !important;
+        }
+        /* Bawat serial ay ISANG linya lang (gaya ng desktop) na may ellipsis
+           kapag mahaba ang serial + property number. */
+        #s_units_picker label {
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            white-space: nowrap !important;
+            overflow: hidden !important;
+            text-overflow: ellipsis !important;
+            min-height: 40px !important;
+            padding: 8px 4px !important;
+            line-height: 20px !important;
+            font-size: 12.5px !important;
+            font-family: monospace !important;
+            color: #334155 !important;
+        }
+        /* Maliit at eksaktong sukat ang checkbox — hindi na ini-stretch. */
+        #s_units_picker input[type="checkbox"].stock-unit-chk {
+            width: 18px !important;
+            height: 18px !important;
+            min-width: 18px !important;
+            min-height: 18px !important;
+            max-width: 18px !important;
+            max-height: 18px !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            flex: 0 0 18px !important;
+            accent-color: #0038A8 !important;
         }
         #unitsModal .modal-box {
-            width: 96vw !important;
-            max-width: 96vw !important;
+            width: 100% !important;
+            max-width: 430px !important;
+        }
+        /* Units table: hindi na pinipilit sa 720px — umiikot na lang nang
+           maayos sa loob ng modal (mas madaling basahin sa phone). */
+        #unitsModal .parts-table th,
+        #unitsModal .parts-table td {
+            white-space: normal !important;
+            padding: 8px 10px !important;
         }
         #unitsSearch {
             min-height: 44px !important;
@@ -440,6 +532,26 @@
         #addUnitForm input {
             min-height: 44px !important;
             font-size: 14px !important;
+        }
+        #addUnitForm > div:first-child {
+            grid-template-columns: 1fr !important;
+        }
+    }
+
+    /* ── Maliliit na phone: stacked na full-width ang footer buttons
+          para hindi masikip ang Cancel + Save sa isang linya. ── */
+    @media screen and (max-width: 480px) {
+        .modal-overlay { padding: 10px !important; }
+        .modal-box { max-height: calc(100dvh - 20px) !important; }
+        .modal-foot {
+            flex-direction: column !important;
+            align-items: stretch !important;
+        }
+        .modal-foot button,
+        .modal-foot .btn-navy,
+        .modal-foot .btn-ghost {
+            width: 100% !important;
+            flex: 0 0 auto !important;
         }
     }
 
@@ -506,6 +618,34 @@
     .modal-box { border-radius: 16px; overflow: hidden; }
     .modal-head { background: #f8fafc; padding: 16px 20px; }
     .modal-head h3 { font-size: 15px; }
+
+    /* ── BUG FIX (lahat ng viewport): hindi maabot ang Save/Cancel ──
+       Ang .modal-box ay may `overflow: hidden` + `max-height`; ang .modal-body
+       ay walang sariling scroll, kaya ang matangkad na form ay na-clip at
+       tuluyang nawawala ang .modal-foot (buttons). Ipagpatuloy ang flex chain:
+       box → form → body(scroll) + foot(pinned). Nasa lahat ng breakpoint ito
+       para hindi na maulit (desktop kapag mahaba ang nilalaman, mobile dahil
+       1-column ang form grid). */
+    .modal-box {
+        display: flex;
+        flex-direction: column;
+    }
+    .modal-box > form {
+        display: flex;
+        flex-direction: column;
+        flex: 1 1 auto;
+        min-height: 0;
+    }
+    .modal-box > .modal-body,
+    .modal-box > form > .modal-body {
+        flex: 1 1 auto;
+        min-height: 0;
+        overflow-y: auto;
+    }
+    .modal-box > .modal-foot,
+    .modal-box > form > .modal-foot {
+        flex: 0 0 auto;
+    }
 
     @media screen and (max-width: 900px) { .parts-stats { grid-template-columns: repeat(2, 1fr); } }
 </style>
@@ -730,7 +870,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="partModalTitle">Add Part</h3>
-            <button class="modal-close" onclick="closeModal('partModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
+            <button class="modal-close" type="button" onclick="closeModal('partModal')" aria-label="Close">&times;</button>
         </div>
         <form id="partForm">
             <input type="hidden" name="_method" value="post" id="partMethod">
@@ -803,7 +943,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="stockModalTitle">Stock In</h3>
-            <button class="modal-close" onclick="closeModal('stockModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
+            <button class="modal-close" type="button" onclick="closeModal('stockModal')" aria-label="Close">&times;</button>
         </div>
         <form id="stockForm">
             <div class="modal-body">
@@ -873,7 +1013,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="historyTitle">History</h3>
-            <button class="modal-close" onclick="closeModal('historyModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
+            <button class="modal-close" type="button" onclick="closeModal('historyModal')" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body" id="historyBody" style="max-height:50vh;overflow-y:auto;">
             <div class="empty-state"><div class="big"><i class="fa-solid fa-circle-notch fa-spin"></i></div>Loading...</div>
@@ -885,7 +1025,7 @@
     <div class="modal-box">
         <div class="modal-head">
             <h3 id="unitsModalTitle">Units</h3>
-            <button class="modal-close" onclick="closeModal('unitsModal')" style="width:32px !important;height:32px !important;min-width:32px !important;min-height:32px !important;max-width:32px !important;max-height:32px !important;padding:0 !important;line-height:1 !important;font-size:20px !important;display:inline-flex !important;align-items:center !important;justify-content:center !important;">&times;</button>
+            <button class="modal-close" type="button" onclick="closeModal('unitsModal')" aria-label="Close">&times;</button>
         </div>
         <div class="modal-body">
             <div style="display:flex; gap:8px; align-items:center; margin-bottom:12px; flex-wrap:wrap;">
@@ -1481,7 +1621,7 @@
         stockPart = part;
         document.getElementById('stockModalTitle').textContent = mode === 'in' ? 'Stock In' : 'Stock Out (Issue)';
         document.getElementById('stockQtyLabel').textContent = mode === 'in' ? 'Qty to add *' : 'Qty to issue *';
-        document.getElementById('stockSubmit').innerHTML = mode === 'in' ? '<i class="fa-solid fa-arrow-down" style="margin-right:6px;"></i>Stock In' : '<i class="fa-solid fa-box-open" style="margin-right:6px;"></i>Issue';
+        document.getElementById('stockSubmit').textContent = mode === 'in' ? 'Stock In' : 'Issue';
         document.getElementById('stockCurrent').textContent = 'Current on-hand: ' + part.on_hand_qty + ' ' + part.unit;
         document.getElementById('s_qty').value = '';
         document.getElementById('s_ref').value = '';

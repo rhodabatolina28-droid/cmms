@@ -113,8 +113,11 @@
 .btn-del-attach:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* ===== MODALS ===== */
-.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px); }
-.modal-box { background: #fff; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; margin: 20px; box-shadow: 0 20px 40px rgba(0,0,0,0.2); }
+/* ── BUG FIX (mobile): hindi maabot ang Upload/Cancel sa maikling screen ──
+   Walang scroll ang overlay at walang max-height ang box → na-clip ang
+   .modal-actions. Ngayon: scrollable ang overlay at ang box mismo. */
+.modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 9999; align-items: center; justify-content: center; backdrop-filter: blur(2px); overflow-y: auto; padding: 12px; box-sizing: border-box; }
+.modal-box { background: #fff; border-radius: 12px; padding: 24px; width: 100%; max-width: 460px; margin: 0 auto; box-shadow: 0 20px 40px rgba(0,0,0,0.2); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box; }
 .modal-title { font-weight: 800; font-size: 16px; color: #1e293b; margin-bottom: 16px; }
 .modal-row { margin-bottom: 14px; }
 .modal-row-last { margin-bottom: 18px; }
@@ -139,8 +142,11 @@
 .upload-filename { margin-top: 6px; font-size: 12px; font-weight: 700; color: #0038A8; }
 
 /* ===== SCRAP MODAL ===== */
-.scrap-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; padding: 20px; backdrop-filter: blur(2px); }
-.scrap-box { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; overflow: hidden; box-shadow: 0 20px 40px rgba(0,0,0,0.25); }
+/* ── BUG FIX (mobile): ang `overflow: hidden` + walang max-height ay nag-clip
+   sa Confirm/Cancel. Ngayon: max-height + scroll (nananatili ang rounded
+   corners dahil scroll container pa rin ang box). ── */
+.scrap-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6); z-index: 9999; align-items: center; justify-content: center; padding: 12px; backdrop-filter: blur(2px); overflow-y: auto; box-sizing: border-box; }
+.scrap-box { background: #fff; border-radius: 12px; width: 100%; max-width: 480px; box-shadow: 0 20px 40px rgba(0,0,0,0.25); max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box; margin: 0 auto; }
 .scrap-header { background: #7f1d1d; color: white; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; }
 .scrap-header-title { font-weight: 800; font-size: 15px; }
 .scrap-close-btn { background: none; border: none; color: white; cursor: pointer; font-size: 16px; }
@@ -205,6 +211,14 @@
     .attach-actions { width: 100%; }
     .btn-view, .btn-del-attach { flex: 1; text-align: center; padding: 10px !important; }
     .back-link { font-size: 13px !important; padding: 10px 14px !important; background: #f8fafc !important; border: 1px solid #e2e8f0 !important; border-radius: 6px !important; min-height: 44px !important; }
+    /* Modals: naka-top para laging maabot ang buttons; full-width ang actions. */
+    .modal-overlay, .scrap-overlay { align-items: flex-start !important; }
+    .modal-actions, .scrap-actions { flex-direction: column !important; gap: 8px !important; margin-top: 16px !important; }
+    .modal-actions .btn-modal-cancel, .modal-actions .btn-modal-primary,
+    .scrap-actions .btn-scrap-cancel, .scrap-actions .btn-scrap-confirm {
+        width: 100% !important; justify-content: center !important; min-height: 48px !important; font-size: 14px !important;
+    }
+    .upload-zone { padding: 22px 14px !important; }
 }
 @media screen and (max-width: 480px) {
     .detail-wrapper { padding: 10px 8px !important; }

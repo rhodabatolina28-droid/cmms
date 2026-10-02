@@ -85,6 +85,12 @@
             align-items: center;
             justify-content: center;
             z-index: 9999;
+            /* ── BUG FIX (mobile): scrollable ang overlay para hindi ma-clip ang
+               modal-box sa maikling screen (ang box mismo ay may sariling
+               max-height + overflow-y). ── */
+            overflow-y: auto;
+            padding: 12px;
+            box-sizing: border-box;
         }
         .modal-overlay.show {
             display: flex;
@@ -206,9 +212,35 @@
             .card-header-accent { flex-direction: column !important; gap: 10px !important; }
             .table-wrap, .scroll-x { overflow-x: auto !important; -webkit-overflow-scrolling: touch !important; }
             input, select, textarea { min-height: 48px !important; font-size: 15px !important; }
-            .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
+            .btn, button:not(#sidebarToggle):not(#notifBell):not(.swal2-confirm):not(.swal2-cancel):not(.modal-close) { min-height: 48px !important; width: 100% !important; font-size: 14px !important; }
             .warranty-chip { font-size: 10px !important; }
             .modal-category { font-size: 13px !important; }
+            /* Modal: naka-top sa maikling screen + full-width ang footer buttons */
+            .modal-overlay { align-items: flex-start !important; padding: 10px !important; }
+            .modal-box { margin: 0 auto !important; max-height: calc(100dvh - 20px) !important; }
+            /* ── Ang × close button ──
+               BUG: may global `width: 100% !important` → naging 290px (67%) ang ×,
+               sinasakop ang modal title. FIX: i-pin ang min/max-width + flex —
+               hindi na ma-stretch kahit anong width rule. */
+            .modal-header .modal-close,
+            .modal-box > .modal-close {
+                width: 40px !important;
+                min-width: 40px !important;
+                max-width: 40px !important;
+                height: 40px !important;
+                min-height: 40px !important;
+                max-height: 40px !important;
+                flex: 0 0 40px !important;
+                align-self: center !important;
+                padding: 0 !important;
+                margin: 0 !important;
+                font-size: 20px !important;
+                line-height: 1 !important;
+                border-radius: 10px !important;
+            }
+            /* Huwag hayaang maipit ang title ng header */
+            .modal-header { gap: 10px !important; align-items: flex-start !important; }
+            .modal-title { flex: 1 1 auto !important; min-width: 0 !important; word-break: break-word !important; }
         }
     </style>
 @endsection

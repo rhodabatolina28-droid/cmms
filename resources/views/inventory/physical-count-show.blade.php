@@ -71,8 +71,11 @@
     .asset-table td { padding: 10px 12px; border-bottom: 1px solid #f1f5f9; }
     .asset-table tr:hover td { background: #f8fafc; }
 
-    .scanner-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 16px; }
-    .scanner-modal { background: white; border-radius: 12px; width: 100%; max-width: 420px; overflow: hidden; animation: fadeInSlide 0.3s ease-out; }
+    /* ── BUG FIX (mobile): ang scanner modal ay may `overflow: hidden` at walang
+       max-height → sa maikling screen (o landscape) na-clip ang Cancel/Scan
+       buttons. Ngayon: max-height + scroll ang box at ang overlay. ── */
+    .scanner-modal-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0,0,0,0.6); z-index: 9999; display: flex; align-items: center; justify-content: center; padding: 12px; overflow-y: auto; box-sizing: border-box; }
+    .scanner-modal { background: white; border-radius: 12px; width: 100%; max-width: 420px; max-height: calc(100dvh - 24px); overflow-y: auto; box-sizing: border-box; animation: fadeInSlide 0.3s ease-out; }
     .scanner-modal-header { padding: 16px 20px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; }
     .scanner-modal-header h4 { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
     .scanner-modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #64748b; padding: 0 4px; }
@@ -100,6 +103,10 @@
         .card-body-content { padding: 12px 14px; }
         .asset-table { font-size: 11px; }
         .asset-table th, .asset-table td { padding: 6px 8px; }
+        /* Scanner modal: naka-top + maliit na video para laging kita ang buttons */
+        .scanner-modal-overlay { align-items: flex-start !important; }
+        #scannerContainer { max-height: 44vh; }
+        .scanner-modal-body button, .scanner-modal-body .btn { min-height: 48px !important; }
     }
     /* Hide QR scanner on desktop — phone only */
     @media (min-width: 768px) {
