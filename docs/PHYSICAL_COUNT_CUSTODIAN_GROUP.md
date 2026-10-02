@@ -53,7 +53,7 @@ Feature is confined to the Supply Office workflow — no other role sees any cha
 
 ### 4.2 `resources/views/inventory/physical-count-show.blade.php`
 - Group checklist UI: custodian header + per-asset Present/Missing buttons + **"Mark all as Present (n)"** bulk button.
-- `markMany(ids)`: sequential POSTs to the **existing** `/mark` endpoint, `Swal` progress, 422 = skip, **one `location.reload()` at the end** (prevents reload storm), summary ("4 marked, 1 already counted").
+- `markMany(ids)`: sequential POSTs to the **existing** `/mark` endpoint, `Swal` progress, summary ("4 marked, 1 already counted"). **Updated (Phase 2, `719045b`):** wala nang `location.reload()` — **in-place DOM update** (group counters, stats bar, pagtanggal ng na-count na row); ang 422 ("already counted") ay **ina-adopt na counted** (`pcAdoptCounted`) para walang buttons na maiiwan at agad magsasara ang scanned card.
 - Flat search results show the custodian name per item when several users match the query.
 
 ### 4.3 `resources/views/inventory/qr-batch.blade.php`
@@ -104,7 +104,7 @@ Mobile-only (`max-width: 767px` media query) — **desktop view untouched**:
 - Counted rows: green/red card tint for instant visual state
 - **Custodian header:** stacks; "Mark all Present" full-width 44px touch target
 - **Sticky search/scan bar** — pinned below the sticky topbar (top: 58px), always reachable while walking
-- **Scroll retention:** `markAsset`/`markMany` save `scrollY` to `sessionStorage`; restored on `DOMContentLoaded` — user stays at the group they were counting after reload
+- **Scroll retention:** hindi na kailangan ang reload/`sessionStorage` — **in-place update** na ngayon ang `markAsset`/`markMany` (Phase 2, `719045b`) + scroll compensation (hindi tumatalon pataas); isinasara at awtomatikong binubuksan muli ang camera sa scanned card kapag ubos na ang pending
 - Verified: blade compiles, zero-width chars 0, PhysicalCountGroupTest 12/12 passed
 
 ### Phase 9: Button polish + pagination split (user feedback) — ✅ TESTED
