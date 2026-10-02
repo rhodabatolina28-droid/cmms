@@ -10,8 +10,7 @@
         body {
             font-family: Arial, sans-serif;
             background: #f1f5f9;
-            padding: 16px;
-            min-height: 100vh;
+            padding: 16px 16px 0;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -90,7 +89,7 @@
         .history-desc { color: #64748b; font-size: 12px; }
 
         .actions {
-            padding: 16px 24px 24px; display: flex; flex-direction: column; gap: 10px;
+            padding: 16px 24px 18px; display: flex; flex-direction: column; gap: 10px;
         }
         .btn {
             display: flex; align-items: center; justify-content: center; gap: 8px;
@@ -104,32 +103,49 @@
         .btn-outline { background: white; color: #475569; border: 1px solid #cbd5e1; }
         .btn-outline:hover { background: #f8fafc; }
 
+        /* Back affordance — text-only, malaking touch target (mobile-friendly) */
         .back-link {
-            align-self: flex-start; margin-bottom: 12px; max-width: 480px; width: 100%;
+            align-self: stretch; margin-bottom: 12px; max-width: 480px; width: 100%;
         }
         .back-link a {
-            color: #475569; text-decoration: none; font-size: 13px; font-weight: 600;
-            display: flex; align-items: center; gap: 6px;
+            display: flex; align-items: center; justify-content: center;
+            min-height: 44px; padding: 10px 16px; border-radius: 8px;
+            background: #fff; border: 1px solid #cbd5e1;
+            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 700;
         }
-        .back-link a:hover { color: #0038A8; }
+        .back-link a:hover { color: #0038A8; border-color: #0038A8; background: #f8faff; }
+        .back-link a:active { background: #f1f5f9; }
 
+        /* Compact footer — walang sayang na blangkong espasyo sa ibaba
+           (tinanggal din ang min-height:100vh sa body). */
         .footer {
-            text-align: center; padding: 20px; font-size: 11px; color: #94a3b8;
-            text-transform: uppercase; letter-spacing: 1px; max-width: 480px;
+            text-align: center; padding: 10px 12px 12px; font-size: 11px; color: #94a3b8;
+            text-transform: uppercase; letter-spacing: 1px; max-width: 480px; width: 100%;
         }
 
-        @media screen and (max-width: 480px) {
-            body { padding: 8px; }
+        @media screen and (max-width: 768px) {
+            body { padding: 10px 10px 0; }
             .row { flex-direction: column; gap: 2px; }
             .label { width: auto; }
             .pm-row { flex-wrap: wrap; gap: 4px; }
             .history-item { word-break: break-word; }
+            /* Mobile/tablet: tipirin ang vertical space — walang dobleng back
+               action, masikip na padding at 48px na touch target sa actions. */
+            .back-link { margin-bottom: 8px; }
+            .actions { padding: 12px 16px 16px; gap: 8px; }
+            .btn { min-height: 48px; font-size: 15px; }
+            .footer { padding: 8px 8px 10px; font-size: 10px; letter-spacing: 0.4px; }
         }
     </style>
 </head>
 <body>
+    @php
+        $dashboardRoute = $user->role === 'super_admin'
+            ? 'dashboard.super-admin'
+            : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it');
+    @endphp
     <div class="back-link">
-        <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}">Back to Dashboard</a>
+        <a href="{{ route($dashboardRoute) }}">Back to Dashboard</a>
     </div>
 
     <div class="card">
@@ -320,21 +336,26 @@
             @endforelse
         </div>
 
+        @php
+            $hasPmAction = $upcomingPM && $upcomingPM->type === 'Preventive Maintenance';
+            $hasProfileAction = $user->role === 'super_admin';
+        @endphp
+        @if($hasPmAction || $hasProfileAction)
+        {{-- "Back to Dashboard" ay nasa ITAAS na (isang beses lang) para hindi
+             dumoble at hindi humaba ang ibaba ng page sa mobile view. --}}
         <div class="actions">
-            @if($upcomingPM && $upcomingPM->type === 'Preventive Maintenance')
+            @if($hasPmAction)
                 <a href="{{ route('maintenance.edit', $upcomingPM->id) }}" class="btn btn-success">
                     Conduct PM
                 </a>
             @endif
-            @if($user->role === 'super_admin')
+            @if($hasProfileAction)
             <a href="{{ route('super_admin.inventory.detail', $asset->asset_id) }}" class="btn btn-primary">
                 View Full Inventory Profile
             </a>
             @endif
-            <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}" class="btn btn-outline">
-                Back to Dashboard
-            </a>
         </div>
+        @endif
     </div>
 
     <div class="footer">

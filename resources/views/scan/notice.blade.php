@@ -14,6 +14,13 @@
         p { font-size: 14px; color: #64748b; line-height: 1.5; }
         .btn { display: inline-flex; align-items: center; gap: 6px; margin-top: 22px; padding: 12px 24px; background: #0038A8; color: white; text-decoration: none; border-radius: 8px; font-size: 14px; font-weight: 700; min-height: 44px; }
         .btn:hover { background: #002d8c; }
+
+        /* Mobile: full-width at 48px na touch target para madaling pindutin */
+        @media screen and (max-width: 768px) {
+            body { padding: 10px; }
+            .card { padding: 28px 20px; }
+            .btn { display: flex; width: 100%; justify-content: center; min-height: 48px; font-size: 15px; }
+        }
     </style>
 </head>
 <body>

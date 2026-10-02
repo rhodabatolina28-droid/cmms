@@ -129,6 +129,28 @@ Panatilihin ang layout/spacing; **teksto lang**. (Ang `notice.blade.php` `.icon-
 
 ---
 
+## 4b. PHASE 1b — Post-scan (QR) pages mobile UX — DONE (2026-10-02)
+
+Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan/scan-preview`, `scan/notice`) ay nakikita ng **lahat ng roles** (IT → `asset-info`, user → `scan-preview`, hindi-assigned/out-of-scope → `notice`).
+
+| Item | Bago | Ngayon |
+|---|---|---|
+| Back action (`asset-info`) | **Doble**: maliit na text link sa itaas (walang touch target) + button sa ibaba | **Isang** 44px touch chip sa itaas (full-width sa mobile) |
+| Back action (`scan-preview`) | **WALA** — walang paraan pabalik sa dashboard | Bagong 44px chip → `route('dashboard.user')` |
+| Blank space sa ibaba | `body { min-height: 100vh }` + malaking footer padding → sayang na blangkong espasyo | Inalis ang `min-height: 100vh`; compact footer → **`blankBelow: 0`** |
+| Footer lines (`scan-preview`) | **2** footer notes sa loob ng card | **1** compact na linya sa labas ng card |
+| Touch targets | 48px | **48-52px**, full-width sa mobile |
+| Breakpoint | `480px` (hindi tumatama sa 500px-wide na layout) | **`768px`** (tugma sa global mobile breakpoint ng app) |
+| Icons | may icons noon | text-only (`faElements: 0`) |
+
+**Ebidensya (headless Chrome sa tunay na Blade output, `innerWidth: 500`):** `backLink h=44` · `backToDashboardCount=1` (walang doble) · `footer h=29 / padBottom 10px` · `blankBelow=0` · `bodyMinH=0px` · `scan-preview CTA 52×444` · `notice button 48×380 (full-width)` · `faElements=0`, `faLinks=0`.
+
+**Sinadya na HINDI binago:**
+- Ang **ICT Repair Ticket link** (`#display_number`) — napatunayang gumagana (dinadala sa ticket page). Wala pong "View Ticket" button na naalis: tiningnan ang **buong git history** (mula `d5f8ae2` initial commit) at link lang talaga ang nasa scan page noon. Ang button na may label na `Process` / `View Ticket` ay nasa **`requests/ict/ticket.blade.php:195`** (ibang page), hindi sa scan page.
+- Ang **focus-division gating ng "Conduct PM"** (`ScanController` L91-104: `$showPmActions` = tugma ang division ng may-ari ng asset sa `current_focus_division`) — business rule ng PM cycle, hindi inalis. Kapag hindi tugma, ang PM panel ay nagpapakita ng **last PM history** (informational) sa halip na ang action button.
+
+---
+
 ## 5. PHASE 2 — Physical Count (cohesive change: backend + frontend)
 
 **Target commit:** `fix(physical-count): hide counted assets, in-place mark without reload, text-only actions`

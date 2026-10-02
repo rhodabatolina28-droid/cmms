@@ -7,7 +7,7 @@
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
     <style nonce="{{ $cspNonce }}">
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: Arial, sans-serif; background: #f1f5f9; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
+        body { font-family: Arial, sans-serif; background: #f1f5f9; padding: 16px 16px 0; display: flex; flex-direction: column; align-items: center; }
         .card { background: white; border-radius: 12px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); max-width: 480px; width: 100%; overflow: hidden; }
         .header { background: linear-gradient(135deg, #0038A8, #1e40af); color: white; padding: 20px 24px; }
         .header h1 { font-size: 19px; margin-bottom: 2px; }
@@ -30,9 +30,34 @@
         .status-Disposal, .status-Scrapped { background: #fee2e2; color: #b91c1c; }
         .status-Repair { background: #dbeafe; color: #1d4ed8; }
         .empty-note { font-size: 13px; color: #94a3b8; padding: 8px 0; }
-        .footer-note { font-size: 11px; color: #94a3b8; text-align: center; margin-top: 18px; }    </style>
+        /* Back affordance — text-only, 44px touch target (mobile-friendly).
+           Dati WALANG paraan pabalik sa dashboard ang page na ito. */
+        .back-link { align-self: stretch; margin-bottom: 12px; max-width: 480px; width: 100%; }
+        .back-link a {
+            display: flex; align-items: center; justify-content: center;
+            min-height: 44px; padding: 10px 16px; border-radius: 8px;
+            background: #fff; border: 1px solid #cbd5e1;
+            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 700;
+        }
+        .back-link a:hover { color: #0038A8; border-color: #0038A8; background: #f8faff; }
+        .back-link a:active { background: #f1f5f9; }
+        /* Compact footer — walang sayang na blangkong espasyo sa ibaba */
+        .footer { font-size: 11px; color: #94a3b8; text-align: center; padding: 8px 0 12px; margin-top: 10px; max-width: 480px; width: 100%; }
+
+        @media screen and (max-width: 768px) {
+            body { padding: 10px 10px 0; }
+            .header { padding: 18px; }
+            .body { padding: 16px 18px; }
+            .back-link { margin-bottom: 8px; }
+            .cta { min-height: 52px; font-size: 15.5px; margin-bottom: 18px; }
+            .footer { font-size: 10px; margin-top: 8px; padding: 6px 0 10px; }
+        }
+    </style>
 </head>
 <body>
+    <div class="back-link">
+        <a href="{{ route('dashboard.user') }}">Back to Dashboard</a>
+    </div>
     <div class="card">
         <div class="header">
             <h1>Asset Scanned</h1>
@@ -72,13 +97,12 @@
                         </div>
                     </a>
                 @endforeach
-                <div class="footer-note">Tap an asset to report a repair for it.</div>
             @else
                 <div class="empty-note">You have no other assigned assets. Use the button above to report a repair for the scanned asset.</div>
             @endif
-
-            <div class="footer-note">CMMS &middot; National Conciliation and Mediation Board</div>
         </div>
     </div>
+
+    <div class="footer">CMMS &middot; National Conciliation and Mediation Board</div>
 </body>
 </html>
