@@ -58,6 +58,25 @@ class ShowPhysicalCountAction
         // Main table grouped by custodian (PAR-based accountability view).
         // One group per employee, unassigned/spare assets last, 10 groups per page.
         $groups = $this->buildCustodianGroups($allAssets, $session->counts);
+
+        // Ongoing session = pending work only. I-hide ang mga na-count nang asset
+        // (at ang buong custodian group na wala nang pending) para malinaw ang
+        // natitirang trabaho ng nag-co-count. Ang $summary ay galing pa rin sa
+        // lahat ng asset/count kaya buo ang stats bar. Ang Completed session ay
+        // hindi binabago — buong report pa rin ang ipinapakita.
+        if ($session->status === 'Ongoing') {
+            $groups = $groups
+                ->map(function ($group) use ($countedIds) {
+                    $group['assets'] = $group['assets']
+                        ->reject(fn ($a) => in_array($a->asset_id, $countedIds))
+                        ->values();
+
+                    return $group;
+                })
+                ->reject(fn ($group) => $group['assets']->isEmpty())
+                ->values();
+        }
+
         $perPage = 10;
         $page = LengthAwarePaginator::resolveCurrentPage();
         $custodianGroups = new LengthAwarePaginator(
