@@ -174,6 +174,41 @@
             gap: 10px;
         }
 
+        /* ── BUG FIX: na-clip ang footer ("Create Account" / "Save") ──
+           Ang <form> sa loob ng .modal-card ay hindi flex, kaya ang
+           .modal-body + .modal-footer ay lumalampas sa max-height ng
+           .modal-card at kinakain ng overflow:hidden. Ipagpatuloy ang
+           flex chain hanggang sa footer para laging kita ang buttons. */
+        .modal-card {
+            display: flex;
+            flex-direction: column;
+            max-height: 90vh;
+        }
+
+        .modal-card > form {
+            display: flex;
+            flex-direction: column;
+            flex: 1 1 auto;
+            min-height: 0;
+            min-width: 0;
+        }
+
+        .modal-card > .modal-body,
+        .modal-card > form > .modal-body {
+            flex: 1 1 auto;
+            min-height: 0;
+            overflow-y: auto;
+        }
+
+        .modal-card > .modal-footer,
+        .modal-card > form > .modal-footer {
+            flex: 0 0 auto;
+        }
+
+        .modal-overlay {
+            overflow-y: auto;
+        }
+
         .form-label-gov {
             display: block;
             font-size: 11px;

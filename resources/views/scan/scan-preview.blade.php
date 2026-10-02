@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asset Scanned | CMMS</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style nonce="{{ $cspNonce }}">
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body { font-family: Arial, sans-serif; background: #f1f5f9; padding: 16px; min-height: 100vh; display: flex; flex-direction: column; align-items: center; }
@@ -21,8 +20,7 @@
         .asset-row .name { font-size: 14px; font-weight: 700; color: #1e293b; }
         .asset-row .meta { font-size: 12px; color: #64748b; margin-top: 3px; }
         .asset-row .meta .id { font-family: monospace; font-weight: 700; color: #0038A8; }
-        .asset-row .arrow { color: #94a3b8; flex-shrink: 0; margin-left: 10px; }
-        .asset-row.scanned .arrow { color: #0038A8; }
+        /* Icons removed: text-only na ang scan preview (Bug 7). */
         .cta { display: flex; align-items: center; justify-content: center; gap: 8px; background: #dc2626; color: white; text-decoration: none; padding: 14px 18px; border-radius: 10px; font-size: 15px; font-weight: 800; min-height: 48px; margin-bottom: 22px; transition: background 0.2s; }
         .cta:hover { background: #b91c1c; }
         .section-title { font-size: 13px; font-weight: 700; color: #0038A8; text-transform: uppercase; letter-spacing: 0.03em; margin: 22px 0 10px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
@@ -37,7 +35,7 @@
 <body>
     <div class="card">
         <div class="header">
-            <h1><i class="fa-solid fa-qrcode"></i> Asset Scanned</h1>
+            <h1>Asset Scanned</h1>
             <div class="sub">Batch QR Sticker Scan &middot; CMMS</div>
         </div>
         <div class="body">
@@ -53,11 +51,9 @@
                         <span class="status-badge status-{{ $statusMap[$asset->status] ?? 'Serviceable' }}">{{ $asset->status }}</span>
                     </div>
                 </div>
-                <i class="fa-solid fa-check-double arrow"></i>
             </div>
 
             <a href="{{ route('ict.create', ['asset_id' => $asset->asset_id]) }}" class="cta">
-                <i class="fa-solid fa-triangle-exclamation"></i>
                 Report Repair &mdash; this asset
             </a>
 
@@ -74,7 +70,6 @@
                                 <span class="status-badge status-{{ $statusMap[$oa->status] ?? 'Serviceable' }}">{{ $oa->status }}</span>
                             </div>
                         </div>
-                        <i class="fa-solid fa-chevron-right arrow"></i>
                     </a>
                 @endforeach
                 <div class="footer-note">Tap an asset to report a repair for it.</div>

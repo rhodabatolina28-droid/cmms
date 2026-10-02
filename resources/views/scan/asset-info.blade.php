@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $asset->item_name }} | Asset Info</title>
     <link rel="icon" type="image/svg+xml" href="{{ asset('images/ncmb-logo.svg') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style nonce="{{ $cspNonce }}">
         * { box-sizing: border-box; margin: 0; padding: 0; }
         body {
@@ -130,12 +129,12 @@
 </head>
 <body>
     <div class="back-link">
-        <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}"><i class="fa-solid fa-arrow-left"></i> Back to Dashboard</a>
+        <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}">Back to Dashboard</a>
     </div>
 
     <div class="card">
         <div class="header">
-            <h1><i class="fa-solid fa-qrcode"></i> {{ $asset->item_name }}</h1>
+            <h1>{{ $asset->item_name }}</h1>
             <div class="sub">Asset ID: {{ $asset->asset_id }}</div>
             <div class="badge">{{ $asset->category }}</div>
         </div>
@@ -186,7 +185,7 @@
 
             {{-- PM Schedule Info --}}
             <div class="section-title">
-                <i class="fa-solid fa-calendar-check"></i> Preventive Maintenance
+                Preventive Maintenance
             </div>
 
             <div class="pm-info">
@@ -270,7 +269,7 @@
             {{-- ICT Ticket Info --}}
             @if($ictTicket)
             <div class="section-title">
-                <i class="fa-solid fa-ticket"></i> ICT Repair Ticket
+                ICT Repair Ticket
             </div>
             <div class="pm-info ict-info-box">
                 <div class="pm-row ict-row-center">
@@ -288,7 +287,7 @@
             {{-- Other Assets of User --}}
             @if($userAssets && $userAssets->count() > 0)
             <div class="section-title">
-                <i class="fa-solid fa-layer-group"></i> Other Assets of {{ $asset->assignedUser->full_name ?? 'User' }}
+                Other Assets of {{ $asset->assignedUser->full_name ?? 'User' }}
             </div>
             @foreach($userAssets as $ua)
             <div class="history-item" style="display:flex;justify-content:space-between;align-items:center;">
@@ -304,7 +303,7 @@
 
             {{-- Service History --}}
             <div class="section-title">
-                <i class="fa-solid fa-clock-rotate-left"></i> Recent Service History
+                Recent Service History
             </div>
             @forelse($history as $h)
             <div class="history-item">
@@ -324,16 +323,16 @@
         <div class="actions">
             @if($upcomingPM && $upcomingPM->type === 'Preventive Maintenance')
                 <a href="{{ route('maintenance.edit', $upcomingPM->id) }}" class="btn btn-success">
-                    <i class="fa-solid fa-screwdriver-wrench"></i> Conduct PM
+                    Conduct PM
                 </a>
             @endif
             @if($user->role === 'super_admin')
             <a href="{{ route('super_admin.inventory.detail', $asset->asset_id) }}" class="btn btn-primary">
-                <i class="fa-solid fa-eye"></i> View Full Inventory Profile
+                View Full Inventory Profile
             </a>
             @endif
             <a href="{{ route($user->role === 'super_admin' ? 'dashboard.super-admin' : ($user->canProcessSupply() ? 'dashboard.admin' : 'dashboard.it')) }}" class="btn btn-outline">
-                <i class="fa-solid fa-house"></i> Back to Dashboard
+                Back to Dashboard
             </a>
         </div>
     </div>

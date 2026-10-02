@@ -42,7 +42,6 @@ class ScanController extends Controller
                 return view('scan.notice', [
                     'title'    => 'Asset Not Assigned',
                     'message'  => 'This asset is not assigned to you. Contact your Supply Admin if this is a mistake.',
-                    'icon'     => 'fa-triangle-exclamation',
                 ]);
             }
             return view('scan.scan-preview', [
@@ -58,7 +57,6 @@ class ScanController extends Controller
                 return view('scan.notice', [
                     'title'   => 'Asset Out of Scope',
                     'message' => 'This asset belongs to another branch.',
-                    'icon'    => 'fa-location-crosshairs',
                 ]);
             }
 

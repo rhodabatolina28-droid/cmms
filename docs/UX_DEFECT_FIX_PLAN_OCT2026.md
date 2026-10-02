@@ -108,6 +108,25 @@ Panatilihin ang layout/spacing; **teksto lang**. (Ang `notice.blade.php` `.icon-
 3. `php artisan test` → walang **bagong** failure (baseline pa rin).
 4. Screenshots (temp sa `storage/`, lilinisin bago ang commit).
 
+### ✅ Phase 1 RESULT — DONE & VERIFIED (2026-10-02)
+
+| Item | Ebidensya (headless Chrome, tunay na pages) |
+|---|---|
+| **1a** Personnel modal footer | `visible: true` · `hitIsButton: true` (na-tap ang button, hindi natatakpan) · `cardRect [20,20,480,555]` · `footRect [20,422,480,555]` = **kumpleto sa loob ng card** · `formDisplay: flex` · `formMinH: 0px` · `bodyScrollable: true` |
+| **1b** MTBF/MTTR | `noHorizontalScroll: true` · lahat ng 4 `.analytics-box`: `overflow: false` (sw == cw) · `titleWrap: "wrap"` · `valueRowWrap: "wrap"` · month `<select>`: `420 × 44px` |
+| **1c** Parts dropdown | `position: fixed` · `zIndex: 1300` · `parentTag: BODY` (portaled) · `rect [10,339,490,617]` · `inViewport: true` · `hitInsideMenu: true` (nasa ibabaw ng backdrop 999) · `itemH: 52px` · `clipAncestor: table-wrap-parts/auto` |
+| **1d** Scan pages | `asset-info` → `faElements: 0`, `faLink: 0` · `scan-preview` → `faElements: 0`, `faLink: 0`, `h1: "Asset Scanned"` |
+| **Regression** | `php artisan test` → **3 failed, 476 passed (1825 assertions)** = eksaktong baseline (3 pre-existing date-dependent) |
+
+**Bonus fix na nadiskubre habang nag-verify:** mixed line-endings (CRLF+LF) sa `scan/scan-preview.blade.php` at `scan/notice.blade.php` → na-normalize sa LF (walang spurious diff).
+
+**Notes para sa susunod na phase:**
+- Ang `_personnel_modals.blade.php` na `<form>` ay direktang anak ng `.modal-card` → isang CSS rule ang sumasaklaw sa **dalawang** modal (`#addPersonnelModal`, `#personnelModal`).
+- Ang `admin/requests/index.blade.php` ay may dead `.modal-card` CSS (walang modal markup) → **walang aksyon**.
+- Ang SA user modals (`_user_modals.blade.php`) ay sakop na ng naunang fix sa `super-admin/users/index.blade.php` (L211-215).
+- Ang `⋯` dropdown sa Parts ay **mobile-only** (`@media max-width:768px`) kaya bottom-sheet ang tamang pattern.
+- Ang `$icon` na variable sa `ScanController` ay inalis na (hindi na ginagamit ng views).
+
 ---
 
 ## 5. PHASE 2 — Physical Count (cohesive change: backend + frontend)
@@ -183,4 +202,7 @@ Panatilihin ang layout/spacing; **teksto lang**. (Ang `notice.blade.php` `.icon-
 | Petsa | Phase | Status |
 |---|---|---|
 | 2026-10-02 | Plan doc | ✅ Ginawa |
-| — | Phase 1 | ⏳ Susunod |
+| 2026-10-02 | **Phase 1** — personnel modal footer · MTBF/MTTR responsive · Parts mobile actions · scan-page icons | ✅ **DONE & VERIFIED** |
+| — | Phase 2 — Physical Count (hide counted + walang reload + icons + mobile polish) | ⏳ Susunod |
+| — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
+| — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |

@@ -186,6 +186,36 @@
     .dropdown-backdrop.show {
         display: block;
     }
+    /* ── Portaled action menu (mobile bottom sheet) ──
+       BUG: ang .dropdown-menu-custom ay anak ng .table-wrap-parts
+       (overflow-x:auto) kaya na-clip ito; at ang #dropdownBackdrop
+       (z-index 999) ay nasa ibabaw nito kaya ang tap ay nagsasara.
+       FIX: JS ang naglalabas sa <body> (portal) habang fixed bottom
+       sheet na may z-index 1300 para hindi matakpan at hindi ma-clip. */
+    .dropdown-menu-custom.portaled {
+        position: fixed !important;
+        top: auto !important;
+        left: 10px !important;
+        right: 10px !important;
+        bottom: calc(12px + env(safe-area-inset-bottom, 0px)) !important;
+        z-index: 1300 !important;
+        min-width: 0 !important;
+        max-height: 60vh;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+        border-radius: 14px !important;
+        padding: 8px 0 !important;
+        box-shadow: 0 18px 45px rgba(15, 23, 42, 0.28) !important;
+    }
+    .dropdown-menu-custom.portaled .dropdown-item-custom {
+        min-height: 52px !important;
+        padding: 14px 20px !important;
+        font-size: 14.5px !important;
+    }
+    .dropdown-menu-custom.portaled .dropdown-item-custom i {
+        width: 22px !important;
+        font-size: 16px !important;
+    }
     .row-actions-desktop {
         display: inline-flex;
         gap: 6px;
@@ -1047,22 +1077,66 @@
         document.getElementById(id).classList.remove('open');
     }
 
+    /* ── Actions menu (mobile) ──
+       Ini-portal sa <body> para hindi ma-clip ng .table-wrap-parts
+       (overflow-x:auto) at hindi matakpan ng #dropdownBackdrop (999). */
+    let PARTS_OPEN_MENU = null;
+    let PARTS_OPEN_MENU_HOME = null;
+
     function toggleDropdown(event, btn) {
         event.stopPropagation();
-        closeAllDropdowns();
         const menu = btn.nextElementSibling;
-        const backdrop = document.getElementById('dropdownBackdrop');
-        if (menu) {
-            menu.classList.add('show');
-            if (backdrop) backdrop.classList.add('show');
+        // Kapag naka-portal na ang menu, wala na itong kapatid sa row.
+        if (!menu || !menu.classList.contains('dropdown-menu-custom')) {
+            closeAllDropdowns();
+            return;
         }
+        if (PARTS_OPEN_MENU === menu) { closeAllDropdowns(); return; }
+
+        closeAllDropdowns();
+
+        PARTS_OPEN_MENU = menu;
+        PARTS_OPEN_MENU_HOME = menu.parentElement;
+        document.body.appendChild(menu);
+        menu.classList.add('show', 'portaled');
+
+        const backdrop = document.getElementById('dropdownBackdrop');
+        if (backdrop) backdrop.classList.add('show');
     }
 
     function closeAllDropdowns() {
-        document.querySelectorAll('.dropdown-menu-custom.show').forEach(m => m.classList.remove('show'));
         const backdrop = document.getElementById('dropdownBackdrop');
         if (backdrop) backdrop.classList.remove('show');
+
+        document.querySelectorAll('.dropdown-menu-custom.show').forEach(function (m) {
+            m.classList.remove('show', 'portaled');
+        });
+
+        if (PARTS_OPEN_MENU) {
+            const menu = PARTS_OPEN_MENU;
+            const home = PARTS_OPEN_MENU_HOME;
+            if (home && home.isConnected) {
+                home.appendChild(menu);          // ibalik sa table row
+            } else {
+                menu.remove();                   // na-render na ulit ang row
+            }
+            PARTS_OPEN_MENU = null;
+            PARTS_OPEN_MENU_HOME = null;
+        }
     }
+
+    /* Kapag umikot ang table o nagbago ang viewport habang bukas ang menu,
+       isara ito para hindi lumaylay ang fixed bottom sheet. (capture=true
+       para mahuli din ang scroll sa loob ng .table-wrap-parts) */
+    window.addEventListener('scroll', function (e) {
+        if (!PARTS_OPEN_MENU) return;
+        const t = e.target;
+        if (t && t.nodeType === 1 && typeof t.contains === 'function' && t.contains(PARTS_OPEN_MENU)) return;
+        closeAllDropdowns();
+    }, true);
+    window.addEventListener('resize', function () {
+        if (PARTS_OPEN_MENU) closeAllDropdowns();
+    });
 
     document.addEventListener('keydown', function(e) {
         if (e.key === 'Escape') closeAllDropdowns();

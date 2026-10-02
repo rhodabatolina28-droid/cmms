@@ -377,6 +377,7 @@
             padding: clamp(20px, 1.5vw, 25px);
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            min-width: 0;
         }
 
         .analytics-title {
@@ -389,6 +390,56 @@
             display: flex;
             align-items: center;
             gap: 10px;
+        }
+
+        /* ── BUG FIX: MTTR/MTBF cards overflow (mobile + siksik sa desktop) ──
+           Ang title row ay may inline `flex-wrap: nowrap` at margin-left:auto
+           na month <select>, habang ang value row ay may nowrap diff chip.
+           Payagan ang pag-wrap imbes na lumampas sa .analytics-box. */
+        .analytics-title.kpi-title {
+            flex-wrap: wrap;
+            row-gap: 8px;
+        }
+
+        .analytics-title.kpi-title > div:first-child {
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+
+        .kpi-month-form {
+            margin-left: auto;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .kpi-value-row {
+            flex-wrap: wrap;
+            row-gap: 6px;
+        }
+
+        .kpi-diff-chip,
+        .kpi-value-row > span {
+            white-space: normal;
+        }
+
+        /* ≤900px: ang month picker ay sariling linya (44px touch target) */
+        @media screen and (max-width: 900px) {
+            .kpi-month-form {
+                margin-left: 0 !important;
+                width: 100%;
+                flex-wrap: wrap;
+            }
+            .kpi-month-form select {
+                flex: 1 1 auto;
+                width: 100%;
+                min-height: 44px !important;
+                font-size: 13px !important;
+                padding: 8px 10px !important;
+            }
+            .kpi-value-row > div:first-child {
+                flex: 1 1 100%;
+            }
         }
 
         .analytics-row {
@@ -705,13 +756,13 @@
                     </div>
                 </div>
                 <div class="analytics-box" style="padding: 22px 24px;">
-                    <div class="analytics-title" style="margin-bottom: 8px; flex-wrap: nowrap;">
+                    <div class="analytics-title kpi-title" style="margin-bottom: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                             <i class="fa-solid fa-clock icon-blue"></i>
                             <span style="white-space: nowrap; font-weight: 700;">Avg. Downtime</span>
                             <span style="font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap;">(MTTR)</span>
                         </div>
-                        <form method="GET" action="{{ route("dashboard.super-admin") }}" style="margin-left: auto; display: inline-flex; align-items: center; gap: 6px;">
+                        <form method="GET" action="{{ route("dashboard.super-admin") }}" class="kpi-month-form">
                             <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Maintenance KPI:</span>
                             <select name="kpi_month" onchange="this.form.submit()" style="padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #1e293b; background: white; cursor: pointer;">
                                 @foreach($kpi["months"] as $key => $label)
@@ -720,7 +771,7 @@
                             </select>
                         </form>
                     </div>
-                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
+                    <div class="kpi-value-row" style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
                         <div style="font-size: 26px; font-weight: 800; color: #0038A8; line-height: 1.1;">
                             @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
                         </div>
@@ -742,7 +793,7 @@
                 </div>
 
                 <div class="analytics-box" style="padding: 22px 24px;">
-                    <div class="analytics-title" style="margin-bottom: 8px; flex-wrap: nowrap;">
+                    <div class="analytics-title kpi-title" style="margin-bottom: 8px;">
                         <div style="display: flex; align-items: center; gap: 8px; min-width: 0;">
                             <i class="fa-solid fa-arrow-trend-down icon-blue" id="mtbfTitleIcon"></i>
                             <span style="white-space: nowrap; font-weight: 700;">Days Between Failures</span>
@@ -750,7 +801,7 @@
                         </div>
                         <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
                     </div>
-                    <div style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
+                    <div class="kpi-value-row" style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
                         <div style="font-size: 26px; font-weight: 800; color: {{ $kpi['mtbf_days'] !== null && $kpi['mtbf_prev'] !== null && $kpi['mtbf_prev'] > 0 && $kpi['mtbf_days'] < $kpi['mtbf_prev'] ? '#dc2626' : '#059669' }}; line-height: 1.1;">
                             @if($kpi["mtbf_days"] !== null){{ number_format($kpi["mtbf_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #10b981; font-size: 18px;">No failures this month</span> @endif
                         </div>
