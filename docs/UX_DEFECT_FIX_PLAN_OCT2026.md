@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Defect Register (7 bugs, lahat may napatunayang root cause)
+## 1. Defect Register (8 bugs, lahat may napatunayang root cause)
 
 | # | Bug (reported) | Root cause (verified) | Sakop |
 |---|---|---|---|
@@ -31,6 +31,7 @@
 | **2** | Physical Count: i-hide ang counted + in-place mark (walang reload) + icons + mobile polish | Katamtaman | May (1 Action + JS) |
 | **3** | QR/Cam button fix (0-byte bundle) + ICT auto-fill ng na-scan | Katamtaman | May (1 Action + JS build) |
 | **4** | PM Work Orders: assignment back-fill + hindi na mag-reset + stats cards | Katamtaman | May (2 Actions + Service) |
+| **2.5** *(hotfix, 2026-10-05)* | Scan rate-limit (Bug 8): route-scoped throttle prefixes + 429 handling sa JS | Mababa (routes + JS) | May (routes lang, walang DB) |
 
 **Bawal galawin sa lahat ng phase:** print/PDF/archive logic, at ang mga date-dependent na existing test.
 
@@ -303,10 +304,25 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-02 | **Phase 1c** — Parts modals (Edit/Stock In/Out/History/Units) + My Assets mobile UX: fixed ×, scrollable modals, serial picker 1-linya | ✅ **DONE & VERIFIED** — `7d652ae` |
 | 2026-10-02 | **Phase 2** — Physical Count: hide counted · walang reload · scan card v2 (custodian-ordered, compact) · auto-close + deretso sa susunod na scan | ✅ **DONE & VERIFIED** — `719045b` |
 | 2026-10-05 | **Phase 2.5 (hotfix — Bug 8)** — scan rate-limit: route-scoped throttle prefixes (`pc-search` 120/min, `pc-mark` 300/min, `pc-store`/`pc-complete` 30/min) + 429 handling sa JS (search message, markMany stop + warning, markAsset button restore, scanner toast) | ✅ **DONE & VERIFIED** — `3b9f213` |
-| — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
+| 2026-10-05 | Phase 2.5 docs + cleanup + prod-readiness assessment (lahat ng temp probe/logs natanggal, tree malinis, `ffe67f7`) | ✅ — `df17756` + `ffe67f7` |
+| 2026-10-05 | Tunnel/`APP_URL` rotation (trycloudflare expired) → `accommodation-numbers-acting-engineer.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
+| — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ **SUSUNOD** |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
 **Rollback:** `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+
+### QR-scan status check (2026-10-05, base sa register sa itaas)
+
+| QR-scan area | Bug/s | Status |
+|---|---|---|
+| **Physical Count scanning** (scan card, mark, auto-rescan, mark-all, rate-limit) | 2, 8 | ✅ **OK na** — Phases 2 + 2.5, tested 15/15 + full suite 479 passed |
+| **Post-scan pages** (`scan/asset-info`, `scan-preview`, `notice`) | 7 (part) | ✅ OK — Phase 1b |
+| **`/r/{id}` QR redirect + stickers** | — | ✅ OK — 406 regenerated sa kasalukuyang `APP_URL` |
+| **ICT form Cam/Scan button + auto-fill** | **3** | ❌ **HINDI PA** — ang `qr-scanner` bundle ay 0-byte pa rin (`window.AssetScanner` undefined) + `CreateIctFormAction` nulls `asset_id` |
+
+**Verdict:** okay na ang QR-scan sa **Physical Count** (kung ito ang sinusubukan mo live), pero **hindi pa 100% ang QR-scan overall** — ang **ICT form scan button (Bug 3 / Phase 3)** ay hindi pa naaayos.
+
+**Next:** **Phase 3** (`resources/js/qr-scanner.js` → kailangan ng `window.AssetScanner = AssetScanner` + `npm run build`; `CreateIctFormAction` L41-47 → panatilihin ang user-owned `asset_id`) → tapos **Phase 4** (PM Work Orders).
 
 ---
 
