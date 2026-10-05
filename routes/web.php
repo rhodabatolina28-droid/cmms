@@ -232,11 +232,17 @@ Route::get('/purchase-requests/{purchaseRequest}/delivery-confirmation.pdf', [Pu
     // Physical Count - Accessible by Admin (Supply) only
     Route::middleware('role:admin')->prefix('physical-count')->name('physical-count.')->group(function () {
         Route::get('/', [PhysicalCountController::class, 'index'])->name('index');
-        Route::post('/', [PhysicalCountController::class, 'store'])->name('store')->middleware('throttle:30,1');
+        // Throttle scoping (Oct 2026 scan defect): ThrottleRequests keys
+        // authenticated users by sha1(user_id) ONLY — without a prefix every
+        // `throttle:*` route shared ONE 30/min bucket per user, so ~15 QR
+        // scans (each = 1 POST /search + 1 POST /mark) plus a 10-asset
+        // "Mark all" burst hit 429 within seconds. The prefixes isolate the
+        // scan routes per-endpoint; /mark gets burst headroom for bulk marking.
+        Route::post('/', [PhysicalCountController::class, 'store'])->name('store')->middleware('throttle:30,1,pc-store');
         Route::get('/{id}', [PhysicalCountController::class, 'show'])->name('show');
-        Route::post('/{sessionId}/search', [PhysicalCountController::class, 'searchAsset'])->name('search')->middleware('throttle:30,1');
-        Route::post('/{sessionId}/mark', [PhysicalCountController::class, 'markAsset'])->name('mark')->middleware('throttle:30,1');
-        Route::post('/{id}/complete', [PhysicalCountController::class, 'complete'])->name('complete')->middleware('throttle:30,1');
+        Route::post('/{sessionId}/search', [PhysicalCountController::class, 'searchAsset'])->name('search')->middleware('throttle:120,1,pc-search');
+        Route::post('/{sessionId}/mark', [PhysicalCountController::class, 'markAsset'])->name('mark')->middleware('throttle:300,1,pc-mark');
+        Route::post('/{id}/complete', [PhysicalCountController::class, 'complete'])->name('complete')->middleware('throttle:30,1,pc-complete');
         Route::get('/{sessionId}/export', [PhysicalCountController::class, 'export'])->name('export');
         Route::get('/{sessionId}/print', [PhysicalCountController::class, 'printReport'])->name('print');
     });

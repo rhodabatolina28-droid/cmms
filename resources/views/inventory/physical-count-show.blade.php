@@ -569,6 +569,17 @@ const API_PROFILE_URL = '{{ route('api.asset.profile', '_ID_') }}';
 const COUNTED_IDS = @json($countedIds);
 let searchTimeout;
 
+/* 429 (rate limit) — dapat LAGING nakikita ng user. Dati ito ay silent:
+   walang laman ang search, "already counted" ang maling summary ng markMany,
+   at nakadikit ang "..." sa mark button. */
+function pcRetryAfter(res) {
+    var s = parseInt(res.headers.get('Retry-After') || '', 10);
+    return (!isNaN(s) && s > 0) ? s : 30;
+}
+function pcTooManyMsg(res) {
+    return 'Masyadong mabilis — maghintay ng ~' + pcRetryAfter(res) + ' segundo bago ulit subukan.';
+}
+
 document.getElementById('scanSearchInput')?.addEventListener('input', function() {
     clearTimeout(searchTimeout);
     const q = this.value.trim();
@@ -595,6 +606,11 @@ async function searchAsset(q) {
             },
             body: formData,
         });
+        if (res.status === 429) {
+            container.innerHTML = '<div class="search-no-result">' + pcTooManyMsg(res) + '</div>';
+            container.style.display = 'block';
+            return;
+        }
         const data = await res.json();
         if (!data.success) return;
 
@@ -868,7 +884,7 @@ async function markMany(ids) {
     if (isMarking || !ids.length) return;
     isMarking = true;
     const total = ids.length;
-    let marked = 0, skipped = 0;
+    let marked = 0, skipped = 0, rateLimited = false, retrySecs = 30;
     const markedIds = [];
     const alreadyIds = [];
     const alreadyStatuses = [];
@@ -896,6 +912,14 @@ async function markMany(ids) {
                 },
                 body: formData,
             });
+            if (res.status === 429) {
+                // Ihinto ang loop — lahat ng natitira ay 429 din lang, at
+                // HINDI ito "already counted" (dati rito nahuhulog ang maling
+                // summary at patuloy pa ring pinapadalhan ang lahat).
+                rateLimited = true;
+                retrySecs = pcRetryAfter(res);
+                break;
+            }
             const data = await res.json();
             if (data.success) {
                 marked++;
@@ -916,9 +940,12 @@ async function markMany(ids) {
     }
 
     await Swal.fire({
-        icon: 'success',
-        title: 'Done',
-        text: marked + ' marked as Present, ' + skipped + ' skipped (already counted).',
+        icon: rateLimited ? 'warning' : 'success',
+        title: rateLimited ? 'Stopped — rate limit' : 'Done',
+        text: rateLimited
+            ? marked + ' marked as Present, ' + skipped + ' processed, ' + (total - marked - skipped) + ' not yet sent. '
+                + 'Masyadong mabilis — maghintay ng ~' + retrySecs + ' segundo bago pindutin ulit ang "Mark all Present" para ipagpatuloy.'
+            : marked + ' marked as Present, ' + skipped + ' skipped (already counted).',
         confirmButtonColor: '#0038A8',
     });
 
@@ -951,6 +978,14 @@ async function markAsset(assetId, status, btn) {
             },
             body: formData,
         });
+        if (res.status === 429) {
+            // Ibalik ang button (dati ay naiiwan itong "...") at ipakita kung
+            // gaano katagal maghihintay.
+            if (btn) { btn.disabled = false; btn.textContent = status === 'Present' ? 'Operational' : 'Non-Operational'; }
+            Swal.fire({ icon: 'warning', title: 'Rate limit', text: pcTooManyMsg(res), confirmButtonColor: '#0038A8' });
+            isMarking = false;
+            return;
+        }
         const data = await res.json();
         if (data.success) {
             // In-place update — hindi na nagre-reload (dating bumabalik sa taas)
@@ -968,10 +1003,14 @@ async function markAsset(assetId, status, btn) {
             pcRemoveRows([id]);
             isMarking = false;
         } else {
+            // Ibalik ang button sa lahat ng iba pang failure (dati naiiwan
+            // itong nakadisable at "...", kaya hindi na makapag-scan ulit).
+            if (btn) { btn.disabled = false; btn.textContent = status === 'Present' ? 'Operational' : 'Non-Operational'; }
             Swal.fire({ icon: 'error', title: 'Failed', text: data.message || 'Failed to mark asset.', confirmButtonColor: '#0038A8' });
             isMarking = false;
         }
     } catch (e) {
+        if (btn) { btn.disabled = false; btn.textContent = status === 'Present' ? 'Operational' : 'Non-Operational'; }
         Swal.fire({ icon: 'error', title: 'Connection Error', text: 'Could not connect to server. Please try again.', confirmButtonColor: '#0038A8' });
         isMarking = false;
     }
@@ -1000,9 +1039,20 @@ const scanner = new AssetScanner({
                     },
                     body: formData,
                 });
-                const searchData = await searchRes.json();
-                if (searchData.success && searchData.user_assets) {
-                    userAssets = searchData.user_assets;
+                if (searchRes.status === 429) {
+                    // Ipaalam (dati ay silent na walang laman ang listahan) —
+                    // itutuloy pa rin ang pagpapakita ng na-scan na asset.
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Rate limit',
+                        text: pcTooManyMsg(searchRes),
+                        confirmButtonColor: '#0038A8',
+                    });
+                } else {
+                    const searchData = await searchRes.json();
+                    if (searchData.success && searchData.user_assets) {
+                        userAssets = searchData.user_assets;
+                    }
                 }
             } catch (e) {
                 console.error('Failed to fetch user assets:', e);
