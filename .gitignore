@@ -41,6 +41,7 @@ Thumbs.db
 /tools/cloudflared.exe
 /tools/*.log
 /storage/framework/tunnel.*
+/storage/framework/serve.*
 
 # Temporary local responsive-check artifacts
 /storage/shots/
