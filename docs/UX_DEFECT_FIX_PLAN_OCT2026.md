@@ -18,6 +18,7 @@
 | **5** | Super-admin dashboard — MTBF/MTTR cards overflow / siksik | `.analytics-title` (L708, L745) ay may `flex-wrap: nowrap` + `margin-left:auto` month `<select>`; ang value rows ay `space-between` na may **nowrap chips** → lumalampas sa box | Mobile + Desktop |
 | **6** | PM Work Orders — blank ang "Assigned To"; wala ang stats cards | (a) **LIVE DB evidence:** `pm_schedules` id=1 focus = `CONCILIATION AND MEDIATION DIVISION`, `assigned_it_id = NULL`; auto-PM: **36 total, 6 unassigned — lahat CMD, status = Scheduled**. Ang `GeneratePMScheduleService` L350-353 ay **ni-null** ang `assigned_it_id` sa cycle advance, habang `AssignPMScheduleITAction` L44-50 ay nag-u-update **lang** kapag `office = current_focus_division`. (b) Ang 5 stats cards ay nasa IT PM Tasks lang | Mobile + Desktop |
 | **7** | "Remove all icons — text only" sa mga na-scan / per-role cards | Maraming `<i class="fa-solid …">` pa sa scan flow at iba pang list pages | Lahat |
+| **8** *(added 2026-10-05)* | Physical Count — **hindi na makapag-scan pagkatapos makarami** ("rate limiting ata") | `ThrottleRequests` (Laravel 13.8) ay nag-e-key ng authenticated request gamit ang **`sha1(user_id)` lang** — `$prefix` ay `''` sa `throttle:30,1` at **walang route sa key** → **lahat ng ~60 `throttle:*` routes ay IISANG 30/min bucket kada user**. Bawat scan = 1 POST `/search` + 1 POST `/mark`; ang `Mark all Present (10)` ay +10 sunod-sunod → **429 sa loob ng ilang segundo**. Silent pa ang JS: `searchAsset` ay `if (!data.success) return;` (walang mensahe), ang `markMany` ay nahuhulog sa `else { skipped++ }` ("already counted" ang maling summary) at patuloy pang pinapadalhan lahat, at ang `markAsset` ay naiiwang `...`/disabled ang button. **Live DB evidence:** pinakamalaking group = **10 assets**; log: `ThrottleRequests->handle(..., '30', '1')` stack traces | Mobile (live scan sessions) |
 
 ---
 
@@ -198,6 +199,49 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 
 ---
 
+## 5.5 PHASE 2.5 (hotfix, 2026-10-05) — Scan rate-limit (Bug 8)
+
+**Target commit:** `3b9f213` — `fix(physical-count): scope scan throttle routes per-endpoint and surface 429 in UI`
+
+**Trigger:** live report — *"un rate limiting ata kaya pag nakarami na ko ng scan hindi ako makapag scan."*
+
+### Root cause (verified sa vendor code, hindi lang hula)
+
+```php
+// vendor/laravel/framework/.../ThrottleRequests.php (Laravel 13.8)
+'key' => $prefix . $this->resolveRequestSignature($request)  // prefix = '' sa `throttle:30,1`
+resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG route sa key
+```
+
+1. **Shared counter:** lahat ng ~60 `throttle:*` routes sa `routes/web.php` ay **iisang 30/min bucket kada user** (key = `sha1(user_id)` lang). Proof (red test): 35 POST `/search` → ang `notifications/read-all` (iba-ibang route) ay **429 na agad**.
+2. **Burst math:** bawat QR scan = 1 POST `/search` (user assets) + 1 POST `/mark`; ang `Mark all Present` ay **+10 sunod-sunod** (live DB: pinakamalaking custodian group = **10 assets**) → 429 sa loob ng ilang segundo. Red test: **429 sa mark request #31**.
+3. **Silent ang JS** (kaya "bigla na lang ayaw"): `searchAsset` → `if (!data.success) return;` (walang mensahe); `markMany` → ang 429 ay nahuhulog sa `else { skipped++ }` → maling "already counted" summary **at patuloy pang pinapadalhan lahat ng natitira**; `markAsset` → generic "Failed" at **naiiwang `...`/disabled ang button**. Ang laravel.log ay may 18 `ThrottleRequests` stack-trace frame (`handle(..., '30', '1')`).
+
+### Fix
+
+| Layer | Pagbabago |
+|---|---|
+| **Routes** (`routes/web.php` L235-245) | Route-scoped prefixes + burst-safe limits: `search` → **`throttle:120,1,pc-search`**, `mark` → **`throttle:300,1,pc-mark`**, `store` → `throttle:30,1,pc-store`, `complete` → `throttle:30,1,pc-complete`. Sariwa ang bawat bucket (hindi na nagbabahagi sa ~60 iba pang routes). |
+| **JS helpers** (`physical-count-show.blade.php`) | `pcRetryAfter(res)` (binabasa ang `Retry-After` header, default 30s) + `pcTooManyMsg(res)` |
+| **`searchAsset`** | 429 → inline mensahe sa search results ("Masyadong mabilis — maghintay ng ~Ns") |
+| **`markMany`** | 429 → **hinto ang loop** (hindi na pinapadalhan lahat ng natitira), hiwalay na warning summary: ilan ang na-mark / ilan ang hindi naipadala + retry seconds. Hindi na nagpapakita ng maling "already counted". |
+| **`markAsset`** | 429 → warning dialog + **ibalik ang button label/state** (dati ay naiiwing `...`); pati ang generic-failure at catch branches → binabalik na rin ang button |
+| **scanner `onScan`** | 429 sa user-assets search → warning dialog, **itutuloy pa rin** ang pagpapakita ng na-scan na asset |
+
+### Verification
+
+1. **TDD:** bagong `tests/Feature/PhysicalCountScanThrottleTest.php` — **RED muna (3/3 failed: shared counter 429, mark #31/429, walang prefixes)** → pagkatapos ng routes fix → **GREEN (3/3, 126 assertions)**.
+2. `php artisan test --filter=PhysicalCount` → **15/15** (12 luma + 3 bago).
+3. Full suite: **3 failed / 479 passed** — pareho lang ang 3 pre-existing date-dependent (`CsmMonthlyReportTest` ×2, `PMCalendarTest` ×1); +3 tests vs 476-baseline, **walang bagong failure**.
+4. `php artisan route:list --json` → `physical-count.mark` middleware = `web, auth, active, require.survey, role:admin, throttle:300,1,pc-mark`.
+5. Blade: `php -l` + `view:cache`/`view:clear` OK; inline JS pinalitan ng `node --check` → **JS SYNTAX OK**.
+
+**Rollback:** `git revert <phase-2.5-hash>` (routes + blade + test).
+
+⚠️ **Paalala:** muli na namang binago ang inline JS ng page → **isang page refresh** sa device bago i-test. Ang route change ay walang route-cache kaya effective agad sa server.
+
+---
+
 ## 6. PHASE 3 — Scan/Camera + ICT auto-fill (end-user side)
 
 **Target commit:** `fix(scan): rebuild qr-scanner bundle and preselected scanned asset on ICT form`
@@ -258,10 +302,11 @@ Ang mga standalone na pahina pagkatapos mag-scan ng QR (`scan/asset-info`, `scan
 | 2026-10-02 | **Phase 1b** — post-scan (QR) pages mobile UX: isang back action, walang sayang na footer space | ✅ **DONE & VERIFIED** — `369edab` |
 | 2026-10-02 | **Phase 1c** — Parts modals (Edit/Stock In/Out/History/Units) + My Assets mobile UX: fixed ×, scrollable modals, serial picker 1-linya | ✅ **DONE & VERIFIED** — `7d652ae` |
 | 2026-10-02 | **Phase 2** — Physical Count: hide counted · walang reload · scan card v2 (custodian-ordered, compact) · auto-close + deretso sa susunod na scan | ✅ **DONE & VERIFIED** — `719045b` |
+| 2026-10-05 | **Phase 2.5 (hotfix — Bug 8)** — scan rate-limit: route-scoped throttle prefixes (`pc-search` 120/min, `pc-mark` 300/min, `pc-store`/`pc-complete` 30/min) + 429 handling sa JS (search message, markMany stop + warning, markAsset button restore, scanner toast) | ✅ **DONE & VERIFIED** — `3b9f213` |
 | — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ Nakabinbin |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ---
 
