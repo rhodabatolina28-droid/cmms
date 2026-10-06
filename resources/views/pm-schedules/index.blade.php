@@ -268,7 +268,7 @@
     {{-- WORK ORDERS CARD --}}
     <div class="premium-card">
         <div class="pm-section-title" style="justify-content:space-between;">
-            <span><i class="fa-solid fa-clipboard-list"></i> Work Orders
+            <span>Work Orders
                 @if(isset($totalActiveWorkOrderCount) && $totalActiveWorkOrderCount > 0)
                     <span style="background:#0038A8;color:white;border-radius:20px;padding:2px 8px;font-size:10px;margin-left:6px;">{{ $totalActiveWorkOrderCount }}</span>
                 @endif
@@ -277,7 +277,7 @@
                 @endif
             </span>
             <a href="{{ route('pm-schedules.orders') }}" style="font-size:11px;font-weight:700;color:#0038A8;text-decoration:none;">
-                <i class="fa-solid fa-list"></i> View All Work Orders
+                View All Work Orders
             </a>
         </div>
         @php
@@ -348,7 +348,7 @@
 
     {{-- SCHEDULES CARD --}}
     <div class="premium-card">
-        <div class="pm-section-title"><i class="fa-solid fa-calendar-days"></i> Schedules</div>
+        <div class="pm-section-title">Schedules</div>
         @if($schedules->isEmpty())
             <div class="empty-schedules">
                 <i class="fa-solid fa-calendar-circle-plus empty-icon"></i>
@@ -394,11 +394,11 @@
                         </div>
                         <div style="font-size:11px; color:#475569; margin-top:10px; padding-top:10px; border-top:1px solid #f1f5f9;">
                             @if($schedule->current_focus_division)
-                                <div><strong>Status:</strong> <span style="color:#0038A8;"><i class="fa-solid fa-spinner fa-spin" style="font-size:9px;"></i> Processing {{ $schedule->current_focus_division }}</span></div>
+                                <div><strong>Status:</strong> <span style="color:#0038A8;">Processing {{ $schedule->current_focus_division }}</span></div>
                             @elseif(($schedule->completed_divisions ?? 0) >= ($schedule->total_divisions ?? 1) && ($schedule->total_divisions ?? 0) > 0)
-                                <div><strong>Status:</strong> <span style="color:#059669;"><i class="fa-solid fa-check-circle"></i> Cycle Complete</span></div>
+                                <div><strong>Status:</strong> <span style="color:#059669;">Cycle Complete</span></div>
                             @elseif(($schedule->completed_divisions ?? 0) > 0)
-                                <div><strong>Status:</strong> <span style="color:#0038A8;"><i class="fa-solid fa-hourglass-half"></i> In Progress</span></div>
+                                <div><strong>Status:</strong> <span style="color:#0038A8;">In Progress</span></div>
                             @else
                                 <div><strong>Status:</strong> <span style="color:#64748b;">Idle / Not Started</span></div>
                             @endif

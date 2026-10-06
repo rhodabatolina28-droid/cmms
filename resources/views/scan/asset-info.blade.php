@@ -237,7 +237,7 @@
                             <span class="pm-label">PM Status</span>
                             <span class="pm-value">
                                 <span class="pm-status-chip">
-                                    ⏳ {{ $upcomingPM->status === 'Scheduled' ? 'To Do' : 'In Progress' }}
+                                    {{ $upcomingPM->status === 'Scheduled' ? 'To Do' : 'In Progress' }}
                                 </span>
                             </span>
                         </div>
