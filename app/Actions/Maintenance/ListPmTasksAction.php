@@ -28,20 +28,28 @@ class ListPmTasksAction
         }
 
         if ($user->role === 'it') {
-            $query->where(function ($q) use ($user) {
-                $q->where('assigned_to', $user->id)
-                  ->orWhere(function ($sub) use ($user) {
-                      $sub->whereNull('assigned_to');
-                      if ($user->branch) {
-                          $sub->where('branch', $user->branch);
-                      }
-                  });
-            });
+            // PM Tasks IT-side fix A (Oct 2026): ONLY work orders assigned to
+            // me. The old `orWhereNull('assigned_to') + branch` clause leaked
+            // UNASSIGNED branch tickets into the IT's personal queue — per
+            // user rule the page must show only "yung na-assign lang sa kanya".
+            $query->where('assigned_to', $user->id);
         } elseif ($user->role === 'super_admin' && $user->branch) {
             $query->where('branch', $user->branch);
         }
 
-        $pmTasks = $query->orderBy('created_at', 'desc')->paginate(20);
+        // PM Tasks IT-side fix B (Oct 2026): order like the System Admin's PM
+        // Work Orders — active work first, Completed sinks to the bottom
+        // (created_at desc tiebreak). Plain `created_at desc` kept a
+        // JUST-completed task at the top of the queue.
+        $pmTasks = $query
+            ->orderByRaw("CASE status"
+                . " WHEN 'Scheduled' THEN 0"
+                . " WHEN 'Ongoing' THEN 1"
+                . " WHEN 'Awaiting Signature' THEN 2"
+                . " WHEN 'Completed' THEN 3"
+                . " ELSE 4 END")
+            ->orderBy('created_at', 'desc')
+            ->paginate(20);
 
         // Accurate stats — computed from the full filtered set, not just the current page
         $statsQuery = clone $query;
