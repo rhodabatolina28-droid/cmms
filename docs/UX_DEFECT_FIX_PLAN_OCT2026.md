@@ -306,23 +306,50 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-05 | **Phase 2.5 (hotfix — Bug 8)** — scan rate-limit: route-scoped throttle prefixes (`pc-search` 120/min, `pc-mark` 300/min, `pc-store`/`pc-complete` 30/min) + 429 handling sa JS (search message, markMany stop + warning, markAsset button restore, scanner toast) | ✅ **DONE & VERIFIED** — `3b9f213` |
 | 2026-10-05 | Phase 2.5 docs + cleanup + prod-readiness assessment (lahat ng temp probe/logs natanggal, tree malinis, `ffe67f7`) | ✅ — `df17756` + `ffe67f7` |
 | 2026-10-05 | Tunnel/`APP_URL` rotation (trycloudflare expired) → `accommodation-numbers-acting-engineer.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
-| — | Phase 3 — QR/Cam button (0-byte bundle) + ICT auto-fill | ⏳ **SUSUNOD** |
+| 2026-10-06 | **Phase 3 (Bug 3)** — ICT form Cam/Scan + auto-fill: `qr-scanner.js` → `window.AssetScanner` (bundle 0 B → 1,318 B) · blade scanner init → `DOMContentLoaded` + tanggalin ang unmatched-`});` OLD HANDLER remnant (SyntaxError = binababa ng browser ang buong script block) · `CreateIctFormAction` keep/push ng user-owned `asset_id` (For Repair allowed, parity sa `linkedAssetValidationError`) · bagong `IctScanPrefillTest` | ✅ **DONE & VERIFIED** — `0abde01` |
+| 2026-10-06 | **Phase 3b (scan flow)** — guest scan → login → **options page muna** (`/r/{id}`) sa halop na deretso sa ICT form: `AuthController` qr-redirect → `url('/r/'.id)` (dating `route('ict.create')` — pre-existing simula June 29, na-expose lang ng tunnel rotation logout) + 2 bagong tests | ✅ **DONE & VERIFIED** — `1d4a3e5` |
+| 2026-10-06 | Tunnel/`APP_URL` rotation (lumang DNS expired) → `womens-cents-any-eyes.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 + `/r/1` 302 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
-### QR-scan status check (2026-10-05, base sa register sa itaas)
+### QR-scan status check (2026-10-05, updated 2026-10-06, base sa register sa itaas)
 
 | QR-scan area | Bug/s | Status |
 |---|---|---|
 | **Physical Count scanning** (scan card, mark, auto-rescan, mark-all, rate-limit) | 2, 8 | ✅ **OK na** — Phases 2 + 2.5, tested 15/15 + full suite 479 passed |
 | **Post-scan pages** (`scan/asset-info`, `scan-preview`, `notice`) | 7 (part) | ✅ OK — Phase 1b |
 | **`/r/{id}` QR redirect + stickers** | — | ✅ OK — 406 regenerated sa kasalukuyang `APP_URL` |
-| **ICT form Cam/Scan button + auto-fill** | **3** | ❌ **HINDI PA** — ang `qr-scanner` bundle ay 0-byte pa rin (`window.AssetScanner` undefined) + `CreateIctFormAction` nulls `asset_id` |
+| **ICT form Cam/Scan button + auto-fill** | **3** | ✅ **OK na** — Phase 3 (`0abde01`): bundle 1,318 B + `window.AssetScanner` defined · script-block SyntaxError inalis · owner preselect/autofill (5/5 tests; headless Chrome probe: modal opens, autofill OK, 0 JS errors) |
 
-**Verdict:** okay na ang QR-scan sa **Physical Count** (kung ito ang sinusubukan mo live), pero **hindi pa 100% ang QR-scan overall** — ang **ICT form scan button (Bug 3 / Phase 3)** ay hindi pa naaayos.
+**Verdict (updated 2026-10-06):** ✅ **100% na ang QR-scan areas** — kasama na ngayon ang **ICT form Cam/Scan + auto-fill** (Phase 3, `0abde01`).
 
-**Next:** **Phase 3** (`resources/js/qr-scanner.js` → kailangan ng `window.AssetScanner = AssetScanner` + `npm run build`; `CreateIctFormAction` L41-47 → panatilihin ang user-owned `asset_id`) → tapos **Phase 4** (PM Work Orders).
+**Next:** **Phase 4** (PM Work Orders — assignment back-fill + stats cards).
+
+### Phase 3 RESULT (2026-10-06, `0abde01`)
+
+**Root causes (3, lahat na-reproduce bago mag-fix):**
+
+1. **0-byte bundle** — walang `export`/`window` assignment sa `resources/js/qr-scanner.js` → tree-shake ng Rollup → `public/build/assets/qr-scanner-*.js` = 0 B → `new AssetScanner` throws bago ma-attach ang `scanBtn` listener.
+2. **Script ordering** — `@vite` = deferred module, pero ang inline IIFE ay classic = tumatakbo **bago** mag-execute ang module → kailangan ng `DOMContentLoaded` deferral.
+3. **SyntaxError sa blade + null-drop sa action** — ang "OLD HANDLER" remnant ay may commented-out opener pero buhay ang pares na `});` → **binababa ng browser ang BUONG `<script>` block** (kahit ang auto-select ay hindi tumatakbo). Dagdag: `CreateIctFormAction` nag-ze-null ng `?asset_id=` kapag na-filter ng status (`For Repair`) kahit pag-aari ng user → walang `<option>`/`ictAssetsMap` entry = walang auto-fill.
+
+**Fixes:** `qr-scanner.js` +`window.AssetScanner` (side-effect = hindi ma-tree-shake) · blade: scanner init naka-`DOMContentLoaded` (+ typeof guard at readyState fallback) at inalis ang remnant · action: kapag ang asset ay wala lang sa dropdown dahil sa status filter → i-keep kung hindi naka-block (`For Disposal`/`Scrapped`/`Disposed` lang; **hindi** ang `For Repair`) at pag-aari (`assetAssignedToUser`) o branch-scope (IT/SA), at **i-push sa `$myAssets`**; kung foreign/blocked → `null` pa rin.
+
+**Verification:**
+
+| Hakbang | Resulta |
+|---|---|
+| RED (bago fix) | 2 failed / 3 passed — `null` vs `90002` + source walang `window.AssetScanner` |
+| `node --check` HEAD vs working | HEAD = `SyntaxError: Unexpected token '}'` (exit 1) → working = exit 0 |
+| `npm run build` | `qr-scanner-BRavi3bg.js` = **1,318 B** (dati 0 B), may `window.AssetScanner`, exit 0 |
+| GREEN (pagkatapos fix) | **5/5 passed (18 assertions)** |
+| Headless Chrome probe | `assetscanner=function`, click Scan → `modal=flex` + `Initializing camera...`, `select=90002`, `autofill=90002`, **0 JS errors** |
+| Full suite | **3 failed / 484 passed** = baseline (3F/479P) + 5 bagong tests — walang bagong failure (3 = `CsmMonthlyReportTest` ×2 date-dependent + `PMCalendarTest` ×1, pre-existing) |
+
+**Phase 3b addendum (`1d4a3e5`)** — pagkatapos ng tunnel-rotation logout, napansin na ang guest scan → login ay **deretso sa ICT form** (bypass ang options page). Pre-existing `d5f8ae2` (June 29) — `AuthController` qr-redirect → `route('ict.create')` — na-expose lang ng bagong domain. Fix: `url('/r/'.id)` (options page muna, tulad ng authed flow) + 2 tests. RED 1F/6P → **GREEN 7/7**.
+
+**Observation (out of scope):** `public/build/assets/app-BvRk9kiK.js` ay 0.00 kB din (pre-existing, walang naire-report na epekto) — i-check sa susunod na phase kung naka-`@vite` ito sa mga layout.
 
 ---
 
@@ -338,6 +365,6 @@ Ang tunnel URL ay **nagbabago tuwing i-restart** ang `cloudflared` (trycloudflar
 | I-update ang `.env` | `APP_URL=<bagong URL>` |
 | I-clear ang config cache | `php artisan config:clear` |
 | **I-regenerate ang QR codes** | `App\Services\QrCodeService::regenerateForAll()` — kailangan ito dahil ang QR ay nag-e-encode ng `config('app.url') . '/r/{asset_id}'` (406 assets) |
-| I-verify | `Invoke-WebRequest https://<url>/login` → 200 |
+| I-verify | `Invoke-WebRequest https://<url>/login` → 200 (kapag 302/exception ang PowerShell, alternatibo: `curl.exe -s -o NUL -w "%{http_code}" https://<url>/login`) |
 
 > ⚠️ **Tandaan:** kapag nag-restart ang tunnel at nagbago ang URL, laging `config:clear` + QR regenerate, kung hindi luma ang URL na naka-encode sa mga sticker.
