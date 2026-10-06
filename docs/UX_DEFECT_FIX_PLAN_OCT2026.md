@@ -7,7 +7,7 @@
 
 ---
 
-## 1. Defect Register (8 bugs, lahat may napatunayang root cause)
+## 1. Defect Register (9 bugs, lahat may napatunayang root cause)
 
 | # | Bug (reported) | Root cause (verified) | Sakop |
 |---|---|---|---|
@@ -19,6 +19,7 @@
 | **6** | PM Work Orders — blank ang "Assigned To"; wala ang stats cards | (a) **LIVE DB evidence:** `pm_schedules` id=1 focus = `CONCILIATION AND MEDIATION DIVISION`, `assigned_it_id = NULL`; auto-PM: **36 total, 6 unassigned — lahat CMD, status = Scheduled**. Ang `GeneratePMScheduleService` L350-353 ay **ni-null** ang `assigned_it_id` sa cycle advance, habang `AssignPMScheduleITAction` L44-50 ay nag-u-update **lang** kapag `office = current_focus_division`. (b) Ang 5 stats cards ay nasa IT PM Tasks lang | Mobile + Desktop |
 | **7** | "Remove all icons — text only" sa mga na-scan / per-role cards | Maraming `<i class="fa-solid …">` pa sa scan flow at iba pang list pages | Lahat |
 | **8** *(added 2026-10-05)* | Physical Count — **hindi na makapag-scan pagkatapos makarami** ("rate limiting ata") | `ThrottleRequests` (Laravel 13.8) ay nag-e-key ng authenticated request gamit ang **`sha1(user_id)` lang** — `$prefix` ay `''` sa `throttle:30,1` at **walang route sa key** → **lahat ng ~60 `throttle:*` routes ay IISANG 30/min bucket kada user**. Bawat scan = 1 POST `/search` + 1 POST `/mark`; ang `Mark all Present (10)` ay +10 sunod-sunod → **429 sa loob ng ilang segundo**. Silent pa ang JS: `searchAsset` ay `if (!data.success) return;` (walang mensahe), ang `markMany` ay nahuhulog sa `else { skipped++ }` ("already counted" ang maling summary) at patuloy pang pinapadalhan lahat, at ang `markAsset` ay naiiwang `...`/disabled ang button. **Live DB evidence:** pinakamalaking group = **10 assets**; log: `ThrottleRequests->handle(..., '30', '1')` stack traces | Mobile (live scan sessions) |
+| **9** *(added 2026-10-06)* | PM Tasks (IT side) — (a) nakikita ng IT ang trabahong **hindi sa kanya**; (b) hindi pababa ang completed sa table | (a) `ListPmTasksAction` L30-39: `orWhereNull('assigned_to') AND branch` → **unassigned same-branch tickets** ay nasa personal queue ng IT; (b) L44: `orderBy('created_at','desc')` lang → kaka-**completeng** task (pinakabagong `created`) ay nasa **taas** pa rin — samantalang ang SA `GetOrdersDataAction` L44-47 ay nagsu-sort ng Scheduled→Ongoing→Awa­iting→Completed | IT side (mobile + desktop) |
 
 ---
 
@@ -261,6 +262,8 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 
 ## 7. PHASE 4 — PM Work Orders (System Admin)
 
+> ⏸️ **PARKED (2026-10-06):** sinabi ng user na *"working na pala — need lang pala assign"* ang PM Work Orders (SA side) → itinigil muna ang **4a-4d**; nag-pivot ang session sa **PM Tasks IT-side fixes (Bug 9)**. Hindi pa naka-implement ang 4a-4d — buo pa rin ang plan na ito kapag ibinalik.
+
 **Target commit:** `fix(pm-orders): back-fill IT assignment for scheduled auto-PMs and add stats cards`
 
 **Files:** `app/Actions/PMSchedule/AssignPMScheduleITAction.php`, `app/Services/GeneratePMScheduleService.php`, `app/Actions/PMSchedule/GetOrdersDataAction.php`, `resources/views/pm-schedules/orders.blade.php`
@@ -309,10 +312,11 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-06 | **Phase 3 (Bug 3)** — ICT form Cam/Scan + auto-fill: `qr-scanner.js` → `window.AssetScanner` (bundle 0 B → 1,318 B) · blade scanner init → `DOMContentLoaded` + tanggalin ang unmatched-`});` OLD HANDLER remnant (SyntaxError = binababa ng browser ang buong script block) · `CreateIctFormAction` keep/push ng user-owned `asset_id` (For Repair allowed, parity sa `linkedAssetValidationError`) · bagong `IctScanPrefillTest` | ✅ **DONE & VERIFIED** — `0abde01` |
 | 2026-10-06 | **Phase 3b (scan flow)** — guest scan → login → **options page muna** (`/r/{id}`) sa halop na deretso sa ICT form: `AuthController` qr-redirect → `url('/r/'.id)` (dating `route('ict.create')` — pre-existing simula June 29, na-expose lang ng tunnel rotation logout) + 2 bagong tests | ✅ **DONE & VERIFIED** — `1d4a3e5` |
 | 2026-10-06 | **DATE RECEIVED autofill** — default = **receipt date** (`created_at`, kailan pumasok ang request para sa system admin), HINDI ang araw na binuksan ang form (dating `now()` mula D9.26) sa `_ict_form_sections.blade.php` + bagong `IctDateReceivedAutofillTest` (3 tests; saved-value + view-blank locks) | ✅ **DONE & VERIFIED** — `2d1081d` |
+| 2026-10-06 | **PM Tasks IT-side (Bug 9)** — (a) **assigned-to-me-only** visibility (tanggalin ang unassigned-in-branch na `orWhereNull` leak) · (b) table sort = Scheduled→Ongoing→Awaiting Signature→Completed bago `created_at desc` (parang SA PM Work Orders — **completed pababa na**) sa `ListPmTasksAction` + bagong `PmTasksItScopeTest` (3 tests) | ✅ **DONE & VERIFIED** — `4c81d14` |
 | 2026-10-06 | Tunnel/`APP_URL` rotation (lumang DNS expired) → `womens-cents-any-eyes.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 + `/r/1` 302 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 4c81d14` (PM Tasks IT-side) · `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ### QR-scan status check (2026-10-05, updated 2026-10-06, base sa register sa itaas)
 
