@@ -36,15 +36,34 @@ class CreateIctFormAction
                 ->whereNotIn('status', ['For Repair', 'For Disposal', 'Scrapped'])
                 ->get();
         }
-        $hasAssignedAssets = $myAssets->isNotEmpty();
-
         $preselectedAssetId = $request->query('asset_id');
         if ($preselectedAssetId) {
             $preselectedAssetId = (int) $preselectedAssetId;
-            if (!$myAssets->contains('asset_id', $preselectedAssetId)) {
-                $preselectedAssetId = null;
+            if (! $myAssets->contains('asset_id', $preselectedAssetId)) {
+                // The asset is missing from the dropdown — normally because the
+                // status filter above (For Repair / For Disposal / Scrapped)
+                // removed it. Keep it preselected ONLY when the user may still
+                // link it — same rules as RequestHelpers::linkedAssetValidationError:
+                // disposal statuses blocked ('For Repair' is NOT), ownership
+                // required for end-users, branch scope for IT/System Admin.
+                $asset = InventoryAsset::where('asset_id', $preselectedAssetId)->first();
+                $canLink = $asset
+                    && ! in_array($asset->status, ['For Disposal', 'Scrapped', 'Disposed'], true)
+                    && (in_array($user->role, ['it', 'super_admin'], true)
+                        ? (! $user->branch || $asset->branch === $user->branch)
+                        : \App\Support\RequestHelpers::assetAssignedToUser($user, $asset->asset_id));
+
+                if ($canLink) {
+                    // Re-add so the <option> exists in the dropdown and the
+                    // auto-fill map has data (Bug 3b, Oct 2026).
+                    $myAssets->push($asset);
+                } else {
+                    $preselectedAssetId = null;
+                }
             }
         }
+
+        $hasAssignedAssets = $myAssets->isNotEmpty();
 
         $ictAssetsMap = [];
         foreach ($myAssets as $asset) {

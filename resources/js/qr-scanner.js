@@ -104,3 +104,11 @@ class AssetScanner {
     }
 }
 
+// Expose globally for inline (non-module) scripts such as the ICT form's
+// _ict_scripts.blade.php — and to give this Vite entry a real side effect so
+// Rollup cannot tree-shake it into a 0-byte bundle. (Bug 3a, Oct 2026)
+if (typeof window !== 'undefined') {
+    window.AssetScanner = AssetScanner;
+}
+
+

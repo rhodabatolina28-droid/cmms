@@ -499,6 +499,16 @@
         }
 
         // ── Scan button → camera modal ───────────────────────────────────
+        // Deferred to DOMContentLoaded: the Vite module entry for qr-scanner.js
+        // is loaded as a MODULE (deferred) — it executes AFTER this inline
+        // classic script but BEFORE DOMContentLoaded, so window.AssetScanner is
+        // guaranteed defined here (Bug 3a-2, Oct 2026). NOTE: never write the
+        // literal vite sigil in blade comments — Blade compiles it as a directive.
+        function initIctScanner() {
+        if (typeof window.AssetScanner === 'undefined') {
+            console.error('AssetScanner bundle not loaded (qr-scanner.js) — Cam/Scan disabled.');
+            return;
+        }
         const scanBtn = document.getElementById('scanQrBtn');
         const modal = document.getElementById('qrScannerModal');
         const cancelBtn = document.getElementById('cancelScanBtn');
@@ -586,26 +596,18 @@
         window.addEventListener('beforeunload', function() {
             if (isScanning) assetScanner.stopCamera();
         });
-    })();
-    // OLD HANDLER - moved to DOMContentLoaded above
-        // document.addEventListener('click', function(e) {
-        var btn = e.target.closest('[data-canvas]');
-        if (btn) {
-            if (btn.dataset.action === 'resign') {
-                // Re-sign: replace saved signature image with a fresh canvas
-                var container = btn.closest('.signature-container');
-                var canvasId = btn.dataset.canvas;
-                var inputId = btn.dataset.input;
-                if (container) {
-                    container.innerHTML = '<canvas id="' + canvasId + '" class="signature-pad" width="220" height="48"></canvas><input type="hidden" id="' + inputId + '" name="' + inputId + '">';
-                    initSignaturePad(canvasId, inputId);
-                    // Change button to Clear mode
-                    btn.textContent = 'Clear';
-                    btn.removeAttribute('data-action');
-                }
-            } else {
-                clearSignature(btn.dataset.canvas, btn.dataset.input);
-            }
+        } // end initIctScanner
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initIctScanner);
+        } else {
+            initIctScanner();
         }
-    });
+    })();
+    // OLD HANDLER block removed (Bug 3 part 2, Oct 2026): its opener
+    // (document.addEventListener click for signature re-sign) was commented
+    // out but the closing `});` was left behind — the resulting SyntaxError
+    // made the browser discard this ENTIRE script block (URL auto-select +
+    // scanner wiring), so nothing in this script tag ever ran. The live
+    // signature handler lives in the script block above (DOMContentLoaded).
     </script>
