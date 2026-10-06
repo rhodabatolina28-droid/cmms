@@ -308,10 +308,11 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-05 | Tunnel/`APP_URL` rotation (trycloudflare expired) → `accommodation-numbers-acting-engineer.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
 | 2026-10-06 | **Phase 3 (Bug 3)** — ICT form Cam/Scan + auto-fill: `qr-scanner.js` → `window.AssetScanner` (bundle 0 B → 1,318 B) · blade scanner init → `DOMContentLoaded` + tanggalin ang unmatched-`});` OLD HANDLER remnant (SyntaxError = binababa ng browser ang buong script block) · `CreateIctFormAction` keep/push ng user-owned `asset_id` (For Repair allowed, parity sa `linkedAssetValidationError`) · bagong `IctScanPrefillTest` | ✅ **DONE & VERIFIED** — `0abde01` |
 | 2026-10-06 | **Phase 3b (scan flow)** — guest scan → login → **options page muna** (`/r/{id}`) sa halop na deretso sa ICT form: `AuthController` qr-redirect → `url('/r/'.id)` (dating `route('ict.create')` — pre-existing simula June 29, na-expose lang ng tunnel rotation logout) + 2 bagong tests | ✅ **DONE & VERIFIED** — `1d4a3e5` |
+| 2026-10-06 | **DATE RECEIVED autofill** — default = **receipt date** (`created_at`, kailan pumasok ang request para sa system admin), HINDI ang araw na binuksan ang form (dating `now()` mula D9.26) sa `_ict_form_sections.blade.php` + bagong `IctDateReceivedAutofillTest` (3 tests; saved-value + view-blank locks) | ✅ **DONE & VERIFIED** — `2d1081d` |
 | 2026-10-06 | Tunnel/`APP_URL` rotation (lumang DNS expired) → `womens-cents-any-eyes.trycloudflare.com`, `config:clear` + **406 QR regenerated**, `/login` 200 + `/r/1` 302 | ✅ (hindi naka-commit — `.env` is gitignored, runbook §11) |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ### QR-scan status check (2026-10-05, updated 2026-10-06, base sa register sa itaas)
 
