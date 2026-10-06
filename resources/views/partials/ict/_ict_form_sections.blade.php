@@ -102,7 +102,13 @@
 
                         <div class="form-group compact">
                             <label for="dateReceived">DATE RECEIVED:</label>
-                            <input type="date" id="dateReceived" name="dateReceived" value="{{ fmtDate($repairRequest->date_received ?? (($isAdmin && !$isView) ? now() : null)) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
+                            {{-- Auto-fill = RECEIPT date (created_at — kailan
+                                 pumasok ang request para sa system admin),
+                                 HINDI ang araw na binuksan ang form (dating
+                                 `now()` default). Naka-save na value ang
+                                 unang priority; `now()` = fallback sa
+                                 create mode (wala pang record). --}}
+                            <input type="date" id="dateReceived" name="dateReceived" value="{{ fmtDate($repairRequest->date_received ?? (($isAdmin && !$isView) ? ($repairRequest->created_at ?? $request?->created_at ?? now()) : null)) }}" {{ (!$isAdmin || $isView) ? 'disabled' : '' }}>
                         </div>
 
                         <div class="form-group compact">
