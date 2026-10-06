@@ -195,5 +195,45 @@ class IctScanPrefillTest extends TestCase
             'Built qr-scanner bundle does not contain the AssetScanner class'
         );
     }
+
+    /**
+     * UX flow (guest scan): after login the user must land on the /r/{id}
+     * OPTIONS page — scanned asset + their other available assets to pick
+     * from — NOT straight on the ICT form. The form comes after they click
+     * an option, where the Bug 3 fixes above preselect + auto-fill it.
+     * (AuthController used to send qr_redirect_asset_id straight to
+     * ict.create, so only already-authed scanners saw the options page.)
+     */
+    public function test_guest_scan_login_lands_on_options_page_not_form(): void
+    {
+        $user  = $this->makeUser();
+        $asset = $this->makeAsset(['assigned_to_user' => $user->id]);
+
+        $res = $this->withSession(['qr_redirect_asset_id' => $asset->asset_id])
+            ->post('/login', [
+                'email'    => $user->email,
+                'password' => 'password',
+            ]);
+
+        $res->assertRedirect(url('/r/' . $asset->asset_id));
+        $this->assertStringNotContainsString(
+            'ict/create',
+            (string) $res->headers->get('Location'),
+            'Guest scan must NOT skip the options page straight to the ICT form'
+        );
+    }
+
+    /** Plain login (walang pending scan) keeps going to the dashboard. */
+    public function test_login_without_pending_scan_goes_to_dashboard(): void
+    {
+        $user = $this->makeUser();
+
+        $res = $this->post('/login', [
+            'email'    => $user->email,
+            'password' => 'password',
+        ]);
+
+        $res->assertRedirect($user->dashboardPath());
+    }
 }
 

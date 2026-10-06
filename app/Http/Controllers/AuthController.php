@@ -83,10 +83,14 @@ class AuthController extends Controller
             $redirect = $this->validateRedirect($request->input('redirect'));
             $dashboardPath = $user->dashboardPath();
 
-            // Check for pending QR redirect from session (guest scanned QR before login)
+            // Check for pending QR redirect from session (guest scanned QR
+            // before login) → land on the /r/{id} OPTIONS page first (scanned
+            // asset + the user's other available assets to pick from), same
+            // as the already-authed flow. The ICT form opens only after they
+            // click an option, where it preselects + auto-fills (Bug 3 UX).
             $qrAssetId = $request->session()->pull('qr_redirect_asset_id');
             if ($qrAssetId && $user->role === 'user') {
-                $finalRedirect = route('ict.create', ['asset_id' => $qrAssetId]);
+                $finalRedirect = url('/r/' . $qrAssetId);
             } else {
                 $finalRedirect = $redirect ?: $dashboardPath;
             }
