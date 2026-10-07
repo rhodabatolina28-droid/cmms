@@ -229,6 +229,30 @@
         }
         tr.covered td { background: #f0fdf4; }
 
+        /* ===== 1" x 1" (25.4mm) sticker — QR plan §9.5.
+           Same class names as inventory/qr-sticker.blade.php; markup comes from
+           the shared fragment (inventory/_sticker.blade.php) via ?fragment=1. ===== */
+        .sticker {
+            width: 25.4mm;
+            height: 25.4mm;
+            background: #fff;
+            border: 0.5px dashed #94a3b8;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 1.2mm;
+            overflow: hidden;
+            text-align: center;
+            box-sizing: border-box;
+        }
+        .sticker .qr { width: 15mm; height: 15mm; }
+        .sticker .qr svg { width: 100% !important; height: 100% !important; display: block; }
+        .sticker .s-id { font-family: 'Courier New', monospace; font-size: 6pt; font-weight: 800; color: #0f172a; margin-top: 0.8mm; }
+        .sticker .s-name { font-size: 5pt; font-weight: 700; color: #334155; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-flag { font-size: 5pt; font-weight: 800; color: #0038A8; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-serial { font-family: 'Courier New', monospace; font-size: 4.5pt; color: #64748b; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
         /* ===== PRINT LAYOUT ===== */
         @media print {
             body * { visibility: hidden; }
@@ -243,64 +267,19 @@
 
             @page {
                 size: A4 portrait;
-                margin: 10mm;
+                margin: 5mm;
             }
 
+            /* QR plan §9.5 — 1" x 1" cells: 7 across x 10 rows = 70/A4 */
             .sticker-grid {
                 display: grid;
-                grid-template-columns: repeat(2, 1fr);
-                gap: 5mm;
-                padding-bottom: 10mm;
-            }
-
-            .sticker-item {
-                width: 95mm;
-                height: 45mm;
-                border: 1px dashed #94a3b8;
-                border-radius: 2mm;
-                display: flex;
-                flex-direction: row;
-                align-items: center;
-                justify-content: flex-start;
-                padding: 4mm;
-                page-break-inside: avoid;
-                overflow: hidden;
-                box-sizing: border-box;
-            }
-
-            .sticker-item svg {
-                width: 32mm;
-                height: 32mm;
-                flex-shrink: 0;
-                margin-right: 4mm;
-            }
-
-            .sticker-info {
-                display: flex;
-                flex-direction: column;
+                grid-template-columns: repeat(7, 25.4mm);
+                gap: 3mm;
                 justify-content: center;
-                overflow: hidden;
-                width: 100%;
+                padding-bottom: 6mm;
             }
 
-            .sticker-item .s-name {
-                font-family: Arial, sans-serif;
-                font-size: 11pt;
-                font-weight: 900;
-                color: #000;
-                line-height: 1.1;
-                margin-bottom: 2mm;
-                text-transform: uppercase;
-                word-wrap: break-word;
-            }
-
-            .sticker-item .s-id {
-                font-family: 'Courier New', monospace;
-                font-size: 8pt;
-                font-weight: 700;
-                color: #333;
-                line-height: 1.3;
-            }
+            .sticker-grid .sticker { page-break-inside: avoid; }
         }
 
         /* Screen preview of sticker grid */
@@ -411,7 +390,7 @@
 <!-- NOTICE -->
 <div class="print-preview-note">
     <i class="fa-solid fa-circle-info"></i>
-    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Kapag nag-print, lalabas ang <strong>2 stickers per row</strong> sa A4 — may QR code at malaking text na item name + asset ID. I-cut bago idikit!</span>
+    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Bawat sticker ay <strong>1" × 1"</strong> (25.4mm), grid ng <strong>70 stickers/A4</strong> — QR, asset ID, at item name. I-cut bago idikit!</span>
 </div>
 
 <!-- ASSET TABLE -->
@@ -676,31 +655,18 @@
         const selected = allAssets.filter(a => selectedIds.has(a.asset_id));
         if (!selected.length) return;
 
-        // Build sticker grid from server-generated QR codes
+        // ONE shared sticker template (inventory/_sticker.blade.php): fetch the
+        // fragment (?fragment=1) per selected asset — same markup as the single
+        // sticker page (1" x 1" cells; parents print, components reference them).
         const promises = selected.map(a =>
-            fetch(`{{ route('inventory.qr-sticker', '_ID_') }}`.replace('_ID_', a.asset_id) + '?raw=1')
+            fetch(`{{ route('inventory.qr-sticker', '_ID_') }}`.replace('_ID_', a.asset_id) + '?fragment=1')
                 .then(r => r.text())
-                .then(html => {
-                    // Extract SVG from the response
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const svg = doc.querySelector('svg');
-                    return { asset: a, svgHtml: svg ? svg.outerHTML : '' };
-                })
-                .catch(() => ({ asset: a, svgHtml: '' }))
+                .catch(() => '')
         );
 
-        Promise.all(promises).then(results => {
+        Promise.all(promises).then(cells => {
             const grid = document.getElementById('stickerGrid');
-            grid.innerHTML = results.map(({ asset, svgHtml }) => `
-                <div class="sticker-item">
-                    ${svgHtml}
-                    <div class="sticker-info">
-                        <div class="s-name">${escHtml(asset.item_name)}</div>
-                        <div class="s-id">ID: #${asset.asset_id}<br>SN: ${asset.serial_number ? escHtml(asset.serial_number) : 'N/A'}</div>
-                    </div>
-                </div>
-            `).join('');
+            grid.innerHTML = cells.join('');
 
             document.getElementById('printSection').style.display = 'block';
             setTimeout(() => {

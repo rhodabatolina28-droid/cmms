@@ -160,6 +160,13 @@ class InventoryController extends Controller
         $asset = InventoryAsset::findOrFail($assetId);
         $asset->qr_code = \App\Services\QrCodeService::generateForAsset($asset);
 
+        // Shared fragment for the batch print grid — ONE sticker template for
+        // single + batch printing (QR Print + Scan Hub Plan §9.5). The fragment
+        // has no print() script; the batch page inserts the markup as-is.
+        if ($request->boolean('fragment')) {
+            return view('inventory._sticker', compact('asset'));
+        }
+
         return view('inventory.qr-sticker', compact('asset'));
     }
 
