@@ -11,6 +11,7 @@
 | Decision | Rationale |
 |---|---|
 | **Asset QR = permanent identity** | The physical sticker is per-asset (`/r/{asset_id}`), printed **once**, never re-printed due to reassignment. Tag follows the asset, not the person. COA-aligned (property tagging is per-item). |
+| **Set QR = parent only (1 print = whole set)** | For parent-child sets (`parent_asset_id`), **one sticker on the parent** = access to the whole linked set via the scan hub (§9). Components carry **no separate sticker** — their identity lives under the parent. Extends the "printed once / no reprints" rule. |
 | **No new sticker type** | No per-person / per-division QR. No new routes, no QR payload changes. |
 | **Person grouping lives in software** | The Physical Count page can search by custodian name and count the custodian's whole assigned set at once. Digital equivalent of a PAR-based annual inventory (COA workflow). |
 | **Assigned assets only** | Group results exclude unassigned/spare assets and `For Disposal` / `Scrapped` items. |
@@ -316,5 +317,138 @@ graph TD
 
 4. **Digital Archive View (`resources/views/pdf/physical-count-report.blade.php`)**:
    - I-align ang HTML structure nito sa Master Report para ang PDF na naka-archive sa storage kapag nag-"Complete Session" ay kasing linis din ng print view.
+
+---
+
+## 9. QR Print + Scan Hub Plan — "1 parent QR print = access to the whole linked asset set"
+
+**Status:** Agreed concept (2026-10-07) — plan for implementation
+**Scope:** Batch QR sticker print (set-aware + per-custodian), sticker layout/size/content, scan hub page (`/r/{asset_id}`), lifecycle/reprint policy, prerequisite: durable host
+**Related:** §1 decisions (dito), `docs/asset-set-integrity.md`, `docs/UX_DEFECT_FIX_PLAN_OCT2026.md` §11 (tunnel/QR runbook)
+
+### 9.1 Concept (confirmed with user)
+
+| # | Decision | Detail |
+|---|---|---|
+| **C1** | **Per-ASSET QR** (hindi per-person) | Naririyan nang rule (§1): ang QR ay `/r/{asset_id}`, **printed once** kada asset. Walang per-person / per-division QR. |
+| **C2** | **1 parent QR print = access sa buong linked asset set** | Ang **parent** asset lang ang may sticker. Ang mga **component** ay *walang sariling sticker* — naka-link sa parent via `parent_asset_id` (shared PAR). Isang scan ng parent QR → kita ang **buong set**. |
+| **C3** | **Everything linked per user / custodian** | Print page, scan hub, "other assets", at actions — lahat naka-group/naka-link sa user o custodian. Parehong pattern ng Physical Count custodian grouping (`PHYSICAL_COUNT_CUSTODIAN_GROUP.md` §4) at ng IT/sys-admin scan page ("Other Assets of User"). |
+| **C4** | **Dynamic page, printed once** | Ang QR ay nag-e-encode **lang** ng `{APP_URL}/r/{asset_id}` — walang ibang data na naka-print (walang custodian, walang component count). Kaya lahat ng pagbabago (reassign, resign, status change, bagong component) ay **software lang** — walang reprint. |
+| **C5** | **Batch print = one print, many linked** | Ang "Batch QR Sticker Print" ay isang print job na maraming sticker; kung set ang napili, **isang sticker lang** (parent) na sumasakop sa lahat ng component nito. |
+
+### 9.2 Existing infrastructure (hindi na uulitin — ito ang pupuntahan ng plano)
+
+| Bahagi | File / route | Katayuan |
+|---|---|---|
+| QR generation | `app/Services/QrCodeService.php` — `generateForAsset()`, `regenerateForAll()` (chunked, `saveQuietly`) | ✅ Gagamitin as-is; payload = `rtrim(config('app.url'),'/').'/r/'.asset_id` |
+| Redirect route | `routes/web.php` → `/r/{asset_id}` (may guest-scan → login → bumalik sa `/r/{id}` flow) | ✅ Gagamitin as-is |
+| Single sticker | `resources/views/inventory/qr-sticker.blade.php` | 🔧 Phase B (variants) |
+| Batch sticker print | `resources/views/inventory/qr-batch.blade.php` (isa-press = maraming sticker) | 🔧 Phase A (set-aware + custodian grouping) |
+| Scan page | `app/Http/Controllers/ScanController.php` → `resources/views/scan/asset-info.blade.php` | 🔧 Phase C (set panel + user panel + actions) |
+| Set relations | `InventoryAsset::components()` / `parentAsset()` + `AssetSetIntegrityService` | ✅ Source of truth ng parent-child |
+| Custodian grouping precedent | `SearchPhysicalCountAssetAction::custodian_group` + `user_assets` | ✅ Pattern na kokopyahin sa batch print |
+| Asset list data | `app/Actions/Inventory/GetInventoryAssetsAction.php` | ✅ `parent_asset_id` / `components_count` kung kailanganin |
+
+### 9.3 Phase plan (bawat phase = isang commit + tests; HINDI lilipat sa susunod hangga't green)
+
+| Phase | Sakop | Files | Test |
+|---|---|---|---|
+| **A** | Batch page: **custodian grouping** + **set-aware selection** (disabled component rows, "covers N pcs" counter) — screen UI lang, walang print-layout change | `qr-batch.blade.php` | `QrBatchPrintTest` |
+| **B** | Sticker templates: **fixed 1" × 1" (25.4mm)** — shared partial, standalone vs set-parent variant (`▣ SET — scan for list`, **walang count**), batch print grid → 1"×1" cells | `qr-sticker.blade.php` + batch print CSS | `QrStickerSizeTest` |
+| **C** | Scan hub `/r/{id}`: **Set Components panel** (parent → listahan ng components; component → parent link + siblings) + bagong **[Scan] [Print QR sticker]** actions (role-gated) | `ScanController.php`, `asset-info.blade.php` | `ScanSetHubTest` |
+| **D** | Full verification: buong test suite + manual print/scan pass sa tunnel | — | baseline: 3 pre-existing F, walang bago |
+| **E** | ⚠️ **Prerequisite gate bago mag-mass print:** durable host → set `.env APP_URL` → `config:clear` → `QrCodeService::regenerateForAll()` | `.env` (hindi na-commit) | manual runbook (UX plan §11) |
+
+**Rule:** RED→GREEN kada phase; fix AGAD kapag may failure; **isang commit bawat phase**; docs commit hiwalay.
+
+### 9.4 Phase A — Batch QR Sticker Print (screen)
+
+```text
+Batch QR Print              [← Back] [Select All] [0 selected] [🖨 Print]
+🔍 [search...] [All Status▾] [All Categories▾]
+⚠ Set = isang sticker sa parent; components ay LINKED (isang scan = buong set).
+┌────┬─────────┬──────────────────┬────────────┬─────────┬──────┬───────┐
+│     ▾ JUAN DELA CRUZ — Property & Supply (3 assets, 1 set)  [select]  │
+│ ☑  │ #140    │ HP ProDesk 400   │ 8CC91A2B   │ 26-...  │ Desk │ ●Act  │
+│    │         │ ▣ SET(4)         │            │         │      │       │
+│ ☐  │ ↳ #141  │ Monitor Dell     │ CN0F882    │ 26-...  │ Mon  │ ●Act  │ ← DISABLED
+│ ☐  │ ↳ #142  │ Keyboard K120    │ WH4412     │ 26-...  │ Peri │ ●Act  │   (covered)
+│     ▾ MARIA SANTOS — ICT (6 assets, 1 set)                   [select]    │
+│ ☑  │ #160    │ Lenovo ThinkPad  │ PF3K99     │ 26-...  │ Lap  │ ●Act  │
+├────┴─────────┴──────────────────┴────────────┴─────────┴──────┴───────┤
+│ Selected: 182 stickers → 147 assets · covers 213 pcs                  │
+└───────────────────────────────────────────────────────────────────────┘
+```
+
+1. **Custodian grouping** — header bawat `assigned_user`: name + office + counts + `[select all]`; unassigned → "Unassigned / Spare" group. Pattern: Physical Count accordion.
+2. **Set-aware** — component rows naka-indent + **disabled checkbox** ("component of #140 — no sticker"); piliin ang parent → auto-covered.
+3. **Counter** — `N stickers → M assets · covers P pcs` (kasama ang covered components).
+4. **Hindi nagbabago:** filters, search, Print button, `window.print()` flow, permissions/route.
+
+### 9.5 Phase B — Sticker: fixed **1" × 1" (25.4 × 25.4 mm)** (agreed 2026-10-07)
+
+```text
+STANDALONE:                    SET PARENT (1 print = buong set):
+┌───────────────────┐          ┌───────────────────┐
+│ ▓▓▓▓▓  #150       │          │ ▓▓▓▓▓  #140       │
+│ ▓QR▓▓  Epson L3210│          │ ▓QR▓▓  HP ProDesk │
+│ ▓▓▓▓▓  SN:XP2291  │          │ ▓▓▓▓▓  ▣ SET      │
+└───────────────────┘          └───────────────────┘
+ 25.4mm × 25.4mm square · QR ≈15mm (SVG mula sa qr_code column)
+ @page grid: 7×10 = 70 stickers/A4 · 0.5pt dashed cut guide
+```
+
+1. **Dalawang variant lang**, parehong 1"×1". Set parent: dagdag na linya `▣ SET — scan for list` — **WALANG component count** (live count = scan hub) → zero-reprint kahit magdagdag ng component.
+2. **Sticker content:** QR · Asset ID · item name (+ serial kung kasya). **WALA:** custodian, status, office, date — lahat ng volatil ay scan-hub only (C4).
+3. Iisang **shared partial** ang gagamitin ng `qr-sticker.blade.php` (single) at ng batch print grid — hindi maghihiwalay ang layout.
+4. Batch print CSS: lumang 95×45mm, 2/row → **1"×1" grid cells** (`@page` A4, dashed cut guides).
+5. QR SVG = `{!! $asset->qr_code !!}` as-is (naka-1:1, walang bagong generation).
+
+### 9.6 Phase C — Scan hub `/r/{id}`: set panel + actions
+
+```text
+┌──────────────────────────────────────────────┐
+│ HP ProDesk 400 G6              ● Active      │  existing header
+│ [📷 Scan]  [🖨 Print QR sticker]  [Back] ... │  ← BAGONG 2 actions
+├──────────────────────────────────────────────┤
+│ ▣ SET COMPONENTS (4)                         │  parent view: listahan
+│  ↳ Monitor Dell P2422H (#141) ⮞ (clickable)  │  ng components → /r/{id}
+├──────────────────────────────────────────────┤
+│ ▣ Component of HP ProDesk (#140) ⮞ go parent │  component view: parent
+│    + siblings (#142, #143)                   │  link + siblings
+├──────────────────────────────────────────────┤
+│ Other Assets of Juan Dela Cruz   (EXISTING)  │
+│ Actions: ICT · PM · History    (EXISTING)    │
+└──────────────────────────────────────────────┘
+```
+
+1. `ScanController` — eager-load `components` + `parentAsset`; i-render ang panel batay sa kung parent/component/standalone.
+2. `🖨 Print QR sticker` → existing `inventory.qr-sticker` route (same access gate ng batch print).
+3. `📷 Scan` → inline camera gamit ang existing `public/js/html5-qrcode.min.js` → `location.href = '/r/{bagong id}'`.
+4. **EXISTING, walang babaguhin:** "Other Assets of User", header details, guest flow (`/r/{id}` → login → balik).
+
+### 9.7 Lifecycle & reprint policy (ito ang nagpapatunay na "printed once" sapat)
+
+| Scenario | Epekto sa naka-print na sticker | Reprint? |
+|---|---|---|
+| Update ng specs/name/status | scan hub lang ang nagbabago | ❌ |
+| Reassign / transfer custodian | lumipat ng group; history sa `inventory_history` | ❌ |
+| Resignation (user deleted) | `ON DELETE SET NULL` → "not assigned" | ❌ |
+| Dagdag ng asset | auto-QR sa create → i-print sa Batch page | ⭕ 1 sticker lang |
+| Dagdag ng component | auto-linked sa parent; **walang count sa sticker** | ❌ |
+| Detach/milipat ng component | blocked (dedicated audited workflow) | N/A |
+| Scrapped / Disposed | tanggalin ang sticker kasama ng asset | ⭕ angulin |
+| **APP_URL change (tunnel rotation)** | **lahat ng printed QR mamamatay** (DNS/530) | ✅ regen + reprint → kaya **GATE** (Phase E) |
+
+**Reprint triggers = 2 lang:** (1) APP_URL change, (2) desisyon na i-print ulit ang stale na teksto. Lahat ng iba = **zero reprint**.
+
+### 9.8 Verification plan (kada phase — bago lumipat)
+
+1. **Feature tests muna (RED→GREEN):** test name kada phase sa §9.3 table. Kapag may failure → **fix bago ang susunod na phase**.
+2. **Baseline:** walang bagong failure (ngayon: 3 pre-existing — `CsmMonthlyReportTest` ×2, `PMCalendarTest` ×1).
+3. **Manual pass (Phase D):** tunnel → batch select + print preview (tama ang 1"×1" grid) → iscan ang parent QR sa phone → SET COMPONENTS + Other Assets + actions → reassign sa DB → **walang kailangang reprint**.
+4. **Headless Chrome probe** kung may rendering change (pattern ng Phase 1/3 ng UX plan).
+
+> ⚠️ **Stability caveat (Phase E):** ang printed QR ay naka-encode ng `APP_URL`. Ang quick-tunnel ay nag-e-expire kada ilang oras → **HINDI mag-mass print** hangga't walang durable host (static domain / LAN IP / production URL). Runbook: `UX_DEFECT_FIX_PLAN_OCT2026.md` §11 (config:clear + `regenerateForAll()` = 406 assets).
 
 
