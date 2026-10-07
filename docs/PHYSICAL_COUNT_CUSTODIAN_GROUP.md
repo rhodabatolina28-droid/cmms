@@ -427,6 +427,8 @@ STANDALONE:                    SET PARENT (1 print = buong set):
 3. `📷 Scan` → inline camera gamit ang existing `public/js/html5-qrcode.min.js` → `location.href = '/r/{bagong id}'`.
 4. **EXISTING, walang babaguhin:** "Other Assets of User", header details, guest flow (`/r/{id}` → login → balik).
 
+> **UPDATE (2026-10-07, `a7a3752`):** items 2–3 (actions bar + inline scanner) ay **INARALIS** din sa parehong araw — user decision na **VIEW-only** dapat ang page pagkatapos ng scan (set panel + Other Assets + details). Ang pag-print ay nasa Batch QR Sticker Print; ang pag-scan ay sa native camera ng phone. May in-view comment na ang bawal na itong ibalik. Ang SET PANEL (items 1) ay nananatili.
+
 ### 9.7 Lifecycle & reprint policy (ito ang nagpapatunay na "printed once" sapat)
 
 | Scenario | Epekto sa naka-print na sticker | Reprint? |
@@ -464,5 +466,7 @@ STANDALONE:                    SET PARENT (1 print = buong set):
 1. **Phase E pa** — walang mass print hangga't walang durable host (tunnel rotation = lahat ng printed QR mamamatay; regen + reprint ang lunas).
 2. Ang dating naka-log na "495 passed" baseline ay hindi eksaktong nababagayan pagdagdag ng 7 (495+7=502 ≠ 499). Ni-verify: (a) lahat ng **7 bagong test ay naka-run at PASS** (nakita isa-isa sa full-suite output), (b) `tests/` diff vs `6ee4ccf` = **puro dagdag** (379+, 0−), (c) walang parse error / missing file sa `test.err` — kaya walang nawalang test file. Bagong authoritative baseline: **3F / 499P** (2054 assertions).
 3. Temp probe artifacts (user, scripts, cookies, fetched pages) — **lahat na-clean**; `git status` = clean bago ang docs commit na ito.
+4. **Scannability hotfix `e437e02` (2026-10-07)** — na-report na **hindi kinikilala ng phone camera** ang na-print na QR. Diagnosis (Chrome screenshot + jsQR decode probe): tama ang naka-encode (live tunnel URL) at nagde-decode ang render — ang salarin ay **laki + quiet zone**: 15mm QR sa 1"×1" cell na may `margin(1)` = 0.43mm/module at 1-module na puti lang. Fix: QR **15→17mm**, cell padding 1.2→0.9mm + `line-height:1` (klaro pa rin ang text — verified sa screenshot), `QrCodeService` **`margin(1)` → `margin(2)`** (~4 modules na puti kasama ang padding), print notice = **"100% scale, huwag Fit to page"**; **406 QR regenerated**. Tests: bagong `QrStickerSizeTest::test_qr_is_scannable_size_with_proper_quiet_zone` (17mm CSS + `scale=200/29`) RED→GREEN; 18 regressions passed. ⚠️ **Ang mga naunang naka-print (lumang layout o lumang tunnel URL) ay dapat i-print muli.**
+5. **Scan-hub buttons removed `a7a3752` (2026-10-07)** — user decision: **VIEW-only** ang `/r/{id}` page pagkatapos ng scan (in-alis ang `[Scan QR]` / `[Print QR sticker]` bar + camera overlay/JS; ang SET PANEL at "Other Assets of User" ay nananatili). `ScanSetHubTest` updated (absence assertions para sa IT at supply) → GREEN, 22 passed kasama ang `IctScanPrefillTest` + `PhysicalCountGroupTest`. Nakasulat ang dahilan sa in-view comment para hindi na muling ma-reintroduce.
 
 
