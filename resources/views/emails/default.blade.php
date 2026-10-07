@@ -3,38 +3,49 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'NCMB CMMS Notification' }}</title>
+    <title>{{ $title ?? 'National Conciliation and Mediation Board' }}</title>
+    <meta name="color-scheme" content="light">
+    <meta name="supported-color-schemes" content="light">
     <style>
         body {
             font-family: 'Segoe UI', Arial, Helvetica, sans-serif;
             margin: 0;
             padding: 0;
-            background-color: #ffffff;
+            background-color: #f1f5f9;
             -webkit-font-smoothing: antialiased;
         }
         table { border-collapse: collapse; }
 
-        .outer-table { width: 100%; background-color: #ffffff; }
+        .outer-table { width: 100%; background-color: #f1f5f9; }
         .main-container {
             max-width: 600px;
             margin: 0 auto;
             background: #ffffff;
+            box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
         }
 
         .top-bar {
             height: 3px;
-            background-color: #1e3a8a;
+            background-color: #0038A8;
         }
 
         .header {
             padding: 28px 32px 0;
             text-align: left;
         }
+        .header-eyebrow {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 1.4px;
+            text-transform: uppercase;
+            color: #64748b;
+            margin-bottom: 6px;
+        }
         .header-name {
             font-size: 18px;
             font-weight: 800;
-            color: #1e3a8a;
-            letter-spacing: 1px;
+            color: #0038A8;
+            letter-spacing: 0.4px;
         }
         .header-sub {
             font-size: 11px;
@@ -89,7 +100,10 @@
         }
         .details-label {
             color: #64748b;
-            font-weight: 500;
+            font-weight: 700;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.4px;
             width: 100px;
             vertical-align: top;
             padding-right: 12px;
@@ -99,8 +113,20 @@
             font-weight: 500;
         }
         .details-value strong {
-            color: #1e3a8a;
+            color: #0038A8;
             font-weight: 700;
+        }
+        .status-pill {
+            display: inline-block;
+            background: #eff6ff;
+            color: #0038A8;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 1px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
         }
 
         .btn-wrap {
@@ -109,7 +135,7 @@
         }
         .btn {
             display: inline-block;
-            background: #1e3a8a;
+            background: #0038A8;
             color: #ffffff !important;
             text-decoration: none;
             padding: 12px 32px;
@@ -119,7 +145,7 @@
             letter-spacing: 0.3px;
         }
         .btn:hover {
-            background: #1e40af;
+            background: #002d8c;
         }
 
         .footer {
@@ -132,7 +158,7 @@
         }
         .footer-agency {
             font-weight: 700;
-            color: #1e3a8a;
+            color: #0038A8;
             font-size: 12px;
         }
         .footer-divider {
@@ -151,17 +177,18 @@
         }
     </style>
 </head>
-<body>
-    <table class="outer-table" cellpadding="0" cellspacing="0" border="0">
+<body bgcolor="#f1f5f9">
+    <table class="outer-table" cellpadding="0" cellspacing="0" border="0" bgcolor="#f1f5f9">
         <tr>
             <td align="center" style="padding: 0;">
-                <table class="main-container" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <table class="main-container" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#ffffff">
                     <tr>
-                        <td class="top-bar"></td>
+                        <td class="top-bar" bgcolor="#0038A8"></td>
                     </tr>
                     <tr>
                         <td class="header">
-                            <div class="header-name">NCMB CMMS</div>
+                            <div class="header-eyebrow">Official Notification</div>
+                            <div class="header-name">National Conciliation and Mediation Board</div>
                             <div class="header-sub">Computerized Maintenance Management System</div>
                             <div class="header-divider"></div>
                         </td>
@@ -184,7 +211,7 @@
                                     @if($status)
                                     <tr>
                                         <td class="details-label">Status</td>
-                                        <td class="details-value">{{ $status }}</td>
+                                        <td class="details-value"><span class="status-pill">{{ $status }}</span></td>
                                     </tr>
                                     @endif
                                     @if($date)

@@ -42,7 +42,7 @@ class PMAdminNotificationMail extends Mailable
         $date = $this->scheduleDate ? \Carbon\Carbon::parse($this->scheduleDate)->format('F d, Y') : 'TBD';
         $status = 'Assigned';
 
-        return $this->subject("[NCMB CMMS] PM Task Assigned - #{$this->requestNumber}")
+        return $this->subject("[NCMB] PM Task Assigned - #{$this->requestNumber}")
                     ->view('emails.default')
                     ->with([
                         'title' => 'PM Task Assigned',

@@ -153,7 +153,7 @@ MAIL_SCHEME=tls
 MAIL_USERNAME=<account>
 MAIL_PASSWORD=<app-password>
 MAIL_FROM_ADDRESS="cmms@<office-domain>"
-MAIL_FROM_NAME="NCMB CMMS"
+MAIL_FROM_NAME="National Conciliation and Mediation Board"
 ```
 
 **Queue worker** (Linux — supervisor ang inirerekomenda):

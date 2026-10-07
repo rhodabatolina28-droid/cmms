@@ -52,10 +52,10 @@ class SystemNotificationMail extends Mailable
         $this->notificationMessage = $message;
         $this->requestNumber = $requestNumber;
 
-        return $this->subject("[NCMB CMMS] {$this->notificationType} - #{$requestNumber}")
+        return $this->subject("[NCMB] {$this->notificationType} - #{$requestNumber}")
                     ->view('emails.default')
                     ->with([
-                        'title' => 'NCMB CMMS Notification',
+                        'title' => 'National Conciliation and Mediation Board',
                         'recipientName' => $this->recipientName,
                         'notificationMessage' => $message,
                         'requestNumber' => $requestNumber,

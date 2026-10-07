@@ -41,7 +41,7 @@ class PMScheduledMail extends Mailable
         $message = "A workstation preventive maintenance (PM) has been scheduled for your equipment in {$this->division}. Please coordinate with your ICT Unit for your schedule.";
         $status = 'Scheduled';
 
-        return $this->subject("[NCMB CMMS] PM Scheduled - #{$this->requestNumber}")
+        return $this->subject("[NCMB] PM Scheduled - #{$this->requestNumber}")
                     ->view('emails.default')
                     ->with([
                         'title' => 'PM Scheduled',
