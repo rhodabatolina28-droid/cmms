@@ -26,7 +26,7 @@ class ScanSetHubTest extends TestCase
 
     private int $counter = 0;
 
-    public function test_parent_scan_shows_set_components_and_print_action(): void
+    public function test_parent_scan_shows_set_components_and_other_assets(): void
     {
         $supply = $this->user(['role' => 'supply_officer']);
         $owner = $this->user(['full_name' => 'Juan Dela Cruz']);
@@ -46,13 +46,16 @@ class ScanSetHubTest extends TestCase
         $this->assertStringContainsString('/r/' . $child->asset_id, $html);
         $this->assertStringNotContainsString('Component of #' . $parent->asset_id, $html);
 
-        // Hub actions: scan button always; print sticker for supply gate.
-        $this->assertStringContainsString('id="hubScanBtn"', $html);
-        $this->assertStringContainsString('Print QR sticker', $html);
-        $this->assertStringContainsString('/inventory/qr-sticker/' . $parent->asset_id, $html);
-
         // Regression: existing custodian panel stays.
         $this->assertStringContainsString('Other Assets of Juan Dela Cruz', $html);
+
+        // User decision (2026-10-07): NO action buttons on the scan hub —
+        // the [Scan QR] / [Print QR sticker] bar (and its camera overlay/JS)
+        // was removed right after it shipped. Scanning stays a pure VIEW.
+        $this->assertStringNotContainsString('id="hubScanBtn"', $html);
+        $this->assertStringNotContainsString('Print QR sticker', $html);
+        $this->assertStringNotContainsString('openHubScanner', $html);
+        $this->assertStringNotContainsString('hubScanOverlay', $html);
     }
 
     public function test_component_scan_shows_parent_and_siblings(): void
@@ -77,21 +80,29 @@ class ScanSetHubTest extends TestCase
         $this->assertStringNotContainsString('Set Components (', $html);
     }
 
-    public function test_print_action_is_gated_to_supply_but_scan_is_shown_to_it(): void
+    public function test_scan_and_print_buttons_absent_for_all_roles(): void
     {
         $it = $this->user(['role' => 'it']);
+        $supply = $this->user(['role' => 'supply_officer']);
         $parent = $this->asset(['item_name' => 'Hub IT Parent']);
 
+        // IT viewer: page renders, but NO hub action buttons / scanner JS.
         $html = $this->actingAs($it)
             ->get(route('qr.redirect', $parent->asset_id))
             ->assertOk()
             ->getContent();
-
-        // IT sees the scan hub action + set section context…
-        $this->assertStringContainsString('id="hubScanBtn"', $html);
-        // …but NOT the print action (no supply access → route would 403).
-        $this->assertStringNotContainsString('/inventory/qr-sticker/', $html);
+        $this->assertStringNotContainsString('id="hubScanBtn"', $html);
         $this->assertStringNotContainsString('Print QR sticker', $html);
+        $this->assertStringNotContainsString('openHubScanner', $html);
+
+        // Supply viewer: same — buttons removed for every role.
+        $html = $this->actingAs($supply)
+            ->get(route('qr.redirect', $parent->asset_id))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringNotContainsString('id="hubScanBtn"', $html);
+        $this->assertStringNotContainsString('Print QR sticker', $html);
+        $this->assertStringNotContainsString('/inventory/qr-sticker/', $html);
     }
 
     private function user(array $attributes = []): User

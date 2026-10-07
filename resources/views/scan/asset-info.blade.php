@@ -154,16 +154,10 @@
             <div class="sub">Asset ID: {{ $asset->asset_id }}</div>
             <div class="badge">{{ $asset->category }}</div>
         </div>
-
-        {{-- QR plan §9.6 — scan hub actions: 1 QR = access to the whole linked set --}}
-        <div class="hub-actions" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #e2e8f0;">
-            <button type="button" id="hubScanBtn" onclick="openHubScanner()"
-                style="background:#0038A8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Scan QR</button>
-            @if($user->canProcessSupply())
-            <a href="{{ route('inventory.qr-sticker', $asset->asset_id) }}"
-                style="background:#fff;color:#0038A8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;text-decoration:none;">Print QR sticker</a>
-            @endif
-        </div>
+        {{-- QR plan §9.6 — scan hub action buttons ([Scan QR] / [Print QR sticker])
+             INTENTIONALLY REMOVED per user (2026-10-07): pagkatapos mag-scan,
+             VIEW lang dapat ang page (set panel + other assets). Printing lives
+             on Batch QR Sticker Print; scanning uses the phone's native camera. --}}
 
         <div class="body">
             @if($asset->serial_number)
@@ -402,42 +396,5 @@
     <div class="footer">
         NCMB ICT Unit &bull; CMMS PORTAL
     </div>
-
-    {{-- QR plan §9.6 — inline scanner: decoded /r/{id} URLs navigate the hub --}}
-    <div id="hubScanOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:2000;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:16px;">
-        <div style="background:#fff;border-radius:12px;padding:12px;max-width:94vw;">
-            <div id="hubScanRegion" style="min-width:300px;min-height:220px;"></div>
-            <div id="hubScanErr" style="color:#b91c1c;font-size:12px;max-width:300px;margin-top:6px;"></div>
-        </div>
-        <button type="button" onclick="closeHubScanner()" style="background:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;">Close</button>
-    </div>
-    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
-    <script nonce="{{ $cspNonce }}">
-        let hubScanner = null;
-        function openHubScanner() {
-            const overlay = document.getElementById('hubScanOverlay');
-            overlay.style.display = 'flex';
-            if (hubScanner) return;
-            hubScanner = new Html5Qrcode('hubScanRegion');
-            hubScanner.start(
-                { facingMode: 'environment' },
-                { fps: 10, qrbox: 200 },
-                (decoded) => {
-                    closeHubScanner();
-                    try {
-                        const u = new URL(decoded, window.location.origin);
-                        window.location.href = u.origin === window.location.origin ? u.pathname + u.search : decoded;
-                    } catch (e) { window.location.href = decoded; }
-                },
-                () => {}
-            ).catch((err) => {
-                document.getElementById('hubScanErr').textContent = 'Camera unavailable: ' + err;
-            });
-        }
-        function closeHubScanner() {
-            document.getElementById('hubScanOverlay').style.display = 'none';
-            if (hubScanner) { hubScanner.stop().catch(() => {}); }
-        }
-    </script>
 </body>
 </html>
