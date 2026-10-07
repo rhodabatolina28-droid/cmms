@@ -190,6 +190,45 @@
         .sp-spare   { background: #eff6ff; color: #1d4ed8; border: 1px solid #dbeafe; box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); }
         .sp-other   { background: #fef2f2; color: #b91c1c; border: 1px solid #fee2e2; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.15); }
 
+        /* ===== CUSTODIAN GROUPS + SET ROWS (QR plan Phase A) ===== */
+        .group-row td {
+            background: #f1f5f9;
+            font-size: 12px;
+            font-weight: 800;
+            color: #0038A8;
+            padding: 9px 14px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+        .group-meta { color: #64748b; font-weight: 600; margin-left: 10px; font-size: 11px; }
+        .group-select {
+            float: right;
+            background: white;
+            border: 1px solid #cbd5e1;
+            border-radius: 6px;
+            padding: 3px 10px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #374151;
+            cursor: pointer;
+        }
+        .group-select:hover { border-color: #0038A8; color: #0038A8; }
+        .component-row td { background: #fafafa; color: #94a3b8; }
+        .component-row .name-bold { font-weight: 600; }
+        .component-note { font-size: 10px; font-style: italic; color: #94a3b8; font-weight: 500; }
+        .set-badge {
+            display: inline-block;
+            background: #eff6ff;
+            color: #0038A8;
+            border: 1px solid #bfdbfe;
+            border-radius: 10px;
+            padding: 2px 8px;
+            font-size: 10px;
+            font-weight: 800;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+        tr.covered td { background: #f0fdf4; }
+
         /* ===== PRINT LAYOUT ===== */
         @media print {
             body * { visibility: hidden; }
@@ -372,7 +411,7 @@
 <!-- NOTICE -->
 <div class="print-preview-note">
     <i class="fa-solid fa-circle-info"></i>
-    <span>I-select ang gustong i-print na assets. Kapag nag-print, lalabas ang <strong>2 stickers per row</strong> sa A4 — may QR code at malaking text na item name + asset ID. I-cut bago idikit!</span>
+    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Kapag nag-print, lalabas ang <strong>2 stickers per row</strong> sa A4 — may QR code at malaking text na item name + asset ID. I-cut bago idikit!</span>
 </div>
 
 <!-- ASSET TABLE -->
@@ -431,6 +470,44 @@
     }
     loadAllAssets();
 
+    function groupByCustodian(assets) {
+        const groups = new Map();
+        assets.forEach(a => {
+            const key = a.assigned_to_name ? 'u:' + a.assigned_to_name : ' unassigned';
+            if (!groups.has(key)) {
+                groups.set(key, {
+                    key: key,
+                    label: a.assigned_to_name || 'Unassigned / Spare',
+                    office: a.assigned_to_name ? (a.assigned_to_office || a.assigned_to_department || '') : '',
+                    assets: []
+                });
+            }
+            groups.get(key).assets.push(a);
+        });
+        const ordered = [];
+        const unassigned = groups.get(' unassigned');
+        groups.forEach((g, key) => { if (key !== ' unassigned') ordered.push(g); });
+        if (unassigned) ordered.push(unassigned);
+        return ordered;
+    }
+
+    function orderGroupAssets(assets) {
+        const isComponent = a => a.parent_asset_id != null;
+        const parents = assets.filter(a => !isComponent(a));
+        const components = assets.filter(isComponent);
+        const out = [];
+        const placed = new Set();
+        parents.forEach(p => {
+            out.push(p);
+            components.filter(c => c.parent_asset_id === p.asset_id).forEach(c => {
+                out.push(c);
+                placed.add(c.asset_id);
+            });
+        });
+        components.filter(c => !placed.has(c.asset_id)).forEach(c => out.push(c));
+        return out;
+    }
+
     function renderTable(assets) {
         const tbody = document.getElementById('tableBody');
         if (!assets.length) {
@@ -438,30 +515,63 @@
             return;
         }
 
-        tbody.innerHTML = assets.map(a => {
-            const checked = selectedIds.has(a.asset_id) ? 'checked' : '';
-            const rowClass = selectedIds.has(a.asset_id) ? 'selected' : '';
-            const statusClass = a.status === 'Active' ? 'sp-active' : (a.status === 'Spare' ? 'sp-spare' : 'sp-other');
-            const sn = a.serial_number || '—';
-            const par = a.par_number || '—';
-            return `
-                <tr class="${rowClass} asset-row row-pointer tr-hover-row" id="row-${a.asset_id}" data-id="${a.asset_id}">
-                    <td class="cb-col">
-                        <input type="checkbox" class="asset-checkbox" data-id="${a.asset_id}" ${checked}>
+        tbody.innerHTML = groupByCustodian(assets).map(group => {
+            const setCount = group.assets.filter(a => !a.parent_asset_id && (a.components_count || 0) > 0).length;
+            const header = `
+                <tr class="group-row">
+                    <td colspan="7">
+                        <span class="group-label">▾ ${escHtml(group.label)}${group.office ? ' — ' + escHtml(group.office) : ''}</span>
+                        <span class="group-meta">${group.assets.length} assets · ${setCount} sets</span>
+                        <button type="button" class="group-select" data-group="${group.key}">select all</button>
                     </td>
-                    <td><span class="id-monospace">#${a.asset_id}</span></td>
-                    <td class="name-bold">${escHtml(a.item_name)}</td>
+                </tr>`;
+            return header + orderGroupAssets(group.assets).map(a => renderRow(a, group)).join('');
+        }).join('');
+        updateUI();
+    }
+
+    function renderRow(a, group) {
+        const checked = selectedIds.has(a.asset_id) ? 'checked' : '';
+        const selectedClass = selectedIds.has(a.asset_id) ? 'selected' : '';
+        const statusClass = a.status === 'Active' ? 'sp-active' : (a.status === 'Spare' ? 'sp-spare' : 'sp-other');
+        const sn = a.serial_number || '—';
+        const par = a.par_number || '—';
+        const isComponent = a.parent_asset_id != null;
+        const coveredClass = isComponent && selectedIds.has(a.parent_asset_id) ? 'covered' : '';
+
+        if (isComponent) {
+            return `
+                <tr class="${selectedClass} ${coveredClass} asset-row component-row row-pointer tr-hover-row" id="row-${a.asset_id}" data-id="${a.asset_id}" data-parent="${a.parent_asset_id}" data-group="${group.key}">
+                    <td class="cb-col">
+                        <input type="checkbox" class="asset-checkbox" data-id="${a.asset_id}" disabled ${checked}>
+                    </td>
+                    <td><span class="id-monospace">↳ #${a.asset_id}</span></td>
+                    <td class="name-bold">${escHtml(a.item_name)} <span class="component-note">component of #${a.parent_asset_id} — no sticker</span></td>
                     <td class="cell-mono">${escHtml(sn)}</td>
                     <td class="cell-mono">${escHtml(par)}</td>
                     <td>${escHtml(a.category || '—')}</td>
                     <td><span class="status-pill ${statusClass}">${escHtml(a.status)}</span></td>
                 </tr>`;
-        }).join('');
+        }
+
+        const setBadge = (a.components_count || 0) > 0 ? ` <span class="set-badge">▣ SET(${a.components_count})</span>` : '';
+        return `
+            <tr class="${selectedClass} asset-row row-pointer tr-hover-row" id="row-${a.asset_id}" data-id="${a.asset_id}" data-group="${group.key}">
+                <td class="cb-col">
+                    <input type="checkbox" class="asset-checkbox" data-id="${a.asset_id}" ${checked}>
+                </td>
+                <td><span class="id-monospace">#${a.asset_id}</span></td>
+                <td class="name-bold">${escHtml(a.item_name)}${setBadge}</td>
+                <td class="cell-mono">${escHtml(sn)}</td>
+                <td class="cell-mono">${escHtml(par)}</td>
+                <td>${escHtml(a.category || '—')}</td>
+                <td><span class="status-pill ${statusClass}">${escHtml(a.status)}</span></td>
+            </tr>`;
     }
 
     function toggleRow(id) {
         const cb = document.querySelector(`input[data-id="${id}"]`);
-        if (!cb) return;
+        if (!cb || cb.disabled) return;
         toggleById(id, !cb.checked);
         cb.checked = !cb.checked;
     }
@@ -474,18 +584,51 @@
         }
         const row = document.getElementById(`row-${id}`);
         if (row) row.classList.toggle('selected', checked);
+        refreshCovered(id, checked);
         updateUI();
     }
 
+    // Visual feedback only: a selected parent marks its component rows as
+    // "covered" (green tint) — components never enter selectedIds themselves.
+    function refreshCovered(parentId, covered) {
+        document.querySelectorAll(`tr[data-parent="${parentId}"]`).forEach(r => {
+            r.classList.toggle('covered', covered);
+        });
+    }
+
     function masterToggle(masterCb) {
-        const visibleCbs = document.querySelectorAll('#tableBody input[type=checkbox]');
+        const visibleCbs = document.querySelectorAll('#tableBody input.asset-checkbox');
         visibleCbs.forEach(cb => {
+            if (cb.disabled) return; // components: covered by their parent's sticker
             const id = parseInt(cb.dataset.id);
             cb.checked = masterCb.checked;
             if (masterCb.checked) selectedIds.add(id);
             else selectedIds.delete(id);
             const row = document.getElementById(`row-${id}`);
             if (row) row.classList.toggle('selected', masterCb.checked);
+            refreshCovered(id, masterCb.checked);
+        });
+        updateUI();
+    }
+
+    // Per-custodian group header button: toggles only that group's selectable rows.
+    function groupToggle(key, forceState) {
+        const rows = document.querySelectorAll(`#tableBody tr[data-group="${key}"]`);
+        const cbs = [];
+        rows.forEach(r => {
+            const cb = r.querySelector('input.asset-checkbox');
+            if (cb && !cb.disabled) cbs.push(cb);
+        });
+        if (!cbs.length) return;
+        const target = (forceState != null) ? forceState : !cbs.every(cb => cb.checked);
+        cbs.forEach(cb => {
+            const id = parseInt(cb.dataset.id);
+            cb.checked = target;
+            if (target) selectedIds.add(id);
+            else selectedIds.delete(id);
+            const row = document.getElementById(`row-${id}`);
+            if (row) row.classList.toggle('selected', target);
+            refreshCovered(id, target);
         });
         updateUI();
     }
@@ -498,8 +641,18 @@
 
     function updateUI() {
         const count = selectedIds.size;
-        document.getElementById('selectedCount').textContent = `${count} selected`;
+        // "covers" = selected stickers + every component linked under them
+        let covered = count;
+        allAssets.forEach(a => {
+            if (selectedIds.has(a.asset_id)) covered += (a.components_count || 0);
+        });
+        document.getElementById('selectedCount').textContent = `${count} stickers · covers ${covered} pcs`;
         document.getElementById('printBtn').disabled = count === 0;
+        const enabled = document.querySelectorAll('#tableBody input.asset-checkbox:not([disabled])');
+        let checkedCount = 0;
+        enabled.forEach(cb => { if (cb.checked) checkedCount++; });
+        const master = document.getElementById('masterCheck');
+        if (master) master.checked = enabled.length > 0 && checkedCount === enabled.length;
     }
 
     function filterTable() {
@@ -583,9 +736,17 @@
         // above — without this guard the row handler double-toggles and the
         // selection instantly empties (print button stays disabled forever).
         if (e.target.closest('input[type="checkbox"]')) return;
+        var groupBtn = e.target.closest('.group-select');
+        if (groupBtn) {
+            groupToggle(groupBtn.dataset.group);
+            return;
+        }
         var row = e.target.closest('.asset-row');
         if (row) {
-            toggleRow(parseInt(row.dataset.id));
+            // Component rows are not selectable (covered by the parent's sticker)
+            // — clicking one toggles its PARENT instead.
+            var targetId = row.dataset.parent ? parseInt(row.dataset.parent) : parseInt(row.dataset.id);
+            toggleRow(targetId);
         }
     });
 </script>

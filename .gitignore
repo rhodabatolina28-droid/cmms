@@ -43,6 +43,7 @@ Thumbs.db
 /storage/framework/tunnel.*
 /storage/framework/serve.*
 /storage/framework/cf.*
+/storage/framework/test.*
 
 # Temporary local responsive-check artifacts
 /storage/shots/

@@ -59,9 +59,11 @@ class GetInventoryAssetsAction
                 if ($asset->assignedUser) {
                     $asset->assigned_to_name = $asset->assignedUser->full_name;
                     $asset->assigned_to_department = $asset->assignedUser->department ?? '';
+                    $asset->assigned_to_office = $asset->assignedUser->office ?? '';
                 } else {
                     $asset->assigned_to_name = '';
                     $asset->assigned_to_department = '';
+                    $asset->assigned_to_office = '';
                 }
                 return $asset;
             });
