@@ -24,7 +24,11 @@ class GetInventoryAssetsAction
 
         $query = InventoryAsset::with('assignedUser');
         InventoryScope::scopeAssetsToActor($query, $user);
-        $query->withCount('components');
+        // LIVE components only: disposed/scrapped children must not inflate the
+        // SET(n) badge / "covers N pcs" counter on Batch QR Sticker Print (§9.7).
+        $query->withCount([
+            'components as components_count' => fn ($q) => $q->whereNotIn('status', ['For Disposal', 'Scrapped']),
+        ]);
 
         if ($search = $request->input('search')) {
             $search = strtolower($search);

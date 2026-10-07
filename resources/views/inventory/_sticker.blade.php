@@ -10,7 +10,11 @@
 --}}
 @php
     $isComponent = !empty($asset->parent_asset_id);
-    $componentsCount = $isComponent ? 0 : $asset->components()->count();
+    // LIVE components only (§9.7): a disposed/scrapped child must not keep the
+    // "SET" flag alive on a printed sticker — the scan hub panel already excludes them.
+    $componentsCount = $isComponent ? 0 : $asset->components()
+        ->whereNotIn('status', ['For Disposal', 'Scrapped'])
+        ->count();
 @endphp
 <div class="sticker{{ $isComponent ? ' sticker-component' : ($componentsCount > 0 ? ' sticker-set' : '') }}">
     <div class="qr">{!! $asset->qr_code !!}</div>
