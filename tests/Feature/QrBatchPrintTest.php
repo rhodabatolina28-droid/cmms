@@ -85,6 +85,41 @@ class QrBatchPrintTest extends TestCase
         $this->assertStringContainsString("e.target.closest('input[type=\"checkbox\"]')", $html);
     }
 
+    /**
+     * Phase M1 — mobile UX: the grouped/set-aware table must not require
+     * horizontal scrolling on phones.
+     *
+     *  - table renders as stacked cards on ≤767px (group header = card header
+     *    with a always-visible "select" button, selected/covered tint on the
+     *    ROW not the cells, checkbox no longer scrolls out of view);
+     *  - count + Print move into a sticky bottom bar (always reachable without
+     *    scrolling back to the top);
+     *  - the old "Swipe table horizontally" hint is gone on mobile.
+     */
+    public function test_batch_page_has_mobile_card_layout_and_sticky_print_bar(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer']);
+
+        $response = $this->actingAs($supply)->get(route('inventory.qr-batch'));
+
+        $response->assertOk();
+        $html = $response->getContent();
+
+        // 1) Sticky bottom print bar (server markup + JS wiring in updateUI)
+        $this->assertStringContainsString('id="mobilePrintBar"', $html);
+        $this->assertStringContainsString('id="mobileSelectedCount"', $html);
+        $this->assertStringContainsString('id="mobilePrintBtn"', $html);
+        $this->assertStringContainsString("getElementById('mobileSelectedCount')", $html);
+
+        // 2) Table → cards on mobile (CSS-only transform, same render path)
+        $this->assertStringContainsString('tr.asset-row.selected', $html);       // row-level selected tint
+        $this->assertStringContainsString('.group-row .group-select', $html);    // group select button in card header
+        $this->assertStringContainsString('header-actions .btn-print', $html);   // header print hidden (lives in bar now)
+
+        // 3) Header count/print duplicated into the bar text
+        $this->assertStringContainsString('covers 0 pcs', $html);
+    }
+
     private function user(array $attributes = []): User
     {
         $this->counter++;

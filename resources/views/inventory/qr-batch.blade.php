@@ -319,27 +319,181 @@
         .id-monospace { font-family: monospace; font-weight: 700; color: #0038A8; }
         td.name-bold { font-weight: 600; }
         td.cell-mono { font-family: monospace; font-size: 12px; }
+        /* ===== MOBILE STICKY PRINT BAR (lilitaw lang sa ≤767px) ===== */
+        .mobile-print-bar { display: none; }
+
         @media screen and (max-width: 767px) {
-            .page-header { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; padding: 12px 16px !important; }
+            body { padding-bottom: 84px; }
+
+            /* Header: compact chips — Back + Select All sa isang hilera.
+               Ang count at Print ay nasa sticky bottom bar na. */
+            .page-header { flex-direction: column !important; align-items: stretch !important; gap: 8px !important; padding: 10px 14px !important; }
             .page-header h1 { font-size: 16px !important; }
-            .header-actions { width: 100% !important; display: flex !important; flex-direction: column !important; gap: 8px !important; }
-            .header-actions a,
-            .header-actions button { width: 100% !important; justify-content: center !important; font-size: 13px !important; padding: 10px 14px !important; border-radius: 6px !important; min-height: 44px !important; }
-            .header-actions .btn-print { padding: 12px 14px !important; font-size: 14px !important; letter-spacing: 0.5px !important; }
-            .header-actions .btn-select-all { background: #f1f5f9 !important; border-color: #94a3b8 !important; }
-            .selected-count { width: 100% !important; text-align: center !important; padding: 6px !important; font-size: 12px !important; order: -1 !important; margin-bottom: 4px !important; }
-            .btn-back { display: flex !important; border-color: #e2e8f0 !important; background: #fff !important; order: 10 !important; }
-            .filter-bar { flex-direction: column !important; padding: 12px 16px !important; }
+            .page-header p { display: none !important; }
+            .header-actions { width: 100% !important; display: flex !important; flex-direction: row !important; flex-wrap: wrap !important; gap: 8px !important; }
+            .header-actions .btn-back,
+            .header-actions .btn-select-all {
+                flex: 1 1 0 !important;
+                width: auto !important;
+                min-height: 44px !important;
+                justify-content: center !important;
+                font-size: 13px !important;
+                padding: 10px 12px !important;
+                border-radius: 8px !important;
+            }
+            .header-actions .btn-print { display: none !important; }
+            .header-actions .selected-count { display: none !important; }
+
+            /* Filters: full-width ang search, magkatabi ang dalawang select */
+            .filter-bar {
+                display: grid !important;
+                grid-template-columns: 1fr 1fr;
+                gap: 8px !important;
+                padding: 10px 14px !important;
+            }
+            .filter-bar .icon-gray { display: none !important; }
+            .filter-bar .search-wide { grid-column: 1 / -1; width: 100% !important; }
             .filter-bar .filter-input { width: 100% !important; }
-            .table-container { padding: 10px 12px !important; overflow-x: auto !important; }
-            .asset-table { min-width: 600px !important; }
-            .asset-table th,
-            .asset-table td { padding: 8px 10px !important; font-size: 12px !important; }
-            .print-preview-note { margin: 0 12px 12px !important; padding: 10px 14px !important; font-size: 12px !important; }
-            .cb-col { width: 36px !important; }
-            .search-wide { width: 100% !important; }
-            .mobile-table-hint { display: flex !important; align-items: center !important; gap: 8px !important; background: #eff6ff !important; border: 1px solid #bfdbfe !important; border-radius: 8px !important; padding: 9px 12px !important; margin: 0 12px 10px !important; color: #1e40af !important; font-size: 12px !important; font-weight: 700 !important; }
-            .asset-table input[type="checkbox"] { width: 20px !important; height: 20px !important; accent-color: #0038A8 !important; }
+
+            .print-preview-note { margin: 0 12px 12px !important; padding: 10px 14px !important; font-size: 12px !important; align-items: flex-start !important; }
+            /* Cards na ang listahan — walang horizontal scroll, tanggal ang hint */
+            .mobile-table-hint { display: none !important; }
+
+            /* ===== TABLE → STACKED CARDS (CSS-only; iisang render path) ===== */
+            .table-container { overflow: visible !important; padding: 0 12px !important; }
+            .asset-table {
+                display: block !important;
+                min-width: 0 !important;
+                width: 100% !important;
+                background: transparent !important;
+                border: none !important;
+                border-radius: 0 !important;
+            }
+            .asset-table thead { display: none !important; }
+            .asset-table tbody { display: block !important; }
+            .asset-table tbody tr { display: block !important; }
+            .asset-table tbody tr > td { display: block !important; }
+            /* Lahat ng cell tints → transparent; ang kulay ay nasa <tr> na */
+            .asset-table tbody tr.asset-row > td {
+                background: transparent !important;
+                border: none !important;
+                padding: 0 !important;
+                font-size: 13px !important;
+            }
+
+            /* Custodian group header → card header bar (select button = laging kita) */
+            .asset-table tbody tr.group-row {
+                margin: 16px 0 8px;
+                background: #f1f5f9;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+            }
+            .asset-table tbody tr.group-row > td {
+                display: flex !important;
+                flex-wrap: wrap;
+                align-items: center;
+                gap: 4px 8px;
+                background: transparent !important;
+                border: none !important;
+                border-radius: 10px;
+                padding: 10px 12px !important;
+            }
+            .group-row .group-label { flex: 1 1 auto; min-width: 0; }
+            .group-row .group-meta { flex: 1 0 100%; order: 3; margin-left: 0 !important; }
+            .group-row .group-select {
+                float: none !important;
+                flex: 0 0 auto;
+                order: 2;
+                margin-left: auto !important;
+                min-height: 36px;
+                padding: 6px 14px !important;
+                border-radius: 8px !important;
+                font-size: 12px !important;
+            }
+
+            /* Asset card: line1 = ☑ | name + SET badge ... status
+                           line2 = #ID · SN: … · PAR: …  (forced break) */
+            .asset-table tbody tr.asset-row {
+                display: flex !important;
+                flex-wrap: wrap;
+                position: relative;
+                align-items: flex-start;
+                column-gap: 10px;
+                row-gap: 3px;
+                padding: 10px 12px;
+                margin-bottom: 8px;
+                background: #fff;
+                border: 1px solid #e2e8f0;
+                border-radius: 10px;
+            }
+            /* Pseudo flex item na 100% ang basis — pinipilit ang bagong linya
+               bago ang #ID / SN / PAR (hindi na sila dumidikit sa status pill) */
+            .asset-table tbody tr.asset-row::before {
+                content: '';
+                flex: 1 0 100%;
+                order: 4;
+                height: 0;
+            }
+            .asset-table tbody tr.asset-row > td.cb-col {
+                order: 1;
+                width: auto !important;
+                flex: 0 0 auto !important;
+                align-self: flex-start;
+                padding: 2px 10px 0 0 !important;
+            }
+            .asset-table tbody tr.asset-row > td:nth-child(3) { order: 2; flex: 1 1 auto; min-width: 0; }
+            .asset-table tbody tr.asset-row > td:nth-child(7) { order: 3; flex: 0 0 auto; }
+            .asset-table tbody tr.asset-row > td:nth-child(2) { order: 5; flex: 0 1 auto; }
+            .asset-table tbody tr.asset-row > td:nth-child(4),
+            .asset-table tbody tr.asset-row > td:nth-child(5) { order: 6; flex: 0 1 auto; }
+            /* Mga label na nawala sa pagka-hide ng table headers */
+            .asset-table tbody tr.asset-row > td:nth-child(4)::before { content: 'SN '; font-weight: 800; color: #94a3b8; font-size: 10px; }
+            .asset-table tbody tr.asset-row > td:nth-child(5)::before { content: 'PAR '; font-weight: 800; color: #94a3b8; font-size: 10px; }
+            .asset-table tbody tr.asset-row > td:nth-child(6) { display: none !important; } /* may Category filter naman */
+            .asset-table tbody tr.asset-row > td:nth-child(2),
+            .asset-table tbody tr.asset-row > td:nth-child(4),
+            .asset-table tbody tr.asset-row > td:nth-child(5) { font-size: 11px !important; color: #64748b; }
+
+            /* Row states — nasa <tr> na ang kulay (selected > covered kung pareho) */
+            .asset-table tbody tr.asset-row.selected { background: #eff6ff !important; border-color: #bfdbfe; }
+            .asset-table tbody tr.component-row { background: #fafafa; }
+            .asset-table tbody tr.asset-row.covered { background: #f0fdf4 !important; border-color: #bbf7d0; }
+            .asset-table tbody tr.component-row > td:nth-child(3) { padding-left: 16px !important; }
+
+            /* Sticky bottom bar: laging kitang-kita ang count at Print */
+            .mobile-print-bar {
+                display: flex !important;
+                position: fixed;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                z-index: 200;
+                align-items: center;
+                gap: 10px;
+                padding: 10px 14px calc(10px + env(safe-area-inset-bottom, 0px));
+                background: #fff;
+                border-top: 1px solid #e2e8f0;
+                box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.10);
+            }
+            .mobile-print-bar .mcb-count { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 800; color: #475569; }
+            .mobile-print-bar .mcb-print {
+                flex: 0 0 auto;
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                background: #0038A8;
+                color: #fff;
+                border: none;
+                border-radius: 8px;
+                min-height: 46px;
+                padding: 10px 18px;
+                font-size: 14px;
+                font-weight: 800;
+                cursor: pointer;
+            }
+            .mobile-print-bar .mcb-print:disabled { background: #94a3b8; cursor: not-allowed; }
+
+            .asset-table input[type="checkbox"] { width: 22px !important; height: 22px !important; accent-color: #0038A8 !important; }
         }
     </style>
 </head>
@@ -418,6 +572,14 @@
 <!-- HIDDEN PRINT SECTION — Generated dynamically before print -->
 <div id="printSection">
     <div class="sticker-grid" id="stickerGrid"></div>
+</div>
+
+<!-- MOBILE STICKY PRINT BAR — count + Print laging nasa reach; CSS-hidden on desktop -->
+<div class="mobile-print-bar" id="mobilePrintBar">
+    <span class="mcb-count" id="mobileSelectedCount">0 stickers · covers 0 pcs</span>
+    <button type="button" class="mcb-print" id="mobilePrintBtn" disabled>
+        <i class="fa-solid fa-print"></i> Print Selected
+    </button>
 </div>
 
 <script nonce="{{ $cspNonce }}">
@@ -628,6 +790,9 @@
         });
         document.getElementById('selectedCount').textContent = `${count} stickers · covers ${covered} pcs`;
         document.getElementById('printBtn').disabled = count === 0;
+        // Sticky mobile bar mirrors the header count + print enable state
+        document.getElementById('mobileSelectedCount').textContent = `${count} stickers · covers ${covered} pcs`;
+        document.getElementById('mobilePrintBtn').disabled = count === 0;
         const enabled = document.querySelectorAll('#tableBody input.asset-checkbox:not([disabled])');
         let checkedCount = 0;
         enabled.forEach(cb => { if (cb.checked) checkedCount++; });
@@ -690,6 +855,7 @@
         });
         document.getElementById('selectAllBtn').addEventListener('click', toggleSelectAll);
         document.getElementById('printBtn').addEventListener('click', triggerPrint);
+        document.getElementById('mobilePrintBtn').addEventListener('click', triggerPrint);
     });
 
     document.addEventListener('change', function(e) {
