@@ -322,7 +322,7 @@ graph TD
 
 ## 9. QR Print + Scan Hub Plan — "1 parent QR print = access to the whole linked asset set"
 
-**Status:** Agreed concept (2026-10-07) — plan for implementation
+**Status:** ✅ Phases A–D IMPLEMENTED & VERIFIED (2026-10-07) — Phase E (durable host) = GATE bago mag-mass print
 **Scope:** Batch QR sticker print (set-aware + per-custodian), sticker layout/size/content, scan hub page (`/r/{asset_id}`), lifecycle/reprint policy, prerequisite: durable host
 **Related:** §1 decisions (dito), `docs/asset-set-integrity.md`, `docs/UX_DEFECT_FIX_PLAN_OCT2026.md` §11 (tunnel/QR runbook)
 
@@ -353,11 +353,11 @@ graph TD
 
 | Phase | Sakop | Files | Test |
 |---|---|---|---|
-| **A** | Batch page: **custodian grouping** + **set-aware selection** (disabled component rows, "covers N pcs" counter) — screen UI lang, walang print-layout change | `qr-batch.blade.php` | `QrBatchPrintTest` |
-| **B** | Sticker templates: **fixed 1" × 1" (25.4mm)** — shared partial, standalone vs set-parent variant (`▣ SET — scan for list`, **walang count**), batch print grid → 1"×1" cells | `qr-sticker.blade.php` + batch print CSS | `QrStickerSizeTest` |
-| **C** | Scan hub `/r/{id}`: **Set Components panel** (parent → listahan ng components; component → parent link + siblings) + bagong **[Scan] [Print QR sticker]** actions (role-gated) | `ScanController.php`, `asset-info.blade.php` | `ScanSetHubTest` |
-| **D** | Full verification: buong test suite + manual print/scan pass sa tunnel | — | baseline: 3 pre-existing F, walang bago |
-| **E** | ⚠️ **Prerequisite gate bago mag-mass print:** durable host → set `.env APP_URL` → `config:clear` → `QrCodeService::regenerateForAll()` | `.env` (hindi na-commit) | manual runbook (UX plan §11) |
+| **A** ✅ `ed10e76` | Batch page: **custodian grouping** + **set-aware selection** (disabled component rows, "covers N pcs" counter) — screen UI lang, walang print-layout change | `qr-batch.blade.php` | `QrBatchPrintTest` |
+| **B** ✅ `93c54ec` | Sticker templates: **fixed 1" × 1" (25.4mm)** — shared partial, standalone vs set-parent variant (`▣ SET — scan for list`, **walang count**), batch print grid → 1"×1" cells | `qr-sticker.blade.php` + batch print CSS | `QrStickerSizeTest` |
+| **C** ✅ `93bd0e4` | Scan hub `/r/{id}`: **Set Components panel** (parent → listahan ng components; component → parent link + siblings) + bagong **[Scan] [Print QR sticker]** actions (role-gated) | `ScanController.php`, `asset-info.blade.php` | `ScanSetHubTest` |
+| **D** ✅ 2026-10-07 | Full verification: buong test suite + manual print/scan pass sa tunnel | — | baseline: 3 pre-existing F, walang bago |
+| **E** ⚠️ GATE | **Prerequisite gate bago mag-mass print:** durable host → set `.env APP_URL` → `config:clear` → `QrCodeService::regenerateForAll()` | `.env` (hindi na-commit) | manual runbook (UX plan §11) |
 
 **Rule:** RED→GREEN kada phase; fix AGAD kapag may failure; **isang commit bawat phase**; docs commit hiwalay.
 
@@ -450,5 +450,19 @@ STANDALONE:                    SET PARENT (1 print = buong set):
 4. **Headless Chrome probe** kung may rendering change (pattern ng Phase 1/3 ng UX plan).
 
 > ⚠️ **Stability caveat (Phase E):** ang printed QR ay naka-encode ng `APP_URL`. Ang quick-tunnel ay nag-e-expire kada ilang oras → **HINDI mag-mass print** hangga't walang durable host (static domain / LAN IP / production URL). Runbook: `UX_DEFECT_FIX_PLAN_OCT2026.md` §11 (config:clear + `regenerateForAll()` = 406 assets).
+
+### 9.9 Results (2026-10-07) — RED→GREEN bawat phase, fix bago lumipat
+
+| Phase | Test (RED→GREEN) | Naging green | Ebidensya |
+|---|---|---|---|
+| **A** `ed10e76` | `QrBatchPrintTest` (2 tests) | 15 passed kasama ang `QrBatchSelectionTest` + `PhysicalCountGroupTest` | custodian group headers + per-group select-all; component rows disabled/indented na "component of #X — no sticker" at nag-to-toggle ng parent; counter `N stickers · covers P pcs`; `assigned_to_office` sa `inventory.data`; JS syntax check ✓ |
+| **B** `93c54ec` | `QrStickerSizeTest` (2 tests) | 17 passed (**1 fixture fix**: walang child na nilink sa test 2 — test bug, hindi impl bug) | single = 25.4mm square (standalone: serial · parent: `▣ SET — scan for list` na walang count · component: `Component of #parent`); fragment (`?fragment=1`) = shared partial na walang `window.print()`; batch grid `repeat(7, 25.4mm)` (70/A4); lumang 95mm×2 layout = GONE |
+| **C** `93bd0e4` | `ScanSetHubTest` (3 tests) | 27 passed kasama ang `IctScanPrefillTest` | parent → `Set Components (n)` + `/r/{child}` links; component → `Component of #parent` + siblings; `hubScanBtn` para sa lahat, `Print QR sticker` gate = `canProcessSupply()` (IT: wala ✓); "Other Assets of X" intact; hub JS syntax check ✓ |
+| **D** | full suite + live probe | **3 failed / 499 passed** (2054 assertions) — ang 3 = pre-existing baseline (`CsmMonthlyReportTest` ×2, `PMCalendarTest` ×1); tests/ diff vs `6ee4ccf` = **puro dagdag lang** (379+, 0−), walang parse error sa `test.err` | Live probe sa tunnel (temp supply user, inalis pagkatapos): `/inventory/qr-batch` 200 (+grouping +1"×1" grid +fragment) · `/r/45` (HP PAVILION, 2 components) 200 (+Set panel +hubScanBtn +Print btn +Other Assets) · `/inventory/qr-sticker/45` 200 (+25.4mm +SET flag) · `?fragment=1` 200 (walang print js) · `/inventory/data` = `assigned_to_office`/`parent_asset_id`/`components_count` ✓ |
+
+**Mga natirang tala:**
+1. **Phase E pa** — walang mass print hangga't walang durable host (tunnel rotation = lahat ng printed QR mamamatay; regen + reprint ang lunas).
+2. Ang dating naka-log na "495 passed" baseline ay hindi eksaktong nababagayan pagdagdag ng 7 (495+7=502 ≠ 499). Ni-verify: (a) lahat ng **7 bagong test ay naka-run at PASS** (nakita isa-isa sa full-suite output), (b) `tests/` diff vs `6ee4ccf` = **puro dagdag** (379+, 0−), (c) walang parse error / missing file sa `test.err` — kaya walang nawalang test file. Bagong authoritative baseline: **3F / 499P** (2054 assertions).
+3. Temp probe artifacts (user, scripts, cookies, fetched pages) — **lahat na-clean**; `git status` = clean bago ang docs commit na ito.
 
 
