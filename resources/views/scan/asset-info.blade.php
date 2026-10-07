@@ -155,6 +155,16 @@
             <div class="badge">{{ $asset->category }}</div>
         </div>
 
+        {{-- QR plan §9.6 — scan hub actions: 1 QR = access to the whole linked set --}}
+        <div class="hub-actions" style="display:flex;gap:8px;flex-wrap:wrap;padding:12px 16px;border-bottom:1px solid #e2e8f0;">
+            <button type="button" id="hubScanBtn" onclick="openHubScanner()"
+                style="background:#0038A8;color:#fff;border:none;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;cursor:pointer;">Scan QR</button>
+            @if($user->canProcessSupply())
+            <a href="{{ route('inventory.qr-sticker', $asset->asset_id) }}"
+                style="background:#fff;color:#0038A8;border:1px solid #bfdbfe;border-radius:8px;padding:9px 16px;font-size:13px;font-weight:700;text-decoration:none;">Print QR sticker</a>
+            @endif
+        </div>
+
         <div class="body">
             @if($asset->serial_number)
             <div class="row">
@@ -197,6 +207,37 @@
                 <span class="label">Date Acquired</span>
                 <span class="value">{{ \Carbon\Carbon::parse($asset->date_acquired)->format('M d, Y') }}</span>
             </div>
+            @endif
+
+            {{-- QR plan §9.6 — SET PANEL: 1 parent QR = access to the whole linked set --}}
+            @if($parentAsset)
+            <div class="section-title">Set Membership</div>
+            <div class="history-item">
+                <strong>Component of #{{ $parentAsset->asset_id }} — {{ $parentAsset->item_name }}</strong>
+                <div style="margin-top:6px;">
+                    <a href="{{ url('/r/' . $parentAsset->asset_id) }}" style="color:#0038A8;font-weight:700;">View parent &amp; whole set →</a>
+                </div>
+                @if($siblings->count())
+                <div style="margin-top:6px;font-size:11px;color:#64748b;">
+                    Siblings:
+                    @foreach($siblings as $sib)
+                        <a href="{{ url('/r/' . $sib->asset_id) }}" style="color:#0038A8;">{{ $sib->item_name }} (#{{ $sib->asset_id }})</a>{{ $loop->last ? '' : ' · ' }}
+                    @endforeach
+                </div>
+                @endif
+            </div>
+            @elseif($setComponents->count())
+            <div class="section-title">Set Components ({{ $setComponents->count() }})</div>
+            @foreach($setComponents as $comp)
+            <div class="history-item" style="display:flex;justify-content:space-between;align-items:center;gap:8px;">
+                <div>
+                    <strong>{{ $comp->item_name }}</strong>
+                    <span style="font-size:11px;color:#64748b;margin-left:6px;">#{{ $comp->asset_id }} · {{ $comp->category }}</span>
+                    <br><span style="font-size:11px;color:#64748b;">S/N: {{ $comp->serial_number ?? 'N/A' }}</span>
+                </div>
+                <a href="{{ url('/r/' . $comp->asset_id) }}" style="color:#0038A8;font-weight:700;white-space:nowrap;">View →</a>
+            </div>
+            @endforeach
             @endif
 
             {{-- PM Schedule Info --}}
@@ -361,5 +402,42 @@
     <div class="footer">
         NCMB ICT Unit &bull; CMMS PORTAL
     </div>
+
+    {{-- QR plan §9.6 — inline scanner: decoded /r/{id} URLs navigate the hub --}}
+    <div id="hubScanOverlay" style="display:none;position:fixed;inset:0;background:rgba(15,23,42,.88);z-index:2000;align-items:center;justify-content:center;flex-direction:column;gap:12px;padding:16px;">
+        <div style="background:#fff;border-radius:12px;padding:12px;max-width:94vw;">
+            <div id="hubScanRegion" style="min-width:300px;min-height:220px;"></div>
+            <div id="hubScanErr" style="color:#b91c1c;font-size:12px;max-width:300px;margin-top:6px;"></div>
+        </div>
+        <button type="button" onclick="closeHubScanner()" style="background:#fff;border:none;border-radius:8px;padding:10px 22px;font-size:14px;font-weight:700;cursor:pointer;">Close</button>
+    </div>
+    <script src="{{ asset('js/html5-qrcode.min.js') }}"></script>
+    <script nonce="{{ $cspNonce }}">
+        let hubScanner = null;
+        function openHubScanner() {
+            const overlay = document.getElementById('hubScanOverlay');
+            overlay.style.display = 'flex';
+            if (hubScanner) return;
+            hubScanner = new Html5Qrcode('hubScanRegion');
+            hubScanner.start(
+                { facingMode: 'environment' },
+                { fps: 10, qrbox: 200 },
+                (decoded) => {
+                    closeHubScanner();
+                    try {
+                        const u = new URL(decoded, window.location.origin);
+                        window.location.href = u.origin === window.location.origin ? u.pathname + u.search : decoded;
+                    } catch (e) { window.location.href = decoded; }
+                },
+                () => {}
+            ).catch((err) => {
+                document.getElementById('hubScanErr').textContent = 'Camera unavailable: ' + err;
+            });
+        }
+        function closeHubScanner() {
+            document.getElementById('hubScanOverlay').style.display = 'none';
+            if (hubScanner) { hubScanner.stop().catch(() => {}); }
+        }
+    </script>
 </body>
 </html>

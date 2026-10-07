@@ -33,6 +33,25 @@ class ScanController extends Controller
                 ->get();
         }
 
+        // QR plan §9.6 — set data for the scan hub (1 parent QR = whole set).
+        $setComponents = $asset->parent_asset_id
+            ? collect()
+            : $asset->components()
+                ->whereNotIn('status', ['For Disposal', 'Scrapped'])
+                ->orderBy('category')
+                ->orderBy('item_name')
+                ->get();
+        $parentAsset = $asset->parentAsset;
+        $siblings = collect();
+        if ($parentAsset) {
+            $siblings = $parentAsset->components()
+                ->where('asset_id', '!=', $asset->asset_id)
+                ->whereNotIn('status', ['For Disposal', 'Scrapped'])
+                ->orderBy('category')
+                ->orderBy('item_name')
+                ->get();
+        }
+
         $user = Auth::user();
 
         // USER role — preview page with the scanned asset + other assets (tap to select)
@@ -141,6 +160,9 @@ class ScanController extends Controller
                 'showPmActions'  => $showPmActions ?? false,
                 'ictTicket'      => $ictTicket ?? null,
                 'userAssets'     => $userAssets,
+                'setComponents'  => $setComponents,
+                'parentAsset'    => $parentAsset,
+                'siblings'       => $siblings,
             ]);
         }
 
@@ -157,6 +179,9 @@ class ScanController extends Controller
                 'showPmActions'  => false,
                 'ictTicket'      => null,
                 'userAssets'     => $userAssets,
+                'setComponents'  => $setComponents,
+                'parentAsset'    => $parentAsset,
+                'siblings'       => $siblings,
             ]);
         }
 
