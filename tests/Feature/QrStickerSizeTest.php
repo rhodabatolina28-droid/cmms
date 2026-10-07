@@ -92,6 +92,36 @@ class QrStickerSizeTest extends TestCase
         $this->assertStringNotContainsString('2 stickers per row', $page);
     }
 
+    public function test_qr_is_scannable_size_with_proper_quiet_zone(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer']);
+        $asset = $this->asset(['item_name' => 'Scannable Asset']);
+
+        // QR box enlarged to 17mm (was 15mm) — bigger modules for cameras.
+        $single = $this->actingAs($supply)
+            ->get(route('inventory.qr-sticker', $asset->asset_id))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('.sticker .qr { width: 17mm; height: 17mm; }', $single);
+
+        // Quiet zone: QrCodeService must use margin(2). The SVG encodes it via
+        // transform="scale(200 / (modules + 2*margin))" — for the short test
+        // payload (http://localhost/r/{id}, version 2 = 25 modules):
+        //   margin 1 → 200/27 = 7.407 ; margin 2 → 200/29 = 6.897.
+        $this->assertMatchesRegularExpression('/transform="scale\(([\d.]+)\)"/', $single);
+        preg_match('/transform="scale\(([\d.]+)\)"/', $single, $m);
+        $this->assertEqualsWithDelta(200 / 29, (float) $m[1], 0.001, 'QrCodeService quiet zone must be margin(2)');
+
+        // The batch grid uses the same shared cell CSS.
+        $batch = $this->actingAs($supply)
+            ->get(route('inventory.qr-batch'))
+            ->assertOk()
+            ->getContent();
+        $this->assertStringContainsString('.sticker .qr { width: 17mm; height: 17mm; }', $batch);
+        // Print-safety note (fit-to-page shrinks modules below scan threshold).
+        $this->assertStringContainsString('100%', $batch);
+    }
+
     private function user(array $attributes = []): User
     {
         $this->counter++;

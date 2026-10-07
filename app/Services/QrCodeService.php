@@ -16,7 +16,10 @@ class QrCodeService
 
         $svg = QrCode::format('svg')
             ->size(200)
-            ->margin(1)
+            // Quiet zone: 2 modules (was 1). At the 17mm sticker render that
+            // yields ~4 modules of white with the cell padding — camera phones
+            // require ≥4 modules or they fail to detect the code at all.
+            ->margin(2)
             ->errorCorrection('L')
             ->generate($data);
 

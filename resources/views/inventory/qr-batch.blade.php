@@ -241,17 +241,18 @@
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding: 1.2mm;
+            padding: 0.9mm;
             overflow: hidden;
             text-align: center;
             box-sizing: border-box;
+            line-height: 1;
         }
-        .sticker .qr { width: 15mm; height: 15mm; }
+        .sticker .qr { width: 17mm; height: 17mm; }
         .sticker .qr svg { width: 100% !important; height: 100% !important; display: block; }
-        .sticker .s-id { font-family: 'Courier New', monospace; font-size: 6pt; font-weight: 800; color: #0f172a; margin-top: 0.8mm; }
-        .sticker .s-name { font-size: 5pt; font-weight: 700; color: #334155; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticker .s-flag { font-size: 5pt; font-weight: 800; color: #0038A8; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticker .s-serial { font-family: 'Courier New', monospace; font-size: 4.5pt; color: #64748b; margin-top: 0.3mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-id { font-family: 'Courier New', monospace; font-size: 6pt; font-weight: 800; color: #0f172a; margin-top: 0.5mm; }
+        .sticker .s-name { font-size: 5pt; font-weight: 700; color: #334155; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-flag { font-size: 5pt; font-weight: 800; color: #0038A8; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-serial { font-family: 'Courier New', monospace; font-size: 4.5pt; color: #64748b; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ===== PRINT LAYOUT ===== */
         @media print {
@@ -390,7 +391,7 @@
 <!-- NOTICE -->
 <div class="print-preview-note">
     <i class="fa-solid fa-circle-info"></i>
-    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Bawat sticker ay <strong>1" × 1"</strong> (25.4mm), grid ng <strong>70 stickers/A4</strong> — QR, asset ID, at item name. I-cut bago idikit!</span>
+    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Bawat sticker ay <strong>1" × 1"</strong> (25.4mm), grid ng <strong>70 stickers/A4</strong> — QR, asset ID, at item name. Print sa <strong>100% scale</strong> (huwag "Fit to page" — liliit ang QR at hindi ma-i-scan). I-cut bago idikit!</span>
 </div>
 
 <!-- ASSET TABLE -->
