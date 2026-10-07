@@ -60,6 +60,33 @@ class PhysicalCountGroupTest extends TestCase
         ]);
     }
 
+    /**
+     * Phase M2 — mobile UX: after counting completes, the Export CSV /
+     * Print Report / Print by Custodian action buttons must stack
+     * FULL-WIDTH (single column) on phones — the old `1fr 1fr` grid orphaned
+     * "Print by Custodian" next to an empty cell with a wrapped 2-line label
+     * (confirmed via 390x844 headless-Chrome screenshot).
+     */
+    public function test_completed_session_stacks_action_buttons_full_width_on_mobile(): void
+    {
+        $supply = $this->user(['role' => 'supply_officer']);
+        $session = $this->startCountSession($supply);
+        $session->update(['status' => 'Completed']);
+
+        $html = $this->actingAs($supply)
+            ->get(route('physical-count.show', $session->id))
+            ->assertOk()
+            ->getContent();
+
+        // Actions render only after the count is completed
+        $this->assertStringContainsString('Export CSV', $html);
+        $this->assertStringContainsString('Print by Custodian', $html);
+
+        // M2 marker + single-column rule (sa loob ng ≤677px media block)
+        $this->assertStringContainsString('M2: full-width stacked action buttons', $html);
+        $this->assertStringContainsString('grid-template-columns: 1fr !important', $html);
+    }
+
     public function test_unique_custodian_name_match_returns_group(): void
     {
         $supply = $this->user(['role' => 'supply_officer', 'email' => 'supply1@test.com', 'full_name' => 'Supply Officer One']);

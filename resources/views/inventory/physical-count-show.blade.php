@@ -288,22 +288,27 @@
         .show-stats-grid p { font-size: 8px !important; letter-spacing: 0.3px !important; }
         .show-stats-grid h3 { font-size: 17px !important; margin-top: 2px !important; }
 
-        /* ── Header buttons — stacked full-width touch targets ── */
-        .card-header-accent > div:first-child { flex-direction: column !important; align-items: stretch !important; }
+        /* ── Header buttons — stacked full-width touch targets ──
+           M2: full-width stacked action buttons — ang dating `1fr 1fr` grid ay
+           ini-orphan ang "Print by Custodian" sa tabi ng BLANGKONG cell at
+           wini-wrap ang label (nakita sa 390x844 screenshot). Single column na
+           ngayon: Export CSV / Print Report / Print by Custodian, tig-isa bawat
+           hilera, ≥44px ang taas. ── */
+        .card-header-accent > div:first-child { flex-direction: column !important; align-items: stretch !important; width: 100% !important; }
         .card-header-accent > div:first-child > div {
             width: 100% !important;
             display: grid !important;
-            grid-template-columns: 1fr 1fr !important;
-            gap: 6px !important;
+            grid-template-columns: 1fr !important;
+            gap: 8px !important;
         }
         .card-header-accent .btn-secondary-sm {
             width: 100% !important;
             display: flex !important;
             justify-content: center !important;
             align-items: center !important;
-            min-height: 44px !important;
+            min-height: 46px !important;
             border-radius: 8px !important;
-            font-size: 12px !important;
+            font-size: 13px !important;
         }
 
         /* ── Mark buttons side-by-side inside asset cards (less vertical bulk) ── */
