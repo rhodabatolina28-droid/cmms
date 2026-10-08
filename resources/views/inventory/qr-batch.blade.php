@@ -522,7 +522,7 @@
 <!-- FILTER BAR -->
 <div class="filter-bar">
     <i class="fa-solid fa-magnifying-glass icon-gray"></i>
-    <input type="text" class="filter-input search-wide" id="searchInput" placeholder="Search item name or serial number..." oninput="filterTable()">
+    <input type="text" class="filter-input search-wide" id="searchInput" placeholder="Search custodian/asset, serial, PAR..."><!-- input listener = nonce'd script below (inline oninput is blocked by the strict production CSP) -->
     <select class="filter-input" id="statusFilter">
         <option value="">All Status</option>
         <option value="Active">Active</option>
@@ -604,7 +604,10 @@
                 page++;
             }
             allAssets = collected;
-            renderTable(allAssets);
+            // Re-apply the ACTIVE search/filters — typing while the paged fetch
+            // is still running must survive each page arrival (the old full-list
+            // render clobbered the filtered view back to everything).
+            filterTable();
         } catch (e) {
             tbody.innerHTML =
                 '<tr><td colspan="7" class="error-row">Failed to load assets. Please refresh.</td></tr>';
@@ -801,15 +804,20 @@
     }
 
     function filterTable() {
-        const search = document.getElementById('searchInput').value.toLowerCase();
+        const search = document.getElementById('searchInput').value.trim().toLowerCase();
         const status = document.getElementById('statusFilter').value;
         const category = document.getElementById('categoryFilter').value;
 
         const filtered = allAssets.filter(a => {
+            // Server-side parity (GetInventoryAssetsAction: item_name, serial, par,
+            // property) + custodian name — the page groups BY custodian, so typing
+            // a person's name must surface their group.
             const matchSearch = !search ||
                 (a.item_name || '').toLowerCase().includes(search) ||
                 (a.serial_number || '').toLowerCase().includes(search) ||
-                (a.par_number || '').toLowerCase().includes(search);
+                (a.par_number || '').toLowerCase().includes(search) ||
+                (a.property_number || '').toLowerCase().includes(search) ||
+                (a.assigned_to_name || '').toLowerCase().includes(search);
             const matchStatus = !status || a.status === status;
             const matchCat = !category || a.category === category;
             return matchSearch && matchStatus && matchCat;
@@ -850,6 +858,9 @@
     document.addEventListener('DOMContentLoaded', function() {
         document.getElementById('statusFilter').addEventListener('change', filterTable);
         document.getElementById('categoryFilter').addEventListener('change', filterTable);
+        // Search: registered here (nonce'd script) — the strict production CSP
+        // blocks inline oninput attributes, so this is the LIVE wiring.
+        document.getElementById('searchInput').addEventListener('input', filterTable);
         document.getElementById('masterCheck').addEventListener('change', function() {
             masterToggle(this);
         });
