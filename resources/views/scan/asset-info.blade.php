@@ -234,7 +234,22 @@
             @endforeach
             @endif
 
-            {{-- PM Schedule Info --}}
+            {{-- Not-assigned notice — OUTSIDE the PM role gate: supply/admin scanning
+                 a Spare/unassigned asset still sees why there is no custodian
+                 (asserted by QrLifecycleTest), without the PM panel itself. --}}
+            @if(!$asset->assignedUser && !in_array($user->role, ['it', 'super_admin'], true))
+            <div class="pm-info">
+                <div class="pm-row">
+                    <span class="pm-label">Assignment</span>
+                    <span class="pm-value pm-value-muted">Asset not assigned to any user.</span>
+                </div>
+            </div>
+            @endif
+
+            {{-- PM Schedule Info — role gate (2026-10-08 user decision): PM section
+                 is for IT / System Admin viewers only; supply/admin scanning sees
+                 "Other Assets" only. --}}
+            @if(in_array($user->role, ['it', 'super_admin'], true))
             <div class="section-title">
                 Preventive Maintenance
             </div>
@@ -316,6 +331,7 @@
                     @endif
                 @endif
             </div>
+            @endif
 
             {{-- ICT Ticket Info --}}
             @if($ictTicket)
@@ -352,7 +368,9 @@
             @endforeach
             @endif
 
-            {{-- Service History --}}
+            {{-- Service History — role gate (2026-10-08 user decision): hidden for
+                 supply/admin (Other Assets only); IT / System Admin keep theirs. --}}
+            @if(in_array($user->role, ['it', 'super_admin'], true))
             <div class="section-title">
                 Recent Service History
             </div>
@@ -369,11 +387,21 @@
             @empty
             <div class="history-empty">No service history found.</div>
             @endforelse
+            @endif
         </div>
 
         @php
-            $hasPmAction = $upcomingPM && $upcomingPM->type === 'Preventive Maintenance';
-            $hasProfileAction = $user->role === 'super_admin';
+            // Conduct PM = IT / System Admin viewers only (defense-in-depth — supply
+            // viewers already receive upcomingPM=null from ScanController).
+            $hasPmAction = $upcomingPM
+                && $upcomingPM->type === 'Preventive Maintenance'
+                && in_array($user->role, ['it', 'super_admin'], true);
+            // Profile link: System Admin → super_admin.inventory.detail; Supply/Admin
+            // → inventory.detail — same route pattern as ApiAssetProfileAction.
+            $profileRoute = $user->canProcessSupply()
+                ? 'inventory.detail'
+                : ($user->role === 'super_admin' ? 'super_admin.inventory.detail' : null);
+            $hasProfileAction = $profileRoute !== null;
         @endphp
         @if($hasPmAction || $hasProfileAction)
         {{-- "Back to Dashboard" ay nasa ITAAS na (isang beses lang) para hindi
@@ -385,7 +413,7 @@
                 </a>
             @endif
             @if($hasProfileAction)
-            <a href="{{ route('super_admin.inventory.detail', $asset->asset_id) }}" class="btn btn-primary">
+            <a href="{{ route($profileRoute, $asset->asset_id) }}" class="btn btn-primary">
                 View Full Inventory Profile
             </a>
             @endif
