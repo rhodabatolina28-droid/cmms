@@ -133,10 +133,25 @@ class ScanController extends Controller
                         ->first();
                 }
 
-                // Check for non-PM ICT repair tickets for this exact asset
+                // Check for non-PM ICT repair tickets for this exact asset.
+                // 2026-10-08 scan-page rule: ONLY an ACTIVE (unfinished) ticket
+                // renders the "ICT Repair Ticket" panel — terminal statuses
+                // (Completed/Cancelled/Rejected) are history, not live alarms
+                // (mirrors Request::isActiveTicketAttribute). Terminal tickets
+                // still land in "Recent Service History" below (no status filter).
+                // whereIn also means a newer terminal ticket cannot bury an older
+                // still-open one — the panel keeps the latest ACTIVE ticket.
                 $ictTicket = RequestModel::where('linked_asset_id', $id)
                     ->where('type', '!=', 'Preventive Maintenance')
                     ->whereNotNull('type')
+                    ->whereIn('status', [
+                        RequestModel::STATUS_PENDING,
+                        RequestModel::STATUS_ONGOING,
+                        RequestModel::STATUS_SCHEDULED,
+                        RequestModel::STATUS_AWAITING_PARTS,
+                        RequestModel::STATUS_AWAITING_SIGNATURE,
+                        RequestModel::STATUS_REFERRED_EXTERNAL,
+                    ])
                     ->latest()
                     ->first();
 
