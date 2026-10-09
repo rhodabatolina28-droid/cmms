@@ -28,8 +28,9 @@ class ArchiveTicketPdfAction
         }
 
         $data = self::viewData($ticket);
+        $paper = $ticket->type === 'Preventive Maintenance' ? 'letter' : 'a4';
 
-        $pdf = Pdf::loadView($data['view'], $data['vars'])->setPaper('legal', 'portrait');
+        $pdf = Pdf::loadView($data['view'], $data['vars'])->setPaper($paper, 'portrait');
 
         $typeFolder = $ticket->type === 'Preventive Maintenance' ? 'pm-pdfs' : 'ict-pdfs';
         $relative = $typeFolder . '/'

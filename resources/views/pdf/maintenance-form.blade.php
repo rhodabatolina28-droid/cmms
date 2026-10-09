@@ -4,71 +4,72 @@
     <meta charset="UTF-8">
     <title>Preventive Maintenance Service Form</title>
     <style nonce="{{ $cspNonce }}">
-        @page { size: legal portrait; margin: 6mm 8mm 6mm 8mm; }
-        body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; font-size: 9.5px; color: #1f2937; margin: 0; padding: 0; line-height: 1.4; }
+        @page { size: letter portrait; margin: 4mm 6mm 3.5mm 6mm; }
+        body { font-family: Arial, sans-serif; font-size: 8.5px; color: #1f2937; margin: 0; padding: 0; line-height: 1.27; }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; padding: 0; }
-        .f { border-bottom: 1.5px solid #000; display: inline-block; min-height: 14px; vertical-align: bottom; padding: 0 3px; font-size: 9px; }
-        .fb { border-bottom: 1.5px solid #000; min-height: 14px; padding: 0 3px; overflow: hidden; word-wrap: break-word; font-size: 9px; }
-        .cb { display: inline-block; width: 12px; height: 12px; border: 1.5px solid #000; margin-right: 2px; position: relative; top: 2px; text-align: center; line-height: 12px; font-size: 9px; }
+        .f { border-bottom: 1.2px solid #000; display: inline-block; min-height: 12.5px; vertical-align: bottom; padding: 0 2px; font-size: 8.2px; }
+        .fb { border-bottom: 1.2px solid #000; min-height: 12.5px; padding: 0 2px; overflow: hidden; word-wrap: break-word; font-size: 8.2px; }
+        .cb { display: inline-block; width: 10px; height: 10px; border: 1.2px solid #000; margin-right: 2px; position: relative; top: 1.5px; text-align: center; line-height: 10px; font-size: 7.5px; }
         .cb.x:after { content: "X"; font-weight: bold; }
-        .sec { text-align: center; font-weight: bold; font-size: 11px; margin: 2px 0 2px 0; text-transform: uppercase; letter-spacing: 0.5px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 2px; }
-        .sub { font-size: 7px; text-align: center; display: block; margin-top: 1px; text-transform: uppercase; color: #333; }
-        .sig-name { font-weight: bold; font-size: 10px; text-transform: uppercase; min-height: 14px; }
+        .sec { text-align: center; font-weight: bold; font-size: 10px; margin: 1px 0; text-transform: uppercase; letter-spacing: 0.5px; background: #f3f4f6; border: 1px solid #d1d5db; padding: 2px; }
+        .sub { font-size: 6.5px; text-align: center; display: block; margin-top: 1px; text-transform: uppercase; color: #333; }
+        .sig-name { font-weight: bold; font-size: 9px; text-transform: uppercase; min-height: 12px; }
         .sig-line { border-bottom: 1px solid #000; width: 80%; margin: 0 auto; min-height: 2px; }
-        .hdr { font-size: 10px; font-weight: bold; text-align: center; background: #334155; color: #ffffff; padding: 3px 3px; border: 1.5px solid #000; text-transform: uppercase; letter-spacing: 1px; margin-top: 2px; margin-bottom: 1px; }
-        .dt td, .dt th { border: 1px solid #000; padding: 3px 4px; font-size: 8.5px; }
+        .hdr { font-size: 8.8px; font-weight: bold; text-align: center; background: #334155; color: #ffffff; padding: 2px 3px; border: 1.2px solid #000; text-transform: uppercase; letter-spacing: 0.6px; margin-top: 1.5px; margin-bottom: 1px; page-break-after: avoid; }
+        .dt td, .dt th { border: 1px solid #000; padding: 1.5px 3px; font-size: 7.8px; line-height: 1.16; }
         .dt th { background: #e8eef5; font-weight: bold; text-align: center; }
-        .chk td { border: 1px solid #000; padding: 2px 3px; font-size: 7.5px; vertical-align: middle; }
-        .chk th { border: 1px solid #000; padding: 2px 3px; font-size: 8px; font-weight: bold; text-align: center; background: #e8eef5; }
+        .chk { page-break-inside: avoid; }
+        .chk td { border: 1px solid #000; padding: 1.3px 2px; font-size: 7.3px; vertical-align: middle; line-height: 1.15; height: 11.5px; }
+        .chk th { border: 1px solid #000; padding: 1.5px 2px; font-size: 7.8px; font-weight: bold; text-align: center; background: #e8eef5; line-height: 1.15; }
         .chk .eq { font-weight: bold; text-align: center; }
         .chk .no { text-align: center; font-weight: bold; }
-        .chk .lb { display: inline-block; width: 72px; }
-        .footer { text-align: center; font-size: 8px; color: #666; margin-top: 2px; border-top: 1px solid #ccc; padding-top: 1px; }
+        .chk .lb { display: inline-block; width: 66px; }
+        .footer { text-align: center; font-size: 7.5px; color: #666; margin-top: 3px; border-top: 1px solid #ccc; padding-top: 1.5px; page-break-inside: avoid; }
     
-        .s16 { width: 55%; vertical-align: bottom; padding-right: 10px; }
-        .s38 { width: 45px; }
-        .s33 { margin-bottom: 1px; }
-        .s17 { font-size: 8px; font-weight: bold; margin-bottom: 2px; }
-        .s40 { width: 120px; }
-        .s4 { width:40px; height:40px; vertical-align: middle; margin-right: 8px; }
-        .s15 { width: 100%; margin-top: 2px; border-collapse: collapse; }
-        .s43 { font-weight:bold; text-align:center; }
-        .s27 { min-height: 36px; margin-top: 1px; }
-        .s31 { text-align: center; font-size: 8px; font-weight: bold; margin-top: 2px; text-transform: uppercase; }
-        .s30 { min-height: 14px; border-bottom: 1.5px solid #000; text-align: center; }
+        .s16 { width: 55%; vertical-align: bottom; padding-right: 8px; }
+        .s38 { width: 38px; }
+        .s33 { margin-bottom: 0; font-size: 7.8px; }
+        .s17 { font-size: 7.2px; font-weight: bold; margin-bottom: 1px; }
+        .s40 { width: 105px; }
+        .s4 { width: 32px; height: 32px; vertical-align: middle; margin-right: 6px; }
+        .s15 { width: 100%; margin-top: 1px; border-collapse: collapse; }
+        .s43 { font-weight: bold; text-align: center; background: #f3f4f6; }
+        .s27 { min-height: 25px; margin-top: 1px; font-size: 7.8px; }
+        .s31 { text-align: center; font-size: 7.2px; font-weight: bold; margin-top: 1px; text-transform: uppercase; }
+        .s30 { min-height: 20px; border-bottom: 1.2px solid #000; text-align: center; }
         .s39 { width: 45%; padding: 0; }
-        .s41 { width: 25px; }
-        .s28 { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .s12 { width: 100%; border-collapse: collapse; margin-bottom: 2px; }
-        .s5 { font-size: 20px; font-weight: bold; letter-spacing: 1px; vertical-align: middle; }
-        .s23 { margin-top: 2px; font-weight: bold; }
-        .s25 { width: 40%; padding: 4px 5px; }
-        .s42 { width: 65px; }
+        .s41 { width: 20px; }
+        .s28 { width: 100%; border-collapse: collapse; margin-bottom: 1px; }
+        .s12 { width: 100%; border-collapse: collapse; margin-bottom: 1px; }
+        .s5 { font-size: 16.5px; font-weight: bold; letter-spacing: 0.6px; vertical-align: middle; }
+        .s23 { margin-top: 1px; font-weight: bold; font-size: 7.8px; }
+        .s25 { width: 40%; padding: 2.5px 4px; }
+        .s42 { width: 56px; }
         .s3 { width: 65%; vertical-align: middle; }
-        .s21 { text-align: center; padding-right: 10px; }
-        .s2 { margin-bottom: 3px; }
-        .s29 { font-size: 7px; font-style: italic; margin-bottom: 1px; color: #555; line-height: 1.2; }
-        .s13 { width: 75px; font-weight: bold; font-size: 9px; vertical-align: bottom; white-space: nowrap; padding-bottom: 2px; }
-        .s6 { font-size: 16px; vertical-align: middle; }
-        .s1 { max-width:100px;max-height:28px; }
-        .s35 { margin: 2px 0 1px; font-weight: bold; }
-        .s14 { border-bottom: 1.5px solid #000; font-size: 9px; vertical-align: bottom; padding: 0 4px 1px 4px; }
-        .s11 { font-weight: bold; font-size: 9px; margin-bottom: 2px; text-decoration: underline; }
+        .s21 { text-align: center; padding-right: 8px; }
+        .s2 { margin-bottom: 2px; }
+        .s29 { font-size: 6.6px; font-style: italic; margin-bottom: 0; color: #555; line-height: 1.1; }
+        .s13 { width: 66px; font-weight: bold; font-size: 7.8px; vertical-align: bottom; white-space: nowrap; padding-bottom: 1px; }
+        .s6 { font-size: 14px; vertical-align: middle; }
+        .s1 { max-width: 90px; max-height: 21px; }
+        .s35 { margin: 1px 0; font-weight: bold; font-size: 7.8px; }
+        .s14 { border-bottom: 1.2px solid #000; font-size: 8.2px; vertical-align: bottom; padding: 0 3px 1px 3px; }
+        .s11 { font-weight: bold; font-size: 8.4px; margin-bottom: 1px; text-decoration: underline; }
         .s36 { width: 55%; padding: 0; border-right: 1px solid #000; }
-        .s9 { border: 1px solid #000; margin-bottom: 2px; }
-        .s34 { min-height: 12px; margin-top: 1px; }
-        .s18 { min-height: 16px; border-bottom: 1.5px solid #000; text-align: center; }
+        .s9 { border: 1px solid #000; margin-bottom: 2px; page-break-inside: avoid; }
+        .s34 { min-height: 11px; margin-top: 0; font-size: 7.8px; }
+        .s18 { min-height: 20px; border-bottom: 1.2px solid #000; text-align: center; }
         .s19 { width: 45%; vertical-align: bottom; }
-        .s10 { width: 60%; padding: 4px 5px; border-right: 1px solid #000; }
-        .s20 { border-bottom: 1.5px solid #000; text-align: center; font-size: 8px; min-height: 14px; padding-bottom: 2px; }
-        .s8 { width: 120px; text-align: center; font-weight: bold; }
-        .s26 { font-weight: bold; }
-        .s32 { margin-bottom: 1px; font-weight: bold; }
-        .s7 { width: 35%; text-align: right; font-size: 11px; }
-        .s22 { height: 10px; }
-        .s24 { min-height: 12px; margin-top: 1px; }
-        .s37 { width: 100px; }
+        .s10 { width: 60%; padding: 2.5px 4px; border-right: 1px solid #000; }
+        .s20 { border-bottom: 1.2px solid #000; text-align: center; font-size: 7.8px; min-height: 12.5px; padding-bottom: 1px; }
+        .s8 { width: 112px; text-align: center; font-weight: bold; }
+        .s26 { font-weight: bold; font-size: 7.8px; }
+        .s32 { margin-bottom: 0; font-weight: bold; font-size: 7.8px; }
+        .s7 { width: 35%; text-align: right; font-size: 9.8px; }
+        .s22 { height: 6px; }
+        .s24 { min-height: 15px; margin-top: 0; font-size: 7.8px; }
+        .s37 { width: 86px; }
     </style>
 </head>
 <body>
@@ -89,7 +90,7 @@
             }
             $ext = pathinfo($real, PATHINFO_EXTENSION);
             return '<img src="data:image/'.$ext.';base64,'.base64_encode(file_get_contents($real)).'" class="s1">';
-        }
+        };
     @endphp
 
     {{-- HEADER --}}
@@ -136,14 +137,11 @@
                         </td>
                     </tr>
                     <tr>
-                        <td class="s21">
-                        </td>
-                        <td>
-                            <div class="s22"></div>
-                        </td>
+                        <td class="s21"></td>
+                        <td><div class="s22"></div></td>
                     </tr>
                 </table>
-                <div class="s23">DEVICE PROBLEM & ISSUES ENCOUNTERED:</div>
+                <div class="s23">DEVICE PROBLEM &amp; ISSUES ENCOUNTERED:</div>
                 <div class="fb s24">{{ $pm->problem_description ?? '' }}</div>
             </td>
             <td class="s25">
@@ -206,23 +204,22 @@
     <div class="hdr">DEVICE INFORMATION</div>
     <table class="s9">
         <tr>
-            {{-- LEFT: Device List --}}
             <td class="s36">
                 <table class="dt">
                     <tr><td class="s37">Desktop Brand:</td><td>{{ $pm->desktop_brand ?? '' }}</td><td class="s38">Model:</td><td>{{ $pm->desktop_model ?? '' }}</td></tr>
                     <tr><td>Desktop PNO:</td><td colspan="3">{{ $pm->desktop_pno ?? '' }}</td></tr>
                     <tr><td>Computer Name:</td><td colspan="3">{{ $pm->desktop_computer_name ?? '' }}</td></tr>
                     <tr><td>Monitor-1 PNO:</td><td colspan="3">{{ $pm->monitor1_pno ?? '' }}</td></tr>
-                    <tr><td>Monitor Brand:</td><td>{{ $pm->monitor1_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->monitor1_model ?? '' }}</td></tr>
-                    @if($pm->monitor2_pno)
+                    <tr><td>Monitor-1 Brand:</td><td>{{ $pm->monitor1_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->monitor1_model ?? '' }}</td></tr>
+                    @if(!empty($pm->monitor2_pno) || !empty($pm->monitor2_brand))
                     <tr><td>Monitor-2 PNO:</td><td colspan="3">{{ $pm->monitor2_pno ?? '' }}</td></tr>
-                    <tr><td>Monitor Brand:</td><td>{{ $pm->monitor2_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->monitor2_model ?? '' }}</td></tr>
+                    <tr><td>Monitor-2 Brand:</td><td>{{ $pm->monitor2_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->monitor2_model ?? '' }}</td></tr>
                     @endif
                     <tr><td>Printer-1 PNO:</td><td colspan="3">{{ $pm->printer1_pno ?? '' }}</td></tr>
-                    <tr><td>Printer Brand:</td><td>{{ $pm->printer1_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->printer1_model ?? '' }}</td></tr>
-                    @if($pm->printer2_pno)
+                    <tr><td>Printer-1 Brand:</td><td>{{ $pm->printer1_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->printer1_model ?? '' }}</td></tr>
+                    @if(!empty($pm->printer2_pno) || !empty($pm->printer2_brand))
                     <tr><td>Printer-2 PNO:</td><td colspan="3">{{ $pm->printer2_pno ?? '' }}</td></tr>
-                    <tr><td>Printer Brand:</td><td>{{ $pm->printer2_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->printer2_model ?? '' }}</td></tr>
+                    <tr><td>Printer-2 Brand:</td><td>{{ $pm->printer2_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->printer2_model ?? '' }}</td></tr>
                     @endif
                     <tr><td>UPS PNO:</td><td colspan="3">{{ $pm->ups_pno ?? '' }}</td></tr>
                     <tr><td>UPS Brand:</td><td>{{ $pm->ups_brand ?? '' }}</td><td>Model:</td><td>{{ $pm->ups_model ?? '' }}</td></tr>
@@ -240,7 +237,6 @@
                     <tr><td>Model / PNO:</td><td colspan="3">{{ $pm->other_equipment_model_pno ?? '' }}</td></tr>
                 </table>
             </td>
-            {{-- RIGHT: Specs --}}
             <td class="s39">
                 <table class="dt">
                     <tr><th colspan="2">DESKTOP SPECS</th></tr>
@@ -271,8 +267,15 @@
     </table>
 
     {{-- SECTION 4: MAINTENANCE TASK CHECKLIST --}}
+    @php
+        $hasMon2 = !empty($pm->monitor2_brand) || !empty($pm->monitor2_pno);
+        $hasPrinter2 = !empty($pm->printer2_brand) || !empty($pm->printer2_pno) || !empty($pm->p2Inkjet) || !empty($pm->p2Laserjet);
+        $monSpan = $hasMon2 ? 4 : 2;
+        $prnSpan = $hasPrinter2 ? 4 : 2;
+    @endphp
+
     <div class="hdr">MAINTENANCE TASK CHECKLIST</div>
-    <table class="chk">
+    <table class="chk" style="page-break-inside:avoid;">
         <thead>
             <tr>
                 <th class="s41">NO.</th>
@@ -282,6 +285,7 @@
             </tr>
         </thead>
         <tbody>
+
             {{-- 1. DESKTOP --}}
             <tr>
                 <td class="no" rowspan="6">1</td>
@@ -324,7 +328,7 @@
 
             {{-- 2. MONITOR --}}
             <tr>
-                <td class="no" rowspan="2">2</td>
+                <td class="no" rowspan="{{ $monSpan }}">2</td>
                 <td class="eq">MON-1</td>
                 <td>SCREEN CLEAN-UP</td>
                 <td><span class="cb {{ $check('monitorScreenCleanup') }}"></span> Yes</td>
@@ -338,9 +342,8 @@
                 <td>{!! $intChk('HDD CHECK DISK:', 'desktopHddCheckDisk', 'Yes') !!}</td>
                 <td></td>
             </tr>
-            @if(!empty($pm->monitor2_brand) || !empty($pm->monitor2_pno))
+            @if($hasMon2)
             <tr>
-                <td class="no" rowspan="2"></td>
                 <td class="eq">MON-2</td>
                 <td>SCREEN CLEAN-UP</td>
                 <td><span class="cb {{ $check('monitor2ScreenCleanup') }}"></span> Yes</td>
@@ -358,7 +361,7 @@
 
             {{-- 3. PRINTER --}}
             <tr>
-                <td class="no" rowspan="2">3</td>
+                <td class="no" rowspan="{{ $prnSpan }}">3</td>
                 <td class="eq">PRINTER-1</td>
                 <td>CASE CLEAN-UP</td>
                 <td><span class="cb {{ $check('printerCaseCleanup') }}"></span> Yes</td>
@@ -372,9 +375,8 @@
                 <td>{!! $intChk('START-UP FILE:', 'desktopStartupFile', 'CLEAN') !!}</td>
                 <td></td>
             </tr>
-            @if(!empty($pm->printer2_brand) || !empty($pm->printer2_pno) || !empty($pm->p2Inkjet) || !empty($pm->p2Laserjet))
+            @if($hasPrinter2)
             <tr>
-                <td class="no" rowspan="2"></td>
                 <td class="eq">PRINTER-2</td>
                 <td>CASE CLEAN-UP</td>
                 <td><span class="cb {{ $check('printer2CaseCleanup') }}"></span> Yes</td>
@@ -499,7 +501,8 @@
                 <td><span class="cb {{ $check('speakerUnitCleanup') }}"></span> Yes</td>
                 <td>{!! $intChk('WIN DEFENDER:', 'laptopWindowsDefender', 'ON') !!}</td>
                 <td>{!! $intChk('PRINT QUALITY:', 'printerLaserjetPrintQuality', 'OK') !!}</td>
-            </td>
+            </tr>
+
         </tbody>
     </table>
 
