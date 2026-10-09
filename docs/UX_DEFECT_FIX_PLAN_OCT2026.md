@@ -293,6 +293,7 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 
 1. **Bug 7 scope** (Phase 1): kasama na ang **scan-flow pages**. Kung isasama rin ang **"My Assets"** at **lahat ng list-page cards**, sabihin bago magsimula ang Phase 1.
 2. **Bug 6b/6c** (Phase 4): **sticky** ba ang IT assignment (hindi na ni-null sa cycle advance) o sapat na ang **inline assign sa PM Work Orders**?
+3. **Email sender/links (Phase E, §12):** `MAIL_FROM_ADDRESS` (ngayon = personal Gmail) at `APP_URL` (trycloudflare quick tunnel na nagbabago kada restart — §11) → kailangan ng **opisyal na internal URL + office email account** bago ang phase **E4**; hanggang ibinibigay = checklist placeholders lang.
 
 ---
 
@@ -327,9 +328,11 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-09 | **PM form mobile UX — M2 (Tech/End User readability + full-width Device Info)** — (a) **device inputs ~235px lang** (intrinsic width) dahil ang PM-M1 ay `td` lang ang na-blockify; naayos = blockify ang buong chain (grid > own `tbody` > inner table > `tbody` > `tr` > `td`) → `desktopModel` 231px → **373px = container**; **`display` ay sinadyang HINDI `!important`** (regression na nahuli ng verification: ang `!important` ay binasag ang inline `display:none` ng JS → lumitaw ang nakatagong `.monitor-2-row`; `monitor-2`=none / `printer-2`=block muli = tama sa 2-printer na ticket) · (b) readability floors sa `@media≤767px`: section label/bar 11.52→**12.5px**, end-user backup note 11.2→**12.5px**, sig caption 9.6→**11.5px**, ≤390 bar 10.4→**12px** · `overflowX=false`, desktop = naka-media-scoped kaya walang binago · test-first: bagong test RED → GREEN **4/4** (17 assertions); full suite **2F/522P** (2F = pre-existing `CsmMonthlyReportTest`×2) | ✅ **DONE & VERIFIED** — `f6d4a98` |
 | 2026-10-09 | **PM form mobile UX — M3 (checklist touch targets + sticky headers)** — (a) **checkbox hit area ~20px lang** (nagmukhang ~30px pero `transform: scale` lang 'yon — hindi lumalaki ang tunay na target; walang effect din ang `tr { min-height }`) → **real 28px box** (`width/height/min-*`), tanggal ang scale trick, `.check-cell` 56→**72px**, **whole-cell tap delegation** sa `_pm_scripts` (anumang tap sa loob ng cell = toggle; may `matchMedia(767px)` guard para **hindi maapektuhan ang desktop** text-selection) → row ≈ **45px**, effective target ≥44px (probe-verified: `cellTapToggle=true`) · (b) **sticky section headers** (`.section-label` + `.section-bar-minimal` `position:sticky top:0`) — kailangan ng `.bond-paper overflow-x: hidden → **clip**` (ang `hidden` ay gumagawa ng ancestor scrollport na tahimik na pumapatay ng sticky) · test-first: bagong test RED → GREEN **5/5** (24 assertions); full suite **2F/523P** (2F = pre-existing `CsmMonthlyReportTest`×2) | ✅ **DONE & VERIFIED** — `f3c39d9` |
 | 2026-10-09 | **PM-LT — LAPTOP SPECS shift (user report: \\\"mali mali, dapat accurate\\\")** — root cause sa **CSV import**: ang `mapPmsLaptop` ay nag-de-destruct ng extra `$year` bago `$cpu` (\\\"8:Year 9:CPU\\\") pero ang totoong laptop sheet ay **walang Year column** → **+1 shift lahat ng spec**: `cpu`=RAM value, `ram`=GPU, `gpu`=HD-1, `hd2`=OS, `os`=Office, at `date_acquired`=null (CPU string ≠ date) — napatunayan ng read-only DB probes (23 laptop assets + pm rows 8–40; desktop imports = tama) · fix: destructuring na walang `$year` (`$cpu` = column 8), column 7 = ComputerName\\|Year na lenient sa `parseDate` · **data repair** (one-shot, signature-guarded na `cpu`→\\<n\\>GB at `os`→20xx): **23 assets + 22 PM rows** umikot pabalot pabalik isang slot, JSON backup = `storage/framework/pm_lt_repair_backup_20261009_061326.json` (gitignored); **ang totoong CPU value ay siniba ng lumaing `$year` slot sa import = HINDI na mababawi** → `cpu=NULL` ngayon (accurately unknown, kailangang i-type muli kung may original sheet) · test-first: bagong `InventoryCsvImportTest::test_pms_laptops_map_to_correct_columns` RED → GREEN **8/8** (53 assertions); full suite **2F/524P** (2F = pre-existing `CsmMonthlyReportTest`×2) · render probe (request 83 / pm 40): `ltRam=16GB DDR5 · ltGpu=NVIDIA RTX 4050 · ltOs=WIN 11 PRO · ltHd1=500GB SSD · ltOffice=2021` | ✅ **DONE & VERIFIED** — `0cb6226` |
+| 2026-10-09 | **PM PDF letter-size fix** (separate sa defect register): `DownloadMaintenancePdfAction` legal→**letter** · `ArchiveTicketPdfAction` PM=letter / ICT=a4 · `maintenance-form.blade` letter @page metrics + conditional MON-2/PRINTER-2 `rowspan` (tanggal ang empty rowspan cell) + `Printer-2` label + stray `</td>`→`</tr>` + `page-break-inside:avoid` sa checklist · PDF tests **6/6** | ✅ — `f600293` |
+| 2026-10-09 | **Phase E PLAN — internal email overhaul**: deep view (14 files, ~50 message sources; §12) + desisyon: **English concise internal ops** · `[NCMB]` prefix **KEEP** · **type strings immutable** · 6 phases E1–E6 (template → mailables → message bank → infra → tests → render QA/docs) | 📝 **PLAN LANG — walang code change pa** |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
-**Rollback:** `git revert 0cb6226` (PM-LT laptop CSV column shift — code only; DB repair: `storage/framework/pm_lt_repair_backup_20261009_061326.json`) · `git revert f3c39d9` (PM-M3 touch targets + sticky headers) · `git revert f6d4a98` (PM-M2 device width + floors) · `git revert ac4e016` (PM-M1 cascade consolidation) · `git revert bbee88a` (CSM silent feedback) · `git revert 2c75901` (qr-batch search bar) · `git revert 0548cc5` (scan hub ICT active-only panel) · `git revert 74755d3` (scan hub role sections) · `git revert 076e391` (email rebrand + template refresh) · `git revert 2c9d4de` (M2 action buttons) · `git revert b40956f` (M1 qr-batch mobile cards) · `git revert ecdaaaa` (icon sweep) · `git revert 4c81d14` (PM Tasks IT-side) · `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
+**Rollback:** `git revert f600293` (PM PDF letter size + checklist fixes) · `git revert 0cb6226` (PM-LT laptop CSV column shift — code only; DB repair: `storage/framework/pm_lt_repair_backup_20261009_061326.json`) · `git revert f3c39d9` (PM-M3 touch targets + sticky headers) · `git revert f6d4a98` (PM-M2 device width + floors) · `git revert ac4e016` (PM-M1 cascade consolidation) · `git revert bbee88a` (CSM silent feedback) · `git revert 2c75901` (qr-batch search bar) · `git revert 0548cc5` (scan hub ICT active-only panel) · `git revert 74755d3` (scan hub role sections) · `git revert 076e391` (email rebrand + template refresh) · `git revert 2c9d4de` (M2 action buttons) · `git revert b40956f` (M1 qr-batch mobile cards) · `git revert ecdaaaa` (icon sweep) · `git revert 4c81d14` (PM Tasks IT-side) · `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
 
 ### QR-scan status check (2026-10-05, updated 2026-10-06, base sa register sa itaas)
 
@@ -386,3 +389,54 @@ Ang tunnel URL ay **nagbabago tuwing i-restart** ang `cloudflared` (trycloudflar
 | I-verify | `Invoke-WebRequest https://<url>/login` → 200 (kapag 302/exception ang PowerShell, alternatibo: `curl.exe -s -o NUL -w "%{http_code}" https://<url>/login`) |
 
 > ⚠️ **Tandaan:** kapag nag-restart ang tunnel at nagbago ang URL, laging `config:clear` + QR regenerate, kung hindi luma ang URL na naka-encode sa mga sticker.
+
+---
+
+## 12. PHASE E — Internal Email System Overhaul (plan, 2026-10-09)
+
+> Contexto: **internal-use na ang CMMS** — dapat tumugma ang buong email surface (template, subjects, ~50 message strings, sender/links) sa internal-ops identity. **Deep view tapos (2026-10-09); walang code change pa** sa planong ito.
+
+### 12.0 Deep-view inventory (14 files, ~50 message sources)
+
+| Layer | Katotohanan |
+|---|---|
+| Template | `resources/views/emails/default.blade.php` — **iisang shared template**: eyebrow *Official Notification*, details box (Ticket/Type/Status/Date), `View Details` CTA, footer = NCMB + DOLE + CONFIDENTIALITY NOTICE + "do not reply" |
+| Mailables (3) | `SystemNotificationMail` · `PMScheduledMail` (may hardcoded message) · `PMAdminNotificationMail` — lahat ay nagre-render ng `emails.default`, subjects `[NCMB] {Type} - #{shortNo}` |
+| Dispatch hub | `Notification::booted(created)` — ang ~**47 `Notification::send()` sites** (bell + auto-email) ay dito dumadaan; may super_admin *no-flood* rule, CSM exception, alias-skip, local log preview; `smtp` = send diretsa, iba = queue |
+| Direct sends (2) | `GenerateScheduledPM` (SA failure alerts) · `SendPMDueReminders` (weekly summary) — parehong `\n`-laden ang message |
+| Auth emails | **Wala** — login/logout views lang (walang password-reset mail) |
+| Tests (6) | `CsmMonthlyReportTest` · `CsmWeeklyDigestTest` · `CsmSevereAlertTest` · `NotificationDestinationUrlTest` · `NotificationRequestNumberMatchTest` · `PurchaseRequestTest` |
+
+### 12.1 Natuklasan (defects)
+
+1. 🔴 **`APP_URL` = trycloudflare quick tunnel** → lahat ng email `View Details` links = temporary (namamatay kada restart, §11).
+2. 🟠 **`MAIL_FROM_ADDRESS` = personal Gmail** (`rhodabatolina28@gmail.com`) — hindi pang-internal na sender.
+3. 🔴 **Multi-line messages = run-on sa email** — walang `nl2br()` sa body (`{{ $notificationMessage }}`) pero `\n`-laden ang weekly summary + PM generation alerts.
+4. 🟠 **Tone split** — template = public/agency style (*Official Notification* + confidentiality/DOLE boilerplate), mga message = internal ops instructions.
+5. 🟠 **~50 message strings sa 15 files** — magkakaibang style, `strtoupper()` names, walang convention.
+
+### 12.2 Mga desisyon (kinumpirma 2026-10-09)
+
+- **Tono/wika:** **English — concise internal ops** (short, professional).
+- **`[NCMB]` subject prefix** = **KEEP** (rebrand `076e391`, D9.42).
+- **Notification `type` strings = IMMUTABLE** — may nakadepende: super_admin *"for Review"* gate, CSM prefix gate, `PM Scheduled` side-effect (`Notification.php` L145), parts-family detection, at 6 test files. **Message text lang ang babaguhin.**
+- **In-app bell** = parehong message text → kasama sa revision (magpapakita ng bagong teksto rin).
+
+### 12.3 Scope / phases (test-first, RED→GREEN kada phase)
+
+| Phase | Dizon | Files |
+|---|---|---|
+| **E1** | Template redesign: eyebrow → **"CMMS Notification"** · body → `{!! nl2br(e($notificationMessage)) !!}` · footer → NCMB · CMMS line + "Automated CMMS message — do not reply." + **"For internal use only."** (tanggal ang CONFIDENTIALITY/DOLE boilerplate) · CTA → **"Open Ticket"** · greeting → `Hello {name},` · panatilihin ang header name/sub + details box + status pill | `emails/default.blade.php` |
+| **E2** | Mailables: subjects → `[NCMB] {Type} · #{shortNo}` · hardcoded message ng `PMScheduledMail` → concise rewrite · consistency check ng `PMAdminNotificationMail` | 3 mailables |
+| **E3** | Message bank (~50 strings): (1) 1 sentence, action-first · (2) tanggal ang `strtoupper()` sa names · (3) **laging may ticket/PR number** (requirement ng `extractRequestNumber`/`prNumber()` fallbacks) · (4) **hindi ang type strings** | `RequestNotificationService`(15) · `PMNotificationService`(3) · `PurchaseRequestNotificationService`(3) · ICT actions(9) · `UpdateMaintenanceTicketAction`(3) · `Request.php`(2) · `CheckLowStockAction` · `GeneratePMScheduleService` · CSM services(3) · `GenerateScheduledPM` · `SendPMDueReminders` |
+| **E4** | Infra/deploy: **`APP_URL`** (tunay na internal URL) + **`MAIL_FROM_ADDRESS`** (office account) → ilagay sa `PRODUCTION_DEPLOY_CHECKLIST.md`; `.env` = gitignored → ibinibigay ng user (open item §9.3) | checklist doc + `.env` (hindi naka-commit) |
+| **E5** | Tests: bagong `EmailTemplateInternalTest` (nl2br multi-line · footer walang CONFIDENTIALITY · may "For internal use only." · eyebrow text · subject format) · 6 existing email tests GREEN · full suite vs baseline **2F/524P** | `tests/Feature/` |
+| **E6** | Render probe (sample data → HTML → screenshot bago/pagkatapos) · progress-log row + rollback line · commits + push `origin/develop` | — |
+
+### 12.4 Commits (kada isa ay `git revert`-able)
+
+`E1+E2` template+mailables → `E3` message bank (+ E5 tests sa parehong phase) → `E6` docs + push.
+
+### 12.5 Verification toolkit (tulad ng mga naunang phase)
+
+`php artisan test` (kada phase + full suite) · render probe sa `public/` (temp, lilinisin bago mag-commit) · `git diff` review bago bawat commit · docs row + rollback line pagkatapos.
