@@ -294,6 +294,8 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 1. **Bug 7 scope** (Phase 1): kasama na ang **scan-flow pages**. Kung isasama rin ang **"My Assets"** at **lahat ng list-page cards**, sabihin bago magsimula ang Phase 1.
 2. **Bug 6b/6c** (Phase 4): **sticky** ba ang IT assignment (hindi na ni-null sa cycle advance) o sapat na ang **inline assign sa PM Work Orders**?
 3. **Email sender/links (Phase E, §12):** `MAIL_FROM_ADDRESS` (ngayon = personal Gmail) at `APP_URL` (trycloudflare quick tunnel na nagbabago kada restart — §11) → kailangan ng **opisyal na internal URL + office email account** bago ang phase **E4**; hanggang ibinibigay = checklist placeholders lang.
+4. **Phase E S4 (§12.9):** `PMAdminNotificationMail` = **dead code** (0 call sites — hindi kailanman na-send). **I-wire** sa totoong PM-assignment flow o **i-delete**? (preview ☠️)
+5. **Phase E S7 (§12.9):** PR email details-box label — panatilihin ang **"Ticket No."** o palitan ng **"Reference No."**?
 
 ---
 
@@ -330,6 +332,7 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-09 | **PM-LT — LAPTOP SPECS shift (user report: \\\"mali mali, dapat accurate\\\")** — root cause sa **CSV import**: ang `mapPmsLaptop` ay nag-de-destruct ng extra `$year` bago `$cpu` (\\\"8:Year 9:CPU\\\") pero ang totoong laptop sheet ay **walang Year column** → **+1 shift lahat ng spec**: `cpu`=RAM value, `ram`=GPU, `gpu`=HD-1, `hd2`=OS, `os`=Office, at `date_acquired`=null (CPU string ≠ date) — napatunayan ng read-only DB probes (23 laptop assets + pm rows 8–40; desktop imports = tama) · fix: destructuring na walang `$year` (`$cpu` = column 8), column 7 = ComputerName\\|Year na lenient sa `parseDate` · **data repair** (one-shot, signature-guarded na `cpu`→\\<n\\>GB at `os`→20xx): **23 assets + 22 PM rows** umikot pabalot pabalik isang slot, JSON backup = `storage/framework/pm_lt_repair_backup_20261009_061326.json` (gitignored); **ang totoong CPU value ay siniba ng lumaing `$year` slot sa import = HINDI na mababawi** → `cpu=NULL` ngayon (accurately unknown, kailangang i-type muli kung may original sheet) · test-first: bagong `InventoryCsvImportTest::test_pms_laptops_map_to_correct_columns` RED → GREEN **8/8** (53 assertions); full suite **2F/524P** (2F = pre-existing `CsmMonthlyReportTest`×2) · render probe (request 83 / pm 40): `ltRam=16GB DDR5 · ltGpu=NVIDIA RTX 4050 · ltOs=WIN 11 PRO · ltHd1=500GB SSD · ltOffice=2021` | ✅ **DONE & VERIFIED** — `0cb6226` |
 | 2026-10-09 | **PM PDF letter-size fix** (separate sa defect register): `DownloadMaintenancePdfAction` legal→**letter** · `ArchiveTicketPdfAction` PM=letter / ICT=a4 · `maintenance-form.blade` letter @page metrics + conditional MON-2/PRINTER-2 `rowspan` (tanggal ang empty rowspan cell) + `Printer-2` label + stray `</td>`→`</tr>` + `page-break-inside:avoid` sa checklist · PDF tests **6/6** | ✅ — `f600293` |
 | 2026-10-09 | **Phase E PLAN — internal email overhaul**: deep view (14 files, ~50 message sources; §12) + desisyon: **English concise internal ops** · `[NCMB]` prefix **KEEP** · **type strings immutable** · 6 phases E1–E6 (template → mailables → message bank → infra → tests → render QA/docs) | 📝 **PLAN LANG — walang code change pa** |
+| 2026-10-09 | **Phase E visual preview + APPROVAL** — 7 scenarios × BEFORE/AFTER na-render mula sa **totoong** `emails/default.blade.php` (`public/__mail-preview/` + generator `storage/framework/mail_preview.php` — temp, hindi naka-commit) + 15 headless-Edge screenshots (`storage/framework/pv_*.png`); **na-approve ng user ang AFTER design** ("oo ganto") — copy per scenario §12.7, template deltas §12.8, findings §12.9; 2 bagong open decisions §9.4–9.5 | ✅ **APPROVED (visual)** — code execution (E1–E6) nakabinbin sa §9.3–9.5 |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
 **Rollback:** `git revert f600293` (PM PDF letter size + checklist fixes) · `git revert 0cb6226` (PM-LT laptop CSV column shift — code only; DB repair: `storage/framework/pm_lt_repair_backup_20261009_061326.json`) · `git revert f3c39d9` (PM-M3 touch targets + sticky headers) · `git revert f6d4a98` (PM-M2 device width + floors) · `git revert ac4e016` (PM-M1 cascade consolidation) · `git revert bbee88a` (CSM silent feedback) · `git revert 2c75901` (qr-batch search bar) · `git revert 0548cc5` (scan hub ICT active-only panel) · `git revert 74755d3` (scan hub role sections) · `git revert 076e391` (email rebrand + template refresh) · `git revert 2c9d4de` (M2 action buttons) · `git revert b40956f` (M1 qr-batch mobile cards) · `git revert ecdaaaa` (icon sweep) · `git revert 4c81d14` (PM Tasks IT-side) · `git revert 2d1081d` (DATE RECEIVED autofill) · `git revert 1d4a3e5` (Phase 3b scan flow) · `git revert 0abde01` (Phase 3) · `git revert 3b9f213` (scan throttle) · `git revert 719045b` (Phase 2) · `git revert 7d652ae` (Phase 1c) · `git revert 369edab` (Phase 1b) · `git revert 996e4ca` (Phase 1) · `git revert c5670ae` (docs).
@@ -440,3 +443,66 @@ Ang tunnel URL ay **nagbabago tuwing i-restart** ang `cloudflared` (trycloudflar
 ### 12.5 Verification toolkit (tulad ng mga naunang phase)
 
 `php artisan test` (kada phase + full suite) · render probe sa `public/` (temp, lilinisin bago mag-commit) · `git diff` review bago bawat commit · docs row + rollback line pagkatapos.
+
+### 12.6 Visual preview + approval (2026-10-09)
+
+- **Deliverable:** `public/__mail-preview/index.html` — 7 scenarios × BEFORE/AFTER side-by-side, rendered mula sa **totoong** `emails/default.blade.php` (hindi mockup) gamit ang totoong `shortNumber()`/`shortenNumbersInText()` helpers (D9.42).
+- **Generator:** `storage/framework/mail_preview.php` (temp, gitignored area, **hindi kino-commit**) — kaya i-regenerate kung may copy change: `php storage/framework/mail_preview.php`.
+- **Bukas:** `http://127.0.0.1:8000/__mail-preview/` (o `file:///C:/laragon/www/CMMS/public/__mail-preview/index.html`).
+- **Evidence:** 15 headless-Edge screenshots = `storage/framework/pv_*.png` (6) + `pv2_*.png` (10-1 [10 files]) — temp.
+- **Verdict:** user **na-approve ang AFTER design** ("oo ganto") → E1–E6 proceed pagkatapos masagot ang §9.3–9.5.
+- **Preview-only, OUT of E-scope:** ang link sa loob ng preview = placeholder (`cmms.internal.local`); ang totoong email link = §9.3 (`APP_URL`).
+
+### 12.7 Approved copy — scenario by scenario (E3 message bank + E2 subjects)
+
+> Legend: `{N}` = stored full number · `{S}` = `shortNumber({N})` (D9.42) · parehong structure ng details box/CTA/footer ang lahat (§12.8).
+
+| # | Scenario | BEFORE (current, totoong strings) | AFTER (approved) |
+|---|---|---|---|
+| **S1** | ICT assigned/updated (requestor) | `Your ICT Repair request {N} is now Ongoing. IT personnel Juan Dela Cruz has been assigned to work on your ticket.` | `Your ICT Repair request {S} is assigned to Juan Dela Cruz. Open the ticket to track progress.` |
+| **S2** | Rejected (may reason) | `Your ICT Repair request {N} was rejected. Reason: Duplicate ticket.` | `Your ICT Repair request {S} was rejected — Duplicate ticket. Submit a new ticket if the issue persists.` |
+| **S3** | PM Scheduled (requestor) | `A workstation preventive maintenance (PM) has been scheduled for your equipment in {div}. Please coordinate with your ICT Unit for your schedule.` | `PM for your workstation in {div} is scheduled on {date}. Coordinate with your ICT Unit for your time slot.` |
+| **S4** ☠️ | PM Task Assigned (admin) | `A new PM task has been assigned to you. Please check your dashboard.` (+ literal `TBD` sa Date field) | `PM task {S} is assigned to you. Conduct the PM and encode results before {date}.` (Date = totoong schedule, §12.9) |
+| **S5** 🔴 | Weekly PM summary | `\n`-laden → **run-on** sa email (walang `nl2br`) | parehong structure + `nl2br` + ending: `Log in to the CMMS to conduct the remaining PMs.` |
+| **S6** 🔴 | PM generation FAILED | `PM Generation FAILED — Action Required` + details na **run-on**; Type field = mahabang string | `PM generation FAILED for schedule "{name}".` + bawat field = sariling linya; Type = `PM Alert` |
+| **S7** | PR submitted | `PR-2026-0015 submitted — 3 item(s), total ₱12,500.00. Awaiting your review.` | `PR-2026-0015 submitted — 3 items, ₱12,500.00 total. Awaiting your review.` |
+
+**Subjects (E2) — lahat ng 7:**
+
+| | BEFORE | AFTER |
+|---|---|---|
+| S1/S2 | `[NCMB] {Type} - #{S}` | `[NCMB] {Type} · #{S}` |
+| S3/S4 | `[NCMB] … - #{N}` (**RAW** — hindi ashorener) | `[NCMB] … · #{S}` |
+| S5/S6 | `[NCMB] … - #SYSTEM` | `[NCMB] … · #SYSTEM` |
+| S7 | `[NCMB] PR Submitted - #PR-2026-0015` (redundant hash) | `[NCMB] PR Submitted · PR-2026-0015` (walang `#` para sa PR) |
+| S6 Type field | `PM Generation FAILED — Action Required` | `PM Alert` (kapareho ng bell row type — **hindi** registered gate string, safe) |
+
+### 12.8 Template deltas — E1 exact literals (`resources/views/emails/default.blade.php`)
+
+| Line (approx) | BEFORE (exact literal) | AFTER |
+|---|---|---|
+| L190 | `<div class="header-eyebrow">Official Notification</div>` | `…>CMMS Notification</div>` |
+| L198 | `<div class="greeting">Good day, {{ $recipientName }}!</div>` | `<div class="greeting">Hello {{ $recipientName }},</div>` |
+| L199 | `<div class="message">{{ $notificationMessage }}</div>` | `<div class="message">{!! nl2br(e($notificationMessage)) !!}</div>` — **ang core run-on fix** (S5/S6) |
+| L228 | `<a href="{{ $ticketUrl }}" …>View Details</a>` | `…>Open Ticket</a>` |
+| L237 | `Department of Labor and Employment, Republic of the Philippines` | `Computerized Maintenance Management System` |
+| L239 | `This is an automated notification. Please do not reply.` | `This is an automated CMMS message — do not reply to this email.` |
+| L240 | `<strong>CONFIDENTIALITY NOTICE:</strong> This email and any files transmitted with it are confidential…` | `<strong>For internal use only.</strong>` |
+| — | **KEEP:** header name (agency full name) + subtitle (*Computerized Maintenance Management System*), details box (Ticket/Type/Status/Date), status pill, `#0038A8` top-bar/CTA, gray backdrop, Outlook `bgcolor` fallbacks, `<title>` default (rebrand `076e391` — hindi babaguhin) | |
+
+**Mailable deltas — E2 (`app/Mail/*.php`):**
+
+| File | Change |
+|---|---|
+| `SystemNotificationMail` | subject: `" - #"` → `" · #"` (L55) — `shortNumber()` nasa lugar na ✓ |
+| `PMScheduledMail` | subject: raw `{requestNumber}` → `shortNumber()`; hardcoded message → §12.7 S3 copy; **i-pass ang totoong `scheduleDate`** (§12.9.2) |
+| `PMAdminNotificationMail` | subject: raw → `shortNumber()`; date fallback `'TBD'` → `null` (walang Date row kung unknown); **depende sa §9.4 (wire/delete)** |
+| `Notification.php` L117-125 | `PMScheduledMail(…, null /* scheduleDate */, …)` → i-pass ang `$request` PM schedule date kung available (E2) |
+
+### 12.9 Natuklasan sa preview (bagong findings/gates)
+
+1. ☠️ **`PMAdminNotificationMail` = dead code** — 0 call sites sa buong codebase (search: `PMAdminNotificationMail(` = 0) → **§9.4** (wire o delete). Kung delete: kasama sa E2 + tanggalin ang S4 scenario.
+2. 🔴 **S3 Date field = ngayon, hindi PM date** — `Notification.php` L121 ay nagpapasa ng `scheduleDate = null` → `PMScheduledMail` falls back sa `now()`. E2: ipasa ang totoong schedule date mula sa PM request/schedule row.
+3. ⚠️ **S7 label** — "Ticket No." ang lumalabas para sa PR number → **§9.5** (keep vs "Reference No."). Kung "Reference No.": condition lang sa `type`/PR, additive sa E1.
+4. ✅ **S6 Type change = safe** — ang `PM Generation FAILED — Action Required` ay lokal na ginawa sa `GenerateScheduledPM` L356-358 (hindi registered/immutable gate string; ang bell row type ay `PM Alert` na) → mapapalitan sa E2/E3.
+5. **Subject quirks confirmed** (§12.7): S3/S4 raw numbers + S7 `#PR-…` redundancy — parehong pinapakita ng preview chips.
