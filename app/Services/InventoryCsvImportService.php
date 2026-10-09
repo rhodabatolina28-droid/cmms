@@ -494,13 +494,23 @@ class InventoryCsvImportService
 
     /**
      * PMS Laptop CSV.
-     *   0:No. 1:End-user 2:DIV 3:(-) 4:Brand 5:Model 6:PropertyNo 7:ComputerName
-     *   8:Year 9:CPU 10:RAM 11:GPU 12:HD-1 13:HD-2 14:OS 15:MSOffice
+     *   0:No. 1:End-user 2:DIV 3:(-) 4:Brand 5:Model 6:PropertyNo
+     *   7:ComputerName|Year 8:CPU 9:RAM 10:GPU 11:HD-1 12:HD-2 13:OS 14:MSOffice
+     *
+     * PM-LT fix (2026-10-09): the previous header assumed an extra Year column
+     * before CPU ("7:ComputerName 8:Year 9:CPU … 15:MSOffice") and destructured
+     * $year/$cpu one position too far right. The real laptop sheet has NO Year
+     * column there, so every spec shifted on import — cpu stored the RAM value,
+     * ram the GPU, gpu the HD-1, hd2 the OS, os the Office version, and
+     * date_acquired stayed null (a CPU string is not a date). Ground truth:
+     * 10 imported laptop assets + preventive_maintenance rows 25–40.
+     * Column 7 (ComputerName or a bare year, depending on the sheet variant) is
+     * read leniently for date_acquired — parseDate() returns null for garbage.
      */
     private function mapPmsLaptop(array $row, User $actor, Collection $users): array
     {
-        $row = array_pad($row, 16, '');
-        [$no, $officer, $div,,,, $propNo, $compName, $year, $cpu, $ram, $gpu, $hd1, $hd2, $os, $office] = $row;
+        $row = array_pad($row, 15, '');
+        [$no, $officer, $div,,,, $propNo, $col7, $cpu, $ram, $gpu, $hd1, $hd2, $os, $office] = $row;
         $officer = $this->clean($officer);
         $brand = $this->clean($row[4] ?? '');
         $model = $this->clean($row[5] ?? '');
@@ -531,7 +541,7 @@ class InventoryCsvImportService
                 'region' => $actor->region, 'branch' => $actor->branch,
                 'office' => $div, 'department' => $div,
                 'status' => $custodian ? 'Active' : 'Spare',
-                'date_acquired' => $this->parseDate($year), 'acquisition_cost' => null,
+                'date_acquired' => $this->parseDate($col7), 'acquisition_cost' => null,
                 'asset_notes' => "PMS import. Officer: {$officer}; Location: {$div}", '_is_component' => false,
             ]],
             'raw' => ['par_number' => $parNumber, 'article' => 'Laptop Computer', 'description' => $brand . ' ' . $model, 'responsible_officer' => $officer, 'location' => $div],

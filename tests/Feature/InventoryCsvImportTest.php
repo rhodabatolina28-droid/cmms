@@ -483,4 +483,56 @@ class InventoryCsvImportTest extends TestCase
 
         unlink($path);
     }
+
+    // =========================================================================
+    // TEST 8: PMS Laptop CSV — spec columns (PM-LT shift bug, 2026-10-09)
+    // =========================================================================
+
+    /**
+     * The real PMS laptop sheet has NO Year column before CPU:
+     *   0:No. 1:End-user 2:DIV 3:(-) 4:Brand 5:Model 6:PropertyNo
+     *   7:ComputerName|Year 8:CPU 9:RAM 10:GPU 11:HD-1 12:HD-2 13:OS 14:MSOffice
+     *
+     * mapPmsLaptop used to destructure an extra `$year` before `$cpu`
+     * ("7:ComputerName 8:Year 9:CPU …"), reading every spec one position too
+     * far right. Ground truth from the Aug-2026 import: 10 laptop assets stored
+     * cpu="16GB DDR5" (the RAM value), ram="NVIDIA RTX 4050" (GPU),
+     * gpu="500GB SSD" (HD-1), hd2="WIN 11 PRO" (OS), os="2021" (Office),
+     * date_acquired=null (a CPU string is not a date) — and the same shift
+     * propagated into preventive_maintenance rows 25–40 that the user reported.
+     */
+    public function test_pms_laptop_specs_map_to_correct_columns(): void
+    {
+        $row = [
+            '1', 'JUAN DELA CRUZ', 'RID', '-',
+            'LENOVO', 'IDEAPAD 3', 'LT-TEST-001', 'LTP-001',
+            'RYZEN 5 5625U',  // 8: CPU  (no Year column in the real sheet)
+            '8GB DDR4',       // 9: RAM
+            'RTX 3050',       // 10: GPU
+            '512GB SSD',      // 11: HD-1
+            '',               // 12: HD-2 (single drive → filtered out)
+            'WIN 11 PRO',     // 13: OS
+            '2021',           // 14: MS Office
+        ];
+
+        $method = new \ReflectionMethod(InventoryCsvImportService::class, 'mapPmsLaptop');
+        $method->setAccessible(true);
+        $mapped = $method->invoke($this->importer, $row, $this->supplyOfficer, User::all());
+
+        $record = $mapped['records'][0];
+        $specs = $record['specifications'];
+
+        $this->assertSame('RYZEN 5 5625U', $specs['cpu'] ?? null, 'CPU must read column 8 (laptop spec shift bug).');
+        $this->assertSame('8GB DDR4', $specs['ram'] ?? null, 'RAM must read column 9.');
+        $this->assertSame('RTX 3050', $specs['gpu'] ?? null, 'GPU must read column 10.');
+        $this->assertSame('512GB SSD', $specs['hd1'] ?? null, 'HD-1 must read column 11.');
+        $this->assertArrayNotHasKey('hd2', $specs, 'empty HD-2 must stay filtered out');
+        $this->assertSame('WIN 11 PRO', $specs['os'] ?? null, 'OS must read column 13.');
+        $this->assertSame('2021', $specs['office'] ?? null, 'MS Office must read column 14.');
+
+        // Columns before the shift point stay intact.
+        $this->assertSame('LT-TEST-001', $record['property_number'], 'Property # reads column 6.');
+        $this->assertSame('LENOVO', $record['brand'], 'Brand reads column 4.');
+        $this->assertSame('IDEAPAD 3', $record['model'], 'Model reads column 5.');
+    }
 }
