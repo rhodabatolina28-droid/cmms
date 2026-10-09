@@ -108,4 +108,82 @@ class PmFormMobileTest extends TestCase
             'inline .label-cell rule must carry the 13px floor (id-specificity beats the module).'
         );
     }
+
+    /**
+     * PM-M2 — full-width device inputs + Technician/End User readability floors.
+     *
+     * Measurements on the rendered form (ticket #86, mobile emulation) exposed
+     * two gaps left by PM-M1:
+     *  1) only the device-info CELLS were blockified — the grid itself, its
+     *     inner tables (table-full) and rows stayed in a table formatting
+     *     context, so cells shrink-wrapped and inputs collapsed to their
+     *     intrinsic width (~235px) instead of spanning the column;
+     *  2) section headers rendered at 11.52px (0.72rem), the end-user backup
+     *     note at 11.2px (0.7rem) and the signature caption at a mere 9.6px
+     *     (0.6rem) — below comfortable touch readability on phones.
+     * Desktop is untouched: every rule lives inside @media (max-width:767px)
+     * (or the ≤390px block, where the floor is 12px).
+     */
+    public function test_device_info_spans_full_width_and_section_text_floors(): void
+    {
+        $css = $this->responsiveCss();
+
+        // 1) Blockify chain: grid + inner tables + rows + cells (pre-M1 winners).
+        $this->assertMatchesRegularExpression(
+            '/\.device-info-grid\s*,\s*\.device-info-grid table,\s*\.device-info-grid table tbody,\s*\.device-info-grid table tr,\s*\.device-info-grid table td\s*\{[^}]*display:\s*block/s',
+            $css,
+            'device-info grid/inner tables/rows/tds must all blockify (PM-M2) or inputs shrink to intrinsic width.'
+        );
+        // …including the grid's OWN tbody — a table-row-group with block children
+        // still triggers anonymous-table shrink-wrapping of col-left/col-right.
+        $this->assertMatchesRegularExpression(
+            '/\.device-info-grid > tbody\s*\{[^}]*display:\s*block/s',
+            $css,
+            'device-info grid\'s own tbody must blockify too, or columns shrink-wrap (PM-M2).'
+        );
+        // The row/cell blockify declarations must NOT carry !important — the form's
+        // JS hides conditional rows (.monitor-2-row / .printer-2-row) with inline
+        // style.display = 'none', and an author !important would outrank it and
+        // keep the hidden rows visible. (Author non-important still beats the UA
+        // table-row default, so layout is unaffected.)
+        $this->assertMatchesRegularExpression(
+            '/\.device-info-grid table tr,\s*\.device-info-grid table td\s*\{\s*display:\s*block;/s',
+            $css,
+            'inner row/cell blockify must be display: block WITHOUT !important so JS inline display:none toggles still work (PM-M2).'
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.device-info-grid table tr,\s*\.device-info-grid table td\s*\{\s*display:\s*block\s*!important/s',
+            $css,
+            'display: block !important on device rows would defeat the monitor/printer row toggles (PM-M2).'
+        );
+
+        // 2) Readability floors inside the ≤767px block.
+        $this->assertMatchesRegularExpression(
+            '/\.section-label\s*\{[^}]*font-size:\s*12\.5px/s',
+            $css,
+            '.section-label must be ≥12.5px on phones (was 11.52px / 0.72rem).'
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.section-bar-minimal\s*\{[^}]*font-size:\s*12\.5px/s',
+            $css,
+            '.section-bar-minimal must be ≥12.5px on phones (was 11.52px).'
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.note-text-minimal\s*\{[^}]*font-size:\s*12\.5px/s',
+            $css,
+            'End-user backup note must be ≥12.5px on phones (was 11.2px).'
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.sig-caption\s*\{[^}]*font-size:\s*11\.5px/s',
+            $css,
+            '"Signature over Printed Name" caption must be ≥11.5px on phones (was 9.6px).'
+        );
+
+        // The ≤390px block must not shrink section bars back down (was 0.65rem = 10.4px).
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.section-bar-minimal\s*\{[^}]*font-size:\s*0\.65rem/s',
+            $css,
+            '≤390px block must keep a 12px floor on section bars.'
+        );
+    }
 }

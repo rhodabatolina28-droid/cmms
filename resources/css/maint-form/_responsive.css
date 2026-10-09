@@ -57,13 +57,13 @@
 
     /* ── SECTION LABELS ── */
     .section-label {
-        font-size: 0.72rem;
+        font-size: 12.5px; /* PM-M2: readability floor (was 0.72rem = 11.52px) */
         padding: 7px 12px;
         margin-bottom: 12px;
     }
 
     .section-bar-minimal {
-        font-size: 0.72rem;
+        font-size: 12.5px; /* PM-M2: readability floor (was 0.72rem = 11.52px) */
         padding: 10px;
         letter-spacing: 0.10em;
     }
@@ -186,7 +186,7 @@
     }
 
     .note-text-minimal {
-        font-size: 0.7rem;
+        font-size: 12.5px; /* PM-M2: was 0.7rem = 11.2px */
         padding: 10px 12px;
         margin: 14px 0;
     }
@@ -224,7 +224,7 @@
         padding: 10px 8px !important;
     }
 
-    .sig-caption { font-size: 0.6rem; }
+    .sig-caption { font-size: 11.5px; } /* PM-M2: was 0.6rem = 9.6px */
 
     /* ── CHECKBOXES ── */
     .checkbox-group-minimal {
@@ -293,6 +293,39 @@
     #deviceInfoSection {
         overflow-x: auto; /* safety net only — layout fits the phone viewport */
         -webkit-overflow-scrolling: touch;
+    }
+
+    /* PM-M2: the grid, its INNER tables (table-full) and rows must all leave the
+       table formatting context — PM-M1 only blockified the cells, so rows still
+       shrink-wrapped and inputs collapsed to intrinsic width (~235px) instead of
+       spanning the column. Must sit ABOVE the chrome/label rules below so their
+       border/padding !important declarations still win.
+       NOTE: display is deliberately NOT !important — the form's JS hides
+       conditional rows (.monitor-2-row / .printer-2-row) with inline
+       style.display = 'none', which an author !important would outrank. A plain
+       author declaration still beats the UA table-row default, so layout holds. */
+    .device-info-grid,
+    .device-info-grid table,
+    .device-info-grid table tbody,
+    .device-info-grid table tr,
+    .device-info-grid table td {
+        display: block;
+        width: 100% !important;
+        height: auto !important;
+        min-height: auto !important;
+        border: none !important;
+        padding: 0 !important;
+    }
+
+    /* PM-M2: the grid's OWN tbody (`.device-info-grid table tbody` above only
+       matches INNER tables) — a table-row-group containing block rows still
+       triggers anonymous-table shrink-wrapping of col-left/col-right. */
+    .device-info-grid > tbody {
+        display: block !important;
+        width: 100% !important;
+        height: auto !important;
+        border: none !important;
+        padding: 0 !important;
     }
 
     .device-info-grid {
@@ -481,7 +514,7 @@
 /* ── VERY SMALL SCREENS (320px – 380px) ── */
 @media screen and (max-width: 390px) {
     .bond-paper { padding: 12px 8px 24px; }
-    .section-bar-minimal { font-size: 0.65rem; letter-spacing: 0.06em; }
+    .section-bar-minimal { font-size: 12px; letter-spacing: 0.06em; } /* PM-M2: floor (was 0.65rem = 10.4px) */
     .tasks-table { min-width: 480px !important; font-size: 0.63rem !important; }
     .tasks-table th, .tasks-table td { padding: 6px 4px !important; font-size: 0.63rem !important; }
     input[type="text"],
