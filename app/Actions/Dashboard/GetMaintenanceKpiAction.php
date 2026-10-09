@@ -93,6 +93,7 @@ class GetMaintenanceKpiAction
         return [
             "months" => $months,
             "selected" => $selected,
+            "selected_index" => $selIdx !== false ? $selIdx : (count($keys) - 1),
             "selected_label" => $cur["label"],
             "mttr_days" => $cur["mttr_days"],
             "mttr_prev" => $prev["mttr_days"] ?? null,

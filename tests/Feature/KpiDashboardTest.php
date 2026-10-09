@@ -349,4 +349,30 @@ class KpiDashboardTest extends TestCase
             ->assertDontSee("MTBF Trend")
             ->assertDontSee("Service Quality");
     }
+
+    public function test_kpi_ajax_endpoint_returns_json_for_selected_month(): void
+    {
+        $sa = $this->user(["role" => "super_admin"]);
+
+        $response = $this->actingAs($sa)
+            ->getJson(route("dashboard.super-admin.kpi", ["kpi_month" => now()->format("Y-m")]));
+
+        $response->assertOk()
+            ->assertJsonStructure([
+                "months",
+                "selected",
+                "selected_index",
+                "selected_label",
+                "mttr_days",
+                "mttr_prev",
+                "mtbf_days",
+                "mtbf_prev",
+                "trend" => [
+                    "months",
+                    "mttr",
+                    "mtbf",
+                    "censored",
+                ],
+            ]);
+    }
 }

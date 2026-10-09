@@ -19,6 +19,12 @@ class DashboardController extends Controller
         return (new SuperAdminDashboardAction)->execute();
     }
 
+    public function superAdminKpi(): \Illuminate\Http\JsonResponse
+    {
+        $kpi = (new \App\Actions\Dashboard\GetMaintenanceKpiAction)->execute();
+        return response()->json($kpi);
+    }
+
     public function userDashboard()
     {
         return (new UserDashboardAction)->execute();

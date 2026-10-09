@@ -195,7 +195,7 @@ body {
 
 .analytics-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 22vw, 400px), 1fr)) !important;
+    grid-template-columns: repeat(auto-fit, minmax(clamp(220px, 22vw, 400px), 1fr));
     gap: clamp(15px, 1.5vw, 25px);
 }
 

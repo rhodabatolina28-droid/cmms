@@ -369,15 +369,26 @@
             grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
             gap: clamp(15px, 2vw, 25px);
             margin-bottom: clamp(20px, 2.5vw, 30px);
+            min-width: 0;
         }
 
         .analytics-box {
             background: white;
             border-radius: 15px;
-            padding: clamp(20px, 1.5vw, 25px);
+            padding: clamp(18px, 1.5vw, 24px);
             border: 1px solid #e2e8f0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
             min-width: 0;
+            overflow: hidden;
+            box-sizing: border-box;
+        }
+
+        .chart-box-bar, .chart-box-doughnut, .chart-box-trend {
+            width: 100% !important;
+            max-width: 100% !important;
+            min-width: 0 !important;
+            overflow: hidden;
+            position: relative;
         }
 
         .analytics-title {
@@ -392,10 +403,7 @@
             gap: 10px;
         }
 
-        /* ── BUG FIX: MTTR/MTBF cards overflow (mobile + siksik sa desktop) ──
-           Ang title row ay may inline `flex-wrap: nowrap` at margin-left:auto
-           na month <select>, habang ang value row ay may nowrap diff chip.
-           Payagan ang pag-wrap imbes na lumampas sa .analytics-box. */
+        /* ── BUG FIX: MTTR/MTBF cards overflow (mobile + zoom-in sa desktop) ── */
         .analytics-title.kpi-title {
             flex-wrap: wrap;
             row-gap: 8px;
@@ -414,13 +422,35 @@
         }
 
         .kpi-value-row {
+            display: flex;
+            align-items: baseline;
+            justify-content: space-between;
+            gap: 8px;
             flex-wrap: wrap;
-            row-gap: 6px;
+            margin-bottom: 2px;
         }
 
-        .kpi-diff-chip,
-        .kpi-value-row > span {
-            white-space: normal;
+        .kpi-diff-badge {
+            font-size: 11px;
+            font-weight: 700;
+            padding: 2px 8px;
+            border-radius: 4px;
+            line-height: 1.35;
+            display: inline-block;
+            word-break: normal;
+            max-width: 100%;
+        }
+        .kpi-diff-good {
+            color: #047857;
+            background: rgba(4, 120, 87, 0.08);
+        }
+        .kpi-diff-bad {
+            color: #b91c1c;
+            background: rgba(185, 28, 28, 0.08);
+        }
+        .kpi-diff-neutral {
+            color: #64748b;
+            background: #f1f5f9;
         }
 
         /* ≤900px: ang month picker ay sariling linya (44px touch target) */
@@ -640,7 +670,17 @@
 
         /* D9: responsive caps - 4 analytics boxes lock to 2 columns (no 3+1 wrap) */
         .analytics-gov-grid {
-            grid-template-columns: repeat(2, minmax(0, 1fr));
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: clamp(16px, 1.8vw, 24px);
+        }
+
+        .admin-workspace-grid > div {
+            min-width: 0;
+        }
+
+        /* Kapag zoom-in sa mobile screens: 1 column */
+        @media screen and (max-width: 900px) {
+            .analytics-gov-grid { grid-template-columns: 1fr !important; }
         }
 
         /* D9: KPI cards - 2 columns desktop, stack on mobile */
@@ -651,9 +691,6 @@
         }
         @media screen and (max-width: 767px) {
             .kpi-card-grid { grid-template-columns: 1fr !important; }
-            /* D9 polish: trend charts STACK full-width sa phones — ang 2-col lock
-               ay para sa desktop lang; sa 375px screen ang ~160px na chart columns
-               ay hindi mababasa. */
             .analytics-gov-grid { grid-template-columns: 1fr !important; }
             /* Trend line charts: 260px ang sapat kapag full-width (ang generic
                360px rule ay para sa bar chart na may mahahabang office labels). */
@@ -740,7 +777,7 @@
                         <span style="margin-left: auto; font-size: 10px; color: #94a3b8; font-weight: 600; letter-spacing: 0; text-transform: none;">ICT &amp; Repair Only</span>
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Top offices by request volume.</p>
-                    <div class="chart-box-bar" style="height: 280px; width: 100%; position: relative;">
+                    <div class="chart-box-bar" style="min-height: 280px; width: 100%; position: relative;">
                         <canvas id="officeChart"></canvas>
                     </div>
                 </div>
@@ -751,7 +788,7 @@
                         Asset Status Overview
                     </div>
                     <p style="font-size: 12px; color: #64748b; margin: 0 0 16px 0;">Real inventory status &mdash; only <strong>Active</strong> counts as active.</p>
-                    <div class="chart-box-doughnut" style="height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
+                    <div class="chart-box-doughnut" style="min-height: 280px; width: 100%; position: relative; display: flex; justify-content: center;">
                         <canvas id="workloadChart"></canvas>
                     </div>
                 </div>
@@ -762,29 +799,35 @@
                             <span style="white-space: nowrap; font-weight: 700;">Avg. Downtime</span>
                             <span style="font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap;">(MTTR)</span>
                         </div>
-                        <form method="GET" action="{{ route("dashboard.super-admin") }}" class="kpi-month-form">
-                            <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">Maintenance KPI:</span>
-                            <select name="kpi_month" onchange="this.form.submit()" style="padding: 3px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #1e293b; background: white; cursor: pointer;">
-                                @foreach($kpi["months"] as $key => $label)
-                                    <option value="{{ $key }}" @if($key === $kpi["selected"]) selected @endif>{{ $label }}</option>
-                                @endforeach
-                            </select>
-                        </form>
+                        <div class="kpi-month-form">
+                            <span style="font-size: 10px; font-weight: 700; color: #94a3b8; text-transform: uppercase; letter-spacing: 0.5px;">Maintenance KPI:</span>
+                            <div style="position: relative; display: inline-flex; align-items: center;">
+                                <select id="kpiMonthSelect" onchange="switchKpiMonth(this.value)" style="padding: 3px 22px 3px 8px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 11px; font-weight: 700; color: #1e293b; background: white; cursor: pointer; appearance: none; -webkit-appearance: none;">
+                                    @foreach($kpi["months"] as $key => $label)
+                                        <option value="{{ $key }}" @if($key === $kpi["selected"]) selected @endif>{{ $label }}</option>
+                                    @endforeach
+                                </select>
+                                <i class="fa-solid fa-chevron-down" style="position: absolute; right: 7px; font-size: 9px; color: #64748b; pointer-events: none;"></i>
+                                <i id="kpiMonthSpinner" class="fa-solid fa-spinner fa-spin" style="display: none; position: absolute; right: 7px; font-size: 10px; color: #0038A8;"></i>
+                            </div>
+                        </div>
                     </div>
-                    <div class="kpi-value-row" style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
-                        <div style="font-size: 26px; font-weight: 800; color: #0038A8; line-height: 1.1;">
+                    <div class="kpi-value-row">
+                        <div id="mttrValueDisplay" style="font-size: 26px; font-weight: 800; color: #0038A8; line-height: 1.1;">
                             @if($kpi["mttr_days"] !== null){{ number_format($kpi["mttr_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #94a3b8;">&mdash;</span> @endif
                         </div>
-                        @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
-                            @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
-                            @if($mttrDiff > 0)
-                                <span style="font-size: 11px; font-weight: 700; color: #047857; background: rgba(4,120,87,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9660; {{ abs($mttrDiff) }} days faster than last month</span>
-                            @elseif($mttrDiff < 0)
-                                <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: rgba(185,28,28,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9650; {{ abs($mttrDiff) }} days slower than last month</span>
-                            @else
-                                <span style="font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap;">No change from last month</span>
+                        <div id="mttrDiffDisplay">
+                            @if($kpi["mttr_days"] !== null && $kpi["mttr_prev"] !== null && $kpi["mttr_prev"] > 0)
+                                @php $mttrDiff = round($kpi["mttr_prev"] - $kpi["mttr_days"], 1); @endphp
+                                @if($mttrDiff > 0)
+                                    <span class="kpi-diff-badge kpi-diff-good">&#9660; {{ abs($mttrDiff) }} days faster than last month</span>
+                                @elseif($mttrDiff < 0)
+                                    <span class="kpi-diff-badge kpi-diff-bad">&#9650; {{ abs($mttrDiff) }} days slower than last month</span>
+                                @else
+                                    <span class="kpi-diff-badge kpi-diff-neutral">No change from last month</span>
+                                @endif
                             @endif
-                        @endif
+                        </div>
                     </div>
                     <p style="font-size: 11px; color: #64748b; margin: 0 0 14px 0;">Mean time to repair &mdash; lower is better.</p>
                     <div class="chart-box-bar chart-box-trend" style="height: 185px; width: 100%; position: relative;">
@@ -799,22 +842,24 @@
                             <span style="white-space: nowrap; font-weight: 700;">Days Between Failures</span>
                             <span style="font-size: 11px; color: #64748b; font-weight: 600; white-space: nowrap;">(MTBF)</span>
                         </div>
-                        <span class="kpi-trend-chip" id="mtbfLatestChip" style="display: none; margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
+                        <span class="kpi-trend-chip" id="mtbfLatestChip" style="margin-left: auto; flex-shrink: 0; white-space: nowrap;"></span>
                     </div>
-                    <div class="kpi-value-row" style="display: flex; align-items: baseline; justify-content: space-between; gap: 8px; margin-bottom: 2px;">
-                        <div style="font-size: 26px; font-weight: 800; color: {{ $kpi['mtbf_days'] !== null && $kpi['mtbf_prev'] !== null && $kpi['mtbf_prev'] > 0 && $kpi['mtbf_days'] < $kpi['mtbf_prev'] ? '#dc2626' : '#059669' }}; line-height: 1.1;">
+                    <div class="kpi-value-row">
+                        <div id="mtbfValueDisplay" style="font-size: 26px; font-weight: 800; color: {{ $kpi['mtbf_days'] !== null && $kpi['mtbf_prev'] !== null && $kpi['mtbf_prev'] > 0 && $kpi['mtbf_days'] < $kpi['mtbf_prev'] ? '#dc2626' : '#059669' }}; line-height: 1.1;">
                             @if($kpi["mtbf_days"] !== null){{ number_format($kpi["mtbf_days"], 1) }}<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>@else <span style="color: #10b981; font-size: 18px;">No failures this month</span> @endif
                         </div>
-                        @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
-                            @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
-                            @if($mtbfDiff > 0)
-                                <span style="font-size: 11px; font-weight: 700; color: #047857; background: rgba(4,120,87,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9650; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</span>
-                            @elseif($mtbfDiff < 0)
-                                <span style="font-size: 11px; font-weight: 700; color: #b91c1c; background: rgba(185,28,28,0.08); padding: 2px 8px; border-radius: 4px; white-space: nowrap;">&#9660; {{ abs($mtbfDiff) }} days shorter (more frequent breakdowns)</span>
-                            @else
-                                <span style="font-size: 11px; font-weight: 700; color: #64748b; white-space: nowrap;">No change from last month</span>
+                        <div id="mtbfDiffDisplay">
+                            @if($kpi["mtbf_days"] !== null && $kpi["mtbf_prev"] !== null && $kpi["mtbf_prev"] > 0)
+                                @php $mtbfDiff = round($kpi["mtbf_days"] - $kpi["mtbf_prev"], 1); @endphp
+                                @if($mtbfDiff > 0)
+                                    <span class="kpi-diff-badge kpi-diff-good">&#9650; {{ abs($mtbfDiff) }} days longer between breakdowns (improved)</span>
+                                @elseif($mtbfDiff < 0)
+                                    <span class="kpi-diff-badge kpi-diff-bad">&#9660; {{ abs($mtbfDiff) }} days shorter (more frequent breakdowns)</span>
+                                @else
+                                    <span class="kpi-diff-badge kpi-diff-neutral">No change from last month</span>
+                                @endif
                             @endif
-                        @endif
+                        </div>
                     </div>
                     <p style="font-size: 11px; color: #64748b; margin: 0 0 14px 0;">Mean time between failures &mdash; higher is better (hollow = no breakdowns that month).</p>
                     <div class="chart-box-bar chart-box-trend" style="height: 185px; width: 100%; position: relative;">
@@ -1034,6 +1079,32 @@
             const sortedData   = sorted.map(x => x.val);
             const maxVal       = Math.max(...sortedData, 1);
 
+            // Wrap long labels into multiline arrays so division names never hide or clip
+            function wrapOfficeLabel(str, maxLen = 22) {
+                if (!str || str.length <= maxLen) return str;
+                const words = str.split(' ');
+                const lines = [];
+                let cur = '';
+                words.forEach(w => {
+                    if ((cur + ' ' + w).trim().length <= maxLen) {
+                        cur = (cur + ' ' + w).trim();
+                    } else {
+                        if (cur) lines.push(cur);
+                        cur = w;
+                    }
+                });
+                if (cur) lines.push(cur);
+                return lines.length > 1 ? lines : str;
+            }
+            const formattedLabels = sortedLabels.map(l => wrapOfficeLabel(l));
+
+            // Dynamic height based on number of divisions so every division has ample space
+            const officeContainer = ctxOffice.parentElement;
+            if (officeContainer) {
+                const computedHeight = Math.max(280, sortedLabels.length * 48);
+                officeContainer.style.height = computedHeight + 'px';
+            }
+
             // Top office highlighted in deep blue; the rest in light blue for scanning
             const barColors = sortedData.map((_, i) =>
                 i === 0 ? 'rgba(0, 56, 168, 1)' : 'rgba(147, 197, 253, 0.75)'
@@ -1042,7 +1113,7 @@
             new Chart(ctxOffice, {
                 type: 'bar',
                 data: {
-                    labels: sortedLabels,
+                    labels: formattedLabels,
                     datasets: [{
                         label: 'No. of Requests',
                         data: sortedData,
@@ -1050,8 +1121,8 @@
                         hoverBackgroundColor: barColors.map(c => c.replace(/[\d.]+\)$/, '1)')),
                         borderRadius: 5,
                         borderSkipped: false,
-                        maxBarThickness: 26,   // thin horizontal bars
-                        barPercentage: 0.72,
+                        maxBarThickness: 24,
+                        barPercentage: 0.75,
                         categoryPercentage: 0.85
                     }]
                 },
@@ -1059,7 +1130,9 @@
                     indexAxis: 'y',
                     responsive: true,
                     maintainAspectRatio: false,
-                    layout: { padding: { top: 10, right: 24, bottom: 5, left: 5 } },
+                    resizeDelay: 0,
+                    transitions: { resize: { animation: { duration: 0 } } },
+                    layout: { padding: { top: 8, right: 30, bottom: 5, left: 0 } },
                     animation: { duration: 800, easing: 'easeOutQuart' },
                     plugins: {
                         legend: { display: false },
@@ -1070,7 +1143,7 @@
                             padding: 12,
                             cornerRadius: 8,
                             callbacks: {
-                                title: ctx => ctx[0].label,
+                                title: ctx => sortedLabels[ctx[0].dataIndex] || ctx[0].label,
                                 label: ctx => {
                                     const pct = officeTotal > 0 ? ((ctx.parsed.x / officeTotal) * 100).toFixed(1) : 0;
                                     return ` ${ctx.parsed.x} request${ctx.parsed.x !== 1 ? 's' : ''} (${pct}%)`;
@@ -1081,13 +1154,13 @@
                     scales: {
                         x: {
                             beginAtZero: true,
-                            max: maxVal + Math.ceil(maxVal * 0.15),
+                            max: maxVal + Math.max(1, Math.ceil(maxVal * 0.2)),
                             grid: { color: '#f1f5f9', drawTicks: false },
                             border: { dash: [4, 4], color: 'transparent' },
                             ticks: {
                                 stepSize: 1,
                                 precision: 0,
-                                font: { size: 12, family: 'Arial, Helvetica, sans-serif' },
+                                font: { size: 11, family: 'Arial, Helvetica, sans-serif' },
                                 color: '#94a3b8',
                                 padding: 6
                             }
@@ -1096,8 +1169,10 @@
                             grid: { display: false },
                             border: { color: '#e2e8f0' },
                             ticks: {
-                                font: { size: 12, weight: '600', family: 'Arial, Helvetica, sans-serif' },
-                                color: '#334155'
+                                autoSkip: false, // CRITICAL: NEVER HIDE DIVISION NAMES!
+                                font: { size: 11, weight: '600', family: 'Arial, Helvetica, sans-serif' },
+                                color: '#334155',
+                                padding: 6
                             }
                         }
                     }
@@ -1113,7 +1188,7 @@
                                 if (value === 0) return;
                                 ctx.save();
                                 ctx.fillStyle = '#0038A8';
-                                ctx.font = 'bold 12px Arial, Helvetica, sans-serif';
+                                ctx.font = 'bold 11px Arial, Helvetica, sans-serif';
                                 ctx.textAlign = 'left';
                                 ctx.textBaseline = 'middle';
                                 ctx.fillText(value, bar.x + 6, bar.y);
@@ -1182,6 +1257,8 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    resizeDelay: 0,
+                    transitions: { resize: { animation: { duration: 0 } } },
                     cutout: '68%',
                     plugins: {
                         legend: {
@@ -1282,8 +1359,10 @@
     // D9.8: hover crosshair — patayong dashed guide line sa aktwal na buwan
     // na hinihover, para madaling i-align ang tooltip sa trend (shared ng
     // MTTR at MTBF charts).
-    const kpiHoverLine = {
-        id: "kpiHoverLine",
+    // NOTE: Each chart instance needs a plugin with a UNIQUE id — Chart.js v4
+    // throws if two charts register the same plugin id globally.
+    const makeHoverLine = (suffix) => ({
+        id: "kpiHoverLine_" + suffix,
         afterDatasetsDraw(chart) {
             const active = chart.tooltip ? chart.tooltip.getActiveElements() : [];
             if (!active || !active.length) return;
@@ -1299,7 +1378,9 @@
             ctx.stroke();
             ctx.restore();
         }
-    };
+    });
+    // Keep kpiHoverLine as alias for backward compat in case referenced elsewhere
+    const kpiHoverLine = makeHoverLine("shared");
     // D9.8b: BASELINE — dashed horizontal line sa mean ng mga VALID na buwan
     // (MTTR: buwang may breakdown; MTBF: hindi censored — dahil ang censored
     // value ay ">= X days" lower bound, bias ang pagkakasama). Instant na
@@ -1316,8 +1397,8 @@
     };
     const kpiMttrBaseline = kpiMeanOf(kpiTrend.mttr, false);
     const kpiMtbfBaseline = kpiMeanOf(kpiTrend.mtbf, true);
-    const kpiBaselinePlugin = (baseline, color) => ({
-        id: "kpiBaselineLine",
+    const kpiBaselinePlugin = (baseline, color, suffix) => ({
+        id: "kpiBaselineLine_" + (suffix || "default"),
         afterDatasetsDraw(chart) {
             if (baseline === null || baseline === undefined) return;
             const yScale = chart.scales.y;
@@ -1371,9 +1452,11 @@
     const kpiMtbfDark = kpiMtbfWorsened ? "#b91c1c" : "#059669";
     const kpiMtbfSoft = kpiMtbfWorsened ? "rgba(220, 38, 38, 0.08)" : "rgba(16, 185, 129, 0.08)";
     const kpiMtbfGradTop = kpiMtbfWorsened ? "rgba(220, 38, 38, 0.20)" : "rgba(16, 185, 129, 0.20)";
+    let currentSelectedMonthIndex = @json($kpi["selected_index"] ?? (count($kpi["trend"]["months"]) - 1));
+
     const ctxMttr = document.getElementById("mttrChart");
     if (ctxMttr) {
-        new Chart(ctxMttr, {
+        window.mttrChartInstance = new Chart(ctxMttr, {
             type: "line",
             data: {
                 labels: kpiTrend.months,
@@ -1393,11 +1476,11 @@
                     },
                     fill: true,
                     stepped: 'middle',
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: "#0038A8",
-                    pointBorderColor: "#ffffff",
-                    pointBorderWidth: 2,
+                    pointRadius: kpiTrend.months.map((_, i) => (i === currentSelectedMonthIndex ? 8 : 4)),
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: kpiTrend.months.map((_, i) => (i === currentSelectedMonthIndex ? "#FDC113" : "#0038A8")),
+                    pointBorderColor: kpiTrend.months.map((_, i) => (i === currentSelectedMonthIndex ? "#0038A8" : "#ffffff")),
+                    pointBorderWidth: kpiTrend.months.map((_, i) => (i === currentSelectedMonthIndex ? 3 : 2)),
                     pointHoverBorderWidth: 3,
                     pointHoverBorderColor: "#ffffff",
                     pointStyle: "circle",
@@ -1408,6 +1491,8 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 0,
+                transitions: { resize: { animation: { duration: 0 } } },
                 animation: { duration: 700, easing: "easeOutQuart" },
                 interaction: kpiInteraction,
                 plugins: {
@@ -1431,12 +1516,13 @@
                     y: { ...kpiTrendScales.y, suggestedMax: kpiMttrBaseline !== null ? kpiMttrBaseline : undefined }
                 }
             },
-            plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMttrBaseline, "rgba(0, 56, 168, 0.55)")]
+            plugins: [makeHoverLine("mttr"), kpiBaselinePlugin(kpiMttrBaseline, "rgba(0, 56, 168, 0.55)", "mttr")]
         });
     }
+
     const ctxMtbf = document.getElementById("mtbfChart");
     if (ctxMtbf) {
-        new Chart(ctxMtbf, {
+        window.mtbfChartInstance = new Chart(ctxMtbf, {
             type: "line",
             data: {
                 labels: kpiTrend.months,
@@ -1457,19 +1543,22 @@
                     fill: true,
                     stepped: 'middle',
                     spanGaps: false,
-                    pointRadius: 5,
-                    pointHoverRadius: 7,
-                    pointBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfColor),
+                    pointRadius: kpiTrend.months.map((_, i) => (i === currentSelectedMonthIndex ? 8 : 4)),
+                    pointHoverRadius: 9,
+                    pointBackgroundColor: kpiTrend.censored.map((c, i) => {
+                        if (c) return "rgba(0,0,0,0)";
+                        return i === currentSelectedMonthIndex ? "#FDC113" : kpiMtbfColor;
+                    }),
                     pointHoverBackgroundColor: kpiTrend.censored.map(c => c ? "rgba(0,0,0,0)" : kpiMtbfDark),
-                    pointBorderColor: kpiTrend.censored.map(c => c ? kpiMtbfColor : "#ffffff"),
-                    pointBorderWidth: kpiTrend.censored.map(c => c ? 2 : 2),
+                    pointBorderColor: kpiTrend.censored.map((c, i) => {
+                        if (c) return kpiMtbfColor;
+                        return i === currentSelectedMonthIndex ? kpiMtbfColor : "#ffffff";
+                    }),
+                    pointBorderWidth: 2,
                     pointHoverBorderWidth: 3,
                     pointHoverBorderColor: "#ffffff",
                     pointStyle: "circle",
                     borderJoinStyle: "round",
-                    // D9.8: DASHED segment papunta/paglabang censored month —
-                    // tama lang, dahil ">= X days" ang value (lower bound),
-                    // hindi eksaktong bilang. Solid ang normal na segments.
                     segment: {
                         borderDash: ctx => (kpiTrend.censored[ctx.p0DataIndex] || kpiTrend.censored[ctx.p1DataIndex]) ? [5, 5] : undefined
                     }
@@ -1478,6 +1567,8 @@
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
+                resizeDelay: 0,
+                transitions: { resize: { animation: { duration: 0 } } },
                 animation: { duration: 700, easing: "easeOutQuart" },
                 interaction: kpiInteraction,
                 plugins: {
@@ -1504,19 +1595,15 @@
                     y: { ...kpiTrendScales.y, suggestedMax: kpiMtbfBaseline !== null ? kpiMtbfBaseline : undefined }
                 }
             },
-            plugins: [kpiHoverLine, kpiBaselinePlugin(kpiMtbfBaseline, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.55)" : "rgba(16, 185, 129, 0.55)")]
+            plugins: [makeHoverLine("mtbf"), kpiBaselinePlugin(kpiMtbfBaseline, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.55)" : "rgba(16, 185, 129, 0.55)", "mtbf")]
         });
     }
 
-    // D9: empty-state overlays — PER-CHART: kapag puro null ang sariling series
-    // ng isang chart (hal. walang breakdown buong 6-month window), magpakita ng
-    // malinaw na "No breakdowns recorded" imbes na blangkong canvas. Dati
-    // all-or-nothing ito — kung may MTTR data pero wala ang MTBF, nagiging
-    // blangkong canvas ang MTBF na parang nabali ang chart.
+    // D9: empty-state overlays
     (function mountKpiEmptyStates() {
         const hasBreakdown = (arr) => (arr || []).some(v => v !== null && v !== undefined);
         [["mttrChart", "downtime trend", kpiTrend.mttr], ["mtbfChart", "failure trend", kpiTrend.mtbf]].forEach(([id, name, series]) => {
-            if (hasBreakdown(series)) return; // may data — walang kailangan
+            if (hasBreakdown(series)) return;
             const cv = document.getElementById(id);
             if (!cv) return;
             cv.style.display = "none";
@@ -1529,39 +1616,163 @@
         });
     })();
 
-    // D9 polish: latest-month value chip sa header ng bawat trend card.
-    // Kunin ang pinakahuling buwan na may value (huling non-null); kung puro
-    // null ang series, nananatiling nakatago ang chip (ang empty-state overlay
-    // na ang bahala sa blangkong canvas).
-    (function mountKpiChips() {
+    // D9 polish: Update trend chip
+    function updateKpiChips(selIdx) {
         const fmt = (v) => (v === null || v === undefined) ? null : (Number.isInteger(v) ? v + "d" : Number(v).toFixed(1) + "d");
-        [
-            ["mttrLatestChip", kpiTrend.mttr, kpiTrend.censored, "rgba(0, 56, 168, 0.08)", "#0038A8", false],
-            ["mtbfLatestChip", kpiTrend.mtbf, kpiTrend.censored, kpiMtbfWorsened ? "rgba(220, 38, 38, 0.10)" : "rgba(16, 185, 129, 0.10)", kpiMtbfWorsened ? "#b91c1c" : "#059669", true]
-        ].forEach(([id, series, censored, bg, fg, showGe]) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            let idx = -1;
-            (series || []).forEach((v, i) => { if (v !== null && v !== undefined) idx = i; });
-            if (idx < 0) return;
-            const prefix = (showGe && censored && censored[idx]) ? "\u2265 " : "";
-            const val = fmt(series[idx]);
-            if (val === null) return;
-            // compact chip: "Sep · 3.1d" — iisang line lang. Ang acronym ay nasa
-            // title na mismo ("MTTR"), kaya hindi na kailangang ulitin sa chip.
-            const shortMonth = (kpiTrend.months[idx] || "----").substring(0, 3);
-            el.textContent = shortMonth + " \u00b7 " + prefix + val;
-            el.style.background = bg;
-            el.style.color = fg;
-            el.style.display = "";
-        });
-
-        const mtbfIcon = document.getElementById("mtbfTitleIcon");
-        if (mtbfIcon) {
-            mtbfIcon.style.color = kpiMtbfColor;
-            mtbfIcon.classList.remove("icon-blue");
+        const idx = selIdx !== undefined ? selIdx : currentSelectedMonthIndex;
+        const prefix = (kpiTrend.censored && kpiTrend.censored[idx]) ? "\u2265 " : "";
+        const val = fmt(kpiTrend.mtbf[idx]);
+        const chip = document.getElementById("mtbfLatestChip");
+        if (chip) {
+            if (val !== null) {
+                const shortMonth = (kpiTrend.months[idx] || "----").substring(0, 3);
+                chip.textContent = shortMonth + " \u00b7 " + prefix + val;
+                chip.style.background = kpiMtbfWorsened ? "rgba(220, 38, 38, 0.10)" : "rgba(16, 185, 129, 0.10)";
+                chip.style.color = kpiMtbfWorsened ? "#b91c1c" : "#059669";
+                chip.style.display = "";
+            } else {
+                chip.style.display = "none";
+            }
         }
-    })();
+    }
+    updateKpiChips(currentSelectedMonthIndex);
+
+    const mtbfIcon = document.getElementById("mtbfTitleIcon");
+    if (mtbfIcon) {
+        mtbfIcon.style.color = kpiMtbfColor;
+        mtbfIcon.classList.remove("icon-blue");
+    }
+
+    // ─── AJAX Month Switcher (No Full Page Reload) ─────────────────────────
+    window.switchKpiMonth = function(monthVal) {
+        const spinner = document.getElementById('kpiMonthSpinner');
+        if (spinner) spinner.style.display = 'inline-block';
+
+        fetch('{{ route("dashboard.super-admin.kpi") }}?kpi_month=' + encodeURIComponent(monthVal), {
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest',
+                'Accept': 'application/json'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (spinner) spinner.style.display = 'none';
+
+            // 1. Update MTTR display
+            const mttrValEl = document.getElementById('mttrValueDisplay');
+            const mttrDiffEl = document.getElementById('mttrDiffDisplay');
+            if (mttrValEl) {
+                if (data.mttr_days !== null && data.mttr_days !== undefined) {
+                    mttrValEl.innerHTML = Number(data.mttr_days).toFixed(1) + '<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>';
+                } else {
+                    mttrValEl.innerHTML = '<span style="color: #94a3b8;">&mdash;</span>';
+                }
+            }
+            if (mttrDiffEl) {
+                if (data.mttr_days !== null && data.mttr_prev !== null && data.mttr_prev > 0) {
+                    const diff = Math.round((data.mttr_prev - data.mttr_days) * 10) / 10;
+                    if (diff > 0) {
+                        mttrDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-good">&#9660; ' + Math.abs(diff) + ' days faster than last month</span>';
+                    } else if (diff < 0) {
+                        mttrDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-bad">&#9650; ' + Math.abs(diff) + ' days slower than last month</span>';
+                    } else {
+                        mttrDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-neutral">No change from last month</span>';
+                    }
+                } else {
+                    mttrDiffEl.innerHTML = '';
+                }
+            }
+
+            // 2. Update MTBF display
+            const mtbfValEl = document.getElementById('mtbfValueDisplay');
+            const mtbfDiffEl = document.getElementById('mtbfDiffDisplay');
+            const worsened = (data.mtbf_days !== null && data.mtbf_prev !== null && data.mtbf_prev > 0 && data.mtbf_days < data.mtbf_prev);
+            const color = worsened ? '#dc2626' : '#059669';
+            const darkColor = worsened ? '#b91c1c' : '#059669';
+
+            if (mtbfValEl) {
+                mtbfValEl.style.color = color;
+                if (data.mtbf_days !== null && data.mtbf_days !== undefined) {
+                    mtbfValEl.innerHTML = Number(data.mtbf_days).toFixed(1) + '<span style="font-size: 13px; font-weight: 700; color: #64748b;"> days</span>';
+                } else {
+                    mtbfValEl.innerHTML = '<span style="color: #10b981; font-size: 18px;">No failures this month</span>';
+                }
+            }
+            if (mtbfDiffEl) {
+                if (data.mtbf_days !== null && data.mtbf_prev !== null && data.mtbf_prev > 0) {
+                    const diff = Math.round((data.mtbf_days - data.mtbf_prev) * 10) / 10;
+                    if (diff > 0) {
+                        mtbfDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-good">&#9650; ' + Math.abs(diff) + ' days longer between breakdowns (improved)</span>';
+                    } else if (diff < 0) {
+                        mtbfDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-bad">&#9660; ' + Math.abs(diff) + ' days shorter (more frequent breakdowns)</span>';
+                    } else {
+                        mtbfDiffEl.innerHTML = '<span class="kpi-diff-badge kpi-diff-neutral">No change from last month</span>';
+                    }
+                } else {
+                    mtbfDiffEl.innerHTML = '';
+                }
+            }
+
+            // 3. Update MTBF Title icon & Chip
+            const mtbfIconEl = document.getElementById("mtbfTitleIcon");
+            if (mtbfIconEl) {
+                mtbfIconEl.style.color = color;
+            }
+            const selIdx = (data.selected_index !== undefined) ? data.selected_index : (data.trend.months.length - 1);
+            const chip = document.getElementById("mtbfLatestChip");
+            if (chip && data.trend) {
+                const isCensored = data.trend.censored && data.trend.censored[selIdx];
+                const prefix = isCensored ? "\u2265 " : "";
+                const val = data.mtbf_days !== null && data.mtbf_days !== undefined
+                    ? (Number.isInteger(data.mtbf_days) ? data.mtbf_days + "d" : Number(data.mtbf_days).toFixed(1) + "d")
+                    : null;
+                if (val !== null) {
+                    const shortMonth = (data.trend.months[selIdx] || "----").substring(0, 3);
+                    chip.textContent = shortMonth + " \u00b7 " + prefix + val;
+                    chip.style.background = worsened ? "rgba(220, 38, 38, 0.10)" : "rgba(16, 185, 129, 0.10)";
+                    chip.style.color = darkColor;
+                    chip.style.display = "";
+                } else {
+                    chip.style.display = "none";
+                }
+            }
+
+            // 4. Update MTTR chart highlight & data
+            if (window.mttrChartInstance && data.trend) {
+                const ds = window.mttrChartInstance.data.datasets[0];
+                ds.data = data.trend.mttr;
+                ds.pointRadius = data.trend.months.map((_, i) => (i === selIdx ? 8 : 4));
+                ds.pointBackgroundColor = data.trend.months.map((_, i) => (i === selIdx ? "#FDC113" : "#0038A8"));
+                ds.pointBorderColor = data.trend.months.map((_, i) => (i === selIdx ? "#0038A8" : "#ffffff"));
+                ds.pointBorderWidth = data.trend.months.map((_, i) => (i === selIdx ? 3 : 2));
+                window.mttrChartInstance.update('none');
+            }
+
+            // 5. Update MTBF chart highlight & data
+            if (window.mtbfChartInstance && data.trend) {
+                const ds = window.mtbfChartInstance.data.datasets[0];
+                ds.data = data.trend.mtbf;
+                ds.borderColor = color;
+                ds.pointRadius = data.trend.months.map((_, i) => (i === selIdx ? 8 : 4));
+                ds.pointBackgroundColor = data.trend.censored.map((c, i) => {
+                    if (i === selIdx) return "#FDC113";
+                    if (c) return "rgba(0,0,0,0)";
+                    return color;
+                });
+                ds.pointBorderColor = data.trend.censored.map((c, i) => {
+                    if (i === selIdx) return color;
+                    if (c) return color;
+                    return "#ffffff";
+                });
+                ds.pointBorderWidth = data.trend.months.map((_, i) => (i === selIdx ? 3 : 2));
+                window.mtbfChartInstance.update('none');
+            }
+        })
+        .catch(err => {
+            console.error('Error switching KPI month:', err);
+            if (spinner) spinner.style.display = 'none';
+        });
+    };
 
 }); // end DOMContentLoaded
 

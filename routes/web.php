@@ -47,6 +47,11 @@ Route::middleware(['auth', 'active', 'require.survey'])->group(function () {
         ->middleware('role:super_admin')
         ->name('dashboard.super-admin');
 
+    // KPI JSON endpoint — AJAX only (no page reload on month switch)
+    Route::get('/dashboard/super-admin/kpi', [DashboardController::class, 'superAdminKpi'])
+        ->middleware('role:super_admin')
+        ->name('dashboard.super-admin.kpi');
+
     // User Dashboard
     Route::get('/dashboard/user', [DashboardController::class, 'userDashboard'])
         ->middleware('role:user')

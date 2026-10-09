@@ -380,6 +380,9 @@
 
     <script nonce="{{ $cspNonce }}">
         // Smooth toggle — uses .collapsed class (no !important, so CSS transitions work)
+        // Chart glitch fix: charts use resizeDelay:300ms (Chart.js native debounce) so they
+        // only resize AFTER the 200ms sidebar transition is done. As a belt-and-suspenders
+        // measure, we also force a clean chart.resize() on the sidebar's transitionend event.
         function toggleSidebar() {
             var sidebar = document.getElementById('sidebar');
             var main = document.getElementById('mainContent');
@@ -402,6 +405,21 @@
                         sidebar.classList.add('collapsed');
                         localStorage.setItem('cmms_sidebar_collapsed', 'true');
                     }
+
+                    // After the sidebar CSS transition finishes, force all Chart.js instances
+                    // to snap to the correct new container size in one clean frame (no animation).
+                    function onSidebarTransitionEnd(e) {
+                        if (e.propertyName !== 'width') return;
+                        sidebar.removeEventListener('transitionend', onSidebarTransitionEnd);
+                        if (typeof Chart !== 'undefined' && Chart.instances) {
+                            Object.values(Chart.instances).forEach(function(chart) {
+                                if (chart && typeof chart.resize === 'function') {
+                                    chart.resize();
+                                }
+                            });
+                        }
+                    }
+                    sidebar.addEventListener('transitionend', onSidebarTransitionEnd);
                 }
             }
         }
