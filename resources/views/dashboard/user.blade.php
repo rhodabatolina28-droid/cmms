@@ -272,7 +272,8 @@
         </div>
     </div>
 
-    <!-- THANK YOU POPUP MODAL -->
+    <!-- THANK YOU POPUP MODAL (restored 2026-10-08 — user prefers this branded
+         popup over a generic Swal for the happy path) -->
     @if(session('success') && str_contains(session('success'), 'Thank you for completing the survey'))
         <div id="thankYouModal" class="modal-overlay">
             <div class="modal-box">
@@ -288,7 +289,7 @@
                 </button>
             </div>
         </div>
-        
+
         <style nonce="{{ $cspNonce }}">
             @keyframes fadeIn {
                 from { opacity: 0; }
@@ -299,6 +300,24 @@
                 to { transform: scale(1); opacity: 1; }
             }
         </style>
+    @endif
+
+    <!-- GLOBAL FLASH → SweetAlert2 (2026-10-08 CSM feedback fix: error and
+         duplicate-submit flashes were rendered NOWHERE on this dashboard =
+         silent failures. The branded thank-you modal above owns the happy
+         path, so it is excluded here. SweetAlert2 comes from layouts/app. -->
+    @php
+        $dashboardFlash = null;
+        if (session('error')) {
+            $dashboardFlash = ['icon' => 'error', 'title' => 'Submission Failed', 'text' => session('error')];
+        } elseif (session('success') && ! str_contains(session('success'), 'Thank you for completing the survey')) {
+            $dashboardFlash = ['icon' => 'success', 'title' => 'Success!', 'text' => session('success')];
+        }
+    @endphp
+    @if($dashboardFlash)
+        <div id="dashboardFlash" style="display:none"
+             data-icon="{{ $dashboardFlash['icon'] }}"
+             data-title="{{ $dashboardFlash['title'] }}">{{ $dashboardFlash['text'] }}</div>
     @endif
 
     <!-- STATS GRID -->
@@ -438,11 +457,24 @@
 
 @section('scripts')
 <script nonce="{{ $cspNonce }}">
+// Branded thank-you modal close (happy path).
 const thankYouBtn = document.getElementById('thankYouDoneBtn');
 if (thankYouBtn) {
     thankYouBtn.addEventListener('click', function() {
         document.getElementById('thankYouModal').remove();
     });
 }
+// Error / duplicate-submit flash → SweetAlert2 — these were silent before
+// (2026-10-08: "after mag-answer ng CSM walang lumabas na sweet alert").
+(function () {
+    var flash = document.getElementById('dashboardFlash');
+    if (!flash) return;
+    Swal.fire({
+        icon: flash.dataset.icon,
+        title: flash.dataset.title,
+        text: flash.textContent.trim(),
+        confirmButtonColor: '#0038A8'
+    });
+})();
 </script>
 @endsection

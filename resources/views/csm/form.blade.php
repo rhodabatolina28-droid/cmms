@@ -49,6 +49,20 @@
                 @if(session('info'))
                     <p class="csm-info-msg">{{ session('info') }}</p>
                 @endif
+
+                {{-- Server-side validation feedback (2026-10-08: the form never
+                     displayed $errors — a bounced submission looked like a
+                     silent no-op). --}}
+                @if($errors->any())
+                    <div class="csm-errors" style="margin-top: 10px; padding: 10px 14px; background: #fef2f2; border: 1px solid #fecaca; border-radius: 8px; color: #b91c1c; font-size: 13px; text-align: left;">
+                        <strong>Please review your answers:</strong>
+                        <ul style="margin: 6px 0 0 18px;">
+                            @foreach($errors->all() as $formError)
+                                <li>{{ $formError }}</li>
+                            @endforeach
+                        </ul>
+                    </div>
+                @endif
                 
 
                 <!-- Survey Description -->
