@@ -68,7 +68,7 @@
             
             #endUserSection .input-row, #suggestionSection { display: block; width: 100%; }
             #pmForm .printed-name-input { width: 100%; box-sizing: border-box; min-height: 48px; font-size: 15px !important; }
-            #pmForm .label-cell { white-space: normal; padding-bottom: 4px; border-bottom: none !important; font-size: 12px !important; }
+            #pmForm .label-cell { white-space: normal; padding-bottom: 4px; border-bottom: none !important; font-size: 13px !important; }
             #pmForm .device-info-grid td { display: block; width: 100%; border: none !important; border-bottom: 1px solid #e2e8f0 !important; padding: 12px 8px !important; height: auto !important; }
             
             #pmForm #adminControls { flex-direction: column; align-items: stretch; gap: 12px; width: 100%; margin-top: 10px; }
