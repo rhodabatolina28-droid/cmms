@@ -186,7 +186,7 @@
                 @if($request && $request->status === 'Completed')
                     <a href="{{ route('maintenance.pdf', $request->id) }}" target="_blank"
                        class="pdf-download-link">
-                        🖨️ Print / Download PDF
+                        Print / Download PDF
                     </a>
                 @endif
                 @if($request && $request->status === 'Completed' && ($maintenance->for_disposal ?? '') === 'YES')

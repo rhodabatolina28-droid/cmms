@@ -382,7 +382,7 @@
                 {{-- Print PDF only when request is fully Completed --}}
                 @if($isUpdate && $request->status === 'Completed')
                     <a href="{{ route('ict.pdf', $request->id) }}" target="_blank" class="btn-secondary ict-btn-pdf">
-                        <i class="fa-solid fa-file-pdf"></i> Print / Download PDF
+                        Print / Download PDF
                     </a>
                 @endif
 
