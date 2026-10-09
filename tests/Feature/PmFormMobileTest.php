@@ -186,4 +186,69 @@ class PmFormMobileTest extends TestCase
             '≤390px block must keep a 12px floor on section bars.'
         );
     }
+
+    /**
+     * PM-M3 — checklist touch targets + sticky section headers.
+     *
+     * The checklist checkboxes used `transform: scale(1.5)` — the BOX looked
+     * ~30px but the hit area stayed the layout size (~20px), far under the
+     * 44px touch guideline, and `tr { min-height }` is a no-op on table rows.
+     * Fix: a REAL 28px input box, a wider check-cell, whole-cell tap
+     * delegation in _pm_scripts (any tap inside the cell toggles it, so the
+     * effective target is the whole ~44px row), sticky section headers, and
+     * `overflow-x: clip` on .bond-paper — `hidden` would create an ancestor
+     * scrollport that silently kills position:sticky.
+     */
+    public function test_checklist_touch_targets_and_sticky_headers(): void
+    {
+        $css = $this->responsiveCss();
+
+        // 1) Real 28px box; the scale() visual trick must be gone from the rule.
+        $this->assertMatchesRegularExpression(
+            '/\.tasks-table input\[type="checkbox"\]\s*\{[^}]*width:\s*28px/s',
+            $css,
+            'checklist checkboxes need a REAL 28px box (PM-M3).'
+        );
+        $this->assertDoesNotMatchRegularExpression(
+            '/\.tasks-table input\[type="checkbox"\]\s*\{[^}]*transform:\s*scale/s',
+            $css,
+            'transform:scale grows the visual only — the hit area stays small (PM-M3).'
+        );
+
+        // 2) Room for the bigger box + "Yes" text.
+        $this->assertMatchesRegularExpression(
+            '/\.tasks-table \.check-cell\s*\{[^}]*width:\s*72px/s',
+            $css,
+            'check-cell must widen 56px → 72px for the 28px box (PM-M3).'
+        );
+
+        // 3) Whole-cell tap delegation (effective ≥44px target).
+        $scripts = file_get_contents(
+            base_path('resources/views/partials/maintenance/_pm_scripts.blade.php')
+        );
+        $this->assertStringContainsString(
+            '#checklistSection td',
+            $scripts,
+            'checklist cells must delegate taps to their checkbox (PM-M3).'
+        );
+
+        // 4) Sticky section headers (mobile media block).
+        $this->assertMatchesRegularExpression(
+            '/\.section-label\s*\{[^}]*position:\s*sticky/s',
+            $css,
+            '.section-label must pin while scrolling (PM-M3).'
+        );
+        $this->assertMatchesRegularExpression(
+            '/\.section-bar-minimal\s*\{[^}]*position:\s*sticky/s',
+            $css,
+            '.section-bar-minimal must pin while scrolling (PM-M3).'
+        );
+
+        // 5) overflow-x: clip — `hidden` creates the scrollport that breaks sticky.
+        $this->assertMatchesRegularExpression(
+            '/\.bond-paper\s*\{[^}]*overflow-x:\s*clip/s',
+            $css,
+            '.bond-paper must clip with `clip` (not `hidden`) so sticky headers work (PM-M3).'
+        );
+    }
 }

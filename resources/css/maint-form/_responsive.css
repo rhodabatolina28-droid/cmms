@@ -19,7 +19,7 @@
         border-radius: 8px;
         border: none;
         box-shadow: 0 2px 12px rgba(0,0,0,0.10);
-        overflow-x: hidden; /* prevent inner tables from shifting form right */
+        overflow-x: clip; /* PM-M3: same visual clipping as `hidden`, but does NOT create a scrollport — `hidden` silently kills position:sticky section headers */
     }
 
     /* ── BANNER ── */
@@ -66,6 +66,21 @@
         font-size: 12.5px; /* PM-M2: readability floor (was 0.72rem = 11.52px) */
         padding: 10px;
         letter-spacing: 0.10em;
+    }
+
+    /* PM-M3: section headers pin to the top while scrolling the long form.
+       (Requires .bond-paper overflow-x: clip — `hidden` creates an ancestor
+       scrollport that silently disables position:sticky.) */
+    .section-label {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+    }
+
+    .section-bar-minimal {
+        position: sticky;
+        top: 0;
+        z-index: 6;
     }
 
     /* ── MAIN GRID TABLE — stack left/right columns ── */
@@ -243,15 +258,16 @@
     }
 
     .checkbox-group-minimal input[type="checkbox"],
-    .checkbox-inline input[type="checkbox"],
-    .tasks-table input[type="checkbox"],
-    .check-cell input[type="checkbox"] {
+    .checkbox-inline input[type="checkbox"] {
         transform: scale(1.4) !important;
         min-width: 20px !important;
         min-height: 20px !important;
         cursor: pointer !important;
         accent-color: #0f2d5e;
     }
+
+    /* PM-M3: checklist boxes moved to the real-size rule in the checklist
+       section below — transform:scale grew the visual but not the hit area. */
 
     .checkbox-inline {
         display: inline-flex;
@@ -452,7 +468,7 @@
     }
 
     .tasks-table .check-cell {
-        width: 56px !important;
+        width: 72px !important; /* PM-M3: was 56px — room for the real 28px box + "Yes" */
         text-align: center !important;
     }
 
@@ -462,13 +478,18 @@
     .tasks-table .sub-header { font-size: 0.62rem !important; padding: 5px !important; }
 
     .tasks-table input[type="checkbox"] {
-        transform: scale(1.5) !important; /* PM-M1: ported winner (was 1.4) */
+        /* PM-M3: REAL 28px box (the old visual scale trick grew only the paint —
+           the hit area stayed ~20px). Row height = 28 + 8×2 padding ≈ 44px; taps
+           anywhere in the cell also toggle via delegation in _pm_scripts. */
+        width: 28px !important;
+        height: 28px !important;
+        min-width: 28px !important;
+        min-height: 28px !important;
         margin: 0 8px 0 5px !important;
         vertical-align: middle !important;
+        accent-color: #0f2d5e;
+        cursor: pointer !important;
     }
-
-    /* Taller checkbox touch area in checklist */
-    .tasks-table tr { min-height: 40px !important; }
 
     /* ── FORM ACTIONS / SUBMIT ── */
     .form-actions-minimal {

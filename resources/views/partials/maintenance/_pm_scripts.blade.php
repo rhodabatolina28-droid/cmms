@@ -123,6 +123,22 @@
                     togglePrinterRows(); // trigger on load
                 }
 
+                // PM-M3: whole-cell tap targets for checklist checkboxes —
+                // the 28px box alone is under the 44px touch guideline, so a
+                // tap anywhere inside the cell toggles its checkbox. Direct
+                // taps on the input bubble here too but are skipped (the
+                // browser already toggled them; cb.click() would double-toggle).
+                // Scoped to the mobile media query so desktop click-to-select
+                // text behaviour is untouched.
+                document.querySelectorAll('#checklistSection td').forEach(td => {
+                    td.addEventListener('click', (e) => {
+                        if (!window.matchMedia('(max-width: 767px)').matches) return;
+                        if (e.target.matches('input[type="checkbox"]')) return;
+                        const cb = td.querySelector('input[type="checkbox"]');
+                        if (cb && !cb.disabled) cb.click();
+                    });
+                });
+
                 form.addEventListener('submit', function(e) {
                     e.preventDefault();
 
