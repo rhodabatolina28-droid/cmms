@@ -112,13 +112,18 @@ class Notification extends Model
                     }
                 }
 
-                // Choose email template based on notification type
+                // Choose email template based on notification type.
+                // Phase E2: pass the REAL PM schedule date (§12.9.2) — the
+                // PreventiveMaintenance detail's maintenance_date (set at batch
+                // generation), falling back to the ticket's creation day. The
+                // old hardcoded null made PMScheduledMail print TODAY as the
+                // "scheduled" date.
                 $mailable = ($notification->type === 'PM Scheduled')
                     ? new \App\Mail\PMScheduledMail(
                         $user->full_name,
                         $requestNumber,
                         $user->office ?? $user->department ?? 'your division',
-                        null,
+                        $request?->maintenanceRequest?->maintenance_date ?? $request?->created_at,
                         $ticketUrl,
                         $branch,
                         $region

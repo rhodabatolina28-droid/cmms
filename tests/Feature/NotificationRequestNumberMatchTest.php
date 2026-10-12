@@ -365,7 +365,7 @@ class NotificationRequestNumberMatchTest extends TestCase
         // Email branding revision (Oct 2026): subject prefix = [NCMB] (tanggal ang
         // CMMS sa tabi ng NCMB), header = buong pangalan ng ahensya, at wala nang
         // "NCMB CMMS" sa loob ng email (subtitle = KEEP).
-        $this->assertSame('[NCMB] Request Updated - #ICT-2026-09-24-0001', $mail->subject);
+        $this->assertSame('[NCMB] Request Updated · #ICT-2026-09-24-0001', $mail->subject);
         $this->assertStringContainsString('class="header-name">National Conciliation and Mediation Board<', $rendered);
         $this->assertStringContainsString('Computerized Maintenance Management System', $rendered); // subtitle = KEEP
         $this->assertStringNotContainsString('NCMB CMMS', $rendered);

@@ -353,8 +353,11 @@ class GenerateScheduledPM extends Command
                 // Email alert — so system admin is notified even when not logged in
                 if ($admin->email) {
                     try {
+                        // Phase E2: concise type label (matches the bell's
+                        // "PM Alert" row; the old string was subject-only
+                        // boilerplate, not a registered gate type).
                         $subject = str_contains($message, 'FAILED')
-                            ? 'PM Generation FAILED — Action Required'
+                            ? 'PM Alert'
                             : 'PM Generation Alert — 0 Work Orders Generated';
 
                         \Illuminate\Support\Facades\Mail::to($admin->email)->send(

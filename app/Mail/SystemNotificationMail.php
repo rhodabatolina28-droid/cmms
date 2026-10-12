@@ -52,7 +52,13 @@ class SystemNotificationMail extends Mailable
         $this->notificationMessage = $message;
         $this->requestNumber = $requestNumber;
 
-        return $this->subject("[NCMB] {$this->notificationType} - #{$requestNumber}")
+        // PR references already start with "PR-" — prefixing "#" would double-tag
+        // them ("#PR-2026-0015"). Everything else keeps the ticket "#".
+        $reference = str_starts_with((string) $requestNumber, 'PR-')
+            ? (string) $requestNumber
+            : '#' . $requestNumber;
+
+        return $this->subject("[NCMB] {$this->notificationType} · {$reference}")
                     ->view('emails.default')
                     ->with([
                         'title' => 'National Conciliation and Mediation Board',
