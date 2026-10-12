@@ -24,7 +24,7 @@
     /* ── Status explainer pill (compact) ── */
     .prd-status-box { display:inline-flex; align-items:center; gap:8px; padding:5px 13px; border-radius:20px; font-size:11.5px; border:1px solid transparent; }
     .prd-status-box .dot { width:6px; height:6px; border-radius:50%; background:currentColor; flex:none; }
-    .prd-status-box .st-title { font-weight:800; font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; }
+    .prd-status-box .st-title { font-weight: 400; font-size:10.5px; letter-spacing:.4px; text-transform:uppercase; }
     .prd-status-box .st-desc { font-size:11.5px; opacity:.85; }
     .prd-status-box.submitted { background:#fefce8; border-color:#fde68a; color:#854d0e; }
     .prd-status-box.submitted .dot { animation:prdPulse 1.6s ease-in-out infinite; }
@@ -36,14 +36,14 @@
     .st-finalized { background:#dcfce7; color:#166534; }
     .st-draft { background:#e2e8f0; color:#334155; }
     .prd-sheet { background:#fff; border:1px solid #cbd5e1; border-radius:8px; padding:28px 32px; max-width:830px; margin:0 auto; font-family:Arial, Helvetica, sans-serif; color:#111827; }
-    .prd-title { text-align:center; font-size:14px; font-weight:700; letter-spacing:2px; margin:2px 0 10px; }
+    .prd-title { text-align:center; font-size:14px; font-weight: 400; letter-spacing:2px; margin:2px 0 10px; }
 
     /* ── Header field grid (first section of the sheet) ── */
     .a60-hdr { width:100%; border-collapse:collapse; margin-bottom:12px; font-size:12px; }
     .a60-hdr td { padding:0; vertical-align:top; }
     .a60-field { border:1px solid #374151; padding:4px 8px 3px; }
-    .a60-field-lbl { font-size:9px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:2px; }
-    .a60-field-val { font-weight:700; color:#111827; font-size:12.5px; }
+    .a60-field-lbl { font-size:9px; font-weight: 400; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:2px; }
+    .a60-field-val { font-weight: 400; color:#111827; font-size:12.5px; }
     .a60-field-val.accent { color:#0038A8; }
     .a60-field-val.muted { color:#9ca3af; font-weight:400; font-style:italic; }
 
@@ -55,7 +55,7 @@
     .prd-table th { background:#f3f4f6; font-family:Arial, sans-serif; font-size:9.5px; text-transform:uppercase; letter-spacing:.4px; text-align:center; }
     .prd-table .num { text-align:center; }
     .prd-table .right { text-align:right; white-space:nowrap; }
-    .prd-total-row td { font-weight:800; background:#f9fafb; text-align:right; }
+    .prd-total-row td { font-weight: 400; background:#f9fafb; text-align:right; }
     .prd-purpose { font-size:11.5px; margin-bottom:14px; padding:7px 10px; border:1px solid #374151; min-height:38px; }
     .prd-purpose .k { font-weight:700; margin-right:6px; }
 
@@ -63,15 +63,15 @@
     table.prd-signs { width:100%; border-collapse:collapse; margin-top:64px; font-size:11.5px; page-break-inside:avoid; }
     .prd-signs td { padding:13px 8px; vertical-align:bottom; }
     .prd-signs td.lbl { white-space:nowrap; width:16%; color:#374151; padding-left:0; }
-    .prd-signs td.val { border-bottom:1px solid #111827; text-align:center; font-weight:700; height:24px; width:26%; }
+    .prd-signs td.val { border-bottom:1px solid #111827; text-align:center; font-weight: 400; height:24px; width:26%; }
     .prd-signs td.sig-space { height:54px; }
-    .prd-signs td.who { font-weight:800; padding-bottom:16px; padding-left:0; font-size:12px; }
+    .prd-signs td.who { font-weight: 400; padding-bottom:16px; padding-left:0; font-size:12px; }
 
     /* Phase C - delivered status + receive panel + receipts (screen only) */
     .prd-status-box.sp-status-delivered { background:#ecfdf5; border-color:#10b981; }
     .prd-status-box.sp-status-delivered .dot { background:#059669; }
     .rx-panel { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:16px 18px; margin-top:12px; }
-    .rx-panel h3 { margin:0 0 4px; font-size:15px; font-weight:800; color:#111827; }
+    .rx-panel h3 { margin:0 0 4px; font-size:15px; font-weight: 400; color:#111827; }
     .rx-panel .rx-hint { font-size:12px; color:#6b7280; margin-bottom:12px; }
     .rx-line { border:1px solid #f3f4f6; border-radius:8px; padding:10px 12px; margin-bottom:10px; }
     .rx-line-head { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
@@ -83,7 +83,7 @@
     @media print { .rx-panel, .pr-attach-card { display:none !important; } }
 
     .pr-attach-card { background:#fff; border:1px solid #e5e7eb; border-radius:10px; padding:14px 18px; margin-top:14px; }
-    .pr-attach-card h3 { margin:0 0 8px; font-size:14px; font-weight:800; color:#111827; }
+    .pr-attach-card h3 { margin:0 0 8px; font-size:14px; font-weight: 400; color:#111827; }
     .pr-attach-row { display:flex; align-items:center; gap:10px; padding:7px 0; border-bottom:1px solid #f3f4f6; font-size:12.5px; flex-wrap:wrap; }
     .pr-attach-row:last-of-type { border-bottom:none; }
     .pr-attach-meta { color:#6b7280; font-size:11.5px; }
@@ -254,7 +254,7 @@
         }
         .a60-field-val {
             font-size:12.5px !important;
-            font-weight:700 !important;
+            font-weight: 400 !important;
             white-space:normal !important;
             word-break:break-word !important;
             overflow:visible !important;

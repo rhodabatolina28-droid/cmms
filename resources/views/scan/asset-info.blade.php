@@ -51,7 +51,7 @@
         .status-For\\,Repair { background: #dbeafe; color: #1d4ed8; }
 
         .section-title {
-            font-size: 13px; font-weight: 700; color: #0038A8;
+            font-size: 13px; font-weight: 400; color: #0038A8;
             text-transform: uppercase; letter-spacing: 0.03em;
             margin-top: 20px; margin-bottom: 8px; padding-top: 16px;
             border-top: 1px solid #e2e8f0;
@@ -68,7 +68,7 @@
             background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 8px;
             padding: 12px 16px; margin-top: 12px; font-size: 13px;
         }
-        .pm-info .pm-label { color: #1e40af; font-weight: 700; font-size: 12px; text-transform: uppercase; }
+        .pm-info .pm-label { color: #1e40af; font-weight: 400; font-size: 12px; text-transform: uppercase; }
         .pm-info .pm-value { color: #1e293b; margin-top: 2px; }
         .pm-info .pm-row { display: flex; justify-content: space-between; padding: 4px 0; }
         .schedule-chip {
@@ -111,7 +111,7 @@
             display: flex; align-items: center; justify-content: center;
             min-height: 44px; padding: 10px 16px; border-radius: 8px;
             background: #fff; border: 1px solid #cbd5e1;
-            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 700;
+            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 400;
         }
         .back-link a:hover { color: #0038A8; border-color: #0038A8; background: #f8faff; }
         .back-link a:active { background: #f1f5f9; }

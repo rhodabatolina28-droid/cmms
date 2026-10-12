@@ -10,17 +10,17 @@
     .maint-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; }
     .maint-header-left { display: flex; align-items: center; gap: 12px; }
     .maint-header-icon { font-size: 24px; color: #0038A8; }
-    .maint-header-title { font-size: 20px; color: #111827; font-weight: 700; margin: 0; }
+    .maint-header-title { font-size: 20px; color: #111827; font-weight: 400; margin: 0; }
     .maint-pm-link { text-decoration: none; padding: 12px 20px; font-size: 14px; display: inline-flex; align-items: center; gap: 8px; min-height: 44px; background: #0038A8; color: white; border-radius: 8px; transition: all 0.2s; }
     .maint-pm-link:hover { background: #002d8c; transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0, 56, 168, 0.2); }
     .maint-table-wrap { overflow-x: auto; }
     .maint-table { width: 100%; border-collapse: collapse; min-width: 800px; text-align: left; }
     .maint-th { background-color: #f1f5f9; border-bottom: 2px solid #e2e8f0; }
-    .maint-th-cell { padding: 12px; font-weight: 800; color: #475569; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
+    .maint-th-cell { padding: 12px; font-weight: 400; color: #475569; text-transform: uppercase; font-size: 11px; letter-spacing: 0.5px; }
     .maint-row { border-bottom: 1px solid #f1f5f9; transition: all 0.2s; position: relative; }
     .maint-row:hover { background: #f8fafc !important; }
     .maint-row:hover td:first-child { box-shadow: inset 4px 0 0 #0038A8; border-top-left-radius: 4px; border-bottom-left-radius: 4px; }
-    .maint-td-id { padding: 12px; font-weight: 700; color: #0038A8; }
+    .maint-td-id { padding: 12px; font-weight: 400; color: #0038A8; }
     .maint-td-name { padding: 12px; color: #1e293b; font-weight: 600; }
     .maint-td-office { padding: 12px; color: #64748b; }
     .maint-td-date { padding: 12px; color: #64748b; font-size: 12px; }

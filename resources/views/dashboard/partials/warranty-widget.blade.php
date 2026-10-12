@@ -1,8 +1,8 @@
 <style nonce="{{ $cspNonce }}">
         .ww-flex { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .ww-title { margin: 0; font-size: 14px; font-weight: 800; color: #1e293b; }
+        .ww-title { margin: 0; font-size: 14px; font-weight: 400; color: #1e293b; }
         .ww-title-icon { color: #0038A8; }
-        .ww-alert-count { font-size: 11px; font-weight: 700; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 10px; }
+        .ww-alert-count { font-size: 11px; font-weight: 400; color: #64748b; background: #f1f5f9; padding: 3px 10px; border-radius: 10px; }
         .ww-empty { text-align: center; color: #94a3b8; padding: 20px; font-size: 13px; }
         .ww-empty-icon { color: #10b981; }
         .ww-section-expiring { font-size: 11px; font-weight: 700; color: #ca8a04; text-transform: uppercase; margin-bottom: 8px; }

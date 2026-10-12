@@ -62,7 +62,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -160,7 +160,7 @@
         .form-label-gov {
             display: block;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             margin-bottom: 6px;
@@ -180,7 +180,7 @@
             border-color: #0038A8;
             box-shadow: 0 0 0 3px rgba(0, 56, 168, 0.05);
         }
-        .ad-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .ad-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .ad-em { font-weight: 800; color: #0038A8; }
         .ad-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .ad-location-badge { font-size: 11px; font-weight: 800; color: #475569; background: #f1f5f9; padding: 4px 12px; border-radius: 99px; }
@@ -217,9 +217,9 @@
             box-shadow: 0 1px 2px rgba(185, 28, 28, 0.08);
             white-space: nowrap;
         }
-        .ad-td-id { font-weight: 800; color: #0038A8; }
+        .ad-td-id { font-weight: 400; color: #0038A8; }
         .ad-td-type { font-weight: 600; color: #475569; }
-        .ad-td-name { color: #1e293b; font-weight: 700; }
+        .ad-td-name { color: #1e293b; font-weight: 400; }
         .ad-td-office { color: #475569; }
         .ad-td-date { color: #64748b; font-size: 12px; }
         .ad-td-center { text-align: center !important; vertical-align: middle; }
@@ -234,7 +234,7 @@
         .ad-empty-icon { font-size: 40px; margin-bottom: 15px; display: block; opacity: 0.5; }
         .ad-empty-text { font-weight: 700; }
         .ad-pagination { margin-top: 20px; }
-        .ad-modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+        .ad-modal-title { margin: 0; font-size: 16px; font-weight: 400; color: #1e293b; }
         .ad-modal-close { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; }
         .ad-modal-hint { font-size: 12px; color: #475569; background: #f8fafc; border: 1px solid #e2e8f0; padding: 12px; border-radius: 6px; margin: 0 0 16px; line-height: 1.5; }
         .ad-modal-field { margin-bottom: 20px; }
@@ -340,7 +340,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

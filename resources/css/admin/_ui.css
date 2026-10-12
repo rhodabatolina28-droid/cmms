@@ -173,7 +173,7 @@ table {
 thead th {
     background: #F9FAFB;
     color: #374151;
-    font-weight: 700;
+    font-weight: 400;
     text-align: left;
     padding: clamp(8px, 1vw, 15px);
     border-bottom: 2px solid #E5E7EB;

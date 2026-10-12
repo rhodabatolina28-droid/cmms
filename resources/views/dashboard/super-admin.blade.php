@@ -43,7 +43,7 @@
         .css-bar-label {
             width: 120px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             text-align: right;
@@ -67,7 +67,7 @@
         .css-bar-value {
             width: 30px;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
 
@@ -184,12 +184,12 @@
         /* D9.31b: CSM card run-rate + secondary lines */
         .stat-unit {
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 400;
             color: #64748b;
         }
         .stat-sub {
             font-size: 10px;
-            font-weight: 700;
+            font-weight: 400;
             color: #64748b;
             margin-top: 4px;
             white-space: nowrap;
@@ -215,7 +215,7 @@
         }
         .stat-chip {
             font-size: 10px;
-            font-weight: 800;
+            font-weight: 400;
             line-height: 1;
             white-space: nowrap;
             flex-shrink: 0;
@@ -271,7 +271,7 @@
 
         .stat-label {
             font-size: clamp(11px, 0.85vw, 12px);
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.8px;
@@ -284,7 +284,7 @@
 
         .stat-value {
             font-size: clamp(24px, 2.5vw, 32px);
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
 
@@ -323,7 +323,7 @@
         }
         .mgmt-tool-title {
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 400;
             color: #1e293b;
             line-height: 1.3;
         }
@@ -347,7 +347,7 @@
         }
         .ops-label {
             font-size: 12px;
-            font-weight: 700;
+            font-weight: 400;
             color: #1e293b;
             line-height: 1.3;
         }
@@ -358,7 +358,7 @@
         }
         .ops-val {
             font-size: 17px;
-            font-weight: 800;
+            font-weight: 400;
             text-decoration: none;
             line-height: 1;
         }
@@ -393,7 +393,7 @@
 
         .analytics-title {
             font-size: 15px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -529,7 +529,7 @@
         .action-center-content h4 {
             margin: 0 0 5px;
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 400;
             color: #9f1239;
         }
         .action-center-content p {
@@ -643,7 +643,7 @@
         .text-muted { font-size: 13px; color: #64748b; font-weight: 600; }
         .text-bold-dark { font-weight: 800; color: #1e293b; }
         .icon-blue { color: #0038A8; }
-        .table-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
+        .table-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; text-transform: uppercase; letter-spacing: 1px; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 14px; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }

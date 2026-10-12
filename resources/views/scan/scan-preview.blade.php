@@ -23,7 +23,7 @@
         /* Icons removed: text-only na ang scan preview (Bug 7). */
         .cta { display: flex; align-items: center; justify-content: center; gap: 8px; background: #dc2626; color: white; text-decoration: none; padding: 14px 18px; border-radius: 10px; font-size: 15px; font-weight: 800; min-height: 48px; margin-bottom: 22px; transition: background 0.2s; }
         .cta:hover { background: #b91c1c; }
-        .section-title { font-size: 13px; font-weight: 700; color: #0038A8; text-transform: uppercase; letter-spacing: 0.03em; margin: 22px 0 10px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
+        .section-title { font-size: 13px; font-weight: 400; color: #0038A8; text-transform: uppercase; letter-spacing: 0.03em; margin: 22px 0 10px; padding-top: 16px; border-top: 1px solid #e2e8f0; }
         .status-badge { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 12px; font-weight: 600; }
         .status-Serviceable { background: #d1fae5; color: #047857; }
         .status-Unserviceable { background: #fef3c7; color: #b45309; }
@@ -37,7 +37,7 @@
             display: flex; align-items: center; justify-content: center;
             min-height: 44px; padding: 10px 16px; border-radius: 8px;
             background: #fff; border: 1px solid #cbd5e1;
-            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 700;
+            color: #334155; text-decoration: none; font-size: 13.5px; font-weight: 400;
         }
         .back-link a:hover { color: #0038A8; border-color: #0038A8; background: #f8faff; }
         .back-link a:active { background: #f1f5f9; }

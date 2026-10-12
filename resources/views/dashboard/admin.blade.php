@@ -80,7 +80,7 @@
 
         .stat-label {
             font-size: clamp(10px, 0.8vw, 11px);
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.8px;
@@ -90,7 +90,7 @@
 
         .stat-value {
             font-size: clamp(24px, 2.5vw, 32px);
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
 
@@ -217,26 +217,26 @@
         .text-red { color: #dc2626; }
         .text-green { color: #10b981; }
         .text-dark { color: #1e293b; }
-        .table-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .table-title { margin: 0; font-size: 16px; font-weight: 400; color: #1e293b; text-transform: uppercase; letter-spacing: 0.8px; }
         .link-master { text-decoration: none; color: #0038A8; font-weight: 700; font-size: 13px; }
         .link-master:hover { text-decoration: underline; }
         .scroll-x { overflow-x: auto; }
         .table-full { width: 100%; border-collapse: collapse; }
-        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
+        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.6px; }
         .table-header.center { text-align: center; }
         .table-header.right { text-align: right; }
         .table-row-header { text-align: left; border-bottom: 2px solid #f1f5f9; }
         .table-row-border { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
         .table-cell { padding: 14px 10px; }
-        .table-cell-bold { padding: 14px 10px; font-weight: 800; color: #0038A8; }
+        .table-cell-bold { padding: 14px 10px; font-weight: 400; color: #0038A8; }
         .table-cell-gray { padding: 14px 10px; color: #64748b; font-size: 13px; }
         .table-cell-dark { padding: 14px 10px; color: #1e293b; font-weight: 600; }
         .table-cell-center { padding: 14px 10px; text-align: center; }
         .table-cell-right { padding: 14px 10px; text-align: right; }
         .empty-cell { padding: 40px; text-align: center; color: #94a3b8; }
         .icon-link { color: #94a3b8; }
-        .ribbon-label { margin-bottom: 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
-        .section-label { margin: 24px 0 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .ribbon-label { margin-bottom: 12px; font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
+        .section-label { margin: 24px 0 12px; font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
         .hero-role { font-size: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.75; }
         .hero-name { font-size: 30px; font-weight: 400; margin: 0; }
         .hero-desc { margin: 10px 0 0; opacity: 0.85; font-size: 14px; }

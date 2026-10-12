@@ -19,7 +19,7 @@
     .tkt-btn-disposal-tag { min-width: 180px; background-color: #4f46e5; color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: 700; cursor: pointer; font-size: 13px; display: inline-flex; align-items: center; gap: 6px; text-decoration: none; }
     .tkt-body-pad { padding: 20px; }
     .tkt-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
-    .tkt-label { margin: 0 0 8px; font-weight: 700; color: #0f172a; }
+    .tkt-label { margin: 0 0 8px; font-weight: 400; color: #0f172a; }
     .tkt-value { margin: 0; color: #475569; }
     .tkt-supply-head { font-size: 12px; color: #64748b; }
     .tkt-body-nopad { padding: 0; }

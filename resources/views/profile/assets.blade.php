@@ -41,7 +41,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -148,7 +148,7 @@
         .detail-label {
             width: 120px;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.3px;
@@ -188,18 +188,18 @@
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
         }
 
-        .asset-header-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .asset-header-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .asset-header-desc { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .asset-header-icon { font-size: 24px; color: #0038A8; opacity: 0.5; }
         .table-wrap { overflow-x: auto; }
         .th-center { text-align: center; }
-        .td-name { font-weight: 700; color: #0038A8; }
+        .td-name { font-weight: 400; color: #0038A8; }
         .td-category { font-weight: 600; }
         .td-serial { font-family: monospace; color: #64748b; }
         .td-center { text-align: center; }
         .td-center-empty { text-align: center; padding: 50px; color: #94a3b8; }
         .icon-empty { font-size: 40px; display: block; margin-bottom: 15px; opacity: 0.3; }
-        .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #0038A8; }
+        .modal-title { margin: 0; font-size: 16px; font-weight: 400; color: #0038A8; }
         .modal-category { font-size: 12px; color: #64748b; }
         .detail-preline { white-space: pre-line; }
         .warranty-chip { display: inline-block; padding: 2px 10px; border-radius: 12px; font-size: 11px; font-weight: 800; border: 1px solid; }

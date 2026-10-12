@@ -10,13 +10,13 @@
 @section('styles')
 <style nonce="{{ $cspNonce }}">
     .sched-table { width: 100%; border-collapse: collapse; background: white; box-shadow: 0 1px 3px rgba(0,0,0,0.06); }
-    .sched-table th { background: #f8fafc; color: #475569; font-size: 11px; font-weight: 700; text-transform: uppercase; padding: 12px 16px; text-align: left; border-bottom: 2px solid #e2e8f0; }
+    .sched-table th { background: #f8fafc; color: #475569; font-size: 11px; font-weight: 400; text-transform: uppercase; padding: 12px 16px; text-align: left; border-bottom: 2px solid #e2e8f0; }
     .sched-table td { padding: 12px 16px; border-bottom: 1px solid #f1f5f9; font-size: 13px; }
     .sched-table tr:hover td { background: #f8fafc; }
     .badge-scheduled { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 700; background: #fef3c7; color: #92400e; }
     .btn-conduct { display: inline-flex; align-items: center; gap: 4px; padding: 11px 16px; background: #0038A8; color: white; border: none; border-radius: 6px; font-size: 13px; font-weight: 700; cursor: pointer; text-decoration: none; min-height: 44px; }
     .btn-conduct:hover { background: #002d8a; }
-    .stat-count { font-size: 28px; font-weight: 800; color: #0038A8; line-height: 1; }
+    .stat-count { font-size: 28px; font-weight: 400; color: #0038A8; line-height: 1; }
     .stat-label { font-size: 12px; color: #64748b; margin-top: 4px; }
     @media screen and (max-width: 767px) {
         .sched-table { min-width: 650px; }

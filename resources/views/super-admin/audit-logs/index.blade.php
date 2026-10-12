@@ -62,7 +62,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -114,7 +114,7 @@
         .btn-hover-archive:hover { background: #b91c1c !important; }
         #globalAlertError, #globalAlertSuccess { display: none !important; }
 
-        .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .header-action-group { display: flex; align-items: center; gap: 15px; }
         .btn-archive { font-size: 12px; font-weight: 800; color: white; background: #dc2626; border: none; padding: 10px 20px; border-radius: 99px; cursor: pointer; min-height: 44px; transition: background 0.2s; }
@@ -130,9 +130,9 @@
         .name-bold { font-weight: 800; color: #1e293b; }
         .name-semi { font-weight: 700; color: #1e293b; }
         .time-sub { font-size: 11px; opacity: 0.8; }
-        .action-label { font-size: 12px; font-weight: 700; color: #0038A8; text-transform: uppercase; }
+        .action-label { font-size: 12px; font-weight: 400; color: #0038A8; text-transform: uppercase; }
         .td-details { color: #475569; line-height: 1.4; font-size: 12px; }
-        .td-region { font-weight: 800; color: #64748b; font-size: 11px; }
+        .td-region { font-weight: 400; color: #64748b; font-size: 11px; }
         .td-empty { padding: 60px; text-align: center; color: #94a3b8; }
         .empty-icon { font-size: 40px; margin-bottom: 15px; display: block; opacity: 0.3; }
         .fw-700 { font-weight: 700; }
@@ -168,7 +168,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

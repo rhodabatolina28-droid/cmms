@@ -62,7 +62,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -118,8 +118,8 @@
             flex-shrink: 0;
         }
 
-        .stat-info p { margin: 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
-        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .stat-info p { margin: 0; font-size: 10px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 400; color: #1e293b; }
 
         .sa-stat-icon-bg-orange { background: #fff7ed; color: #c2410c; }
         .sa-stat-icon-bg-blue { background: #eff6ff; color: #1d4ed8; }
@@ -230,7 +230,7 @@
         .form-label-gov {
             display: block;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             margin-bottom: 6px;
@@ -272,7 +272,7 @@
         }
 
         /* --- Inline style replacement classes --- */
-        .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .content-padding { padding: 25px 30px; }
         .search-wrapper { position: relative; flex: 1; min-width: 250px; }
@@ -288,7 +288,7 @@
         .th-right { text-align: center !important; }
         .name-bold { font-weight: 800; color: #1e293b; }
         .email-mono { font-size: 11px; color: #64748b; font-family: monospace; }
-        .td-bold { font-weight: 700; color: #475569; }
+        .td-bold { font-weight: 400; color: #475569; }
         .dept-sub { font-size: 11px; color: #64748b; font-weight: normal; margin-top: 2px; }
         .td-center { text-align: center !important; vertical-align: middle; }
         .td-right { text-align: center !important; vertical-align: middle; }
@@ -297,7 +297,7 @@
         .pagination-wrap { margin-top: 20px; }
         /* Mobile swipe-table hint — hidden on desktop, shown ≤767px */
         .mobile-table-hint { display: none; }
-        .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+        .modal-title { margin: 0; font-size: 16px; font-weight: 400; color: #1e293b; }
         .close-btn { background: none; border: none; font-size: 20px; color: #94a3b8; cursor: pointer; padding: 4px 8px; border-radius: 6px; transition: all 0.2s; }
         .close-btn:hover { background: #f1f5f9; color: #475569; }
         .form-group { margin-bottom: 14px; }
@@ -346,7 +346,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

@@ -50,7 +50,7 @@
 
         .summary-name {
             font-size: 20px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
             margin: 0 0 5px;
         }
@@ -68,7 +68,7 @@
             padding: 6px 15px;
             border-radius: 20px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             text-transform: uppercase;
             letter-spacing: 0.5px;
             border: 1px solid #dbeafe;
@@ -88,7 +88,7 @@
             border-bottom: 1px solid rgba(0,0,0,0.05);
         }
 
-        .profile-header-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .profile-header-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .profile-header-desc { margin: 2px 0 0; font-size: 12px; color: #64748b; }
 
         .card-body-content {
@@ -108,7 +108,7 @@
         .label-simple {
             display: block;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -170,7 +170,7 @@
 
         .section-header-simple {
             font-size: 14px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
             margin: 35px 0 20px;
             padding-bottom: 10px;

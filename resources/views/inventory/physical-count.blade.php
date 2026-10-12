@@ -16,14 +16,14 @@
     .session-status { padding: 3px 10px; border-radius: 4px; font-size: 10px; font-weight: 800; text-transform: uppercase; }
     .status-ongoing { background: #dcfce7; color: #166534; }
         .status-completed { background: #f1f5f9; color: #475569; }
-        .card-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .card-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .inline-form { display:inline; }
         .pc-start-wrap { padding: 14px 24px 0; display: flex; justify-content: flex-end; }
         .alert-success { background: #dcfce7; border: 1px solid #86efac; color: #166534; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
         .alert-info { background: #eff6ff; border: 1px solid #93c5fd; color: #1e40af; padding: 12px 16px; border-radius: 8px; font-size: 13px; font-weight: 600; margin-bottom: 18px; }
         .ongoing-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 18px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
-        .ongoing-label { font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; }
+        .ongoing-label { font-size: 11px; font-weight: 400; color: #15803d; text-transform: uppercase; }
         .ongoing-date { font-size: 14px; font-weight: 700; color: #1e293b; margin-top: 2px; }
         .session-row-active { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 14px 16px; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; gap: 14px; flex-wrap: wrap; }
         .session-row-active .session-name { color: #1e293b; }
@@ -35,7 +35,7 @@
         .session-progress-text { font-size: 11px; font-weight: 700; color: #475569; white-space: nowrap; }
         .btn-continue { background: #0038A8; color: #fff; border: none; padding: 9px 16px; border-radius: 8px; font-size: 12px; font-weight: 800; cursor: pointer; display: inline-flex; align-items: center; gap: 7px; text-decoration: none; }
         .btn-continue:hover { background: #002d8c; color: #fff; }
-        .section-h4 { font-size: 14px; font-weight: 800; color: #1e293b; margin: 0 0 14px; }
+        .section-h4 { font-size: 14px; font-weight: 400; color: #1e293b; margin: 0 0 14px; }
         .empty-state { color: #94a3b8; font-size: 13px; text-align: center; padding: 40px 0; }
         .empty-icon { font-size: 24px; display: block; margin-bottom: 10px; }
         .session-name { font-weight: 700; font-size: 14px; color: #1e293b; }

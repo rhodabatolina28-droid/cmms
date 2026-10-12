@@ -388,7 +388,7 @@
     .device-info-grid .label-cell {
         width: 100% !important;
         font-size: 13px !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         color: #475569 !important;
         text-transform: uppercase !important;
         background: transparent !important;
@@ -432,7 +432,7 @@
        11px → 12px floor). */
     .device-info-grid .specs-header {
         font-size: 12px !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         color: #475569 !important;
         text-transform: uppercase !important;
         background: transparent !important;

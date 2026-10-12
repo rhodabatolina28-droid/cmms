@@ -9,7 +9,7 @@
     .polish-card { background: white; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
     .card-header-accent { background: #f8fafc; padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .card-body-content { padding: 25px 30px; }
-    .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+    .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
     .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
     .filter-bar { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:16px; }
     .filter-btn { padding:6px 14px; border-radius:20px; font-size:11px; font-weight:700; text-decoration:none; border:2px solid #e2e8f0; color:#64748b; background:white; cursor:pointer; transition:all 0.2s; }
@@ -18,13 +18,13 @@
     .table-wrap { overflow-x:auto; border-radius:10px; border:1px solid #e2e8f0; }
     .table-orders { width:100%; border-collapse:collapse; min-width:700px; }
     .thead-row { background:linear-gradient(135deg,#f8fafc,#f1f5f9); }
-    .th { padding:12px 14px; font-size:10px; font-weight:700; text-transform:uppercase; color:#475569; text-align:left; border-bottom:2px solid #0038A8; }
+    .th { padding:12px 14px; font-size:10px; font-weight: 400; text-transform:uppercase; color:#475569; text-align:left; border-bottom:2px solid #0038A8; }
     .tr { border-bottom:1px solid #f1f5f9; transition:background 0.15s; }
     .tr:hover { background:#f8fafc; }
     .tr-overdue { background:#fffbeb !important; }
     .tr-overdue:hover { background:#fef3c7 !important; }
     .td { padding:11px 14px; font-size:13px; color:#1e293b; }
-    .td-num a { color:#0038A8; font-weight:700; text-decoration:none; font-size:12px; }
+    .td-num a { color:#0038A8; font-weight: 400; text-decoration:none; font-size:12px; }
     .status-pill { display:inline-block; padding:3px 10px; border-radius:20px; font-size:9px; font-weight:800; text-transform:uppercase; }
     .pill-scheduled { background:#fef3c7; color:#92400e; }
     .pill-ongoing { background:#dbeafe; color:#1e40af; }
@@ -35,7 +35,7 @@
     .action-btn { display:inline-flex; align-items:center; gap:5px; padding:6px 12px; background:#0038A8; color:white; border-radius:6px; font-size:10px; font-weight:700; text-decoration:none; }
     .action-btn:hover { background:#002d8c; }
     .paginator { margin-top:16px; }
-    .count-badge { background:#0038A8; color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight:700; margin-left:8px; }
+    .count-badge { background:#0038A8; color:white; border-radius:20px; padding:2px 8px; font-size:11px; font-weight: 400; margin-left:8px; }
     .overdue-legend { display:inline-flex; align-items:center; gap:6px; font-size:11px; color:#92400e; background:#fffbeb; border:1px solid #fde68a; border-radius:6px; padding:4px 10px; }
     /* Mobile swipe-table hint - hidden on desktop, revealed at max-width 767px */
     .mobile-table-hint { display:none; }
@@ -56,7 +56,7 @@
             background:#eff6ff;
             color:#1e40af;
             font-size:11.5px;
-            font-weight:700;
+            font-weight: 400;
             letter-spacing:0.03em;
             border:1px solid #dbeafe;
             border-bottom:none;

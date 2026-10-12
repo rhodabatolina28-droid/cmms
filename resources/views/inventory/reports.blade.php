@@ -20,7 +20,7 @@
     }
     .report-card h3 {
         font-size: 13px;
-        font-weight: 800;
+        font-weight: 400;
         color: #64748b;
         text-transform: uppercase;
         letter-spacing: 0.5px;
@@ -30,7 +30,7 @@
     }
     .stat-big {
         font-size: 36px;
-        font-weight: 900;
+        font-weight: 400;
         color: #0038A8;
         line-height: 1;
         margin-bottom: 4px;
@@ -52,7 +52,7 @@
     .dist-count {
         background: #eff6ff;
         color: #0038A8;
-        font-weight: 800;
+        font-weight: 400;
         padding: 2px 10px;
         border-radius: 10px;
         font-size: 13px;

@@ -22,7 +22,7 @@
 
     .topbar-left h3 {
         font-size: 15px !important;
-        font-weight: 800 !important;
+        font-weight: 400 !important;
         max-width: 160px;
         white-space: nowrap;
         overflow: hidden;
@@ -384,7 +384,7 @@
     }
 
     .td-name {
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         font-size: 12px !important;
     }
 
@@ -524,7 +524,7 @@
 
     .privacy-title {
         font-size: 14px !important;
-        font-weight: 700 !important;
+        font-weight: 400 !important;
         color: #1e293b !important;
         margin-bottom: 12px !important;
         line-height: 1.4 !important;
@@ -1046,7 +1046,7 @@
 
     .hero-status-value {
         font-size: 1rem !important;
-        font-weight: 800 !important;
+        font-weight: 400 !important;
     }
 
     /* Stats Grid - 2x2 on mobile */

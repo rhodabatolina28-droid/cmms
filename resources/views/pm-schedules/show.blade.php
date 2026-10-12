@@ -25,9 +25,9 @@
     .modal-overlay { position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:9999; display:none; justify-content:center; align-items:center; padding:20px; }
     .modal-overlay.show { display:flex; }
     .modal-box { background:white; border-radius:14px; padding:28px; max-width:480px; width:100%; box-shadow:0 20px 60px rgba(0,0,0,0.15); }
-    .modal-title { font-size:20px; font-weight:800; color:#1e293b; margin:0 0 20px; }
+    .modal-title { font-size:20px; font-weight: 400; color:#1e293b; margin:0 0 20px; }
     .modal-field { margin-bottom:16px; }
-    .modal-label { display:block; font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
+    .modal-label { display:block; font-size:12px; color:#64748b; font-weight: 400; text-transform:uppercase; letter-spacing:0.06em; margin-bottom:6px; }
     .modal-input { width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; box-sizing:border-box; }
     .modal-input:focus { outline:none; border-color:#0038A8; }
     .modal-textarea { width:100%; padding:10px 14px; border:2px solid #e2e8f0; border-radius:8px; font-size:14px; color:#1e293b; box-sizing:border-box; resize:vertical; min-height:80px; }
@@ -39,12 +39,12 @@
     .modal-btn-submit:disabled { opacity:0.6; cursor:not-allowed; }
     .detail-header { margin-bottom:20px; }
     .detail-header > div:first-child { flex:1; }
-    .detail-title { font-size:24px; font-weight:800; color:#1e293b; margin:0 0 8px; }
+    .detail-title { font-size:24px; font-weight: 400; color:#1e293b; margin:0 0 8px; }
     .detail-subtitle { font-size:14px; color:#64748b; margin:0; }
     .info-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:16px; }
     .info-item { padding:0; background:transparent; border-radius:0; border:none; }
     .info-item:hover { background:transparent; }
-    .info-label { font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; font-weight:700; margin-bottom:6px; }
+    .info-label { font-size:12px; color:#64748b; text-transform:uppercase; letter-spacing:0.06em; font-weight: 400; margin-bottom:6px; }
     .info-value { font-size:16px; color:#1e293b; font-weight:600; }
     .badge-freq { display:inline-block; padding:5px 14px; border-radius:20px; font-size:12px; font-weight:700; text-transform:uppercase; letter-spacing:0.03em; }
     .badge-monthly { background:#dbeafe; color:#1e40af; box-shadow:0 2px 4px rgba(30,64,175,0.15); }
@@ -52,15 +52,15 @@
     .badge-semi { background:#e0e7ff; color:#3730a3; box-shadow:0 2px 4px rgba(55,48,163,0.15); }
     .badge-annual { background:#dcfce7; color:#166534; box-shadow:0 2px 4px rgba(22,101,52,0.15); }
     .badge-inactive { background:#fee2e2; color:#991b1b; box-shadow:0 2px 4px rgba(153,27,27,0.15); }
-    .section-title { font-size:18px; font-weight:800; color:#1e293b; margin:0 0 20px; display:flex; align-items:center; gap:10px; }
+    .section-title { font-size:18px; font-weight: 400; color:#1e293b; margin:0 0 20px; display:flex; align-items:center; gap:10px; }
     .section-title i { color:#0038A8; }
     .monitor-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
-    .monitor-title { margin:0; font-size:20px; color:#1e293b; font-weight:800; display:flex; align-items:center; gap:8px; }
+    .monitor-title { margin:0; font-size:20px; color:#1e293b; font-weight: 400; display:flex; align-items:center; gap:8px; }
     .monitor-title i { color:#0038A8; }
     .monitor-status { font-size:13px; color:#64748b; font-weight:600; padding:6px 14px; background:#f1f5f9; border-radius:20px; }
     .summary-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
     .stat-card { background:#f8fafc; border-radius:10px; padding:16px 12px; text-align:center; border:1px solid #e2e8f0; display:flex; flex-direction:column; align-items:center; justify-content:center; min-height:80px; }
-    .stat-value { font-size:28px; font-weight:800; line-height:1; margin-bottom:6px; }
+    .stat-value { font-size:28px; font-weight: 400; line-height:1; margin-bottom:6px; }
     .stat-value.blue { color:#0038A8; }
     .stat-value.green { color:#10b981; }
     .stat-value.amber { color:#f59e0b; }
@@ -85,17 +85,17 @@
     .next-user-box.show { display:flex; }
     .next-user-icon { color:#16a34a; font-size:22px; flex-shrink:0; }
     .next-user-content { flex:1; }
-    .next-user-title { font-size:15px; font-weight:700; color:#1e293b; margin-bottom:4px; }
+    .next-user-title { font-size:15px; font-weight: 400; color:#1e293b; margin-bottom:4px; }
     .next-user-detail { font-size:13px; color:#64748b; line-height:1.5; }
     .history-card { }
-    .history-title { font-size:20px; font-weight:800; color:#1e293b; margin:0 0 20px; display:flex; align-items:center; gap:10px; }
+    .history-title { font-size:20px; font-weight: 400; color:#1e293b; margin:0 0 20px; display:flex; align-items:center; gap:10px; }
     .history-title i { color:#0038A8; }
     .history-list { }
     .history-item { padding:16px; border-bottom:1px solid #f1f5f9; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; transition:background 0.2s; }
     .history-item:last-child { border-bottom:none; }
     .history-item:hover { background:#f8fafc; }
     .history-info { display:flex; flex-direction:column; gap:4px; }
-    .history-label { font-size:14px; font-weight:700; color:#0038A8; }
+    .history-label { font-size:14px; font-weight: 400; color:#0038A8; }
     .history-date { font-size:12px; color:#64748b; }
     .history-badge { padding:4px 14px; border-radius:20px; font-size:12px; font-weight:600; background:#f1f5f9; color:#64748b; }
     .empty-state { text-align:center; padding:40px 20px; color:#94a3b8; }

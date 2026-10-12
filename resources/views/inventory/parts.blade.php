@@ -29,7 +29,7 @@
     .row-low td { background: #fffbeb; }
     .row-critical td { background: #fef2f2; }
 
-    .qty { font-weight: 800; }
+    .qty { font-weight: 400; }
     .qty-ok { color: #15803d; }
     .qty-low { color: #b45309; }
     .qty-critical { color: #b91c1c; }
@@ -49,29 +49,29 @@
     .modal-overlay.open { display: flex; }
     .modal-box { background: #fff; border-radius: 12px; width: 100%; max-width: 560px; max-height: 90vh; overflow-y: auto; box-shadow: 0 20px 40px rgba(0,0,0,.2); }
     .modal-head { display: flex; justify-content: space-between; align-items: center; padding: 16px 20px; border-bottom: 1px solid #e2e8f0; }
-    .modal-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
+    .modal-head h3 { margin: 0; font-size: 16px; font-weight: 400; color: #0f172a; }
     .modal-close { background: none; border: none; font-size: 22px; line-height: 1; cursor: pointer; color: #64748b; border-radius: 8px; width: 34px; height: 34px; padding: 0; display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto; }
     .modal-close:hover { background: #f1f5f9; color: #0f172a; }
     .modal-body { padding: 20px; }
     .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
     .form-field { display: flex; flex-direction: column; gap: 5px; }
     .form-field.full { grid-column: 1 / -1; }
-    .form-field label { font-size: 12px; font-weight: 700; color: #475569; }
+    .form-field label { font-size: 12px; font-weight: 400; color: #475569; }
     .form-field input, .form-field select {
         border: 1px solid #cbd5e1; border-radius: 8px; padding: 9px 11px; font-size: 13px; color: #1e293b; outline: none; background: #fff;
     }
     .form-field input:focus, .form-field select:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,.12); }
     .form-err { color: #dc2626; font-size: 11.5px; font-weight: 600; min-height: 14px; }
     .field-hint { font-size: 11.5px; color: #64748b; margin-top: 2px; line-height: 1.5; min-height: 0; font-weight: 500; }
-    .field-hint.warn { color: #b45309; font-weight: 700; }
-    .field-hint.ok { color: #15803d; font-weight: 700; }
+    .field-hint.warn { color: #b45309; font-weight: 400; }
+    .field-hint.ok { color: #15803d; font-weight: 400; }
     .field-hint-strong { background: #f8fafc; border: 1px solid #e2e8f0; border-left: 3px solid #0038A8; border-radius: 6px; padding: 9px 11px; color: #0f172a; font-size: 12.5px; }
     .current-hand { background: #f0f4ff; color: #0038A8; font-weight: 800; padding: 8px 12px; border-radius: 8px; font-size: 13px; margin-bottom: 12px; }
     .modal-foot { display: flex; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #e2e8f0; }
 
     .movement-item { display: flex; gap: 12px; padding: 10px 0; border-bottom: 1px solid #f1f5f9; align-items: flex-start; }
     .movement-item:last-child { border-bottom: none; }
-    .movement-qty { min-width: 54px; font-weight: 800; }
+    .movement-qty { min-width: 54px; font-weight: 400; }
     .mov-qty-in { color: #15803d; } .mov-qty-out { color: #b91c1c; }
     .movement-body { flex: 1; }
     .movement-reason { font-weight: 600; color: #1e293b; font-size: 13px; }
@@ -305,7 +305,7 @@
             background: #eff6ff;
             color: #1e40af;
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 400;
             letter-spacing: 0.03em;
             border: 1px solid #dbeafe;
             border-bottom: none;
@@ -564,7 +564,7 @@
     .parts-hero { display: flex; align-items: center; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin: 0 0 18px; }
     .parts-hero-title { display: flex; align-items: center; gap: 14px; }
     .parts-hero-icon { width: 52px; height: 52px; border-radius: 14px; background: linear-gradient(135deg, #0038A8, #0b5cd6); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 22px; box-shadow: 0 8px 18px rgba(0,56,168,.25); }
-    .parts-hero h2 { margin: 0; font-size: 22px; font-weight: 900; color: #0f172a; letter-spacing: -.02em; }
+    .parts-hero h2 { margin: 0; font-size: 22px; font-weight: 400; color: #0f172a; letter-spacing: -.02em; }
     .parts-hero p { margin: 2px 0 0; font-size: 12.5px; color: #64748b; font-weight: 500; }
 
     .banner { border-radius: 10px; padding: 11px 16px; font-size: 12.5px; }
@@ -577,8 +577,8 @@
     .stat-card.stat-clickable:focus-visible { outline: 2px solid #0038A8; outline-offset: 2px; }
     .stat-card.stat-clickable.active-filter { border-color: #0038A8; box-shadow: inset 0 0 0 1px #0038A8, 0 10px 22px rgba(15,23,42,.08); }
     .stat-card.stat-clickable.active-filter .stat-label { color: #0038A8; }
-    .stat-val { font-size: 22px; font-weight: 800; line-height: 1.2; color: #1e293b; }
-    .stat-label { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
+    .stat-val { font-size: 22px; font-weight: 400; line-height: 1.2; color: #1e293b; }
+    .stat-label { font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: .6px; margin-bottom: 4px; }
 
     /* Card + header */
     .parts-card { border-radius: 16px; border: 1px solid #e2e8f0; box-shadow: 0 6px 18px rgba(15,23,42,.05); }
@@ -591,12 +591,12 @@
     .parts-search input:focus, .parts-search select:focus { border-color: #0038A8; box-shadow: 0 0 0 3px rgba(0,56,168,.12); }
 
     /* Table */
-        .parts-table th { padding: 13px 16px; font-size: 10px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #64748b; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
+        .parts-table th { padding: 13px 16px; font-size: 10px; font-weight: 400; letter-spacing: .06em; text-transform: uppercase; color: #64748b; background: #f8fafc; border-bottom: 2px solid #e2e8f0; }
     .parts-table td { padding: 13px 16px; font-size: 13.5px; }
     .item-name { font-weight: 700; color: #0f172a; font-size: 13.5px; }
     .item-sub { font-size: 11.5px; color: #94a3b8; margin-top: 2px; }
     .qty-pill { display: inline-flex; align-items: center; gap: 9px; }
-    .qty-num { font-size: 16px; font-weight: 900; }
+    .qty-num { font-size: 16px; font-weight: 400; }
     .qty-ok { color: #15803d; } .qty-low { color: #b45309; } .qty-critical { color: #b91c1c; }
     .qty-track { width: 62px; height: 6px; background: #eef2f6; border-radius: 99px; overflow: hidden; }
     .qty-track > i { display: block; height: 100%; border-radius: 99px; }
@@ -652,7 +652,7 @@
 <style nonce="{{ $cspNonce }}">
     /* ═══ Card-only layout (mimic Inventory & Assets) ═══ */
     .parts-card-head { padding: 16px 20px; border-bottom: 1px solid #eef2f6; display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; background: #f8fafc; }
-    .parts-card-head h3 { margin: 0; font-size: 16px; font-weight: 800; color: #0f172a; }
+    .parts-card-head h3 { margin: 0; font-size: 16px; font-weight: 400; color: #0f172a; }
     .parts-card-head h3 i { color: #0038A8; margin-right: 8px; }
     .parts-card-head p { margin: 3px 0 0; font-size: 12px; color: #64748b; font-weight: 500; }
     .parts-body { padding: 16px 20px; }
@@ -776,7 +776,7 @@
     /* Units table total row */
     #unitsModal .parts-table tr.units-total-row td {
         border-top: 2px solid #e2e8f0;
-        font-weight: 800;
+        font-weight: 400;
         color: #0f172a;
         background: #f8fafc;
         font-size: 13px;

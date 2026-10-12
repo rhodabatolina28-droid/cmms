@@ -12,16 +12,16 @@
     .rx-crumb { display:flex; align-items:center; gap:6px; font-size:12px; color:#94a3b8; }
     .rx-crumb b { color:#334155; }
     .rx-hero { background:#fff; border:1px solid #e2e8f0; border-radius:14px; padding:20px 22px; margin-bottom:16px; }
-    .rx-hero h1 { margin:0 0 6px; font-size:19px; font-weight:800; color:#0f172a; display:flex; align-items:center; gap:11px; }
+    .rx-hero h1 { margin:0 0 6px; font-size:19px; font-weight: 400; color:#0f172a; display:flex; align-items:center; gap:11px; }
     .rx-hero .rx-sub { font-size:12.5px; color:#475569; line-height:1.5; max-width:540px; }
     .rx-hero-meta { display:flex; gap:10px; flex-wrap:wrap; margin-top:16px; }
     .rx-stat { background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:8px 15px; min-width:105px; }
-    .rx-stat .k { font-size:9.5px; font-weight:800; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; }
-    .rx-stat .v { font-size:13.5px; font-weight:800; color:#0f172a; margin-top:1px; }
+    .rx-stat .k { font-size:9.5px; font-weight: 400; text-transform:uppercase; letter-spacing:.06em; color:#94a3b8; }
+    .rx-stat .v { font-size:13.5px; font-weight: 400; color:#0f172a; margin-top:1px; }
     .rx-panel { background:#fff; border:1px solid #e5e7eb; border-radius:14px; padding:20px 22px; margin-bottom:16px; box-shadow:0 1px 2px rgba(15,23,42,.04); }
     .rx-step-head { display:flex; align-items:center; gap:11px; padding-bottom:12px; border-bottom:1px solid #f1f5f9; margin-bottom:14px; }
     .rx-step-badge { width:30px; height:30px; border-radius:50%; background:#0038A8; color:#fff; display:inline-flex; align-items:center; justify-content:center; font-size:13px; font-weight:800; flex:none; }
-    .rx-step-head h2 { margin:0; font-size:15.5px; font-weight:800; color:#111827; }
+    .rx-step-head h2 { margin:0; font-size:15.5px; font-weight: 400; color:#111827; }
     .rx-step-head .st-sub { font-size:11.5px; color:#94a3b8; }
     .rx-hint { font-size:12px; color:#6b7280; margin:0 0 14px; line-height:1.55; }
     .rx-line { border:1.5px solid #e5e7eb; border-radius:12px; padding:15px 16px; margin-bottom:12px; background:#fff; transition:border-color .15s, box-shadow .15s; }
@@ -30,7 +30,7 @@
     .rx-line-no { width:26px; height:26px; border-radius:8px; background:#eff6ff; color:#0038A8; border:1px solid #bfdbfe; font-size:12px; font-weight:800; display:inline-flex; align-items:center; justify-content:center; flex:none; }
     .rx-line-desc { flex:1; font-size:13.5px; font-weight:700; color:#111827; }
     .rx-line-desc em { color:#475569; font-style:normal; font-weight:700; background:#f1f5f9; border-radius:999px; padding:2px 10px; font-size:11.5px; margin-left:7px; }
-    .rx-field-label { display:block; font-size:10.5px; font-weight:800; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:5px; }
+    .rx-field-label { display:block; font-size:10.5px; font-weight: 400; text-transform:uppercase; letter-spacing:.05em; color:#64748b; margin-bottom:5px; }
     .rx-cols { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
     @media screen and (max-width:680px){ .rx-cols { grid-template-columns:1fr; } }
     .rx-select-wrap select, .rx-input { width:100%; padding:9px 12px; border:1.5px solid #d1d5db; border-radius:9px; font-size:12.5px; background:#fff; transition:border-color .15s; }
@@ -47,7 +47,7 @@
     .rx-dest .d { font-size:11px; color:#64748b; margin-top:3px; margin-left:24px; line-height:1.45; }
     .rx-unit-grid { display:none; margin-top:12px; background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:12px 14px; }
     .rx-unit-grid.show { display:block; }
-    .rx-unit-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; color:#374151; margin-bottom:8px; }
+    .rx-unit-title { font-size:11px; font-weight: 400; text-transform:uppercase; letter-spacing:.04em; color:#374151; margin-bottom:8px; }
     .rx-unit-row { display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:8px; }
     @media screen and (max-width:560px){ .rx-unit-row { grid-template-columns:1fr; } }
     /* Per-piece label inside the serial/property grid — mobile-only (shown ≤768px). */
@@ -278,7 +278,7 @@
         }
         .rx-dest label.is-checked .t {
             color: #0038A8 !important;
-            font-weight: 800 !important;
+            font-weight: 400 !important;
         }
         .rx-dest label.is-checked .d {
             color: #1e40af !important;

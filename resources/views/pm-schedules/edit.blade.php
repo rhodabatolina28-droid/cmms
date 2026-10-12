@@ -10,13 +10,13 @@
 @section('styles')
 <style nonce="{{ $cspNonce }}">
     .premium-card { background: white; border-radius: 14px; border: 1px solid #e2e8f0; padding: 24px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05); }
-    .form-title { font-size: 20px; font-weight: 800; color: #1e293b; margin: 0 0 6px; }
+    .form-title { font-size: 20px; font-weight: 400; color: #1e293b; margin: 0 0 6px; }
     .form-subtitle { font-size: 12px; color: #64748b; margin: 0 0 28px; }
     .form-section { margin-bottom: 28px; }
     .form-section:last-of-type { margin-bottom: 0; }
     .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
     .form-group { margin-bottom: 0; }
-    .form-group label { display: block; font-size: 11px; font-weight: 800; color: #1e293b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
+    .form-group label { display: block; font-size: 11px; font-weight: 400; color: #1e293b; margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em; }
     .form-group .hint { font-size: 11px; color: #64748b; margin-top: 8px; line-height: 1.5; }
     .form-group .required { color: #ef4444; margin-left: 2px; }
     .input-focus { width:100%; padding:11px 14px; border:1.5px solid #cbd5e1; border-radius:10px; font-size:13px; transition:border-color 0.2s; outline:none; background: white; }

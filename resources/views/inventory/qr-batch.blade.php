@@ -30,7 +30,7 @@
 
         .page-header h1 {
             font-size: 18px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
 
@@ -103,7 +103,7 @@
             padding: 9px 14px;
             border-radius: 8px;
             font-size: 13px;
-            font-weight: 800;
+            font-weight: 400;
         }
 
         /* ===== FILTER BAR ===== */
@@ -145,7 +145,7 @@
             background: #f1f5f9;
             padding: 11px 14px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -194,7 +194,7 @@
         .group-row td {
             background: #f1f5f9;
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 400;
             color: #0038A8;
             padding: 9px 14px;
             border-bottom: 1px solid #e2e8f0;
@@ -447,8 +447,8 @@
             .asset-table tbody tr.asset-row > td:nth-child(4),
             .asset-table tbody tr.asset-row > td:nth-child(5) { order: 6; flex: 0 1 auto; }
             /* Mga label na nawala sa pagka-hide ng table headers */
-            .asset-table tbody tr.asset-row > td:nth-child(4)::before { content: 'SN '; font-weight: 800; color: #94a3b8; font-size: 10px; }
-            .asset-table tbody tr.asset-row > td:nth-child(5)::before { content: 'PAR '; font-weight: 800; color: #94a3b8; font-size: 10px; }
+            .asset-table tbody tr.asset-row > td:nth-child(4)::before { content: 'SN '; font-weight: 400; color: #94a3b8; font-size: 10px; }
+            .asset-table tbody tr.asset-row > td:nth-child(5)::before { content: 'PAR '; font-weight: 400; color: #94a3b8; font-size: 10px; }
             .asset-table tbody tr.asset-row > td:nth-child(6) { display: none !important; } /* may Category filter naman */
             .asset-table tbody tr.asset-row > td:nth-child(2),
             .asset-table tbody tr.asset-row > td:nth-child(4),
@@ -475,7 +475,7 @@
                 border-top: 1px solid #e2e8f0;
                 box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.10);
             }
-            .mobile-print-bar .mcb-count { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 800; color: #475569; }
+            .mobile-print-bar .mcb-count { flex: 1 1 auto; min-width: 0; font-size: 12px; font-weight: 400; color: #475569; }
             .mobile-print-bar .mcb-print {
                 flex: 0 0 auto;
                 display: flex;

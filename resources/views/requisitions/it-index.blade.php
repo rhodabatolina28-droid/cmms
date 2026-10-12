@@ -21,7 +21,7 @@
     /* Table polish - matched to Parts & Consumables */
     .cmms-official-table { border-collapse:collapse; }
     .cmms-official-table th {
-        padding:12px 14px; font-size:11px; font-weight:700; text-transform:uppercase;
+        padding:12px 14px; font-size:11px; font-weight: 400; text-transform:uppercase;
         letter-spacing:.5px; color:#64748b; background:#f8fafc;
         border-bottom:2px solid #e2e8f0; text-align:center;
     }
@@ -111,7 +111,7 @@
     }
     .col-num { width:44px; text-align:center; color:#64748b; font-weight:700; font-size:12px; }
     .cmms-pr-add-row-bar { display:flex; align-items:center; gap:14px; flex-wrap:wrap; margin-top:12px; }
-    .cmms-item-count { font-size:12px; color:#94a3b8; font-weight:700; }
+    .cmms-item-count { font-size:12px; color:#94a3b8; font-weight: 400; }
     .cmms-pr-footer { align-items:flex-start; }
     .cmms-pr-option-wrap { display:flex; flex-direction:column; gap:4px; }
     .cmms-pr-option-hint { font-size:11px; color:#94a3b8; font-weight:500; }

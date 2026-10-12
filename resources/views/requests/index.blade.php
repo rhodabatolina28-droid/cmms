@@ -65,7 +65,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -124,7 +124,7 @@
             transform: scale(1.05);
             box-shadow: 0 4px 10px rgba(15, 23, 42, 0.12);
         }
-        .req-header-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .req-header-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .req-header-sub { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .req-header-actions { display: flex; gap: 10px; }
         .btn-ict-create { background: #0038A8; color: white; text-decoration: none; padding: 12px 20px; border-radius: 4px; font-size: 13px; font-weight: 700; display: flex; align-items: center; gap: 8px; min-height: 44px; }
@@ -136,8 +136,8 @@
         .td-center { text-align: center !important; vertical-align: middle; }
         .th-status { width: 140px; text-align: center !important; }
         .th-action { width: 130px; text-align: center !important; }
-        .td-id { font-weight: 700; color: #0038A8; }
-        .td-type { font-weight: 700; font-size: 12px; }
+        .td-id { font-weight: 400; color: #0038A8; }
+        .td-type { font-weight: 400; font-size: 12px; }
         .td-desc { color: #64748b; max-width: 200px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
         .td-date { color: #64748b; font-size: 12px; }
         .td-remarks { color: #94a3b8; font-size: 12px; font-style: italic; }
@@ -162,7 +162,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

@@ -32,7 +32,7 @@
 
         h1 {
             font-size: 22px;
-            font-weight: 700;
+            font-weight: 400;
             margin-bottom: 10px;
             color: #111827;
         }

@@ -21,8 +21,8 @@
     .icon-mr-4 { margin-right:4px; }
     .item-block { padding:14px 16px; border-bottom:1px solid #e2e8f0; }
     .item-header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; flex-wrap:wrap; gap:8px; }
-    .item-label { font-size:10px; font-weight:800; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; }
-    .item-title { font-weight:700; font-size:14px; color:#1e293b; }
+    .item-label { font-size:10px; font-weight: 400; color:#64748b; text-transform:uppercase; letter-spacing:0.05em; }
+    .item-title { font-weight: 400; font-size:14px; color:#1e293b; }
     .badge-spare { background:#dcfce7; color:#166534; font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px; }
     .asset-list { display:flex; flex-direction:column; gap:6px; }
     .asset-row { display:flex; justify-content:space-between; align-items:center; border-radius:6px; padding:8px 12px; flex-wrap:wrap; gap:8px; }
@@ -47,7 +47,7 @@
     .badge-stock-ok { background:#dcfce7; color:#166534; font-size:11px; font-weight:800; padding:3px 10px; border-radius:99px; white-space:nowrap; }
     .rq-banner { border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; gap:8px; border:1px solid; }
     .rq-banner-icon { font-size:15px; }
-    .rq-banner-title { font-size:11px; font-weight:800; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
+    .rq-banner-title { font-size:11px; font-weight: 400; text-transform:uppercase; letter-spacing:.04em; margin-bottom:2px; }
     .rq-banner-text { font-size:12px; }
     .rq-banner--pending { background:#fff7ed; border-color:#fed7aa; border-left:3px solid #d97706; }
     .rq-banner--pending .rq-banner-icon { color:#d97706; }
@@ -201,7 +201,7 @@
         }
         .cmms-meta-card .label {
             font-size: 10.5px !important;
-            font-weight: 800 !important;
+            font-weight: 400 !important;
             color: #64748b !important;
             text-transform: uppercase !important;
             letter-spacing: 0.04em !important;
@@ -209,7 +209,7 @@
         }
         .cmms-meta-card .value {
             font-size: 13px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             color: #0f172a !important;
             word-break: break-word !important;
         }
@@ -223,7 +223,7 @@
             background: #eff6ff;
             color: #1e40af;
             font-size: 11px;
-            font-weight: 700;
+            font-weight: 400;
             border-bottom: 1px solid #dbeafe;
             width: 100%;
             box-sizing: border-box;
@@ -341,13 +341,13 @@
         }
         .cmms-pr-meta-row .k {
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             color: #64748b !important;
             text-transform: uppercase !important;
         }
         .cmms-pr-meta-row .v {
             font-size: 13px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             text-align: right !important;
         }
         /* Official action review panel */

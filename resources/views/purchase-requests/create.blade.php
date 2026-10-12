@@ -11,7 +11,7 @@
     /* ── Document sheet — max-width keeps it document-like on wide screens ── */
     .a60-sheet { background:#fff; border:1px solid #94a3b8; padding:30px 36px; font-family:'Times New Roman', Times, serif; color:#111; font-size:13px; max-width:900px; margin:0 auto; }
 
-    .a60-title { text-align:center; font-size:16px; font-weight:bold; letter-spacing:.5px; margin:6px 0 14px; }
+    .a60-title { text-align:center; font-size:16px; font-weight: 400; letter-spacing:.5px; margin:6px 0 14px; }
 
     /* ── Header field grid ── */
     .a60-hdr-wrap { width:100%; }
@@ -23,8 +23,8 @@
     .hdr-br-none { border-right:none; }
     .hdr-bl { border-left:1px solid #374151; }
     .hdr-bt-none { border-top:none; }
-    .a60-field-lbl { font-size:9.5px; font-weight:700; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
-    .a60-field-val { font-weight:700; color:#111827; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .a60-field-lbl { font-size:9.5px; font-weight: 400; text-transform:uppercase; letter-spacing:.5px; color:#6b7280; margin-bottom:3px; display:flex; justify-content:space-between; align-items:center; }
+    .a60-field-val { font-weight: 400; color:#111827; font-size:13px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
     .a60-field-val.muted { color:#9ca3af; font-weight:400; font-style:italic; }
 
     .a60-line { display:block; width:100%; border:none; background:transparent; font-family:inherit; font-size:13px; font-weight:700; color:#1e3a8a; padding:0; min-width:0; }
@@ -37,15 +37,15 @@
     /* â”€â”€ Items table â”€â”€ */
     .a60-table { width:100%; border-collapse:collapse; margin-top:0; }
     .a60-table th, .a60-table td { border:1px solid #111; padding:6px 7px; vertical-align:middle; font-size:12.5px; }
-    .a60-table th { text-align:center; font-weight:bold; background:#f8fafc; }
-    .a60-table .cell-input { width:100%; border:none; border-bottom:1px dotted #94a3b8; background:transparent; font-family:inherit; font-size:13px; padding:3px 4px; color:#1e3a8a; font-weight:bold; }
+    .a60-table th { text-align:center; font-weight: 400; background:#f8fafc; }
+    .a60-table .cell-input { width:100%; border:none; border-bottom:1px dotted #94a3b8; background:transparent; font-family:inherit; font-size:13px; padding:3px 4px; color:#1e3a8a; font-weight: 400; }
     .a60-table .cell-input:focus { outline:none; border-bottom:2px solid #0038A8; background:#f0f6ff; }
     .a60-table .cell-input.is-invalid { border-bottom:2px solid #dc2626; background:#fef2f2; }
     .a60-table td.num-cell { text-align:center; }
     .a60-table td.right-cell { text-align:right; }
-    .a60-table tfoot td { border:1px solid #111; padding:6px 7px; font-weight:bold; }
-    .a60-table tfoot .total-label { text-align:right; font-weight:800; font-size:13px; }
-    .a60-table tfoot .total-val { text-align:right; font-weight:800; font-size:13px; }
+    .a60-table tfoot td { border:1px solid #111; padding:6px 7px; font-weight: 400; }
+    .a60-table tfoot .total-label { text-align:right; font-weight: 400; font-size:13px; }
+    .a60-table tfoot .total-val { text-align:right; font-weight: 400; font-size:13px; }
 
     /* â”€â”€ Purpose & Remarks boxes â”€â”€ */
     .a60-purpose-box { border:1px solid #374151; padding:5px 9px 6px; }
@@ -172,7 +172,7 @@
         }
         .a60-title {
             font-size: 16px !important;
-            font-weight: 800 !important;
+            font-weight: 400 !important;
             letter-spacing: 0.5px !important;
             margin: 6px 0 14px !important;
             color: #0038A8 !important;
@@ -262,7 +262,7 @@
         }
         .a60-field-lbl {
             font-size: 10px !important;
-            font-weight: 800 !important;
+            font-weight: 400 !important;
             color: #64748b !important;
             text-transform: uppercase !important;
             letter-spacing: .04em !important;
@@ -270,7 +270,7 @@
         }
         .a60-field-val {
             font-size: 12.5px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             white-space: normal !important;
             word-break: break-word !important;
             overflow: visible !important;
@@ -334,7 +334,7 @@
             background: #f8fafc !important;
             padding: 10px 8px !important;
             font-size: 11px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             text-transform: uppercase !important;
             letter-spacing: .03em !important;
             color: #475569 !important;
@@ -412,7 +412,7 @@
         }
         .pr-amount-text {
             display: inline-block !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             font-size: 13px !important;
             color: #0f172a !important;
             white-space: nowrap !important;

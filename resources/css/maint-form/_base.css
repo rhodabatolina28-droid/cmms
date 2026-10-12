@@ -77,7 +77,7 @@ body {
 
 .header-no-row .form-no-label {
     font-size: 0.72rem;
-    font-weight: 800;
+    font-weight: 400;
     color: var(--navy);
     text-transform: uppercase;
     letter-spacing: 0.06em;
@@ -112,7 +112,7 @@ body {
 /* ── SECTION LABELS ── */
 .section-label {
     font-size: 0.68rem;
-    font-weight: 800;
+    font-weight: 400;
     margin-bottom: 14px;
     text-transform: uppercase;
     letter-spacing: 0.12em;
@@ -125,7 +125,7 @@ body {
 
 .inner-label {
     font-size: 0.68rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--muted);
     display: block;
     margin-bottom: 6px;
@@ -163,7 +163,7 @@ body {
 
 label {
     font-size: 0.6rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--muted);
     text-transform: uppercase;
     letter-spacing: 0.05em;

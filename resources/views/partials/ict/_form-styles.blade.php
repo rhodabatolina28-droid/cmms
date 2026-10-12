@@ -17,7 +17,7 @@
     .ict-assign-panel { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 20px; margin-bottom: 24px; }
     .ict-assign-inner { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 16px; justify-content: space-between; }
     .ict-assign-left { flex: 1; min-width: 260px; }
-    .ict-assign-label { font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+    .ict-assign-label { font-size: 11px; font-weight: 400; color: #1e40af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
     .ict-assign-text { margin: 0 0 12px; font-size: 13px; color: #334155; }
     .ict-assign-select { max-width: 400px; width: 100%; }
     .ict-assign-notice { margin: 8px 0 0; font-size: 12px; color: #b45309; }
@@ -25,7 +25,7 @@
     .ict-assign-unassigned { display: inline-block; background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 99px; font-size: 11px; font-weight: 800; margin-bottom: 12px; }
     .ict-assign-btn { background: #0038A8; color: white; border: none; padding: 12px 24px; border-radius: 6px; font-weight: 700; cursor: pointer; text-transform: uppercase; font-size: 13px; }
     .ict-div-review-panel { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px 12px; margin-bottom: 16px; }
-    .ict-div-review-label { font-size: 10px; font-weight: 700; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
+    .ict-div-review-label { font-size: 10px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 3px; }
     .ict-div-review-text { margin: 0 0 6px; font-size: 11px; color: #475569; }
     .ict-div-review-body { display: flex; gap: 8px; align-items: stretch; }
     .ict-div-review-textarea { width: 100%; font-size: 12px; min-height: 34px; }
@@ -68,7 +68,7 @@
     .ict-mt-8 { margin-top: 8px; }
     .ict-type-selects { display: flex; gap: 12px; flex-wrap: wrap; }
     .ict-type-select-wrap { flex: 1; min-width: 200px; }
-    .ict-type-select-wrap .inline-label { display: block; font-size: 11px; font-weight: 700; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+    .ict-type-select-wrap .inline-label { display: block; font-size: 11px; font-weight: 400; color: #475569; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
 
     /* Deskstop UX Upgrades & Hidden Scanner */
     @media (min-width: 768px) {

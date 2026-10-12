@@ -31,7 +31,7 @@
         .h3-title {
             margin: 0;
             font-size: 20px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
         .p-subtitle {

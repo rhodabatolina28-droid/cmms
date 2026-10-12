@@ -97,4 +97,100 @@ class FontSystemTest extends TestCase
         $this->assertRuleWeight('resources/css/landing/_layout.css', '.hero h1', '400');
         $this->assertRuleWeight('resources/css/landing/_base.css', '.logo-text strong', '400');
     }
+
+    /** Functional weights that survive the sweep (buttons, badges, signatures). */
+    private function isKeepSelector(string $selector): bool
+    {
+        return (bool) preg_match(
+            '/(^|[\s,>.#])(btn|button|badge|pill|chip|sig|signature|checkbox|swal|dropdown|tab|tabs|'
+            . 'pag-btn|pagination|nav-link|notif|toggle|switch|sticker|checkbox)([\s,.$-]|$)/i',
+            $selector
+        );
+    }
+
+    /**
+     * Chrome-touch selectors (headers, labels, STAT VALUES — and, per user
+     * amendment 2026-10-12, TABLE headers/cells too) must never carry
+     * font-weight >= 700: the flat Arial look across every module of every
+     * role. KEEP-list wins for buttons/badges/signatures.
+     */
+    private function isChromeTouchSelector(string $selector): bool
+    {
+        if ($this->isKeepSelector($selector)) {
+            return false;
+        }
+
+        return (bool) preg_match(
+            '/\b(h[1-6]|header|title|heading|label|lbl|greeting|summary|caption|subtitle|brand|logo|'
+            . 'ops-(label|val)|detail-label|empty-state|hint|counted-note|selected-count|pm-info|'
+            . 'amount-text|back-link|panel-link|nav-parent|form-(field|input)|search-input|page-header|'
+            . 'report-card|analytics-title|mgmt-tool|h3-title|conforme-title|a60-title|a60-field|'
+            . 'stat-?(big|value|label|sub|unit|icon|s)?|kpi-(value|label)|bar-(label|value)|'
+            . 'meta-card|meta-row|session-bar|mobile-table-hint|value|total|count|amount|qty|price|'
+            . 'th|thead|td|table)\b/i',
+            $selector
+        );
+    }
+
+    /**
+     * Sweep contract: every bold-weight CSS block in the system views and
+     * module CSS must be either KEEP-functional or non-chrome. Scans
+     * line-by-line, tracking the owning selector; <script> regions and
+     * pdf/emails/errors pages are out of scope.
+     */
+    public function test_module_headers_labels_stats_and_tables_are_not_bold(): void
+    {
+        $violations = [];
+
+        $files = array_merge(
+            iterator_to_array(new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator(resource_path('views'))
+            )),
+            iterator_to_array(new \RecursiveIteratorIterator(
+                new \RecursiveDirectoryIterator(resource_path('css'))
+            ))
+        );
+
+        foreach ($files as $file) {
+            $path = $file->getPathname();
+            if (!$file->isFile() || (!str_ends_with($path, '.blade.php') && !str_ends_with($path, '.css'))) {
+                continue;
+            }
+            if (preg_match('#[\\\\/](pdf|emails|errors)[\\\\/]#', $path)) {
+                continue;
+            }
+
+            $lines = file($path);
+            $selector = '';
+            $inStyle = true; // .css files are pure style; blades toggle on </style>/<script>
+            $inScript = false;
+
+            foreach ($lines as $i => $line) {
+                if (preg_match('/<script\b/i', $line)) { $inScript = true; continue; }
+                if (preg_match('#</script>#i', $line)) { $inScript = false; $selector = ''; continue; }
+                if (preg_match('/<style\b/i', $line)) { $inStyle = true; $selector = ''; continue; }
+                if (preg_match('#</style>#i', $line)) { $inStyle = false; $selector = ''; continue; }
+                if ($inScript || !$inStyle) { continue; }
+
+                // Owns both multi-line (`sel {`) and single-line (`sel { … }`) rules.
+                if (preg_match('/([^{};]+)\{(.*)$/', $line, $m)) {
+                    $selector = trim($m[1]);
+                }
+
+                if (preg_match('/font-weight:\s*(700|800|900|bold)\b/i', $line)
+                    && $selector !== ''
+                    && $this->isChromeTouchSelector($selector)
+                ) {
+                    $violations[] = sprintf(
+                        '%s:%d  [%s]',
+                        str_replace(base_path() . DIRECTORY_SEPARATOR, '', $path),
+                        $i + 1,
+                        mb_substr($selector, 0, 90)
+                    );
+                }
+            }
+        }
+
+        $this->assertSame([], $violations, "Chrome-touch selectors still bold:\n" . implode("\n", $violations));
+    }
 }

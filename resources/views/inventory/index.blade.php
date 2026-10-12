@@ -66,8 +66,8 @@
             font-size: 18px;
         }
 
-        .stat-info p { margin: 0; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        .stat-info h4 { margin: 2px 0 0; font-size: 20px; font-weight: 800; color: #1e293b; }
+        .stat-info p { margin: 0; font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; }
+        .stat-info h4 { margin: 2px 0 0; font-size: 20px; font-weight: 400; color: #1e293b; }
 
         .filter-ribbon {
             display: flex;
@@ -124,7 +124,7 @@
             background: #f1f5f9;
             padding: 10px 10px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -390,7 +390,7 @@
         .form-label-gov {
             display: block;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             margin-bottom: 6px;
@@ -416,7 +416,7 @@
         .si-active { background: #ecfdf5; color: #059669; }
         .si-spare { background: #fffbeb; color: #d97706; }
         .si-defective { background: #fef2f2; color: #dc2626; }
-        .card-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .card-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .card-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .btn-group { display: flex; gap: 8px; }
         .btn-import { background: #f0fdf4; color: #166534; border: 1px solid #86efac; padding: 10px 16px; border-radius: 8px; font-size: 13px; font-weight: 800; cursor: pointer; display: flex; align-items: center; gap: 8px; }
@@ -430,11 +430,11 @@
         .overflow-x-auto { overflow-x: auto; }
         .text-center { text-align: center !important; }
         .loading-row { text-align: center; padding: 40px; color: #64748b; }
-        .modal-h4 { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+        .modal-h4 { margin: 0; font-size: 16px; font-weight: 400; color: #1e293b; }
         .close-btn { background: none; border: none; cursor: pointer; color: #94a3b8; }
         .modal-form { display: flex; flex-direction: column; flex: 1; min-height: 0; overflow: hidden; }
         .edit-banner { display: none; background: #eff6ff; border: 1px solid #93c5fd; border-radius: 8px; padding: 12px 16px; margin-bottom: 18px; }
-        .edit-banner-title { font-size: 10px; font-weight: 800; color: #1e40af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
+        .edit-banner-title { font-size: 10px; font-weight: 400; color: #1e40af; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 6px; }
         .edit-banner-info { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; font-size: 12px; }
         .edit-label { color: #64748b; }
         .edit-value { color: #1e293b; }
@@ -442,8 +442,8 @@
         .edit-custodian { color: #0038A8; }
         .form-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
         .form-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
-        .spec-label { font-size: 10px; font-weight: 800; color: #64748b; }
-        .section-title-sm { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+        .spec-label { font-size: 10px; font-weight: 400; color: #64748b; }
+        .section-title-sm { font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
         .icon-section { color: #0038A8; }
         .specs-box { display: none; padding: 20px; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 10px; margin-bottom: 20px; }
         .specs-box-label { margin-bottom: 12px; color: #0038A8; }
@@ -460,7 +460,7 @@
         .textarea-sm { min-height: 70px; resize: vertical; }
         .textarea-xs { min-height: 60px; resize: vertical; }
         .section-divider { border: none; border-top: 1px solid #e2e8f0; margin: 20px 0; }
-        .lifecycle-title { font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
+        .lifecycle-title { font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 14px; }
         .lifecycle-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
         .mb-16 { margin-bottom: 16px; }
         .mb-20 { margin-bottom: 20px; }
@@ -471,7 +471,7 @@
         .info-text-sm { font-size: 11px; color: #64748b; margin: -5px 0 10px; }
         .transfer-card { max-width: 520px; }
         .transfer-info-box { background: #f0fdf4; border: 1px solid #86efac; border-radius: 8px; padding: 14px 16px; margin-bottom: 20px; }
-        .transfer-info-title { font-size: 11px; font-weight: 800; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
+        .transfer-info-title { font-size: 11px; font-weight: 400; color: #15803d; text-transform: uppercase; letter-spacing: 0.04em; margin-bottom: 6px; }
         @media screen and (max-width: 767px) {
             input[type="checkbox"] { display: none !important; }
             .swal2-checkbox { display: none !important; }
@@ -510,7 +510,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

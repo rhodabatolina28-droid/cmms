@@ -143,7 +143,7 @@
             padding: 0 clamp(16px, 1.8vw, 24px);
             color: rgba(255,255,255,0.85);
             background: transparent; border: none; border-left: 4px solid transparent;
-            font-size: clamp(12px, 1vw, 15px); font-weight: 700;
+            font-size: clamp(12px, 1vw, 15px); font-weight: 400;
             cursor: pointer; text-align: left;
             transition: background 0.2s, color 0.2s, border-left-color 0.2s;
             white-space: nowrap;
@@ -1112,7 +1112,7 @@
                 right: 0;
                 font-size: 10px;
                 color: #64748b;
-                font-weight: 700;
+                font-weight: 400;
                 opacity: 0.8;
                 pointer-events: none;
             }

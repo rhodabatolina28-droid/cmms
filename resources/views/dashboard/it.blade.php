@@ -74,7 +74,7 @@
         .stat-label {
             display: block;
             font-size: clamp(10px, 0.8vw, 11px);
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             letter-spacing: 0.8px;
@@ -82,7 +82,7 @@
         }
         .stat-value {
             font-size: clamp(22px, 2.2vw, 28px);
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
         .workbench-grid {
@@ -108,13 +108,13 @@
         .panel-title h3 {
             margin: 0;
             font-size: 15px;
-            font-weight: 800;
+            font-weight: 400;
             color: #1e293b;
         }
         .panel-link {
             color: #0038A8;
             font-size: 13px;
-            font-weight: 700;
+            font-weight: 400;
             text-decoration: none;
         }
         .job-row {
@@ -233,11 +233,11 @@
         .table-row-header { text-align: left; border-bottom: 2px solid #f1f5f9; }
         .table-row-border { border-bottom: 1px solid #f8fafc; transition: background 0.2s; }
         .tr-hover-row:hover { background: #f8fafc !important; }
-        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase; }
+        .table-header { padding: 12px 10px; font-size: 11px; font-weight: 400; color: #64748b; text-transform: uppercase; }
         .table-header.center { text-align: center; }
         .table-header.right { text-align: right; }
         .table-cell { padding: 12px 10px; }
-        .table-cell-bold { padding: 12px 10px; font-weight: 800; color: #0038A8; font-size: 12px; }
+        .table-cell-bold { padding: 12px 10px; font-weight: 400; color: #0038A8; font-size: 12px; }
         .table-cell-center { padding: 12px 10px; text-align: center; }
         .table-cell-right { padding: 12px 10px; text-align: right; }
         .empty-cell { padding: 30px; text-align: center; color: #94a3b8; }

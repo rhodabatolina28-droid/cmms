@@ -47,15 +47,15 @@
             margin-bottom: 6px;
         }
         .page-header .repub {
-            font-size: 8pt; font-weight: 700;
+            font-size: 8pt; font-weight: 400;
             letter-spacing: 1.5px; text-transform: uppercase;
         }
         .page-header .agency {
-            font-size: 9.5pt; font-weight: 800;
+            font-size: 9.5pt; font-weight: 400;
             text-transform: uppercase; letter-spacing: 0.5px;
         }
         .page-header .title {
-            font-size: 10pt; font-weight: 800;
+            font-size: 10pt; font-weight: 400;
             text-transform: uppercase; margin-top: 1px; letter-spacing: 1px;
         }
         .page-header .sub {
@@ -74,7 +74,7 @@
             border: 1px solid #bbb;
         }
         .session-bar span { margin-right: 14px; }
-        .session-bar .lbl { font-weight: 700; }
+        .session-bar .lbl { font-weight: 400; }
 
         /* ── SUMMARY ── */
         .summary-row {
@@ -83,8 +83,8 @@
         .summary-item {
             flex: 1; border: 1px solid #888; text-align: center; padding: 2px 2px;
         }
-        .summary-item .num { font-size: 13pt; font-weight: 800; }
-        .summary-item .lbl { font-size: 6pt; font-weight: 700; text-transform: uppercase; }
+        .summary-item .num { font-size: 13pt; font-weight: 400; }
+        .summary-item .lbl { font-size: 6pt; font-weight: 400; text-transform: uppercase; }
 
         /* ── ASSET TABLE ── */
         table.asset-table {
@@ -98,7 +98,7 @@
             color: #fff;
             padding: 3px 2px;
             font-size: 6pt;
-            font-weight: 700;
+            font-weight: 400;
             text-transform: uppercase;
             text-align: left;
             border: 1px solid #0038A8;
@@ -119,7 +119,7 @@
         /* Category divider row */
         .cat-div td {
             background: #e8e8e8;
-            font-weight: 800;
+            font-weight: 400;
             font-size: 7.5pt;
             padding: 3px 2px;
             border: 1px solid #888;
@@ -129,7 +129,7 @@
         /* Custodian conforme section (group=custodian mode) */
         .conforme-section { page-break-inside: avoid; margin-top: 10px; }
         .conforme-title {
-            font-size: 9pt; font-weight: 800; text-transform: uppercase;
+            font-size: 9pt; font-weight: 400; text-transform: uppercase;
             border-bottom: 2px solid #0038A8; padding-bottom: 3px; margin-bottom: 6px;
         }
         .conforme-note { font-size: 6.5pt; color: #555; margin-bottom: 8px; font-style: italic; }
@@ -149,7 +149,7 @@
             page-break-after: always;
         }
         .maintenance-section .section-title {
-            font-size: 10pt; font-weight: 800; text-transform: uppercase;
+            font-size: 10pt; font-weight: 400; text-transform: uppercase;
             border-bottom: 2px solid #0038A8;
             padding-bottom: 3px; margin-bottom: 8px;
         }
@@ -167,7 +167,7 @@
             color: #fff;
             padding: 4px 3px;
             font-size: 6.5pt;
-            font-weight: 700;
+            font-weight: 400;
             text-transform: uppercase;
             border: 1px solid #0038A8;
             text-align: left;

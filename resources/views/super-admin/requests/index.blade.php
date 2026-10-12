@@ -29,7 +29,7 @@
         }
 
         .card-body-content { padding: 25px 30px; }
-        .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
 
         /* Summary Stats Ribbon - inside card body */
@@ -68,8 +68,8 @@
             flex-shrink: 0;
         }
 
-        .stat-info p { margin: 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
-        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .stat-info p { margin: 0; font-size: 10px; font-weight: 400; color: #64748b; text-transform: uppercase; letter-spacing: 0.3px; }
+        .stat-info h4 { margin: 2px 0 0; font-size: 18px; font-weight: 400; color: #1e293b; }
 
         .filter-ribbon {
             display: flex;
@@ -129,7 +129,7 @@
             background: #f8fafc;
             padding: 13px 16px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -237,7 +237,7 @@
         .mobile-table-hint { display: none; }
         .gov-table-premium tbody { transition: opacity 0.15s ease; }
         .gov-table-premium tbody.fading { opacity: 1; }
-        .sa-td-id { font-weight: 800; color: #0038A8; font-size: 13px; }
+        .sa-td-id { font-weight: 400; color: #0038A8; font-size: 13px; }
         /* Request ID line: number + URGENT badge on one aligned row (never drops
            below) — same treatment as the IT dashboard / admin tables. */
         .sa-id-row {
@@ -264,8 +264,8 @@
             box-shadow: 0 1px 2px rgba(185, 28, 28, 0.08);
             white-space: nowrap;
         }
-        .sa-td-office { font-weight: 700; color: #475569; }
-        .sa-td-type { font-weight: 700; font-size: 12px; color: #475569; }
+        .sa-td-office { font-weight: 400; color: #475569; }
+        .sa-td-type { font-weight: 400; font-size: 12px; color: #475569; }
         .sa-type-pill { font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; }
         .sa-type-ict { background: #eff6ff; color: #3b82f6; border: 1px solid #dbeafe; }
         .sa-type-pm { background: #f5f3ff; color: #8b5cf6; border: 1px solid #ede9fe; }
@@ -322,7 +322,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

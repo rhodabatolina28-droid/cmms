@@ -66,7 +66,7 @@
             background: #f1f5f9;
             padding: 12px 15px;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #475569;
             text-transform: uppercase;
             letter-spacing: 0.5px;
@@ -212,7 +212,7 @@
         .form-label-gov {
             display: block;
             font-size: 11px;
-            font-weight: 800;
+            font-weight: 400;
             color: #64748b;
             text-transform: uppercase;
             margin-bottom: 6px;
@@ -234,7 +234,7 @@
         }
 
         /* --- Inline style replacement classes --- */
-        .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
         .btn-primary-solid { background: #0038A8; color: white; border: none; padding: 10px 20px; border-radius: 4px; font-size: 13px; font-weight: 700; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .search-wrapper { position: relative; flex: 1; min-width: 250px; }
@@ -255,7 +255,7 @@
         .pagination-wrap { margin-top: 20px; }
         /* --- Supply Workspace scroll pattern: base hide hint --- */
         .mobile-table-hint { display: none; }
-        .modal-title { margin: 0; font-size: 16px; font-weight: 800; color: #1e293b; }
+        .modal-title { margin: 0; font-size: 16px; font-weight: 400; color: #1e293b; }
         .close-icon-btn { background: none; border: none; cursor: pointer; color: #94a3b8; }
         .form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
         .form-grid-full { grid-column: span 2; }
@@ -266,29 +266,29 @@
         .spinner-icon { font-size: 30px; color: #0038A8; }
         .loading-text { margin-top: 10px; color: #64748b; }
         .det-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-bottom: 30px; background: #f8fafc; padding: 20px; border-radius: 10px; border: 1px solid #e2e8f0; }
-        .det-value { margin: 0; font-size: 15px; font-weight: 700; color: #1e293b; }
+        .det-value { margin: 0; font-size: 15px; font-weight: 400; color: #1e293b; }
         .det-value-sm { margin: 0; font-size: 14px; color: #1e293b; }
         .det-hide { display: none; }
         .dept-select { padding: 2px 6px; font-size: 12px; height: auto; width: auto; border: 1px solid #cbd5e1; border-radius: 4px; }
         .status-toggle-group { display: flex; align-items: center; gap: 10px; }
         .toggle-btn-sm { padding: 2px 8px; font-size: 10px; }
-        .section-title { margin: 0 0 12px; font-size: 13px; color: #1e293b; font-weight: 800; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; text-transform: uppercase; }
+        .section-title { margin: 0 0 12px; font-size: 13px; color: #1e293b; font-weight: 400; border-bottom: 2px solid #e2e8f0; padding-bottom: 6px; text-transform: uppercase; }
         .assets-scroll { max-height: 150px; overflow-y: auto; }
         .stats-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-bottom: 15px; }
         .requests-scroll { max-height: 200px; overflow-y: auto; }
         .btn-close-lg { padding: 10px 20px; }
         .stat-card { background: #f8fafc; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #e2e8f0; }
-        .stat-label { margin: 0; font-size: 10px; font-weight: 800; color: #64748b; text-transform: uppercase; }
-        .stat-value { margin: 4px 0 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+        .stat-label { margin: 0; font-size: 10px; font-weight: 400; color: #64748b; text-transform: uppercase; }
+        .stat-value { margin: 4px 0 0; font-size: 18px; font-weight: 400; color: #1e293b; }
         .stat-card-done { background: #ecfdf5; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #d1fae5; }
-        .stat-label-green { margin: 0; font-size: 10px; font-weight: 800; color: #059669; text-transform: uppercase; }
-        .stat-value-green { margin: 4px 0 0; font-size: 18px; font-weight: 800; color: #059669; }
+        .stat-label-green { margin: 0; font-size: 10px; font-weight: 400; color: #059669; text-transform: uppercase; }
+        .stat-value-green { margin: 4px 0 0; font-size: 18px; font-weight: 400; color: #059669; }
         .stat-card-pending { background: #fffbeb; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #fef3c7; }
-        .stat-label-yellow { margin: 0; font-size: 10px; font-weight: 800; color: #d97706; text-transform: uppercase; }
-        .stat-value-yellow { margin: 4px 0 0; font-size: 18px; font-weight: 800; color: #d97706; }
+        .stat-label-yellow { margin: 0; font-size: 10px; font-weight: 400; color: #d97706; text-transform: uppercase; }
+        .stat-value-yellow { margin: 4px 0 0; font-size: 18px; font-weight: 400; color: #d97706; }
         .stat-card-rejected { background: #fef2f2; padding: 12px; border-radius: 8px; text-align: center; border: 1px solid #fee2e2; }
-        .stat-label-red { margin: 0; font-size: 10px; font-weight: 800; color: #dc2626; text-transform: uppercase; }
-        .stat-value-red { margin: 4px 0 0; font-size: 18px; font-weight: 800; color: #dc2626; }
+        .stat-label-red { margin: 0; font-size: 10px; font-weight: 400; color: #dc2626; text-transform: uppercase; }
+        .stat-value-red { margin: 4px 0 0; font-size: 18px; font-weight: 400; color: #dc2626; }
         .empty-text { text-align: center; color: #94a3b8; padding: 20px; font-size: 13px; background: #f8fafc; border-radius: 8px; }
         .empty-text-sm { text-align: center; color: #94a3b8; padding: 15px; font-size: 12px; }
         .filter-ribbon-wrap { display: flex; gap: 12px; flex-wrap: wrap; }
@@ -296,7 +296,7 @@
         .fs-12 { font-size: 12px; }
         .fs-13 { font-size: 13px; }
         .td-right { text-align: right; }
-        .td-request-num { font-weight: 700; color: #0038A8; }
+        .td-request-num { font-weight: 400; color: #0038A8; }
         .det-flex-group { display: flex; gap: 5px; }
         .form-group-lg { margin-bottom: 25px; }
         /* â”€â”€ SweetAlert on TOP of all modals â”€â”€ */
@@ -380,7 +380,7 @@
                 background: #eff6ff;
                 color: #1e40af;
                 font-size: 11.5px;
-                font-weight: 700;
+                font-weight: 400;
                 letter-spacing: 0.03em;
                 border: 1px solid #dbeafe;
                 border-bottom: none;

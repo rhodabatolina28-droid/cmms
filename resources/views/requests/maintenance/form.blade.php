@@ -79,7 +79,7 @@
             .assign-flex { flex-direction: column; align-items: stretch; gap: 10px; }
         }
         .assign-panel { background: #eff6ff; border: 2px solid #93c5fd; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .assign-panel-label { font-size: 11px; font-weight: 800; color: #1e40af; text-transform: uppercase; margin-bottom: 6px; }
+        .assign-panel-label { font-size: 11px; font-weight: 400; color: #1e40af; text-transform: uppercase; margin-bottom: 6px; }
         .assign-panel-text { margin: 0 0 12px; font-size: 13px; color: #334155; }
         .assign-flex { display: flex; flex-wrap: wrap; gap: 12px; align-items: flex-end; }
         .assign-select { flex: 1; min-width: 260px; padding: 8px; border: 1px solid #cbd5e1; border-radius: 4px; }

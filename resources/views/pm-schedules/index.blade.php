@@ -20,15 +20,15 @@
     .badge-active { background: #dcfce7; color: #166534; box-shadow: 0 2px 4px rgba(22, 101, 52, 0.15); }
     .badge-inactive { background: #fee2e2; color: #991b1b; box-shadow: 0 2px 4px rgba(153, 27, 27, 0.15); }
     .stat-card { text-align:center; padding:14px; }
-    .stat-count { font-size: 24px; font-weight: 800; color: #0038A8; line-height: 1; }
-    .stat-label { font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .pm-section-title { font-size: 12px; font-weight: 800; color: #1e293b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+    .stat-count { font-size: 24px; font-weight: 400; color: #0038A8; line-height: 1; }
+    .stat-label { font-size: 10px; color: #64748b; margin-top: 4px; font-weight: 400; text-transform: uppercase; letter-spacing: 0.05em; }
+    .pm-section-title { font-size: 12px; font-weight: 400; color: #1e293b; text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
     .pm-section-title i { color: #0038A8; }
     .status-scheduled { background: #fef3c7; color: #92400e; border: 1px solid rgba(245, 158, 11, 0.2); box-shadow: 0 2px 4px rgba(245, 158, 11, 0.15); }
     .status-ongoing { background: #dbeafe; color: #1e40af; border: 1px solid rgba(59, 130, 246, 0.2); box-shadow: 0 2px 4px rgba(59, 130, 246, 0.15); }
     .status-completed { background: #dcfce7; color: #166534; border: 1px solid rgba(16, 185, 129, 0.2); box-shadow: 0 2px 4px rgba(16, 185, 129, 0.15); }
     .cycle-box { background: #f8fafc; border-radius: 10px; border: 1px solid #e2e8f0; padding: 18px; margin-bottom: 20px; }
-    .cycle-title { margin:0; font-size:16px; font-weight:800; color:#1e293b; }
+    .cycle-title { margin:0; font-size:16px; font-weight: 400; color:#1e293b; }
     .cycle-status-badge { display:inline-flex; align-items:center; gap:4px; padding:3px 10px; border-radius:20px; font-size:10px; font-weight:700; text-transform:uppercase; }
     .cycle-badge-active { background:#dcfce7; color:#166534; }
     .cycle-badge-paused { background:#fef3c7; color:#92400e; }
@@ -53,11 +53,11 @@
     .table-wrap-wo { overflow-x:auto; border-radius:10px; border:1px solid #e2e8f0; box-shadow:0 1px 3px rgba(0,0,0,0.04); }
     .table-wo { width:100%; border-collapse:collapse; background:white; min-width:750px; }
     .tr-header-wo { background:linear-gradient(135deg,#f8fafc 0%,#f1f5f9 100%); }
-    .th-wo { color:#475569; font-size:10px; font-weight:700; text-transform:uppercase; padding:12px 14px; text-align:left; border-bottom:2px solid #0038A8; }
-    .th-wo-center { color:#475569; font-size:10px; font-weight:700; text-transform:uppercase; padding:12px 14px; text-align:center; border-bottom:2px solid #0038A8; }
+    .th-wo { color:#475569; font-size:10px; font-weight: 400; text-transform:uppercase; padding:12px 14px; text-align:left; border-bottom:2px solid #0038A8; }
+    .th-wo-center { color:#475569; font-size:10px; font-weight: 400; text-transform:uppercase; padding:12px 14px; text-align:center; border-bottom:2px solid #0038A8; }
     .tr-wo { border-bottom:1px solid #f1f5f9; transition:all 0.2s; }
     .tr-wo:hover { background:#f8fafc !important; }
-    .td-wo-link { padding:12px 14px; font-weight:700; font-size:12px; }
+    .td-wo-link { padding:12px 14px; font-weight: 400; font-size:12px; }
     .a-wo { color:#0038A8; text-decoration:none; font-weight:700; font-size:12px; }
     .td-wo-name { padding:12px 14px; font-weight:600; color:#1e293b; font-size:13px; }
     .td-wo-div { padding:12px 14px; color:#475569; font-size:12px; }
@@ -75,7 +75,7 @@
     .mobile-table-hint { display:none; }
     .sched-grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(300px,1fr)); gap:16px; }
     .sched-card-head { display:flex; justify-content:space-between; align-items:start; margin-bottom:12px; }
-    .sched-card-title { margin:0; font-size:15px; color:#1e293b; font-weight:700; }
+    .sched-card-title { margin:0; font-size:15px; color:#1e293b; font-weight: 400; }
     .sched-card-title a { color:#0038A8; text-decoration:none; }
     .sched-card-meta { margin:4px 0 0; font-size:10px; color:#64748b; }
     .sched-card-body { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }
@@ -97,7 +97,7 @@
     .sched-paginator { margin-top:20px; }
     .empty-state-wo { text-align:center; padding:30px 20px; color:#94a3b8; border:1px dashed #e2e8f0; border-radius:10px; }
     .page-head-flex { display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:12px; }
-    .page-title-text { font-size:20px; font-weight:800; color:#1e293b; margin:0; }
+    .page-title-text { font-size:20px; font-weight: 400; color:#1e293b; margin:0; }
     .page-subtitle-text { font-size:12px; color:#64748b; margin:4px 0 0; }
     .stats-grid-custom { display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-top:16px; padding-top:16px; border-top:1px solid #e2e8f0; }
     .cycle-row-flex { display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px; }
@@ -106,7 +106,7 @@
     .div-grid-custom { display:grid; grid-template-columns:repeat(auto-fit, minmax(150px,1fr)); gap:8px; margin-top:12px; padding-top:12px; border-top:1px solid #e2e8f0; }
     .div-header { display:flex; justify-content:space-between; align-items:center; }
     .div-name { font-size:12px; color:#1e293b; }
-    .div-count { font-size:11px; font-weight:700; }
+    .div-count { font-size:11px; font-weight: 400; }
     .div-card.completed .div-count { color:#166534; }
     .div-card.active .div-count { color:#1e40af; }
     .div-card.queued .div-count { color:#64748b; }
@@ -141,7 +141,7 @@
             background: #eff6ff;
             color: #1e40af;
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 400;
             letter-spacing: 0.03em;
             border: 1px solid #dbeafe;
             border-bottom: none;

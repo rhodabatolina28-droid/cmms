@@ -12,7 +12,7 @@
     .polish-card { background: white; border-radius: 15px; border: 1px solid #e2e8f0; box-shadow: 0 1px 3px rgba(0,0,0,0.05); overflow: hidden; }
     .card-header-accent { background: #f8fafc; padding: 20px 30px; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
     .card-body-content { padding: 25px 30px; }
-    .h3-title { margin: 0; font-size: 18px; font-weight: 800; color: #1e293b; }
+    .h3-title { margin: 0; font-size: 18px; font-weight: 400; color: #1e293b; }
     .p-subtitle { margin: 2px 0 0; font-size: 12px; color: #64748b; }
 
     /* Stats */
@@ -20,12 +20,12 @@
     .task-card { background: white; border-radius: 12px; border: 1px solid #e2e8f0; padding: 20px; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1); }
     .task-card:hover { border-color: #0038A8; box-shadow: 0 4px 12px rgba(0,56,168,0.1); transform: translateY(-3px); }
     .pm-stat-card { text-align: center; padding: 14px; }
-    .pm-stat-num { font-size: 24px; font-weight: 800; }
+    .pm-stat-num { font-size: 24px; font-weight: 400; }
     .pm-stat-num-total { color: #000000; }
     .pm-stat-num-scheduled { color: #000000; }
     .pm-stat-num-ongoing { color: #000000; }
     .pm-stat-num-completed { color: #000000; }
-    .pm-stat-label { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; margin-top: 4px; }
+    .pm-stat-label { font-size: 10px; color: #64748b; font-weight: 400; text-transform: uppercase; margin-top: 4px; }
 
     /* Filters */
     .pm-filters { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
@@ -41,14 +41,14 @@
     .pm-empty-text { font-size: 13px; }
     .pm-table { width: 100%; border-collapse: collapse; }
     .pm-th { background: linear-gradient(135deg, #f8fafc, #f1f5f9); border-bottom: 2px solid #0038A8; }
-    .pm-th-cell { padding: 12px 16px; text-align: left; font-size: 10px; color: #475569; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
-    .pm-th-cell-center { padding: 12px 16px; text-align: center; font-size: 10px; color: #475569; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em; }
+    .pm-th-cell { padding: 12px 16px; text-align: left; font-size: 10px; color: #475569; text-transform: uppercase; font-weight: 400; letter-spacing: 0.05em; }
+    .pm-th-cell-center { padding: 12px 16px; text-align: center; font-size: 10px; color: #475569; text-transform: uppercase; font-weight: 400; letter-spacing: 0.05em; }
     .pm-row { border-bottom: 1px solid #f1f5f9; transition: background 0.2s; }
     .pm-row:hover { background: #f8fafc; }
     .pm-row-overdue { background: #fffbeb; }
     .pm-row-overdue:hover { background: #fef3c7 !important; }
     .pm-td { padding: 14px 16px; }
-    .pm-td-link { color: #0038A8; font-weight: 700; text-decoration: none; font-size: 13px; }
+    .pm-td-link { color: #0038A8; font-weight: 400; text-decoration: none; font-size: 13px; }
     .pm-td-link:hover { text-decoration: underline; }
     .pm-td-name { padding: 14px 16px; color: #1e293b; font-weight: 600; font-size: 13px; }
     .pm-td-office { padding: 14px 16px; color: #475569; font-size: 12px; }
@@ -106,7 +106,7 @@
             background: #eff6ff;
             color: #1e40af;
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 400;
             letter-spacing: 0.03em;
             border: 1px solid #dbeafe;
             border-bottom: none;

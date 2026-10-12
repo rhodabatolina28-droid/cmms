@@ -54,7 +54,7 @@
         min-height:32px !important;
         padding:5px 12px !important;
         font-size:12px !important;
-        font-weight:700 !important;
+        font-weight: 400 !important;
         line-height:1 !important;
         white-space:nowrap !important;
         border-radius:6px !important;
@@ -146,7 +146,7 @@
     .qstat:focus-visible { outline:2px solid #0038A8; outline-offset:2px; }
     .qstat.active { border-color:#0038A8; box-shadow:inset 0 0 0 1px #0038A8, 0 6px 16px rgba(0,56,168,.08); }
     .qstat-val { display:block; font-size:22px; font-weight:900; color:#0f172a; line-height:1.2; }
-    .qstat-lbl { font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; color:#64748b; }
+    .qstat-lbl { font-size:11px; font-weight: 400; text-transform:uppercase; letter-spacing:.04em; color:#64748b; }
     .qstat--pending.active { border-color:#d97706; box-shadow:inset 0 0 0 1px #d97706; }
     .qstat--pending.active .qstat-val { color:#b45309; }
     .qstat--issued.active { border-color:#16a34a; box-shadow:inset 0 0 0 1px #16a34a; }
@@ -244,7 +244,7 @@
             background: #eff6ff;
             color: #1e40af;
             font-size: 11.5px;
-            font-weight: 700;
+            font-weight: 400;
             letter-spacing: 0.03em;
             border-bottom: 1px solid #dbeafe;
         }
@@ -380,7 +380,7 @@
             min-height: 36px !important;
             padding: 6px 12px !important;
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             border-radius: 6px !important;
             white-space: nowrap !important;
             margin: 0 2px !important;
@@ -455,7 +455,7 @@
             min-height: 36px !important;
             padding: 6px 12px !important;
             font-size: 12px !important;
-            font-weight: 700 !important;
+            font-weight: 400 !important;
             border-radius: 6px !important;
             white-space: nowrap !important;
             display: inline-flex !important;
