@@ -31,7 +31,7 @@ class DownloadMaintenancePdfAction
             'request' => $trackingRequest,
             'pm' => $maintenance,
             'tasks' => $tasks,
-        ])->setPaper('letter', 'portrait');
+        ])->setPaper('legal', 'portrait');
 
         if (ob_get_length()) {
             ob_end_clean();

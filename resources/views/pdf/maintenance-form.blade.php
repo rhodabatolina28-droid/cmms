@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <title>Preventive Maintenance Service Form</title>
     <style nonce="{{ $cspNonce }}">
-        @page { size: letter portrait; margin: 4mm 6mm 3.5mm 6mm; }
+        @page { size: legal portrait; margin: 4mm 6mm 3.5mm 6mm; }
         body { font-family: Arial, sans-serif; font-size: 8.5px; color: #1f2937; margin: 0; padding: 0; line-height: 1.27; }
         table { width: 100%; border-collapse: collapse; }
         td, th { vertical-align: top; padding: 0; }
