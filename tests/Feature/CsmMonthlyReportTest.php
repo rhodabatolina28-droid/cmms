@@ -92,9 +92,13 @@ class CsmMonthlyReportTest extends TestCase
         $month = Carbon::parse("2026-09-15");
 
         $a = $this->completedTicket($requestor, "REQ-2026-09-01-0001", "2026-09-05 10:00:00");
-        $this->survey($a); // all Strongly Agree (5)
+        // Record-date rule: the report window is FIXED (Sept 2026), so the
+        // surveys' created_at must be pinned inside it too — letting it default
+        // to now() silently drifted out of the window after the month rolled
+        // over (discovered 2026-10-09; the suite had been passing in Sept).
+        $this->survey($a, [], "2026-09-05 11:00:00"); // all Strongly Agree (5)
         $b = $this->completedTicket($requestor, "REQ-2026-09-02-0002", "2026-09-06 10:00:00");
-        $this->survey($b, array_fill_keys(CsmStatsService::SQD_COLUMNS, "Agree")); // all 4
+        $this->survey($b, array_fill_keys(CsmStatsService::SQD_COLUMNS, "Agree"), "2026-09-06 11:00:00"); // all 4
 
         $data = (new CsmMonthlyReportService)->build($month);
 
@@ -125,7 +129,7 @@ class CsmMonthlyReportTest extends TestCase
 
         // THIS month: sqd3 gets a Strongly Disagree -> weakest column.
         $b = $this->completedTicket($requestor, "REQ-2026-09-01-0002", "2026-09-10 10:00:00");
-        $this->survey($b, ["sqd3" => "Strongly Disagree"]);
+        $this->survey($b, ["sqd3" => "Strongly Disagree"], "2026-09-10 11:00:00");
 
         $data = (new CsmMonthlyReportService)->build(Carbon::parse("2026-09-15"));
 
