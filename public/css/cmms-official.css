@@ -4,7 +4,7 @@
  * Palette: navy #0038A8 Â· ink #1a1a1a Â· border #c5c9d0 Â· paper #fff Â· wash #f7f8fa
  */
 .cmms-official {
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     color: var(--cmms-ink, #1a1a1a);
@@ -1432,7 +1432,7 @@
 /* ==============================================
    Unified action buttons (PR forms & toolbars)
    ============================================== */
-.cmms-action-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s, background .15s; text-decoration: none; border: 1px solid transparent; font-family: 'Segoe UI', Arial, sans-serif; }
+.cmms-action-btn { display: inline-flex; align-items: center; gap: 7px; padding: 8px 16px; border-radius: 8px; font-size: 12px; font-weight: 700; cursor: pointer; transition: transform .12s, box-shadow .12s, background .15s; text-decoration: none; border: 1px solid transparent; font-family: Arial, Helvetica, sans-serif; }
 .cmms-action-btn i { font-size: 11px; }
 .cmms-action-btn--primary { background: #0038A8; color: #fff; box-shadow: 0 2px 8px rgba(0,56,168,.25); }
 .cmms-action-btn--primary:hover { background: #002d87; transform: translateY(-1px); box-shadow: 0 3px 12px rgba(0,56,168,.32); }

@@ -188,7 +188,7 @@
         font-size: 1.6rem;
         line-height: 1.25;
         margin-bottom: 14px;
-        font-weight: 800;
+        font-weight: 400;
         letter-spacing: -0.02em;
     }
 
@@ -209,7 +209,7 @@
     .how-it-works h2 {
         font-size: 1.4rem;
         margin-bottom: 28px;
-        font-weight: 800;
+        font-weight: 400;
         color: #1e40af;
     }
 
@@ -241,7 +241,7 @@
 
     .step h4 {
         font-size: 1.05rem;
-        font-weight: 700;
+        font-weight: 400;
         margin-bottom: 8px;
         color: #1f2937;
     }
@@ -276,7 +276,7 @@
 
     .logo-text strong {
         font-size: 1.05rem;
-        font-weight: 800;
+        font-weight: 400;
     }
 
     .logo-text span {

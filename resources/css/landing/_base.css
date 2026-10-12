@@ -36,7 +36,7 @@
 }
 
 body {
-    font-family: 'Inter', sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     background-color: var(--bg-surface);
     color: var(--text-main);
     line-height: 1.6;
@@ -90,7 +90,7 @@ body {
 
 .logo-text strong {
     font-size: 1.25rem;
-    font-weight: 800;
+    font-weight: 400;
     color: var(--gov-blue-dark);
     letter-spacing: -0.02em;
 }

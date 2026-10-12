@@ -5,7 +5,7 @@
  * Palette: navy #0038A8 · ink #1a1a1a · border #c5c9d0 · paper #fff · wash #f7f8fa
  */
 .cmms-official {
-    font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+    font-family: Arial, Helvetica, sans-serif;
     font-size: 14px;
     line-height: 1.5;
     color: var(--cmms-ink, #1a1a1a);

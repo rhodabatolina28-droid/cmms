@@ -237,12 +237,12 @@
         .icon-link { color: #94a3b8; }
         .ribbon-label { margin-bottom: 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
         .section-label { margin: 24px 0 12px; font-size: 11px; font-weight: 800; color: #64748b; text-transform: uppercase; letter-spacing: 0.8px; }
-        .hero-role { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.75; }
-        .hero-name { font-size: 30px; font-weight: 800; margin: 0; }
+        .hero-role { font-size: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.75; }
+        .hero-name { font-size: 30px; font-weight: 400; margin: 0; }
         .hero-desc { margin: 10px 0 0; opacity: 0.85; font-size: 14px; }
         .hero-stats-box { text-align: right; background: rgba(255,255,255,0.1); padding: 14px 22px; border-radius: 12px; backdrop-filter: blur(10px); }
-        .hero-stats-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; }
-        .hero-stats-value { font-size: 16px; font-weight: 800; }
+        .hero-stats-label { font-size: 11px; font-weight: 400; text-transform: uppercase; margin-bottom: 5px; opacity: 0.8; }
+        .hero-stats-value { font-size: 16px; font-weight: 400; }
         .mb-0 { margin-bottom: 0; }
         .mb-10 { margin-bottom: 10px; }
         .mb-25 { margin-bottom: 20px; }

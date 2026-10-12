@@ -31,12 +31,12 @@
         border-radius: 50%;
     }
     .flex-sb { display: flex; justify-content: space-between; align-items: center; }
-    .hero-role { font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.7; }
-    .hero-name { font-size: 32px; font-weight: 800; margin: 0; }
+    .hero-role { font-size: 12px; font-weight: 400; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 10px; opacity: 0.7; }
+    .hero-name { font-size: 32px; font-weight: 400; margin: 0; }
     .hero-desc { margin: 10px 0 0; opacity: 0.8; font-size: 15px; }
     .hero-stats-box { text-align: right; background: rgba(255,255,255,0.1); padding: 15px 25px; border-radius: 12px; backdrop-filter: blur(10px); }
-    .hero-stats-label { font-size: 11px; font-weight: 800; text-transform: uppercase; margin-bottom: 5px; }
-    .hero-stats-value { font-size: 18px; font-weight: 800; }
+    .hero-stats-label { font-size: 11px; font-weight: 400; text-transform: uppercase; margin-bottom: 5px; }
+    .hero-stats-value { font-size: 18px; font-weight: 400; }
         .stats-grid {
             display: grid;
             grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));

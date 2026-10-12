@@ -187,11 +187,11 @@
         .flex-center { display: flex; align-items: center; }
         .flex-center-gap { display: flex; align-items: center; gap: 10px; }
         .flex-wrap-gap { display: flex; gap: 6px; flex-wrap: wrap; }
-        .hero-name { font-size: 32px; font-weight: 800; margin: 0; }
+        .hero-name { font-size: 32px; font-weight: 400; margin: 0; }
         .hero-desc { margin: 8px 0 0; opacity: 0.8; font-size: 15px; }
         .hero-status-box { display: flex; flex-direction: column; align-items: flex-end; }
-        .hero-status-label { font-size: 12px; opacity: 0.7; font-weight: 700; text-transform: uppercase; }
-        .hero-status-value { font-size: 14px; font-weight: 800; color: #1e293b; }
+        .hero-status-label { font-size: 12px; opacity: 0.7; font-weight: 400; text-transform: uppercase; }
+        .hero-status-value { font-size: 14px; font-weight: 400; color: #1e293b; }
         .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 56, 168, 0.2); backdrop-filter: blur(6px); display: flex; align-items: center; justify-content: center; z-index: 9999; animation: fadeIn 0.3s ease-out; overflow-y: auto; padding: 16px; }
         .modal-box { background: white; border-radius: 20px; padding: 40px; text-align: center; max-width: 450px; width: 90%; box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04); transform: scale(0.9); animation: scaleUp 0.3s cubic-bezier(0.34, 1.56, 0.64, 1) forwards; }
         .modal-icon-circle { background: #ecfdf5; color: #10b981; width: 80px; height: 80px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 40px; margin: 0 auto 20px; box-shadow: 0 10px 15px -3px rgba(16, 185, 129, 0.2); }

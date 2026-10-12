@@ -24,7 +24,7 @@
 
 .hero h1 {
     font-size: 2.25rem;
-    font-weight: 700;
+    font-weight: 400;
     color: var(--text-main);
     margin-bottom: 16px;
     max-width: 800px;
@@ -106,7 +106,7 @@
 
 .step h4 {
     font-size: 1.1rem;
-    font-weight: 600;
+    font-weight: 400;
     margin-bottom: 8px;
     color: var(--text-main);
 }

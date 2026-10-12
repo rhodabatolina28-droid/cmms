@@ -50,7 +50,7 @@
         .topbar { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid rgba(0,0,0,0.05); padding: 10px 30px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; position: sticky; top: 0; z-index: 90; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.01); }
         .topbar-left { display: flex; align-items: center; gap: 20px; }
         .topbar-right { display: flex; align-items: center; gap: 30px; }
-        .topbar-title { margin: 0; font-size: 18px; color: #111827; font-weight: 800; letter-spacing: -0.5px; }
+        .topbar-title { margin: 0; font-size: 18px; color: #111827; font-weight: 400; letter-spacing: -0.5px; }
         #sidebarToggle { background: #f3f4f6; border: none; width: 38px; height: 38px; border-radius: 10px; font-size: 18px; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
         #timeContainer { display: flex; align-items: center; gap: 15px; background: white; padding: 6px 20px 6px 6px; border-radius: 30px; border: 1px solid rgba(0, 56, 168, 0.1); box-shadow: 0 4px 10px rgba(0, 56, 168, 0.06); transition: transform 0.2s, box-shadow 0.2s; }
         #timeContainer:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 56, 168, 0.1); }

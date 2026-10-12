@@ -85,7 +85,7 @@
 
         .hero-role {
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 400;
             letter-spacing: 1px;
             text-transform: uppercase;
             opacity: 0.84;
@@ -103,13 +103,13 @@
         }
         .hero-stats-label {
             font-size: 12px;
-            font-weight: 800;
+            font-weight: 400;
             letter-spacing: 0.6px;
             text-transform: uppercase;
         }
         .hero-stats-value {
             font-size: 28px;
-            font-weight: 800;
+            font-weight: 400;
             line-height: 1.15;
         }
 
