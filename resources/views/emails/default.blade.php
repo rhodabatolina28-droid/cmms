@@ -187,7 +187,7 @@
                     </tr>
                     <tr>
                         <td class="header">
-                            <div class="header-eyebrow">Official Notification</div>
+                            <div class="header-eyebrow">CMMS Notification</div>
                             <div class="header-name">National Conciliation and Mediation Board</div>
                             <div class="header-sub">Computerized Maintenance Management System</div>
                             <div class="header-divider"></div>
@@ -195,8 +195,8 @@
                     </tr>
                     <tr>
                         <td class="body-content">
-                            <div class="greeting">Good day, {{ $recipientName }}!</div>
-                            <div class="message">{{ $notificationMessage }}</div>
+                            <div class="greeting">Hello {{ $recipientName }},</div>
+                            <div class="message">{!! nl2br(e($notificationMessage)) !!}</div>
 
                             <div class="details-box">
                                 <table class="details-table" cellpadding="0" cellspacing="0" border="0">
@@ -225,7 +225,7 @@
 
                             @if($ticketUrl)
                             <div class="btn-wrap">
-                                <a href="{{ $ticketUrl }}" target="_blank" class="btn">View Details</a>
+                                <a href="{{ $ticketUrl }}" target="_blank" class="btn">Open Ticket</a>
                             </div>
                             @endif
                         </td>
@@ -234,10 +234,10 @@
                         <td class="footer">
                             <div class="footer-agency">National Conciliation and Mediation Board</div>
                             {{ $branch ?? '' }}{{ $branch && $region ? ' · ' : '' }}{{ $region ?? '' }}<br>
-                            Department of Labor and Employment, Republic of the Philippines
+                            Computerized Maintenance Management System
                             <div class="footer-divider"></div>
-                            This is an automated notification. Please do not reply.<br>
-                            <strong>CONFIDENTIALITY NOTICE:</strong> This email and any files transmitted with it are confidential and intended solely for the designated recipient.
+                            This is an automated CMMS message — do not reply to this email.<br>
+                            <strong>For internal use only.</strong>
                         </td>
                     </tr>
                 </table>
