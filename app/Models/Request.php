@@ -627,7 +627,7 @@ class Request extends Model
                                 $userId,
                                 $request->id,
                                 'Parts Request Rejected',
-                                "Your parts request for {$request->request_number} was auto-rejected because the ticket was {$newStatus}."
+                                "Your parts request for {$request->request_number} was auto-rejected — the ticket is now {$newStatus}."
                             );
                         }
                     }
@@ -792,7 +792,7 @@ class Request extends Model
                                         $officerId,
                                         $request->id,
                                         'Asset Tagged for Disposal',
-                                        "Ticket {$request->request_number} is completed. Asset [{$asset->item_name} | SN: {$asset->serial_number}] has been tagged for disposal by IT. Please prepare to print the disposal tag."
+                                        "Ticket {$request->request_number} is completed. Asset {$asset->item_name} (SN: {$asset->serial_number}) is tagged for disposal. Prepare the disposal tag."
                                     );
                                 }
                                 

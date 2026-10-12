@@ -76,8 +76,8 @@ class SignIctAcceptanceAction
                 $trackingRequest->update(['status' => $newStatus]);
 
                 $ictNotificationMessage = $newStatus === RequestModel::STATUS_COMPLETED
-                    ? "Your ICT Request {$trackingRequest->request_number} has been completed. Please complete the required satisfaction survey."
-                    : "Your ICT Request {$trackingRequest->request_number} status has been updated to {$newStatus}.";
+                    ? "Your ICT Repair request {$trackingRequest->request_number} is completed. Complete the satisfaction survey."
+                    : "Your ICT Repair request {$trackingRequest->request_number} is now {$newStatus}.";
 
                 \App\Models\Notification::send(
                     $trackingRequest->user_id,
@@ -91,7 +91,7 @@ class SignIctAcceptanceAction
                         $trackingRequest->user_id,
                         $trackingRequest->id,
                         'Request Updated',
-                        "IT personnel has updated the details of your request {$trackingRequest->request_number}."
+                        "IT has updated the details of your request {$trackingRequest->request_number}."
                     );
                 }
             }

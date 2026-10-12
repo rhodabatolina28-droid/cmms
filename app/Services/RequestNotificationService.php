@@ -27,9 +27,9 @@ class RequestNotificationService
     {
         $recipients = self::cascadeSuperAdminsForUser($requestor);
 
-        $requestorName = strtoupper($requestor->full_name ?? 'USER');
-        $officeLabel = strtoupper($request->office ?: ($requestor->office ?? 'No office'));
-        $message = "New ICT Repair from {$requestorName} ({$request->request_number}) — {$officeLabel}. Please review and assign IT personnel.";
+        $requestorName = $requestor->full_name ?? 'USER';
+        $officeLabel = $request->office ?: ($requestor->office ?? 'No office');
+        $message = "New ICT Repair request {$request->request_number} from {$requestorName} ({$officeLabel}). Review and assign IT.";
 
         foreach ($recipients as $recipient) {
             if ((int) $recipient->id === (int) $requestor->id) {
@@ -50,8 +50,8 @@ class RequestNotificationService
         $recipients = self::cascadeSuperAdminsForUser($divisionAdmin);
         
         $typeLabel = self::typeLabel($request->type);
-        $adminName = strtoupper($divisionAdmin->full_name ?? 'ADMIN');
-        $message = "Division Admin {$adminName} forwarded {$typeLabel} request {$request->request_number}. Please assign IT.";
+        $adminName = $divisionAdmin->full_name ?? 'ADMIN';
+        $message = "Division Admin {$adminName} forwarded {$typeLabel} request {$request->request_number}. Assign IT.";
 
         foreach ($recipients as $recipient) {
             \App\Models\Notification::send(
@@ -67,8 +67,8 @@ class RequestNotificationService
     {
         $recipients = self::cascadeSuperAdminsForUser($requestor);
         
-        $requestorName = strtoupper($requestor->full_name ?? 'USER');
-        $message = "New Preventive Maintenance from {$requestorName} ({$request->request_number}). Please assign IT personnel.";
+        $requestorName = $requestor->full_name ?? 'USER';
+        $message = "New Preventive Maintenance request {$request->request_number} from {$requestorName}. Assign IT.";
 
         foreach ($recipients as $recipient) {
             \App\Models\Notification::send(
@@ -87,7 +87,7 @@ class RequestNotificationService
             $itUser->id,
             $request->id,
             'Job Order Assigned',
-            "You have been assigned {$label} request {$request->request_number}. Please open the ticket and complete the technical sections."
+            "{$label} request {$request->request_number} is assigned to you. Open the ticket and complete the technical sections."
         );
     }
 
@@ -99,12 +99,14 @@ class RequestNotificationService
         }
 
         $label = self::typeLabel($request->type);
-        $status = $request->status ?? RequestModel::STATUS_ONGOING;
 
-        self::notifyRequestorTicketStatus(
-            $request,
-            $status,
-            "IT personnel {$itUser->full_name} has been assigned to work on your ticket."
+        // Approved bank copy (S1, preview 2026-10-09): assignment-first, no
+        // status echo — sends directly instead of the generic status template.
+        \App\Models\Notification::send(
+            (int) $request->user_id,
+            $request->id,
+            'Request Updated',
+            "Your {$label} request {$request->request_number} is assigned to {$itUser->full_name}. Open the ticket to track progress."
         );
     }
 
@@ -136,7 +138,7 @@ class RequestNotificationService
             (int) $request->user_id,
             $request->id,
             'Request Rejected',
-            "Your {$label} request {$request->request_number} was rejected. Reason: " . ($reason ?: 'No reason provided.')
+            "Your {$label} request {$request->request_number} was rejected — " . ($reason ?: 'no reason provided') . '. Submit a new ticket if the issue persists.'
         );
     }
 
@@ -173,7 +175,7 @@ class RequestNotificationService
             $custodianId,
             $ticket->id,
             'Parts Issued to Asset',
-            "Parts were issued and recorded under asset {$asset->item_name} for ticket {$ticket->request_number}."
+            "Parts for ticket {$ticket->request_number} were issued under asset {$asset->item_name}."
         );
     }
 
@@ -183,7 +185,7 @@ class RequestNotificationService
             $custodianId,
             null,
             'Asset Assigned',
-            "Asset {$asset->item_name} (PAR: {$asset->par_number}) has been assigned to you."
+            "Asset {$asset->item_name} (PAR: {$asset->par_number}) is now assigned to you."
         );
     }
 

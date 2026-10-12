@@ -77,7 +77,7 @@ class RecommendAssetDisposalAction
                 $admin->id,
                 $trackingRequest->id,
                 'Asset Tagged for Disposal',
-                "ICT recommended asset [{$asset->item_name} | SN: {$asset->serial_number}] for disposal via ticket {$trackingRequest->request_number}. Please process and update the asset status when physical disposal is done."
+                "ICT recommended asset {$asset->item_name} (SN: {$asset->serial_number}) for disposal via ticket {$trackingRequest->request_number}. Process the disposal and update the asset status when done."
             );
         }
 
@@ -92,7 +92,7 @@ class RecommendAssetDisposalAction
                     $superAdmin->id,
                     $trackingRequest->id,
                     'Asset Tagged for Disposal',
-                    "ICT recommended asset [{$asset->item_name} | SN: {$asset->serial_number}] for disposal via ticket {$trackingRequest->request_number}."
+                    "ICT recommended asset {$asset->item_name} (SN: {$asset->serial_number}) for disposal via ticket {$trackingRequest->request_number}."
                 );
             }
         }

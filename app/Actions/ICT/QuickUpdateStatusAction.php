@@ -53,7 +53,7 @@ class QuickUpdateStatusAction
             $trackingRequest->user_id,
             $trackingRequest->id,
             "Request {$validated['status']}",
-            "Your {$typeLabel} {$trackingRequest->request_number} has been updated to {$validated['status']}."
+            "Your {$typeLabel} {$trackingRequest->request_number} is now {$validated['status']}."
         );
 
         AuditLog::log(

@@ -37,9 +37,12 @@ class PurchaseRequestNotificationService
         $region = $creator?->region;
         $branch = $creator?->branch;
 
-        $message = "{$pr->pr_number} submitted — " . count($pr->items ?? []) . ' item(s), ' .
-            ($pr->total_amount !== null ? 'total ₱' . number_format((float) $pr->total_amount, 2) : 'amount TBD') .
-            '. Awaiting your review.';
+        $count = count($pr->items ?? []);
+        $itemLabel = $count === 1 ? 'item' : 'items';
+        // Approved bank copy (S7, preview 2026-10-09).
+        $message = $pr->total_amount !== null
+            ? "{$pr->pr_number} submitted — {$count} {$itemLabel}, ₱" . number_format((float) $pr->total_amount, 2) . ' total. Awaiting your review.'
+            : "{$pr->pr_number} submitted — {$count} {$itemLabel}. Awaiting your review.";
 
         foreach (self::supplyUsers($region, $branch) as $recipient) {
             if ($creator && $recipient->id === $creator->id) {
@@ -53,7 +56,7 @@ class PurchaseRequestNotificationService
     /** PR finalized → notify requester + creator (dedupe, skip self). */
     public static function notifyFinalized(PurchaseRequest $pr): void
     {
-        $message = "{$pr->pr_number} finalized — ready to print and submit to Procurement.";
+        $message = "{$pr->pr_number} finalized — print and submit to Procurement.";
 
         $targets = collect([$pr->requested_by, $pr->created_by])
             ->filter()

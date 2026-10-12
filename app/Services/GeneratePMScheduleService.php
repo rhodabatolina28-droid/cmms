@@ -203,7 +203,7 @@ class GeneratePMScheduleService
                         $user->id,
                         $trackingRequest->id,
                         'PM Scheduled',
-                        "A workstation preventive maintenance has been scheduled for your equipment in {$focusDivision}. Please coordinate with your ICT Unit for your schedule. Request #{$requestNumber}."
+                        "PM {$requestNumber} is scheduled for your workstation in {$focusDivision}. Coordinate with your ICT Unit for your time slot."
                     );
                 }
 

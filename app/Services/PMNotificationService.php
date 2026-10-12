@@ -41,7 +41,7 @@ class PMNotificationService
                     $admin->id,
                     $request->id ?? null,
                     'PM Task Created',
-                    "A new PM request {$requestNumber} has been scheduled. Please check your dashboard."
+                    "PM request {$requestNumber} is scheduled. Open your dashboard."
                 );
             }
 
@@ -83,7 +83,7 @@ class PMNotificationService
                     $admin->id,
                     null,
                     'PM Batch Generated',
-                    "PM tickets have been generated for {$division} Division ({$count} users). Please inform your personnel."
+                    "{$count} PM tickets generated for {$division} Division. Inform your personnel."
                 );
             }
 
@@ -118,7 +118,7 @@ class PMNotificationService
                     $user->id,
                     null,
                     'PM Batch Generated',
-                    "New PM tickets generated for {$division} Division ({$count} users). Please conduct the PMs."
+                    "{$count} PM tickets generated for {$division} Division. Conduct the PMs."
                 );
             }
 

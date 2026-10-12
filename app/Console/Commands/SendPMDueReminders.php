@@ -100,7 +100,7 @@ class SendPMDueReminders extends Command
         $summaryMessage .= "Generated: " . now()->format('F d, Y') . "\n\n";
         $summaryMessage .= implode("\n", $lines);
         $summaryMessage .= "\n\nTOTAL: {$totalPending} pending / {$totalCompleted} completed\n";
-        $summaryMessage .= "\nPlease log in to your CMMS dashboard to conduct the remaining PMs.";
+        $summaryMessage .= "\nLog in to the CMMS to conduct the remaining PMs.";
 
         // Notify IT staff and System Admins in this branch only
         $staff = User::whereIn('role', ['super_admin', 'it'])

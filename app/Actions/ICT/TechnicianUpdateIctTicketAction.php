@@ -90,7 +90,7 @@ class TechnicianUpdateIctTicketAction
                     $trackingRequest->user_id,
                     $trackingRequest->id,
                     'Ready for Signature',
-                    "IT has completed the repair for your ICT request {$trackingRequest->request_number}. Please open the ticket and sign the Service Acceptance section (Section 6)."
+                    "IT completed the repair for your ICT request {$trackingRequest->request_number}. Open the ticket and sign the Service Acceptance section (Section 6)."
                 );
             }
 
@@ -178,8 +178,8 @@ class TechnicianUpdateIctTicketAction
 
                 // Notify User of Status Change
                 $ictNotificationMessage = $newStatus === RequestModel::STATUS_COMPLETED
-                    ? "Your ICT Request {$trackingRequest->request_number} has been completed. Please complete the required satisfaction survey."
-                    : "Your ICT Request {$trackingRequest->request_number} status has been updated to {$newStatus}.";
+                    ? "Your ICT Repair request {$trackingRequest->request_number} is completed. Complete the satisfaction survey."
+                    : "Your ICT Repair request {$trackingRequest->request_number} is now {$newStatus}.";
 
                 \App\Models\Notification::send(
                     $trackingRequest->user_id,
@@ -194,7 +194,7 @@ class TechnicianUpdateIctTicketAction
                         $trackingRequest->user_id,
                         $trackingRequest->id,
                         'Request Updated',
-                        "IT personnel has updated the details of your request {$trackingRequest->request_number}."
+                        "IT has updated the details of your request {$trackingRequest->request_number}."
                     );
                 }
             }

@@ -70,7 +70,7 @@ class StoreRequisitionAction
                 RequestNotificationService::notifyRequestorTicketStatus(
                     $ticket,
                     RequestModel::STATUS_AWAITING_PARTS,
-                    'IT requested parts from Supply Office. Your ticket is awaiting parts.'
+                    'IT requested parts from Supply Office.'
                 );
             }
 

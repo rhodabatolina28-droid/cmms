@@ -85,7 +85,7 @@ class ReviewRequisitionAction
                 RequestNotificationService::notifyRequestorTicketStatus(
                     $ticket,
                     RequestModel::STATUS_ONGOING,
-                    'Parts request was rejected by Supply. Repair is now ongoing without parts.'
+                    'Supply rejected the parts request. Repair continues without parts.'
                 );
             }
 
@@ -95,7 +95,7 @@ class ReviewRequisitionAction
                 RequestNotificationService::notifyRequestorTicketStatus(
                     $ticket,
                     RequestModel::STATUS_ONGOING,
-                    'Parts were issued. Your repair request is ongoing again.'
+                    'Supply issued the parts. Repair resumes.'
                 );
             }
 

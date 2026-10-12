@@ -181,7 +181,7 @@ class UpdateMaintenanceTicketAction
                                 $admin->id,
                                 $trackingRequest->id,
                                 'Asset Tagged for Disposal',
-                                "Asset [{$disposalAsset->item_name} | SN: {$disposalAsset->serial_number}] marked for disposal via PM request {$trackingRequest->request_number}. Please process."
+                                "Asset {$disposalAsset->item_name} (SN: {$disposalAsset->serial_number}) is marked for disposal via PM request {$trackingRequest->request_number}. Process the disposal."
                             );
                         }
                     }
@@ -259,8 +259,8 @@ class UpdateMaintenanceTicketAction
 
                 // Notify User
                 $notificationMessage = $newStatus === RequestModel::STATUS_COMPLETED
-                    ? "Your Maintenance Request {$trackingRequest->request_number} has been completed. Please log in and complete the required satisfaction survey."
-                    : "Your Maintenance Request {$trackingRequest->request_number} status has been updated to {$newStatus}.";
+                    ? "Your Maintenance request {$trackingRequest->request_number} is completed. Complete the satisfaction survey."
+                    : "Your Maintenance request {$trackingRequest->request_number} is now {$newStatus}.";
 
                 \App\Models\Notification::send(
                     $trackingRequest->user_id,
@@ -274,7 +274,7 @@ class UpdateMaintenanceTicketAction
                     $trackingRequest->user_id,
                     $trackingRequest->id,
                     'Request Updated',
-                    "IT personnel has updated the details of your maintenance request {$trackingRequest->request_number}."
+                    "IT has updated the details of your maintenance request {$trackingRequest->request_number}."
                 );
             }
 

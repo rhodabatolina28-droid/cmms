@@ -82,7 +82,7 @@ class ReviewIctTicketAction
                 $trackingRequest->user_id,
                 $trackingRequest->id,
                 'Request Rejected',
-                "Your ICT Request {$trackingRequest->request_number} was rejected by {$reviewerLabel}. Reason: " . ($validated['notes'] ?: 'No reason provided.')
+                "Your ICT Repair request {$trackingRequest->request_number} was rejected by {$reviewerLabel} — " . ($validated['notes'] ?: 'no reason provided') . '. Submit a new ticket if the issue persists.'
             );
         }
 

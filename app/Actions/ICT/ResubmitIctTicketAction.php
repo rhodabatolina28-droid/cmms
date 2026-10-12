@@ -80,7 +80,7 @@ class ResubmitIctTicketAction
             \App\Models\Notification::send(
                 $trackingRequest->user_id, $trackingRequest->id,
                 'Request Resubmitted',
-                "Your ICT Request {$trackingRequest->request_number} has been resubmitted and is now pending assignment."
+                "ICT {$trackingRequest->request_number} is resubmitted and pending assignment."
             );
 
             // D9.20: the System Admin is the reviewer — notify them directly.
