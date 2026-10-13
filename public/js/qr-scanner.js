@@ -55,7 +55,33 @@ class AssetScanner {
             this.scanner = new Html5Qrcode(elementId);
             this.isScanning = true;
 
-            const config = { fps: 10, qrbox: { width: 250, height: 250 } };
+            // Adaptive scan window: 80% of the container's smaller dimension
+            // (180-320px). The old FIXED 250px box broke close-range scans of
+            // small printed QRs (30mm sticker / 20mm code — user 2026-10-13):
+            // the code must fit INSIDE the box or it never decodes, and a
+            // fixed px size cannot follow phone screen widths.
+            const base = Math.min(
+                (container && container.clientWidth) || 300,
+                (container && container.clientHeight) || 300
+            );
+            const box = Math.max(180, Math.min(320, Math.floor(base * 0.8)));
+
+            const config = {
+                fps: 10,
+                qrbox: { width: box, height: box },
+                // Physical count does many scans in a row — skip the camera
+                // picker on re-open.
+                rememberLastUsedCamera: true,
+                // High-res stream: a 20mm QR at arm's length is only a few
+                // dozen pixels at the library's default 640x480 — 1080p
+                // ideal keeps the modules above the decode threshold.
+                // facingMode ideal environment = rear camera on phones.
+                videoConstraints: {
+                    facingMode: { ideal: 'environment' },
+                    width: { ideal: 1920 },
+                    height: { ideal: 1080 }
+                }
+            };
             const onSuccess = (decodedText) => {
                 const assetId = this.parseQrContent(decodedText);
                 if (assetId && this.onScan) {

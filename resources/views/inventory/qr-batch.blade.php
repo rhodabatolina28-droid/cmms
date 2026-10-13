@@ -229,55 +229,62 @@
         }
         tr.covered td { background: #f0fdf4; }
 
-        /* ===== 1" x 1" (25.4mm) sticker — QR plan §9.5.
+        /* ===== 30mm x 30mm sticker — QR plan §9.5 (bumped from the old 1-inch cell).
            Same class names as inventory/qr-sticker.blade.php; markup comes from
            the shared fragment (inventory/_sticker.blade.php) via ?fragment=1. ===== */
         .sticker {
-            width: 25.4mm;
-            height: 25.4mm;
+            width: 30mm;
+            height: 30mm;
             background: #fff;
             border: 0.5px dashed #94a3b8;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: flex-start;
-            padding: 0.9mm;
+            padding: 1.2mm;
             overflow: hidden;
             text-align: center;
             box-sizing: border-box;
             line-height: 1;
         }
-        .sticker .qr { width: 17mm; height: 17mm; }
+        .sticker .qr { width: 20mm; height: 20mm; }
         .sticker .qr svg { width: 100% !important; height: 100% !important; display: block; }
-        .sticker .s-id { font-family: 'Courier New', monospace; font-size: 6pt; font-weight: 800; color: #0f172a; margin-top: 0.5mm; }
-        .sticker .s-name { font-size: 5pt; font-weight: 700; color: #334155; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticker .s-flag { font-size: 5pt; font-weight: 800; color: #0038A8; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .sticker .s-serial { font-family: 'Courier New', monospace; font-size: 4.5pt; color: #64748b; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-id { font-family: 'Courier New', monospace; font-size: 7pt; font-weight: 800; color: #0f172a; margin-top: 0.5mm; }
+        .sticker .s-name { font-size: 5.5pt; font-weight: 700; color: #334155; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-flag { font-size: 5.5pt; font-weight: 800; color: #0038A8; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .sticker .s-serial { font-family: 'Courier New', monospace; font-size: 5pt; color: #64748b; margin-top: 0.2mm; max-width: 100%; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 
         /* ===== PRINT LAYOUT ===== */
         @media print {
-            body * { visibility: hidden; }
-
-            #printSection, #printSection * { visibility: visible; }
+            /* Kill EVERYTHING outside the print grid with display:none — NOT
+               `visibility:hidden` (user 2026-10-13: "madaming papel na blanco,
+               walang QR, kahit isa lang ang sticker ko"). Visibility only hides
+               the INK: the tall asset table kept its layout height, so every
+               print emitted page after page of invisible (blank) content.
+               display:none contributes ZERO page height = exactly N pages for
+               N sticker rows. #printSection is a direct child of <body>. */
+            body > *:not(#printSection) { display: none !important; }
 
             #printSection {
-                position: absolute;
-                top: 0; left: 0;
+                display: block !important;
+                position: static;
                 width: 100%;
             }
 
             @page {
-                size: A4 portrait;
-                margin: 5mm;
+                size: auto;
+                margin: 6mm;
             }
 
-            /* QR plan §9.5 — 1" x 1" cells: 7 across x 10 rows = 70/A4 */
+            /* QR plan §9.5 — 30mm cells: 6 x 8 = 48 per Letter page
+               (261mm <= 267.4mm Letter usable with 6mm margins; A4/Legal fit too).
+               size:auto = follows the dialog paper — never hard-code A4 again
+               (the old A4 grid overflowed onto a 2nd page on Letter paper). */
             .sticker-grid {
                 display: grid;
-                grid-template-columns: repeat(7, 25.4mm);
+                grid-template-columns: repeat(6, 30mm);
                 gap: 3mm;
                 justify-content: center;
-                padding-bottom: 6mm;
             }
 
             .sticker-grid .sticker { page-break-inside: avoid; }
@@ -545,7 +552,7 @@
 <!-- NOTICE -->
 <div class="print-preview-note">
     <i class="fa-solid fa-circle-info"></i>
-    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Bawat sticker ay <strong>1" × 1"</strong> (25.4mm), grid ng <strong>70 stickers/A4</strong> — QR, asset ID, at item name. Print sa <strong>100% scale</strong> (huwag "Fit to page" — liliit ang QR at hindi ma-i-scan). I-cut bago idikit!</span>
+    <span>I-select ang gustong i-print na assets. <strong>SET = isang sticker lang sa parent</strong> — auto-covered ang components (isang scan = buong set). Bawat sticker ay <strong>30mm × 30mm</strong>, grid ng <strong>48 stickers/letter page</strong> — QR, asset ID, at item name. Print sa <strong>100% scale</strong> (huwag "Fit to page" — liliit ang QR at hindi ma-i-scan). I-cut bago idikit!</span>
 </div>
 
 <!-- ASSET TABLE -->

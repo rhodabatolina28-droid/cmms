@@ -1,5 +1,5 @@
 {{--
-    1" x 1" (25.4mm) QR sticker — QR Print + Scan Hub Plan §9.5.
+    30mm x 30mm QR sticker — QR Print + Scan Hub Plan §9.5 (bumped from the old 1-inch cell).
     Shared by:
       - inventory/qr-sticker.blade.php (single print — has the print() script)
       - inventory/qr-batch.blade.php print grid (fetched via ?fragment=1)
