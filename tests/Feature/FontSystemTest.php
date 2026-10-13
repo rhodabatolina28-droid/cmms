@@ -98,6 +98,37 @@ class FontSystemTest extends TestCase
         $this->assertRuleWeight('resources/css/landing/_base.css', '.logo-text strong', '400');
     }
 
+    /**
+     * Notification bell panel (user amendment 2026-10-12, second pass):
+     * the dropdown panel is KEEP-exempt in the sweep above (its selectors
+     * carry the 'notif' KEEP token as functional badges/links), but the user
+     * asked for the flat look here too — header title, type/time labels,
+     * "View" link, mark-read links, the footer "View All Activities" link
+     * and BOTH badges (bell counter + ticket-number chip) all render at 400.
+     * Fonts: the panel inherits Arial from <body>; the ticket badge keeps
+     * its monospace serial font — only the weights change.
+     */
+    public function test_notification_panel_is_not_bold(): void
+    {
+        $file = 'resources/views/layouts/app.blade.php';
+
+        foreach ([
+            '.notif-type',
+            '.notif-req-badge',
+            '.notif-time',
+            '.notif-view-link',
+            '.mark-read',
+            '.notif-badge',
+            '.notif-header-title',
+            '.notif-count-label',
+            '.notif-footer-link',
+        ] as $selector) {
+            $this->assertRuleWeight($file, $selector, '400');
+        }
+
+        $this->assertRuleWeight($file, '#markAllRead', '400');
+    }
+
     /** Functional weights that survive the sweep (buttons, badges, signatures). */
     private function isKeepSelector(string $selector): bool
     {
