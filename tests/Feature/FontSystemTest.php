@@ -70,6 +70,12 @@ class FontSystemTest extends TestCase
         $this->assertRuleWeight('resources/css/admin/_ui.css', '.topbar-left h3', '400');
         $this->assertRuleWeight('resources/css/admin/_ui.css', '.card-content h2', '400');
         $this->assertRuleWeight('resources/css/admin/_ui.css', '.table-box h4', '400');
+
+        // Topbar real-time clock + date (user amendment 2026-10-13): the sweep
+        // classifier has no clock/date/time keyword, so the clock survived at
+        // 900 (the heaviest weight in the whole app) and the date at 700.
+        $this->assertRuleWeight('resources/views/layouts/app.blade.php', '#realTimeClock', '400');
+        $this->assertRuleWeight('resources/views/layouts/app.blade.php', '#realTimeDate', '400');
     }
 
     public function test_dashboard_welcome_heroes_are_not_bold(): void

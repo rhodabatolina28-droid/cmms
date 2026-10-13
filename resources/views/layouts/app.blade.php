@@ -52,12 +52,11 @@
         .topbar-right { display: flex; align-items: center; gap: 30px; }
         .topbar-title { margin: 0; font-size: 18px; color: #111827; font-weight: 400; letter-spacing: -0.5px; }
         #sidebarToggle { background: #f3f4f6; border: none; width: 38px; height: 38px; border-radius: 10px; font-size: 18px; cursor: pointer; color: #374151; display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
-        #timeContainer { display: flex; align-items: center; gap: 15px; background: white; padding: 6px 20px 6px 6px; border-radius: 30px; border: 1px solid rgba(0, 56, 168, 0.1); box-shadow: 0 4px 10px rgba(0, 56, 168, 0.06); transition: transform 0.2s, box-shadow 0.2s; }
-        #timeContainer:hover { transform: translateY(-2px); box-shadow: 0 6px 15px rgba(0, 56, 168, 0.1); }
-        #realTimeClock { font-size: 16px; color: #0038A8; font-weight: 900; font-family: Arial, sans-serif; line-height: 1; letter-spacing: 0.5px; }
-        #realTimeDate { font-size: 10px; color: #64748b; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
+        #timeContainer { display: flex; align-items: center; gap: 8px; padding: 4px 6px; }
+        #realTimeClock { font-size: 16px; color: #0038A8; font-weight: 400; font-family: Arial, sans-serif; line-height: 1; letter-spacing: 0.5px; font-variant-numeric: tabular-nums; }
+        #realTimeDate { font-size: 10px; color: #64748b; font-weight: 400; text-transform: uppercase; letter-spacing: 0.5px; margin-top: 4px; }
         .time-text-wrap { text-align: right; }
-        .time-clock-icon { width: 34px; height: 34px; background: #eff6ff; color: #0038A8; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 16px; box-shadow: 0 2px 5px rgba(0, 56, 168, 0.1); }
+        .time-clock-icon { font-size: 13px; color: #94a3b8; }
 
         /* Notification items (JS templates) */
         .notif-item { padding: 13px 18px; border-bottom: 1px solid #f1f5f9; transition: all 0.15s ease; position: relative; cursor: pointer; }
@@ -331,7 +330,7 @@
                 </div>
                 
                 <div class="topbar-right">
-                    <!-- PREMIUM TIME & DATE -->
+                    <!-- TIME & DATE (flat, 2026-10-13) -->
                     <div id="timeContainer">
                         <div class="time-text-wrap">
                             <div id="realTimeClock">00:00:00 AM</div>
