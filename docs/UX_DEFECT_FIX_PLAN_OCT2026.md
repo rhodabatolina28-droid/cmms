@@ -33,6 +33,7 @@
 | **3** | QR/Cam button fix (0-byte bundle) + ICT auto-fill ng na-scan | Katamtaman | May (1 Action + JS build) |
 | **4** | PM Work Orders: assignment back-fill + hindi na mag-reset + stats cards | Katamtaman | May (2 Actions + Service) |
 | **2.5** *(hotfix, 2026-10-05)* | Scan rate-limit (Bug 8): route-scoped throttle prefixes + 429 handling sa JS | Mababa (routes + JS) | May (routes lang, walang DB) |
+| **SP** *(plan, 2026-10-14)* | SP technician signature upload (Opsyong 1C — scanned wet signature, §13) | Katamtaman (blade + JS lang; backend = existing contracts) | Wala (reuse lang — walang migration/route/PDF-render change) |
 
 **Bawal galawin sa lahat ng phase:** print/PDF/archive logic, at ang mga date-dependent na existing test.
 
@@ -345,6 +346,7 @@ resolveRequestSignature() → sha1($user->getAuthIdentifier())  // ← WALANG ro
 | 2026-10-12 | **Tunnel rotation #2 + QR re-regen** — ang naunang quick tunnel ay namatay nang matapos ang session (background process cleanup); dev server :8000 buhay pa. Start ulit gamit ang `-WindowStyle Hidden` (detached process = mas buhay sa pagitan ng sessions) → **`https://consensus-atom-directors-justify.trycloudflare.com`** → `.env` `APP_URL` (old: `invoice-facial-hart-ronald`) + `config:clear` · **QR 406/406 re-regenerated (10.4s)**, idempotence `stored == fresh: YES` · e2e: `/r/1` → **302**, `/` → **200** · 0 mangled `.env` lines | ✅ **DONE** |
 | 2026-10-12 | **Notification bell panel — flat weights** (user report: "hindi na-update sa notification 'yung footer at bold") — ang sweep (`7464b1f`) ay hindi hinawakan ang bell dropdown dahil ang `isKeepSelector` ng `FontSystemTest` ay may **`notif`** KEEP token (inakalang functional badges/links) — 10 declarations pa rin ang 600/700/800: `.notif-type` 700 · `.notif-req-badge` 800 (monospace ticket chip — **font-family: monospace KEPT**, weight lang) · `.notif-time` 600 · `.notif-view-link` 700 · `.mark-read` 600 · `.notif-badge` 800 (bell counter) · `.notif-header-title` 800 · `.notif-count-label` 700 · `#markAllRead` 600 · **`.notif-footer-link` 700** ("View All Activities" footer) → **lahat 400**. Fonts: panel inherits Arial sa `<body>` (4496b89) — walang font-family change. Test-first: bagong `FontSystemTest::test_notification_panel_is_not_bold` (10 pins) RED 1F → **GREEN 7/7 (50 assertions)** | ✅ |
 | 2026-10-13 | **Topbar clock: flat weights + Option A redesign** (user: "un bold ng clock" → "redesign natin 'yun, ano ba mas okay") — ① `#realTimeClock` **900→400** at `#realTimeDate` **700→400** (hindi na-sweep: walang clock/date/time keyword sa classifier) — pinned sa `test_headers_are_not_bold`; ② ang "PREMIUM" floating pill (puting capsule, box-shadow, hover-lipad, 34px na bilog na may sariling shadow na icon) → **flat text stack**: walang box/shadow/hover, `font-variant-numeric: tabular-nums` (hindi na tumatagilid ang digits kada segundo), maliit na plain gray clock icon (13px), seconds kasama pa rin. RED 1F → **GREEN 7/7 (52 assertions)** | ✅ |
+| 2026-10-14 | **PHASE SP — PLAN DOCUMENTED (hindi pa naka-implement)** — SP technician signature upload (Opsyong 1C): detailed blueprint sa §13 (UI states · backend flows · data lifecycle · file manifest · safety proofs · test plan). Naghihintay ng go bago ang code. | 📝 Plan lang |
 | 2026-10-13 | **QR print + scan pipeline** (user: "medyo lakihan mo un sticker" · "bakit madami pa din papel" · "madaming papel na blanco, walang QR, kahit isa lang" · "need update un qr scan cam since maliit un sticker") — (1) **Laki**: sticker **25.4mm → 30mm**, QR **17mm → 20mm**, fonts bump (id 7pt, name/flag 5.5pt, serial 5pt); (2) **One-page math**: ang lumang grid ay naka-hard-code sa `@page A4` (287mm = A4 boundary, 18mm taliwas sa Letter) → `size: auto` + `margin: 6mm` + **6×8 = 48/Letter page** (261mm ≤ 267.4mm, 6.4mm spare — kasya sa Letter/A4/Legal); (3) **Blank-page bug** (ang tunay na dahilan ng "madaming papel na blanco"): `body * { visibility: hidden; }` ay nagtatago lang ng INK — ang matataas na asset table ay patuloy na nag-o-occupy ng page height → **`body > *:not(#printSection) { display: none !important; }`** = eksaktong N pages para sa N sticker rows; (4) **Scanner cam** (`public/js/qr-scanner.js`, shared ng physical-count-show + ICT): fixed 250px qrbox + default 640×480 → **adaptive qrbox** (80% ng container, 180–320px = 256px sa phone) + **1080p rear-cam stream** (`videoConstraints` 1920×1080 ideal, facingMode environment) + `rememberLastUsedCamera`. Test-first: `QrStickerSizeTest` 3→5 (size pins + `test_batch_sheet_fits_one_letter_page` + `test_batch_print_kills_invisible_blank_pages`) + bagong `QrScannerConfigTest` (3) — **full suite 557 passed / 2,380 assertions**. QR design: per-ASSET confirmed (payload = `/r/{asset_id}`; parent reassign = auto-sync ng components + PAR + notifications, "Set Custodian Updated" history — test-backed); hybrid per-custodian QR = option lang, hindi pa nagawa | ✅ |
 | — | Phase 4 — PM Work Orders (assignment back-fill + stats cards) | ⏳ Nakabinbin |
 
@@ -519,3 +521,209 @@ Ang tunnel URL ay **nagbabago tuwing i-restart** ang `cloudflared` (trycloudflar
 3. ⚠️ **S7 label** — "Ticket No." ang lumalabas para sa PR number → **§9.5** (keep vs "Reference No."). Kung "Reference No.": condition lang sa `type`/PR, additive sa E1.
 4. ✅ **S6 Type change = safe** — ang `PM Generation FAILED — Action Required` ay lokal na ginawa sa `GenerateScheduledPM` L356-358 (hindi registered/immutable gate string; ang bell row type ay `PM Alert` na) → mapapalitan sa E2/E3.
 5. **Subject quirks confirmed** (§12.7): S3/S4 raw numbers + S7 `#PR-…` redundancy — parehong pinapakita ng preview chips.
+
+---
+
+## 13. PHASE SP — Service Provider Technician Signature Upload (Opsyong 1C) — DETAILED PLAN (2026-10-14)
+
+> **Status:** 📝 PLAN DOCUMENTED — hindi pa naka-implement. Naghihintay ng go signal.
+> **Rule na sinusunod:** test-first (RED→GREEN) · additive lang (kaya `git revert`-able sa isang commit) · **walang migration, walang bagong route, walang PDF-render change** (§2 rule: bawal galawin ang print/PDF/archive logic — ang PDF ay awtomatikong magre-render dahil parehong column at parehong `$sigImg` closure ang gamit).
+
+### 13.1 Ang problema
+
+- **Section 4** ng ICT form (`TO BE FILLED-UP BY SERVICE PROVIDER`) — ang **Service Provider technician** ang pumipirma sa **hard copy** (wet signature), pero sa system: kapag wala pang naka-save → canvas e-signature ang nakalantad (sinumang naka-login na IT/SA ang pwedeng gumuhit — hindi authentic); kapag may canvas na → self-declared in-draw ng admin, hindi ang aktwal na pirma sa papel. **Walang mechanism para ilink ang totoong pirma sa hard copy sa system record.**
+- **Desisyon ng user (Opsyong 1C):** i-**upload/scan ang aktwal na pirma** mula sa hard copy (scan/photo), i-preview sa form, i-save bilang **image sa private disk** (parehong pattern ng umiiral na canvas signatures), at i-render sa PDF — digital counterpart na ang physical signature.
+- **Bakit hindi canvas:** hindi authenticator ng SP (pwedeng gumuhit ang kahit sino). **Bakit hindi hardware signature pad:** wala sa field; impractical.
+
+**Compliance basis (na-verify):**
+- **RA 8792 (E-Commerce Act) §10** — electronic signature = legally recognized, basta may integrity at attribution; ang scanned copy ng handwritten signature na naka-link sa record ay sakop nito.
+- **RA 9470 (National Archives Act)** — ang **original na hard copy ay dapat naka-retain sa opisina**; ang system copy = index/retrieval copy lang. Kaya may helper text ang upload field: *"Original on file with ICT."*
+- **COA** — retention ng pirma-holding records; ang duplicate digital copy ay para sa retrieval audit, hindi pumapalit sa original.
+
+### 13.2 UI plan (anim na estado — eksaktong tugma sa umiiral na CSS)
+
+Ginamit ang umiiral na `.signature-wrapper` (`_signature.css:4`), `.signature-line` (:51), `.btn-clear-signature` (:34), `.signature-preview` (`_form-styles.blade.php:4` max-width 220px; `_phone-portrait.css:592` 180px sa phone), `.disabled-section` + RESTRICTED overlay (:81-99). **Walang bagong CSS file.**
+
+```
+STATE A — WALA PANG PIRMA (admin/IT edit · referred) — bagong default
+┌──────────────────────────────────────────────────────────────┐
+│ TECHNICIAN SIGNATURE OVER PRINTED NAME:                      │
+│ ┌─ .signature-wrapper ─────────────────────────────────────┐ │
+│ │ [ 📎 Upload scanned signature ]   ← <label> sa hidden    │ │
+│ │     accept="image/png,image/jpeg,image/webp"             │ │
+│ │ ℹ️ Service Provider technician — i-scan/photograph ang    │ │
+│ │ pirma mula sa hard copy (PNG/JPG, max 8MB). Ang orihinal │ │
+│ │ na dokumento ay dapat naka-file sa opisina.              │ │
+│ │ ─── .signature-line ───────────────────────────────      │ │
+│ │ [ Printed Name (centered, border-bottom) ]               │ │
+│ └──────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────┘
+  ⚠️ HINDI NA <canvas> — walang paraan para gumuhit ng pekeng
+     pirma online (tanggalin ang initSignaturePad L171 call).
+
+STATE B — NAG-SELECT NA NG FILE (live preview, bago pa save)
+  preview <img id="spSigPreview"> (base64, max-width 220px)
+  [ Remove ]  ← data-sp-sig="remove" (HINDI data-canvas)
+  (nasa browser pa lang; walang network hangga't walang [Save])
+
+STATE C — SAVED NA (may path na sa DB)
+  <img src="/tickets/{id}/signature/technician_signature">  ← AUTHED ROUTE
+  [ Replace ]  ← data-sp-sig="replace" → babalik sa State A picker
+  hidden input technicianSignature = "signatures/2026/Oct/ict_tech_…png"
+  (PATH ang value → str_contains 'data:image' = false → IDEMPOTENT)
+
+STATE D — VIEW / END-USER (read-only)
+  #serviceProviderSection.disabled-section + "RESTRICTED" ::after
+  preview img present, WALANG Remove/Replace button
+  (server-rendered hidden — hindi umiiral sa DOM ang controls)
+
+STATE E — HINDI REFERRED — #serviceProviderSectionWrap.hidden (D9.43, L147)
+
+STATE F — MOBILE PORTRAIT — pareho; .signature-preview max-width:180px
+  (existing rule) + full-width 44px touch targets (existing responsive)
+```
+
+### 13.3 Backend plan (walang bagong infra — lahat ay EXISTING contract)
+
+```
+SAVE (POST /requests/ict/{id}/update — ICTRequestController::update L87)
+  → UpdateIctRequestAction: it/super_admin → TechnicianUpdateIctTicketAction
+    L31  $data = $request->only(ictTechnicianFieldKeys())
+         ← kasama na 'technicianSignature' (RequestHelpers.php L716)
+    L46-55 sig loop: str_contains('data:image')?
+         ├─ base64 → delete old file (L49-51) → saveSignature(L52,
+         │    'ict_tech','Update') → private disk
+         │    signatures/{Y}/{Month}/ict_tech_{NAME}_{ts}.png (L187-192)
+         │    → $mappedData['technician_signature'] = PATH
+         └─ path/empty → SKIPPED (hindi muling ise-save — IDEMPOTENT)
+    L57  $repairRequest->update($mappedData)
+    + AUDIT (optional, ~3 lines): AuditLog::log("SP Signature Scanned",
+      "Scanned SP technician signature uploaded for {req_no}")
+      kapag bagong path (post-update diff)
+
+VALIDATION — UpdateIctRequest L63-64 (UMIIRAL NA, walang edit)
+  technicianSignature => nullable|string|max:200000
+  (downscaled upload ≈ 70-120K chars < 200K ✅; client-side guard
+   ang pumipigil sa oversized bago pa ma-submit)
+
+SERVE — SignatureController@show (UMIIRAL NA, walang edit)
+  GET /tickets/{id}/signature/technician_signature
+  = ALLOWED_FIELDS ✅ + policy viewIct ✅ + str_starts_with
+    'signatures/' ✅ + Storage::disk('local') ✅
+  config filesystems.local.serve=false (D5b) → WALANG /storage/
+  direct access — tanging authed route lang
+
+PDF — pdf/ict-form.blade.php (UMIIRAL NA, walang edit sa render path)
+  L470 @if(!empty($rr->technician_signature)) {!! $sigImg(...) !!}
+  L199 $sigImg: realpath guard + base64 embed (png ext)
+  → dahil PATH lang ang nasa parehong column, awtomatikong lalabas
+    ang scanned pirma sa PDF — ZERO PDF change.
+  OPTIONAL (hiwalay na approval — bawal galawin ang print logic):
+  caption "Scanned copy — original on file with ICT." sa L474 area.
+```
+
+### 13.4 Client-side JS pipeline (`_ict_scripts.blade.php`, bahagi ng L170-173 area)
+
+```
+[ 📎 Upload ] click → hidden <input type="file"> click
+  change →
+  GUARD 1  mime ∈ {image/png, image/jpeg, image/webp} (else Swal + return)
+  GUARD 2  size ≤ 8MB (else Swal + return)
+  FileReader.readAsDataURL
+  createImageBitmap(file, { imageOrientation:'from-image' })
+  (fallback: new Image() onload — EXIF rotation handling)
+  downscale: targetWidth 480 max → canvas.toDataURL('image/png')
+  GUARD 3  base64.length ≤ 190_000; lampas → re-encode sa 360px;
+           lampas pa rin → Swal "i-crop ang pirma" + return
+  → technicianSignature.value = dataUrl
+  → preview img src = dataUrl (State B); fileInput.value = ''
+    (handa ulit para sa Replace — walang re-selection needed)
+
+[ Remove / Replace ] ← data-sp-sig attribute, HINDI data-canvas
+  (ang delegated handler sa L447-555 ay para sa [data-canvas] canvas
+   clear/re-init — kung data-canvas ang gamit, ita-try nitong
+   i-re-init ang wala nang canvas → iwas sa class of bug na ito)
+```
+
+### 13.5 Data lifecycle (isang pirma, buong buhay)
+
+```
+BROWSER                        SERVER                        RECORD
+file(JPG) → downscale 480px → PNG base64 (~73K, in-memory)
+   │ POST technicianSignature="data:image/png;base64,…"
+   ▼
+UpdateIctRequest (max:200000 ✅) → sig loop → saveSignature()
+   → .png sa private disk ──────────────────────────────► FILE EXISTS
+   → UPDATE repair_requests.technician_signature = path ─► DB: PATH
+[Save ulit nang walang bago: value=PATH → str_contains=false → SKIP]
+[View: GET /tickets/{id}/signature/technician_signature → authed PNG]
+[PDF: L470 $sigImg(path) → inline base64 → self-contained PDF]
+[Replace: POST new base64 → DELETE old .png → WRITE new → UPDATE path]
+[Archive (D6): auto-PDF sa Completion → embedded na ang pirma]
+```
+
+
+### 13.6 File change manifest
+
+| File | Aksyon | Detalye |
+|---|---|---|
+| `resources/views/partials/ict/_ict_form_sections.blade.php` | **EDIT** (L228-247) | `@if(saved)` → preview `<img>` (authed route) + `[Replace]`; `@else` → upload button + hidden file input + helper text. Pareho pa rin ang gating: `(!$isAdmin \|\| $isView \|\| !$spSectionActive)` ng `#serviceProviderSection` (L155) |
+| `resources/views/partials/ict/_ict_scripts.blade.php` | **EDIT** | ✂️ Tanggalin ang `initSignaturePad('technicianSignatureCanvas', 'technicianSignature')` (L171). ➕ `initSpSignatureUpload()` (~40 linya: guards + downscale + preview) + Remove/Replace listeners na naka-`data-sp-sig` (~15 linya). **Huwag galawin** ang `syncSpState()` (L209-249) — hindi ito nag-clear ng fields, visibility/disable lang (na-verify) |
+| `app/Support/RequestHelpers.php` | **EDIT (optional hardening, ~2 linya)** | `saveSignature()` L179: ang tinatanggal lang ay `data:image/png;base64,` — gawing regex strip ng anumang `data:image/{png\|jpeg\|webp};base64,` (defense-in-depth sakaling may JPEG prefix makaalusot; ang client ay PNG lang ang nagpo-produce) |
+| `tests/Feature/IctSpSignatureUploadTest.php` | **NEW** (~150 linya) | 6 tests — tingnan §13.8 |
+| `tests/Feature/IctSpSectionVisibilityTest.php` | **EXTEND** | siguraduhing hindi nababago ang show/hide ng section |
+| `docs/UX_DEFECT_FIX_PLAN_OCT2026.md` | **APPEND** | §13 execution log + progress row |
+
+**HINDI HINAHAWAKAN (na-verify sa code):** `UpdateIctRequest.php` · `SignatureController.php` · `TechnicianUpdateIctTicketAction` sig loop · `pdf/ict-form.blade.php` · `SignIctAcceptanceAction` · routes · migration (ang `repair_requests.technician_signature` ay TEXT na — kasya ang path) · PM form (lahat).
+
+### 13.7 Safety proofs + hazards (na-verify laban sa ACTUAL code, 2026-10-14)
+
+1. ✅ **Idempotency** — kapag saved na, ang hidden input VALUE ay ang PATH (`_ict_form_sections` L234). Iisend ito pabalik; `str_contains('signatures/…', 'data:image')` = false → `saveSignature` hindi tatawagin → walang rewrite, walang delete ng luma.
+2. ✅ **Hindi mabubura ng end user ang Section 4** — `SignIctAcceptanceAction::execute()` L38-43: `$request->only([acceptance keys])` lang ang dumarating sa `mapLegacyData`; lahat ng `technician_*` ay `null` → tinatanggal ng `array_filter(..., $v !== null)` (L192) → **wala sa `$mappedData`** → hindi isasama sa UPDATE. *(Koreksyon sa naunang session summary: walang "isAdmin wipe path" sa kasalukuyang code — ang L168-173 ng `mapLegacyData` ay teknikal na naka-map pero unreachable dahil sa `only()` whitelist. Ang tanong ay sagutin ng regression test sa §13.8 T4 — kung RED, may totoong bug; kung GREEN, proof na ito ay ligtas.)*
+3. ✅ **Hindi mabubura kapag hidden ang SP section** — D9.43 `keepActive` (`_ict_scripts` L220-227) + `isServiceProviderSectionInUse()` (RequestHelpers L342 — **may `technician_signature` sa checks**): kapag may naka-save nang pirma, kahit nakatago ang section ay **naka-enabled** pa rin ang inputs → patuloy na nagre-resubmit ang PATH → preserved. Kapag walang laman at disabled → excluded sa submission → `null` → stripped.
+4. ✅ **Walang /storage/ exposure** — private disk + `filesystems.serve=false` (D5b); tanging `SignatureController` (login + `viewIct` policy + field whitelist + `signatures/` prefix check) ang nagse-serve. May umiiral nang test: `SignatureAccessTest` (200 sa owner, 403 sa stranger).
+5. ✅ **PDF integrity** — `$sigImg` (PDF L199) ay may `realpath` + allowed-base guard → walang path traversal; inline base64 embed = self-contained PDF kahit walang file sa archive machine.
+6. ⚠️ **JPEG-prefix hazard** — ang client ay laging PNG (`toDataURL('image/png')`) kaya ligtas; ang optional hardening sa §13.6 ang magpapatibay kung may ibang caller.
+7. ⚠️ **`data-canvas` collision** — ang delegated clear/re-init handler (`_ict_scripts` L447-555) ay umaako ng kahit anong `[data-canvas]`; ang bagong buttons ay **`data-sp-sig`** para hindi sila magulo.
+8. ℹ️ **Tamper-evidence** — wala pang hash/manifest ang mga e-signature (RA 8792 §10(5) best practice). Ang panlaban ngayon: **ang original na paper pirma** ang ebidensya sa opisina (RA 9470); ang scan = reference copy. Naka-bookmark bilang future hardening (PDF SHA-256 manifest), **out of scope** ng phase na ito.
+
+
+### 13.8 Test plan (test-first — RED bago mag-GREEN)
+
+**Bagong file:** `tests/Feature/IctSpSignatureUploadTest.php`
+
+| # | Test | Asserts | RED/GREEN note |
+|---|---|---|---|
+| **T1** | `test_upload_field_and_no_canvas_when_referred_admin_edit` | referred + SA/IT + edit → response HTML may `<input type="file"` na `accept="image/png,image/jpeg,image/webp"` sa loob ng `#serviceProviderSection`, at **walang** `technicianSignatureCanvas` | RED hangga't hindi pa tinatanggal ang canvas |
+| **T2** | `test_upload_base64_is_stored_as_png_path` | `Storage::fake` impossible sa private disk kaya `Storage::disk('local')` + temp dir; POST valid small base64 PNG → DB `technician_signature` = `signatures/{Y}/{Month}/ict_tech_*.png`, file exists on disk, at ang `data:` prefix ay **wala** sa DB value | pins ang save pipeline |
+| **T3** | `test_resave_with_path_value_is_idempotent` | may saved path; POST ulit na may parehong path value (gaya ng ginagawa ng form) → parehong file pa rin ang nasa disk (walang bago), parehong value sa DB | pins ang str_contains skip |
+| **T4** | `test_end_user_acceptance_does_not_touch_section4` *(BUG-SP-1 probe)* | may naka-save na `technician_signature` + printed name; end user signs acceptance (`SignIctAcceptanceAction` route) → `technician_signature` **hindi nagbago** | kung RED → may totoong wipe bug → i-fix sa `mapLegacyData`/`only()`; kung GREEN → documented proof ng safety (§13.7.2) |
+| **T5** | `test_non_referred_section_stays_hidden_and_disabled` | Internal/External lang → `#serviceProviderSectionWrap` may `hidden` class (D9.43 parity) | extends IctSpSectionVisibilityTest behavior |
+| **T6** | `test_oversized_signature_rejected` | `technicianSignature` na >200,000 chars → 422 | pins ang existing validation rule |
+
+**Extend:** `IctSpSectionVisibilityTest` — kapag referred + may saved signature + nag-toggle pabalik sa Internal → ang section ay hidden ngunit ang DB value ay **hindi nagbabago** (keepActive proof).
+
+### 13.9 Execution order (kada phase test-first, isang commit bawat yugto)
+
+1. **Probe (RED muna):** isulat ang T1–T6 → patakbuhin → inaasahang RED ang T1/T2/T3/T5 (wala pa ang feature); ang **T4 ang magpapasya** sa BUG-SP-1 (tingnan §13.7.2).
+2. **Blade** — palitan ang L228-247 ng upload/preview/replace markup (gating pareho pa rin sa L155 condition).
+3. **JS** — tanggalin ang L171 init call; dagdag ang `initSpSignatureUpload()` + `data-sp-sig` handlers.
+4. **Hardening (optional)** — `saveSignature()` regex prefix strip (~2 linya) + T2 extended assertions.
+5. **GREEN** — buong suite: `php artisan test --compact` (baseline: 557 passed / 2,380 assertions noong QR phase).
+6. **Manual verification (dev server):** IT login → referred ticket → upload scan → preview → Save → DB path ✓ → i-refresh → Replace/Remove ✓ → download PDF → naka-inline ang pirma ✓ → end user login → sign acceptance → Section 4 intact ✓ → mobile viewport check.
+7. **Docs** — §13.9 execution log + progress row + rollback line.
+
+**Rollback:** iisang `git revert <commit>` (purely additive: blade markup + JS function + optional 2-line hardening + tests). Walang DB schema change, walang route change, walang PDF logic change.
+
+### 13.10 Out of scope (hindi kasama sa phase na ito)
+
+- PM form signatures (iba ang flow — `MaintenanceRequest`, walang SP concept).
+- Hardware signature pad / tablet signing sa field.
+- Tamper-evidence hardening (SHA-256 manifest ng signature files + PDF hash) — bookmarked future work.
+- PDF caption change ("Scanned copy — original on file") — PRINT LOGIC (§2 rule) → hiwalay na approval bago gawin.
+- Auto-backfill ng lumang canvas SP signatures (walang paraan para malaman kung ang canvas ay totoo — ang bago lang ang may scanned counterpart).
+
+---
+
+*Phase SP plan: §13 (2026-10-14) · Base: f7b9851 · Branch: develop*
+
